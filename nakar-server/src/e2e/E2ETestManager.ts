@@ -1,6 +1,4 @@
-import { E2ETestApplicationProject } from './E2ETestApplicationProject';
-import { E2ETestApplicationRoom } from './E2ETestApplicationRoom';
-import type { RoomVisibilityDto } from '../lib/schema/dtos/RoomVisibilityDto';
+import { E2ETestApplicationUser } from './E2ETestApplicationUser';
 import type { PostAuthResponseBodyDto } from '../lib/http/routes/auth/dto/PostAuthResponseBodyDto';
 import assert from 'node:assert/strict';
 import type { ChildProcessWithoutNullStreams } from 'node:child_process';
@@ -15,7 +13,6 @@ import { setTimeout as delay } from 'node:timers/promises';
 import { stripVTControlCharacters } from 'node:util';
 import testConfig from '../../node.config.json';
 import { E2ETestApplicationContext } from './E2ETestApplicationContext';
-import { E2ETestApplicationUser } from './E2ETestApplicationUser';
 import { E2ETestApplicationAdmin } from './E2ETestApplicationAdmin';
 import z from 'zod';
 
@@ -108,6 +105,7 @@ export class E2ETestManager {
 
       signal.throwIfAborted();
       const jwtSecret: string = randomUUID();
+      /* eslint-disable @typescript-eslint/naming-convention -- Environment variable names are defined by Strapi. */
       const env: NodeJS.ProcessEnv = {
         NODE_ENV: 'test',
         AUTH_RATE_LIMIT_ENABLED: 'false',
@@ -128,6 +126,7 @@ export class E2ETestManager {
         JWT_SECRET: jwtSecret,
         STRAPI_TELEMETRY_DISABLED: 'true',
       };
+      /* eslint-enable @typescript-eslint/naming-convention */
       testContext.diagnostic(JSON.stringify(env));
       signal.throwIfAborted();
       const child: ChildProcessWithoutNullStreams = spawn(
@@ -212,15 +211,15 @@ export class E2ETestManager {
   }
 
   public async registerUser(
-    username: string,
-    password: string,
     testContext: TestContext,
   ): Promise<E2ETestApplicationUser> {
+    const username: string = `e2e-${randomUUID()}`;
+    const password: string = randomUUID();
     const response: Response = await fetch(
       `${this.strapiUrl}/api/auth/local/register`,
       {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: new Headers([['Content-Type', 'application/json']]),
         body: JSON.stringify({
           username,
           password,
@@ -244,7 +243,7 @@ export class E2ETestManager {
   ): Promise<PostAuthResponseBodyDto> {
     const response: Response = await fetch(`${this.apiUrl}/auth`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: new Headers([['Content-Type', 'application/json']]),
       body: JSON.stringify({ username, password }),
       signal: testContext.signal,
     });
@@ -255,56 +254,92 @@ export class E2ETestManager {
       .parse(json);
   }
 
-  public async createProject(
-    title: string,
-    owner: E2ETestApplicationUser,
-    collaborators: E2ETestApplicationUser[],
+  public async createDocument(
+    model: string,
+    data: Record<string, unknown>,
     testContext: TestContext,
-  ): Promise<E2ETestApplicationProject> {
-    const documentId: string = await this._createPublishedDocument(
-      'api::project.project',
-      {
-        title,
-        owner: owner.documentId,
-        collaborators: collaborators.map(
-          (user: E2ETestApplicationUser): string => user.documentId,
-        ),
-      },
-      testContext,
-    );
-    return new E2ETestApplicationProject(documentId, title);
+  ): Promise<Response> {
+    return await this._requestDocument(model, 'POST', data, testContext);
   }
 
-  public async createRoom(
-    title: string,
-    visibility: RoomVisibilityDto,
-    project: E2ETestApplicationProject | null,
+  public async readDocument(
+    model: string,
+    documentId: string,
     testContext: TestContext,
-  ): Promise<E2ETestApplicationRoom> {
-    const documentId: string = await this._createPublishedDocument(
-      'api::room.room',
-      { title, visibility, project: project?.documentId ?? null },
+  ): Promise<Response> {
+    return await this._requestDocument(
+      `${model}/${documentId}`,
+      'GET',
+      undefined,
       testContext,
     );
-    return new E2ETestApplicationRoom(documentId, title, visibility);
   }
 
-  private async _createPublishedDocument(
+  public async updateDocument(
+    model: string,
+    documentId: string,
+    data: Record<string, unknown>,
+    testContext: TestContext,
+  ): Promise<Response> {
+    return await this._requestDocument(
+      `${model}/${documentId}`,
+      'PUT',
+      data,
+      testContext,
+    );
+  }
+
+  public async deleteDocument(
+    model: string,
+    documentId: string,
+    testContext: TestContext,
+  ): Promise<Response> {
+    return await this._requestDocument(
+      `${model}/${documentId}`,
+      'DELETE',
+      undefined,
+      testContext,
+    );
+  }
+
+  public async publishDocument(
+    model: string,
+    documentId: string | null,
+    data: Record<string, unknown>,
+    testContext: TestContext,
+  ): Promise<Response> {
+    return await this._requestDocument(
+      `${model}${documentId === null ? '' : `/${documentId}`}/actions/publish`,
+      'POST',
+      data,
+      testContext,
+    );
+  }
+
+  public async unpublishDocument(
+    model: string,
+    documentId: string,
+    data: Record<string, unknown>,
+    testContext: TestContext,
+  ): Promise<Response> {
+    return await this._requestDocument(
+      `${model}/${documentId}/actions/unpublish`,
+      'POST',
+      data,
+      testContext,
+    );
+  }
+
+  public async createPublishedDocument(
     model: 'api::project.project' | 'api::room.room',
     data: Record<string, unknown>,
     testContext: TestContext,
   ): Promise<string> {
-    const response: Response = await fetch(
-      `${this.strapiUrl}/content-manager/collection-types/${model}/actions/publish`,
-      {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${this.context.admin.token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
-        signal: testContext.signal,
-      },
+    const response: Response = await this.publishDocument(
+      model,
+      null,
+      data,
+      testContext,
     );
     const json: unknown = await response.json();
     assert.equal(response.status, 200, JSON.stringify(json));
@@ -312,6 +347,26 @@ export class E2ETestManager {
       .object({ data: z.object({ documentId: z.string().min(1) }) })
       .parse(json);
     return body.data.documentId;
+  }
+
+  private async _requestDocument(
+    path: string,
+    method: string,
+    data: Record<string, unknown> | undefined,
+    testContext: TestContext,
+  ): Promise<Response> {
+    return await fetch(
+      `${this.strapiUrl}/content-manager/collection-types/${path}`,
+      {
+        method,
+        headers: new Headers([
+          ['Authorization', `Bearer ${this.context.admin.token}`],
+          ['Content-Type', 'application/json'],
+        ]),
+        body: data === undefined ? undefined : JSON.stringify(data),
+        signal: testContext.signal,
+      },
+    );
   }
 
   private async _createAdmin(
@@ -324,7 +379,7 @@ export class E2ETestManager {
       `http://127.0.0.1:${strapiPort.toString()}/admin/register-admin`,
       {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: new Headers([['Content-Type', 'application/json']]),
         body: JSON.stringify({ firstname: 'E2E', email, password }),
         signal,
       },

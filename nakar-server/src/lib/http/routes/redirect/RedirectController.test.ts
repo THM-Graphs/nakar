@@ -43,20 +43,14 @@ describe('/redirect', (suiteContext: SuiteContext): void => {
           // given
           const sourceUrl: string = `https://source.example/${randomUUID()}`;
           const targetUrl: string = `https://target.example/${randomUUID()}`;
-          const creation: Response = await fetch(
-            `${manager.strapiUrl}/content-manager/collection-types/api::redirect.redirect/actions/publish`,
+          const creation: Response = await manager.publishDocument(
+            'api::redirect.redirect',
+            null,
             {
-              method: 'POST',
-              headers: {
-                Authorization: `Bearer ${manager.context.admin.token}`,
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                sourceUrl: sourceUrl,
-                targetUrl: targetUrl,
-              }),
-              signal: testContext.signal,
+              sourceUrl: sourceUrl,
+              targetUrl: targetUrl,
             },
+            testContext,
           );
           assert.equal(creation.status, 200, await creation.text());
 
@@ -78,20 +72,14 @@ describe('/redirect', (suiteContext: SuiteContext): void => {
         test('does not match a different source URL', async (testContext: TestContext): Promise<void> => {
           // given
           const sourceUrl: string = `https://source.example/${randomUUID()}`;
-          const creation: Response = await fetch(
-            `${manager.strapiUrl}/content-manager/collection-types/api::redirect.redirect/actions/publish`,
+          const creation: Response = await manager.publishDocument(
+            'api::redirect.redirect',
+            null,
             {
-              method: 'POST',
-              headers: {
-                Authorization: `Bearer ${manager.context.admin.token}`,
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                sourceUrl: `${sourceUrl}/other`,
-                targetUrl: 'https://target.example/other',
-              }),
-              signal: testContext.signal,
+              sourceUrl: `${sourceUrl}/other`,
+              targetUrl: 'https://target.example/other',
             },
+            testContext,
           );
           assert.equal(creation.status, 200, await creation.text());
 
@@ -112,20 +100,14 @@ describe('/redirect', (suiteContext: SuiteContext): void => {
           // given
           const sourceUrl: string = `https://source.example/${randomUUID()}/ä?name=a+b&value=x%20y#section`;
           const targetUrl: string = `https://target.example/${randomUUID()}?next=%2Fpage&name=ä+b#anchor`;
-          const creation: Response = await fetch(
-            `${manager.strapiUrl}/content-manager/collection-types/api::redirect.redirect/actions/publish`,
+          const creation: Response = await manager.publishDocument(
+            'api::redirect.redirect',
+            null,
             {
-              method: 'POST',
-              headers: {
-                Authorization: `Bearer ${manager.context.admin.token}`,
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                sourceUrl: sourceUrl,
-                targetUrl: targetUrl,
-              }),
-              signal: testContext.signal,
+              sourceUrl: sourceUrl,
+              targetUrl: targetUrl,
             },
+            testContext,
           );
           assert.equal(creation.status, 200, await creation.text());
 
@@ -145,17 +127,11 @@ describe('/redirect', (suiteContext: SuiteContext): void => {
         test('returns null when the target is missing', async (testContext: TestContext): Promise<void> => {
           // given
           const sourceUrl: string = `https://source.example/${randomUUID()}`;
-          const creation: Response = await fetch(
-            `${manager.strapiUrl}/content-manager/collection-types/api::redirect.redirect/actions/publish`,
-            {
-              method: 'POST',
-              headers: {
-                Authorization: `Bearer ${manager.context.admin.token}`,
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({ sourceUrl: sourceUrl, targetUrl: null }),
-              signal: testContext.signal,
-            },
+          const creation: Response = await manager.publishDocument(
+            'api::redirect.redirect',
+            null,
+            { sourceUrl: sourceUrl, targetUrl: null },
+            testContext,
           );
           assert.equal(creation.status, 200, await creation.text());
 
@@ -175,17 +151,11 @@ describe('/redirect', (suiteContext: SuiteContext): void => {
         test('returns an empty target unchanged', async (testContext: TestContext): Promise<void> => {
           // given
           const sourceUrl: string = `https://source.example/${randomUUID()}`;
-          const creation: Response = await fetch(
-            `${manager.strapiUrl}/content-manager/collection-types/api::redirect.redirect/actions/publish`,
-            {
-              method: 'POST',
-              headers: {
-                Authorization: `Bearer ${manager.context.admin.token}`,
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({ sourceUrl: sourceUrl, targetUrl: '' }),
-              signal: testContext.signal,
-            },
+          const creation: Response = await manager.publishDocument(
+            'api::redirect.redirect',
+            null,
+            { sourceUrl: sourceUrl, targetUrl: '' },
+            testContext,
           );
           assert.equal(creation.status, 200, await creation.text());
 
@@ -206,20 +176,13 @@ describe('/redirect', (suiteContext: SuiteContext): void => {
           // given
           const sourceUrl: string = `https://source.example/${randomUUID()}`;
           const targetUrl: string = `https://target.example/${randomUUID()}`;
-          const creation: Response = await fetch(
-            `${manager.strapiUrl}/content-manager/collection-types/api::redirect.redirect`,
+          const creation: Response = await manager.createDocument(
+            'api::redirect.redirect',
             {
-              method: 'POST',
-              headers: {
-                Authorization: `Bearer ${manager.context.admin.token}`,
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                sourceUrl: sourceUrl,
-                targetUrl: targetUrl,
-              }),
-              signal: testContext.signal,
+              sourceUrl: sourceUrl,
+              targetUrl: targetUrl,
             },
+            testContext,
           );
           assert.equal(creation.status, 201);
           z.object({ data: z.object({ publishedAt: z.null() }) }).parse(
@@ -243,38 +206,26 @@ describe('/redirect', (suiteContext: SuiteContext): void => {
           // given
           const sourceUrl: string = `https://source.example/${randomUUID()}`;
           const targetUrl: string = `https://target.example/${randomUUID()}`;
-          const creation: Response = await fetch(
-            `${manager.strapiUrl}/content-manager/collection-types/api::redirect.redirect/actions/publish`,
+          const creation: Response = await manager.publishDocument(
+            'api::redirect.redirect',
+            null,
             {
-              method: 'POST',
-              headers: {
-                Authorization: `Bearer ${manager.context.admin.token}`,
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                sourceUrl: sourceUrl,
-                targetUrl: targetUrl,
-              }),
-              signal: testContext.signal,
+              sourceUrl: sourceUrl,
+              targetUrl: targetUrl,
             },
+            testContext,
           );
           assert.equal(creation.status, 200);
           const published: { data: { documentId: string } } = z
             .object({ data: z.object({ documentId: z.string().min(1) }) })
             .parse(await creation.json());
-          const update: Response = await fetch(
-            `${manager.strapiUrl}/content-manager/collection-types/api::redirect.redirect/${published.data.documentId}`,
+          const update: Response = await manager.updateDocument(
+            'api::redirect.redirect',
+            published.data.documentId,
             {
-              method: 'PUT',
-              headers: {
-                Authorization: `Bearer ${manager.context.admin.token}`,
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                targetUrl: `https://draft.example/${randomUUID()}`,
-              }),
-              signal: testContext.signal,
+              targetUrl: `https://draft.example/${randomUUID()}`,
             },
+            testContext,
           );
           assert.equal(update.status, 200, await update.text());
 
@@ -296,39 +247,26 @@ describe('/redirect', (suiteContext: SuiteContext): void => {
           const sourceUrl: string = `https://source.example/${randomUUID()}`;
           const draftTarget: string = `https://draft.example/${randomUUID()}`;
           const publishedTarget: string = `https://published.example/${randomUUID()}`;
-          const draftCreation: Response = await fetch(
-            `${manager.strapiUrl}/content-manager/collection-types/api::redirect.redirect`,
+          const draftCreation: Response = await manager.createDocument(
+            'api::redirect.redirect',
             {
-              method: 'POST',
-              headers: {
-                Authorization: `Bearer ${manager.context.admin.token}`,
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                sourceUrl: sourceUrl,
-                targetUrl: draftTarget,
-              }),
-              signal: testContext.signal,
+              sourceUrl: sourceUrl,
+              targetUrl: draftTarget,
             },
+            testContext,
           );
           assert.equal(draftCreation.status, 201);
           z.object({ data: z.object({ publishedAt: z.null() }) }).parse(
             await draftCreation.json(),
           );
-          const publishedCreation: Response = await fetch(
-            `${manager.strapiUrl}/content-manager/collection-types/api::redirect.redirect/actions/publish`,
+          const publishedCreation: Response = await manager.publishDocument(
+            'api::redirect.redirect',
+            null,
             {
-              method: 'POST',
-              headers: {
-                Authorization: `Bearer ${manager.context.admin.token}`,
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                sourceUrl: sourceUrl,
-                targetUrl: publishedTarget,
-              }),
-              signal: testContext.signal,
+              sourceUrl: sourceUrl,
+              targetUrl: publishedTarget,
             },
+            testContext,
           );
           assert.equal(
             publishedCreation.status,
@@ -352,36 +290,24 @@ describe('/redirect', (suiteContext: SuiteContext): void => {
           const sourceUrl: string = `https://source.example/${randomUUID()}`;
           const firstTarget: string = `https://first.example/${randomUUID()}`;
           const secondTarget: string = `https://second.example/${randomUUID()}`;
-          const firstCreation: Response = await fetch(
-            `${manager.strapiUrl}/content-manager/collection-types/api::redirect.redirect/actions/publish`,
+          const firstCreation: Response = await manager.publishDocument(
+            'api::redirect.redirect',
+            null,
             {
-              method: 'POST',
-              headers: {
-                Authorization: `Bearer ${manager.context.admin.token}`,
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                sourceUrl: sourceUrl,
-                targetUrl: firstTarget,
-              }),
-              signal: testContext.signal,
+              sourceUrl: sourceUrl,
+              targetUrl: firstTarget,
             },
+            testContext,
           );
           assert.equal(firstCreation.status, 200, await firstCreation.text());
-          const secondCreation: Response = await fetch(
-            `${manager.strapiUrl}/content-manager/collection-types/api::redirect.redirect/actions/publish`,
+          const secondCreation: Response = await manager.publishDocument(
+            'api::redirect.redirect',
+            null,
             {
-              method: 'POST',
-              headers: {
-                Authorization: `Bearer ${manager.context.admin.token}`,
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                sourceUrl: sourceUrl,
-                targetUrl: secondTarget,
-              }),
-              signal: testContext.signal,
+              sourceUrl: sourceUrl,
+              targetUrl: secondTarget,
             },
+            testContext,
           );
           assert.equal(secondCreation.status, 200, await secondCreation.text());
 
@@ -404,36 +330,24 @@ describe('/redirect', (suiteContext: SuiteContext): void => {
           // given
           const sourceUrl: string = `https://source.example/${randomUUID()}`;
           const targetUrl: string = `https://target.example/${randomUUID()}`;
-          const firstCreation: Response = await fetch(
-            `${manager.strapiUrl}/content-manager/collection-types/api::redirect.redirect/actions/publish`,
+          const firstCreation: Response = await manager.publishDocument(
+            'api::redirect.redirect',
+            null,
             {
-              method: 'POST',
-              headers: {
-                Authorization: `Bearer ${manager.context.admin.token}`,
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                sourceUrl: sourceUrl,
-                targetUrl: targetUrl,
-              }),
-              signal: testContext.signal,
+              sourceUrl: sourceUrl,
+              targetUrl: targetUrl,
             },
+            testContext,
           );
           assert.equal(firstCreation.status, 200, await firstCreation.text());
-          const secondCreation: Response = await fetch(
-            `${manager.strapiUrl}/content-manager/collection-types/api::redirect.redirect/actions/publish`,
+          const secondCreation: Response = await manager.publishDocument(
+            'api::redirect.redirect',
+            null,
             {
-              method: 'POST',
-              headers: {
-                Authorization: `Bearer ${manager.context.admin.token}`,
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                sourceUrl: targetUrl,
-                targetUrl: 'https://final.example/destination',
-              }),
-              signal: testContext.signal,
+              sourceUrl: targetUrl,
+              targetUrl: 'https://final.example/destination',
             },
+            testContext,
           );
           assert.equal(secondCreation.status, 200, await secondCreation.text());
 

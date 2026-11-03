@@ -1,12 +1,11 @@
+import type { E2ETestApplicationUser } from '../../../../e2e/E2ETestApplicationUser';
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
 import type { SuiteContext, TestContext } from 'node:test';
 import { after, before, describe, test } from 'node:test';
 import z from 'zod';
 import { E2ETestManager } from '../../../../e2e/E2ETestManager';
-import type { E2ETestApplicationUser } from '../../../../e2e/E2ETestApplicationUser';
-import type { E2ETestApplicationProject } from '../../../../e2e/E2ETestApplicationProject';
-import type { E2ETestApplicationRoom } from '../../../../e2e/E2ETestApplicationRoom';
+
 import type { PostAuthResponseBodyDto } from '../auth/dto/PostAuthResponseBodyDto';
 import type { ProjectPageDto } from './dto/ProjectPageDto';
 import type { UserPreviewDto } from '../../../schema/dtos/UserPreviewDto';
@@ -57,23 +56,21 @@ describe('/project', (suiteContext: SuiteContext): void => {
     describe('201', (): void => {
       test('creates a project owned by the authenticated user', async (testContext: TestContext): Promise<void> => {
         // given
-        const owner: E2ETestApplicationUser = await manager.registerUser(
-          `e2e-${randomUUID()}`,
-          randomUUID(),
-          testContext,
-        );
+        const owner: E2ETestApplicationUser =
+          await manager.registerUser(testContext);
         const login: PostAuthResponseBodyDto = await manager.loginUser(
           owner.username,
           owner.password,
           testContext,
         );
+
         // when
         const response: Response = await fetch(`${manager.apiUrl}/project`, {
           method: 'POST',
-          headers: {
-            Authorization: `Bearer ${login.jwt}`,
-            'Content-Type': 'application/json',
-          },
+          headers: new Headers([
+            ['Authorization', `Bearer ${login.jwt}`],
+            ['Content-Type', 'application/json'],
+          ]),
           body: JSON.stringify({ title: 'Created Project' }),
           signal: testContext.signal,
         });
@@ -96,11 +93,8 @@ describe('/project', (suiteContext: SuiteContext): void => {
     describe('400', (): void => {
       test('rejects a missing title', async (testContext: TestContext): Promise<void> => {
         // given
-        const owner: E2ETestApplicationUser = await manager.registerUser(
-          `e2e-${randomUUID()}`,
-          randomUUID(),
-          testContext,
-        );
+        const owner: E2ETestApplicationUser =
+          await manager.registerUser(testContext);
         const login: PostAuthResponseBodyDto = await manager.loginUser(
           owner.username,
           owner.password,
@@ -110,10 +104,10 @@ describe('/project', (suiteContext: SuiteContext): void => {
         // when
         const response: Response = await fetch(`${manager.apiUrl}/project`, {
           method: 'POST',
-          headers: {
-            Authorization: `Bearer ${login.jwt}`,
-            'Content-Type': 'application/json',
-          },
+          headers: new Headers([
+            ['Authorization', `Bearer ${login.jwt}`],
+            ['Content-Type', 'application/json'],
+          ]),
           body: JSON.stringify({}),
           signal: testContext.signal,
         });
@@ -129,11 +123,8 @@ describe('/project', (suiteContext: SuiteContext): void => {
 
       test('rejects an empty title', async (testContext: TestContext): Promise<void> => {
         // given
-        const owner: E2ETestApplicationUser = await manager.registerUser(
-          `e2e-${randomUUID()}`,
-          randomUUID(),
-          testContext,
-        );
+        const owner: E2ETestApplicationUser =
+          await manager.registerUser(testContext);
         const login: PostAuthResponseBodyDto = await manager.loginUser(
           owner.username,
           owner.password,
@@ -143,10 +134,10 @@ describe('/project', (suiteContext: SuiteContext): void => {
         // when
         const response: Response = await fetch(`${manager.apiUrl}/project`, {
           method: 'POST',
-          headers: {
-            Authorization: `Bearer ${login.jwt}`,
-            'Content-Type': 'application/json',
-          },
+          headers: new Headers([
+            ['Authorization', `Bearer ${login.jwt}`],
+            ['Content-Type', 'application/json'],
+          ]),
           body: JSON.stringify({ title: '' }),
           signal: testContext.signal,
         });
@@ -162,11 +153,8 @@ describe('/project', (suiteContext: SuiteContext): void => {
 
       test('rejects a non-string title', async (testContext: TestContext): Promise<void> => {
         // given
-        const owner: E2ETestApplicationUser = await manager.registerUser(
-          `e2e-${randomUUID()}`,
-          randomUUID(),
-          testContext,
-        );
+        const owner: E2ETestApplicationUser =
+          await manager.registerUser(testContext);
         const login: PostAuthResponseBodyDto = await manager.loginUser(
           owner.username,
           owner.password,
@@ -176,10 +164,10 @@ describe('/project', (suiteContext: SuiteContext): void => {
         // when
         const response: Response = await fetch(`${manager.apiUrl}/project`, {
           method: 'POST',
-          headers: {
-            Authorization: `Bearer ${login.jwt}`,
-            'Content-Type': 'application/json',
-          },
+          headers: new Headers([
+            ['Authorization', `Bearer ${login.jwt}`],
+            ['Content-Type', 'application/json'],
+          ]),
           body: JSON.stringify({ title: 123 }),
           signal: testContext.signal,
         });
@@ -195,11 +183,8 @@ describe('/project', (suiteContext: SuiteContext): void => {
 
       test('rejects a null title', async (testContext: TestContext): Promise<void> => {
         // given
-        const owner: E2ETestApplicationUser = await manager.registerUser(
-          `e2e-${randomUUID()}`,
-          randomUUID(),
-          testContext,
-        );
+        const owner: E2ETestApplicationUser =
+          await manager.registerUser(testContext);
         const login: PostAuthResponseBodyDto = await manager.loginUser(
           owner.username,
           owner.password,
@@ -209,10 +194,10 @@ describe('/project', (suiteContext: SuiteContext): void => {
         // when
         const response: Response = await fetch(`${manager.apiUrl}/project`, {
           method: 'POST',
-          headers: {
-            Authorization: `Bearer ${login.jwt}`,
-            'Content-Type': 'application/json',
-          },
+          headers: new Headers([
+            ['Authorization', `Bearer ${login.jwt}`],
+            ['Content-Type', 'application/json'],
+          ]),
           body: JSON.stringify({ title: null }),
           signal: testContext.signal,
         });
@@ -228,11 +213,8 @@ describe('/project', (suiteContext: SuiteContext): void => {
 
       test('rejects unexpected properties', async (testContext: TestContext): Promise<void> => {
         // given
-        const owner: E2ETestApplicationUser = await manager.registerUser(
-          `e2e-${randomUUID()}`,
-          randomUUID(),
-          testContext,
-        );
+        const owner: E2ETestApplicationUser =
+          await manager.registerUser(testContext);
         const login: PostAuthResponseBodyDto = await manager.loginUser(
           owner.username,
           owner.password,
@@ -242,10 +224,10 @@ describe('/project', (suiteContext: SuiteContext): void => {
         // when
         const response: Response = await fetch(`${manager.apiUrl}/project`, {
           method: 'POST',
-          headers: {
-            Authorization: `Bearer ${login.jwt}`,
-            'Content-Type': 'application/json',
-          },
+          headers: new Headers([
+            ['Authorization', `Bearer ${login.jwt}`],
+            ['Content-Type', 'application/json'],
+          ]),
           body: JSON.stringify({ title: 'Test Project', unexpected: true }),
           signal: testContext.signal,
         });
@@ -264,7 +246,7 @@ describe('/project', (suiteContext: SuiteContext): void => {
         // when
         const response: Response = await fetch(`${manager.apiUrl}/project`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: new Headers([['Content-Type', 'application/json']]),
           body: JSON.stringify({ title: 'Test Project' }),
           signal: testContext.signal,
         });
@@ -282,10 +264,10 @@ describe('/project', (suiteContext: SuiteContext): void => {
         // when
         const response: Response = await fetch(`${manager.apiUrl}/project`, {
           method: 'POST',
-          headers: {
-            Authorization: 'Bearer invalid-jwt',
-            'Content-Type': 'application/json',
-          },
+          headers: new Headers([
+            ['Authorization', 'Bearer invalid-jwt'],
+            ['Content-Type', 'application/json'],
+          ]),
           body: JSON.stringify({ title: 'Test Project' }),
           signal: testContext.signal,
         });
@@ -305,22 +287,24 @@ describe('/project', (suiteContext: SuiteContext): void => {
       describe('200', (): void => {
         test('excludes draft rooms from a published project', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser = await manager.registerUser(
-            `e2e-${randomUUID()}`,
-            randomUUID(),
+          const owner: E2ETestApplicationUser =
+            await manager.registerUser(testContext);
+          const project: string = await manager.createPublishedDocument(
+            'api::project.project',
+            {
+              title: 'Published Project',
+              owner: owner.documentId,
+              collaborators: [],
+            },
             testContext,
           );
-          const project: E2ETestApplicationProject =
-            await manager.createProject(
-              'Published Project',
-              owner,
-              [],
-              testContext,
-            );
-          const room: E2ETestApplicationRoom = await manager.createRoom(
-            'Published Room',
-            RoomVisibilityDto.public,
-            project,
+          const room: string = await manager.createPublishedDocument(
+            'api::room.room',
+            {
+              title: 'Published Room',
+              visibility: RoomVisibilityDto.public,
+              project: project,
+            },
             testContext,
           );
           const login: PostAuthResponseBodyDto = await manager.loginUser(
@@ -328,29 +312,22 @@ describe('/project', (suiteContext: SuiteContext): void => {
             owner.password,
             testContext,
           );
-          const creation: Response = await fetch(
-            `${manager.strapiUrl}/content-manager/collection-types/api::room.room`,
+          const creation: Response = await manager.createDocument(
+            'api::room.room',
             {
-              method: 'POST',
-              headers: {
-                Authorization: `Bearer ${manager.context.admin.token}`,
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                title: 'Draft Room',
-                visibility: RoomVisibilityDto.public,
-                project: project.documentId,
-              }),
-              signal: testContext.signal,
+              title: 'Draft Room',
+              visibility: RoomVisibilityDto.public,
+              project: project,
             },
+            testContext,
           );
           assert.equal(creation.status, 201, await creation.text());
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project.documentId}`,
+            `${manager.apiUrl}/project/${project}`,
             {
-              headers: { Authorization: `Bearer ${login.jwt}` },
+              headers: new Headers([['Authorization', `Bearer ${login.jwt}`]]),
               signal: testContext.signal,
             },
           );
@@ -362,56 +339,40 @@ describe('/project', (suiteContext: SuiteContext): void => {
           );
           assert.deepEqual(
             body.rooms.map((item: RoomDto): string => item.id),
-            [room.documentId],
+            [room],
           );
         });
 
         test('published collaborator retains access after draft removal', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser = await manager.registerUser(
-            `e2e-${randomUUID()}`,
-            randomUUID(),
+          const owner: E2ETestApplicationUser =
+            await manager.registerUser(testContext);
+          const project: string = await manager.createPublishedDocument(
+            'api::project.project',
+            {
+              title: 'Published Project',
+              owner: owner.documentId,
+              collaborators: [],
+            },
             testContext,
           );
-          const project: E2ETestApplicationProject =
-            await manager.createProject(
-              'Published Project',
-              owner,
-              [],
-              testContext,
-            );
+
           const collaborator: E2ETestApplicationUser =
-            await manager.registerUser(
-              `e2e-${randomUUID()}`,
-              randomUUID(),
-              testContext,
-            );
-          const publication: Response = await fetch(
-            `${manager.strapiUrl}/content-manager/collection-types/api::project.project/${project.documentId}/actions/publish`,
+            await manager.registerUser(testContext);
+          const publication: Response = await manager.publishDocument(
+            'api::project.project',
+            project,
             {
-              method: 'POST',
-              headers: {
-                Authorization: `Bearer ${manager.context.admin.token}`,
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                collaborators: [collaborator.documentId],
-              }),
-              signal: testContext.signal,
+              collaborators: [collaborator.documentId],
             },
+            testContext,
           );
           assert.equal(publication.status, 200, await publication.text());
-          const update: Response = await fetch(
-            `${manager.strapiUrl}/content-manager/collection-types/api::project.project/${project.documentId}`,
-            {
-              method: 'PUT',
-              headers: {
-                Authorization: `Bearer ${manager.context.admin.token}`,
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({ title: 'Draft Title', collaborators: [] }),
-              signal: testContext.signal,
-            },
+          const update: Response = await manager.updateDocument(
+            'api::project.project',
+            project,
+            { title: 'Draft Title', collaborators: [] },
+            testContext,
           );
           assert.equal(update.status, 200, await update.text());
           const login: PostAuthResponseBodyDto = await manager.loginUser(
@@ -422,9 +383,9 @@ describe('/project', (suiteContext: SuiteContext): void => {
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project.documentId}`,
+            `${manager.apiUrl}/project/${project}`,
             {
-              headers: { Authorization: `Bearer ${login.jwt}` },
+              headers: new Headers([['Authorization', `Bearer ${login.jwt}`]]),
               signal: testContext.signal,
             },
           );
@@ -440,7 +401,7 @@ describe('/project', (suiteContext: SuiteContext): void => {
             [collaborator.documentId],
           );
           const startResponse: Response = await fetch(manager.apiUrl, {
-            headers: { Authorization: `Bearer ${login.jwt}` },
+            headers: new Headers([['Authorization', `Bearer ${login.jwt}`]]),
             signal: testContext.signal,
           });
           assert.equal(startResponse.status, 200);
@@ -454,19 +415,23 @@ describe('/project', (suiteContext: SuiteContext): void => {
             })
             .parse(await startResponse.json());
           assert.deepEqual(startBody.collaborationProjects, [
-            { id: project.documentId, title: project.title },
+            { id: project, title: 'Published Project' },
           ]);
         });
 
         test('owner can read the project', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser = await manager.registerUser(
-            `e2e-${randomUUID()}`,
-            randomUUID(),
+          const owner: E2ETestApplicationUser =
+            await manager.registerUser(testContext);
+          const project: string = await manager.createPublishedDocument(
+            'api::project.project',
+            {
+              title: 'Test Project',
+              owner: owner.documentId,
+              collaborators: [],
+            },
             testContext,
           );
-          const project: E2ETestApplicationProject =
-            await manager.createProject('Test Project', owner, [], testContext);
           const login: PostAuthResponseBodyDto = await manager.loginUser(
             owner.username,
             owner.password,
@@ -475,10 +440,10 @@ describe('/project', (suiteContext: SuiteContext): void => {
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project.documentId}`,
+            `${manager.apiUrl}/project/${project}`,
             {
               method: 'GET',
-              headers: { Authorization: `Bearer ${login.jwt}` },
+              headers: new Headers([['Authorization', `Bearer ${login.jwt}`]]),
               signal: testContext.signal,
             },
           );
@@ -489,8 +454,8 @@ describe('/project', (suiteContext: SuiteContext): void => {
             await response.json(),
           );
           assert.deepEqual(body, {
-            id: project.documentId,
-            title: project.title,
+            id: project,
+            title: 'Test Project',
             owner: { id: owner.documentId, displayName: owner.username },
             collaborators: [],
             databases: [],
@@ -502,24 +467,20 @@ describe('/project', (suiteContext: SuiteContext): void => {
 
         test('collaborator can read the project', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser = await manager.registerUser(
-            `e2e-${randomUUID()}`,
-            randomUUID(),
+          const owner: E2ETestApplicationUser =
+            await manager.registerUser(testContext);
+
+          const collaborator: E2ETestApplicationUser =
+            await manager.registerUser(testContext);
+          const project: string = await manager.createPublishedDocument(
+            'api::project.project',
+            {
+              title: 'Test Project',
+              owner: owner.documentId,
+              collaborators: [collaborator.documentId],
+            },
             testContext,
           );
-          const collaborator: E2ETestApplicationUser =
-            await manager.registerUser(
-              `e2e-${randomUUID()}`,
-              randomUUID(),
-              testContext,
-            );
-          const project: E2ETestApplicationProject =
-            await manager.createProject(
-              'Test Project',
-              owner,
-              [collaborator],
-              testContext,
-            );
           const login: PostAuthResponseBodyDto = await manager.loginUser(
             collaborator.username,
             collaborator.password,
@@ -528,10 +489,10 @@ describe('/project', (suiteContext: SuiteContext): void => {
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project.documentId}`,
+            `${manager.apiUrl}/project/${project}`,
             {
               method: 'GET',
-              headers: { Authorization: `Bearer ${login.jwt}` },
+              headers: new Headers([['Authorization', `Bearer ${login.jwt}`]]),
               signal: testContext.signal,
             },
           );
@@ -542,8 +503,8 @@ describe('/project', (suiteContext: SuiteContext): void => {
             await response.json(),
           );
           assert.deepEqual(body, {
-            id: project.documentId,
-            title: project.title,
+            id: project,
+            title: 'Test Project',
             owner: { id: owner.documentId, displayName: owner.username },
             collaborators: [
               {
@@ -560,44 +521,56 @@ describe('/project', (suiteContext: SuiteContext): void => {
 
         test('returns only rooms belonging to the project', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser = await manager.registerUser(
-            `e2e-${randomUUID()}`,
-            randomUUID(),
+          const owner: E2ETestApplicationUser =
+            await manager.registerUser(testContext);
+          const project: string = await manager.createPublishedDocument(
+            'api::project.project',
+            {
+              title: 'Test Project',
+              owner: owner.documentId,
+              collaborators: [],
+            },
             testContext,
           );
-          const project: E2ETestApplicationProject =
-            await manager.createProject('Test Project', owner, [], testContext);
           const login: PostAuthResponseBodyDto = await manager.loginUser(
             owner.username,
             owner.password,
             testContext,
           );
-          const room: E2ETestApplicationRoom = await manager.createRoom(
-            'Test Room',
-            RoomVisibilityDto.private,
-            project,
+          const room: string = await manager.createPublishedDocument(
+            'api::room.room',
+            {
+              title: 'Test Room',
+              visibility: RoomVisibilityDto.private,
+              project: project,
+            },
             testContext,
           );
-          const otherProject: E2ETestApplicationProject =
-            await manager.createProject(
-              'Other Project',
-              owner,
-              [],
-              testContext,
-            );
-          await manager.createRoom(
-            'Other Room',
-            RoomVisibilityDto.public,
-            otherProject,
+          const otherProject: string = await manager.createPublishedDocument(
+            'api::project.project',
+            {
+              title: 'Other Project',
+              owner: owner.documentId,
+              collaborators: [],
+            },
+            testContext,
+          );
+          await manager.createPublishedDocument(
+            'api::room.room',
+            {
+              title: 'Other Room',
+              visibility: RoomVisibilityDto.public,
+              project: otherProject,
+            },
             testContext,
           );
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project.documentId}`,
+            `${manager.apiUrl}/project/${project}`,
             {
               method: 'GET',
-              headers: { Authorization: `Bearer ${login.jwt}` },
+              headers: new Headers([['Authorization', `Bearer ${login.jwt}`]]),
               signal: testContext.signal,
             },
           );
@@ -608,10 +581,10 @@ describe('/project', (suiteContext: SuiteContext): void => {
             await response.json(),
           );
           assert.equal(body.rooms.length, 1);
-          assert.equal(body.rooms[0].id, room.documentId);
-          assert.equal(body.rooms[0].title, room.title);
+          assert.equal(body.rooms[0].id, room);
+          assert.equal(body.rooms[0].title, 'Test Room');
           assert.equal(body.rooms[0].visibility, RoomVisibilityDto.private);
-          assert.equal(body.rooms[0].projectId, project.documentId);
+          assert.equal(body.rooms[0].projectId, project);
           assert.equal(body.rooms[0].canvases.length, 1);
           assert.equal(
             body.rooms[0].joinCanvasId,
@@ -624,38 +597,28 @@ describe('/project', (suiteContext: SuiteContext): void => {
       describe('403', (): void => {
         test('draft collaborator has no access', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser = await manager.registerUser(
-            `e2e-${randomUUID()}`,
-            randomUUID(),
+          const owner: E2ETestApplicationUser =
+            await manager.registerUser(testContext);
+          const project: string = await manager.createPublishedDocument(
+            'api::project.project',
+            {
+              title: 'Published Project',
+              owner: owner.documentId,
+              collaborators: [],
+            },
             testContext,
           );
-          const project: E2ETestApplicationProject =
-            await manager.createProject(
-              'Published Project',
-              owner,
-              [],
-              testContext,
-            );
+
           const collaborator: E2ETestApplicationUser =
-            await manager.registerUser(
-              `e2e-${randomUUID()}`,
-              randomUUID(),
-              testContext,
-            );
-          const update: Response = await fetch(
-            `${manager.strapiUrl}/content-manager/collection-types/api::project.project/${project.documentId}`,
+            await manager.registerUser(testContext);
+          const update: Response = await manager.updateDocument(
+            'api::project.project',
+            project,
             {
-              method: 'PUT',
-              headers: {
-                Authorization: `Bearer ${manager.context.admin.token}`,
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                title: 'Draft Title',
-                collaborators: [collaborator.documentId],
-              }),
-              signal: testContext.signal,
+              title: 'Draft Title',
+              collaborators: [collaborator.documentId],
             },
+            testContext,
           );
           assert.equal(update.status, 200, await update.text());
           const login: PostAuthResponseBodyDto = await manager.loginUser(
@@ -666,9 +629,9 @@ describe('/project', (suiteContext: SuiteContext): void => {
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project.documentId}`,
+            `${manager.apiUrl}/project/${project}`,
             {
-              headers: { Authorization: `Bearer ${login.jwt}` },
+              headers: new Headers([['Authorization', `Bearer ${login.jwt}`]]),
               signal: testContext.signal,
             },
           );
@@ -676,7 +639,7 @@ describe('/project', (suiteContext: SuiteContext): void => {
           // then
           assert.equal(response.status, 403);
           const startResponse: Response = await fetch(manager.apiUrl, {
-            headers: { Authorization: `Bearer ${login.jwt}` },
+            headers: new Headers([['Authorization', `Bearer ${login.jwt}`]]),
             signal: testContext.signal,
           });
           assert.equal(startResponse.status, 200);
@@ -694,39 +657,38 @@ describe('/project', (suiteContext: SuiteContext): void => {
 
         test('rejects other project owner access', async (testContext: TestContext): Promise<void> => {
           // given
-          const actor: E2ETestApplicationUser = await manager.registerUser(
-            `e2e-${randomUUID()}`,
-            randomUUID(),
+          const actor: E2ETestApplicationUser =
+            await manager.registerUser(testContext);
+
+          const owner: E2ETestApplicationUser =
+            await manager.registerUser(testContext);
+          const sourceProject: string = await manager.createPublishedDocument(
+            'api::project.project',
+            {
+              title: 'Source Project',
+              owner: actor.documentId,
+              collaborators: [],
+            },
             testContext,
           );
-          const owner: E2ETestApplicationUser = await manager.registerUser(
-            `e2e-${randomUUID()}`,
-            randomUUID(),
+          const project: string = await manager.createPublishedDocument(
+            'api::project.project',
+            {
+              title: 'Target Project',
+              owner: owner.documentId,
+              collaborators: [],
+            },
             testContext,
           );
-          const sourceProject: E2ETestApplicationProject =
-            await manager.createProject(
-              'Source Project',
-              actor,
-              [],
-              testContext,
-            );
-          const project: E2ETestApplicationProject =
-            await manager.createProject(
-              'Target Project',
-              owner,
-              [],
-              testContext,
-            );
           const login: PostAuthResponseBodyDto = await manager.loginUser(
             actor.username,
             actor.password,
             testContext,
           );
           const authorized: Response = await fetch(
-            `${manager.apiUrl}/project/${sourceProject.documentId}`,
+            `${manager.apiUrl}/project/${sourceProject}`,
             {
-              headers: { Authorization: `Bearer ${login.jwt}` },
+              headers: new Headers([['Authorization', `Bearer ${login.jwt}`]]),
               signal: testContext.signal,
             },
           );
@@ -735,10 +697,10 @@ describe('/project', (suiteContext: SuiteContext): void => {
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project.documentId}`,
+            `${manager.apiUrl}/project/${project}`,
             {
               method: 'GET',
-              headers: { Authorization: `Bearer ${login.jwt}` },
+              headers: new Headers([['Authorization', `Bearer ${login.jwt}`]]),
               signal: testContext.signal,
             },
           );
@@ -754,45 +716,41 @@ describe('/project', (suiteContext: SuiteContext): void => {
 
         test('rejects other project collaborator access', async (testContext: TestContext): Promise<void> => {
           // given
-          const actor: E2ETestApplicationUser = await manager.registerUser(
-            `e2e-${randomUUID()}`,
-            randomUUID(),
-            testContext,
-          );
-          const owner: E2ETestApplicationUser = await manager.registerUser(
-            `e2e-${randomUUID()}`,
-            randomUUID(),
-            testContext,
-          );
+          const actor: E2ETestApplicationUser =
+            await manager.registerUser(testContext);
+
+          const owner: E2ETestApplicationUser =
+            await manager.registerUser(testContext);
+
           const sourceOwner: E2ETestApplicationUser =
-            await manager.registerUser(
-              `e2e-${randomUUID()}`,
-              randomUUID(),
-              testContext,
-            );
-          const sourceProject: E2ETestApplicationProject =
-            await manager.createProject(
-              'Source Project',
-              sourceOwner,
-              [actor],
-              testContext,
-            );
-          const project: E2ETestApplicationProject =
-            await manager.createProject(
-              'Target Project',
-              owner,
-              [],
-              testContext,
-            );
+            await manager.registerUser(testContext);
+          const sourceProject: string = await manager.createPublishedDocument(
+            'api::project.project',
+            {
+              title: 'Source Project',
+              owner: sourceOwner.documentId,
+              collaborators: [actor.documentId],
+            },
+            testContext,
+          );
+          const project: string = await manager.createPublishedDocument(
+            'api::project.project',
+            {
+              title: 'Target Project',
+              owner: owner.documentId,
+              collaborators: [],
+            },
+            testContext,
+          );
           const login: PostAuthResponseBodyDto = await manager.loginUser(
             actor.username,
             actor.password,
             testContext,
           );
           const authorized: Response = await fetch(
-            `${manager.apiUrl}/project/${sourceProject.documentId}`,
+            `${manager.apiUrl}/project/${sourceProject}`,
             {
-              headers: { Authorization: `Bearer ${login.jwt}` },
+              headers: new Headers([['Authorization', `Bearer ${login.jwt}`]]),
               signal: testContext.signal,
             },
           );
@@ -801,10 +759,10 @@ describe('/project', (suiteContext: SuiteContext): void => {
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project.documentId}`,
+            `${manager.apiUrl}/project/${project}`,
             {
               method: 'GET',
-              headers: { Authorization: `Bearer ${login.jwt}` },
+              headers: new Headers([['Authorization', `Bearer ${login.jwt}`]]),
               signal: testContext.signal,
             },
           );
@@ -822,24 +780,20 @@ describe('/project', (suiteContext: SuiteContext): void => {
           // Move this test when there is a custom route for revoking access.
 
           // given
-          const owner: E2ETestApplicationUser = await manager.registerUser(
-            `e2e-${randomUUID()}`,
-            randomUUID(),
+          const owner: E2ETestApplicationUser =
+            await manager.registerUser(testContext);
+
+          const collaborator: E2ETestApplicationUser =
+            await manager.registerUser(testContext);
+          const project: string = await manager.createPublishedDocument(
+            'api::project.project',
+            {
+              title: 'Test Project',
+              owner: owner.documentId,
+              collaborators: [collaborator.documentId],
+            },
             testContext,
           );
-          const collaborator: E2ETestApplicationUser =
-            await manager.registerUser(
-              `e2e-${randomUUID()}`,
-              randomUUID(),
-              testContext,
-            );
-          const project: E2ETestApplicationProject =
-            await manager.createProject(
-              'Test Project',
-              owner,
-              [collaborator],
-              testContext,
-            );
           const login: PostAuthResponseBodyDto = await manager.loginUser(
             collaborator.username,
             collaborator.password,
@@ -851,9 +805,9 @@ describe('/project', (suiteContext: SuiteContext): void => {
             testContext,
           );
           const authorized: Response = await fetch(
-            `${manager.apiUrl}/project/${project.documentId}`,
+            `${manager.apiUrl}/project/${project}`,
             {
-              headers: { Authorization: `Bearer ${login.jwt}` },
+              headers: new Headers([['Authorization', `Bearer ${login.jwt}`]]),
               signal: testContext.signal,
             },
           );
@@ -867,23 +821,19 @@ describe('/project', (suiteContext: SuiteContext): void => {
               },
             ],
           );
-          const removal: Response = await fetch(
-            `${manager.strapiUrl}/content-manager/collection-types/api::project.project/${project.documentId}/actions/publish`,
-            {
-              method: 'POST',
-              headers: {
-                Authorization: `Bearer ${manager.context.admin.token}`,
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({ collaborators: [] }),
-              signal: testContext.signal,
-            },
+          const removal: Response = await manager.publishDocument(
+            'api::project.project',
+            project,
+            { collaborators: [] },
+            testContext,
           );
           assert.equal(removal.status, 200, await removal.text());
           const revoked: Response = await fetch(
-            `${manager.apiUrl}/project/${project.documentId}`,
+            `${manager.apiUrl}/project/${project}`,
             {
-              headers: { Authorization: `Bearer ${ownerLogin.jwt}` },
+              headers: new Headers([
+                ['Authorization', `Bearer ${ownerLogin.jwt}`],
+              ]),
               signal: testContext.signal,
             },
           );
@@ -895,10 +845,10 @@ describe('/project', (suiteContext: SuiteContext): void => {
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project.documentId}`,
+            `${manager.apiUrl}/project/${project}`,
             {
               method: 'GET',
-              headers: { Authorization: `Bearer ${login.jwt}` },
+              headers: new Headers([['Authorization', `Bearer ${login.jwt}`]]),
               signal: testContext.signal,
             },
           );
@@ -914,20 +864,24 @@ describe('/project', (suiteContext: SuiteContext): void => {
 
         test('rejects anonymous access', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser = await manager.registerUser(
-            `e2e-${randomUUID()}`,
-            randomUUID(),
+          const owner: E2ETestApplicationUser =
+            await manager.registerUser(testContext);
+          const project: string = await manager.createPublishedDocument(
+            'api::project.project',
+            {
+              title: 'Test Project',
+              owner: owner.documentId,
+              collaborators: [],
+            },
             testContext,
           );
-          const project: E2ETestApplicationProject =
-            await manager.createProject('Test Project', owner, [], testContext);
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project.documentId}`,
+            `${manager.apiUrl}/project/${project}`,
             {
               method: 'GET',
-              headers: {},
+              headers: new Headers([]),
               signal: testContext.signal,
             },
           );
@@ -943,20 +897,24 @@ describe('/project', (suiteContext: SuiteContext): void => {
 
         test('rejects invalid jwt access', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser = await manager.registerUser(
-            `e2e-${randomUUID()}`,
-            randomUUID(),
+          const owner: E2ETestApplicationUser =
+            await manager.registerUser(testContext);
+          const project: string = await manager.createPublishedDocument(
+            'api::project.project',
+            {
+              title: 'Test Project',
+              owner: owner.documentId,
+              collaborators: [],
+            },
             testContext,
           );
-          const project: E2ETestApplicationProject =
-            await manager.createProject('Test Project', owner, [], testContext);
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project.documentId}`,
+            `${manager.apiUrl}/project/${project}`,
             {
               method: 'GET',
-              headers: { Authorization: 'Bearer invalid-jwt' },
+              headers: new Headers([['Authorization', 'Bearer invalid-jwt']]),
               signal: testContext.signal,
             },
           );
@@ -972,18 +930,20 @@ describe('/project', (suiteContext: SuiteContext): void => {
 
         test('rejects outsider access', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser = await manager.registerUser(
-            `e2e-${randomUUID()}`,
-            randomUUID(),
+          const owner: E2ETestApplicationUser =
+            await manager.registerUser(testContext);
+
+          const outsider: E2ETestApplicationUser =
+            await manager.registerUser(testContext);
+          const project: string = await manager.createPublishedDocument(
+            'api::project.project',
+            {
+              title: 'Test Project',
+              owner: owner.documentId,
+              collaborators: [],
+            },
             testContext,
           );
-          const outsider: E2ETestApplicationUser = await manager.registerUser(
-            `e2e-${randomUUID()}`,
-            randomUUID(),
-            testContext,
-          );
-          const project: E2ETestApplicationProject =
-            await manager.createProject('Test Project', owner, [], testContext);
           const login: PostAuthResponseBodyDto = await manager.loginUser(
             outsider.username,
             outsider.password,
@@ -992,10 +952,10 @@ describe('/project', (suiteContext: SuiteContext): void => {
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project.documentId}`,
+            `${manager.apiUrl}/project/${project}`,
             {
               method: 'GET',
-              headers: { Authorization: `Bearer ${login.jwt}` },
+              headers: new Headers([['Authorization', `Bearer ${login.jwt}`]]),
               signal: testContext.signal,
             },
           );
@@ -1011,36 +971,41 @@ describe('/project', (suiteContext: SuiteContext): void => {
 
         test('public rooms do not grant outsiders project access', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser = await manager.registerUser(
-            `e2e-${randomUUID()}`,
-            randomUUID(),
+          const owner: E2ETestApplicationUser =
+            await manager.registerUser(testContext);
+
+          const outsider: E2ETestApplicationUser =
+            await manager.registerUser(testContext);
+          const project: string = await manager.createPublishedDocument(
+            'api::project.project',
+            {
+              title: 'Test Project',
+              owner: owner.documentId,
+              collaborators: [],
+            },
             testContext,
           );
-          const outsider: E2ETestApplicationUser = await manager.registerUser(
-            `e2e-${randomUUID()}`,
-            randomUUID(),
-            testContext,
-          );
-          const project: E2ETestApplicationProject =
-            await manager.createProject('Test Project', owner, [], testContext);
           const login: PostAuthResponseBodyDto = await manager.loginUser(
             outsider.username,
             outsider.password,
             testContext,
           );
-          await manager.createRoom(
-            'Public Room',
-            RoomVisibilityDto.public,
-            project,
+          await manager.createPublishedDocument(
+            'api::room.room',
+            {
+              title: 'Public Room',
+              visibility: RoomVisibilityDto.public,
+              project: project,
+            },
             testContext,
           );
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project.documentId}`,
+            `${manager.apiUrl}/project/${project}`,
             {
               method: 'GET',
-              headers: { Authorization: `Bearer ${login.jwt}` },
+              headers: new Headers([['authorization', `Bearer ${login.jwt}`]]),
               signal: testContext.signal,
             },
           );
@@ -1057,25 +1022,15 @@ describe('/project', (suiteContext: SuiteContext): void => {
       describe('404', (): void => {
         test('rejects a draft project even for its owner', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser = await manager.registerUser(
-            `e2e-${randomUUID()}`,
-            randomUUID(),
-            testContext,
-          );
-          const creation: Response = await fetch(
-            `${manager.strapiUrl}/content-manager/collection-types/api::project.project`,
+          const owner: E2ETestApplicationUser =
+            await manager.registerUser(testContext);
+          const creation: Response = await manager.createDocument(
+            'api::project.project',
             {
-              method: 'POST',
-              headers: {
-                Authorization: `Bearer ${manager.context.admin.token}`,
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                title: 'Draft Project',
-                owner: owner.documentId,
-              }),
-              signal: testContext.signal,
+              title: 'Draft Project',
+              owner: owner.documentId,
             },
+            testContext,
           );
           assert.equal(creation.status, 201);
           const draft: { data: { documentId: string; publishedAt: null } } = z
@@ -1097,7 +1052,7 @@ describe('/project', (suiteContext: SuiteContext): void => {
             `${manager.apiUrl}/project/${draft.data.documentId}`,
             {
               method: 'GET',
-              headers: { Authorization: `Bearer ${login.jwt}` },
+              headers: new Headers([['Authorization', `Bearer ${login.jwt}`]]),
               signal: testContext.signal,
             },
           );
@@ -1112,11 +1067,8 @@ describe('/project', (suiteContext: SuiteContext): void => {
 
         test('rejects an unknown project', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser = await manager.registerUser(
-            `e2e-${randomUUID()}`,
-            randomUUID(),
-            testContext,
-          );
+          const owner: E2ETestApplicationUser =
+            await manager.registerUser(testContext);
           const login: PostAuthResponseBodyDto = await manager.loginUser(
             owner.username,
             owner.password,
@@ -1128,7 +1080,7 @@ describe('/project', (suiteContext: SuiteContext): void => {
             `${manager.apiUrl}/project/${randomUUID()}`,
             {
               method: 'GET',
-              headers: { Authorization: `Bearer ${login.jwt}` },
+              headers: new Headers([['Authorization', `Bearer ${login.jwt}`]]),
               signal: testContext.signal,
             },
           );
@@ -1147,13 +1099,17 @@ describe('/project', (suiteContext: SuiteContext): void => {
       describe('200', (): void => {
         test('owner can update the title', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser = await manager.registerUser(
-            `e2e-${randomUUID()}`,
-            randomUUID(),
+          const owner: E2ETestApplicationUser =
+            await manager.registerUser(testContext);
+          const project: string = await manager.createPublishedDocument(
+            'api::project.project',
+            {
+              title: 'Test Project',
+              owner: owner.documentId,
+              collaborators: [],
+            },
             testContext,
           );
-          const project: E2ETestApplicationProject =
-            await manager.createProject('Test Project', owner, [], testContext);
           const login: PostAuthResponseBodyDto = await manager.loginUser(
             owner.username,
             owner.password,
@@ -1162,32 +1118,33 @@ describe('/project', (suiteContext: SuiteContext): void => {
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project.documentId}`,
+            `${manager.apiUrl}/project/${project}`,
             {
               method: 'PUT',
-              headers: {
-                Authorization: `Bearer ${login.jwt}`,
-                'Content-Type': 'application/json',
-              },
+              headers: new Headers([
+                ['Authorization', `Bearer ${login.jwt}`],
+                ['Content-Type', 'application/json'],
+              ]),
               body: JSON.stringify({ title: 'Changed Project' }),
-              signal: testContext.signal,
-            },
-          );
-          const persisted: Response = await fetch(
-            `${manager.apiUrl}/project/${project.documentId}`,
-            {
-              headers: { Authorization: `Bearer ${login.jwt}` },
               signal: testContext.signal,
             },
           );
 
           // then
+          const persisted: Response = await fetch(
+            `${manager.apiUrl}/project/${project}`,
+            {
+              headers: new Headers([['Authorization', `Bearer ${login.jwt}`]]),
+              signal: testContext.signal,
+            },
+          );
+
           assert.equal(response.status, 200);
           const body: ProjectPageDto = projectSchema.parse(
             await response.json(),
           );
           assert.deepEqual(body, {
-            id: project.documentId,
+            id: project,
             title: 'Changed Project',
             owner: { id: owner.documentId, displayName: owner.username },
             collaborators: [],
@@ -1202,24 +1159,20 @@ describe('/project', (suiteContext: SuiteContext): void => {
 
         test('collaborator can update the title', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser = await manager.registerUser(
-            `e2e-${randomUUID()}`,
-            randomUUID(),
+          const owner: E2ETestApplicationUser =
+            await manager.registerUser(testContext);
+
+          const collaborator: E2ETestApplicationUser =
+            await manager.registerUser(testContext);
+          const project: string = await manager.createPublishedDocument(
+            'api::project.project',
+            {
+              title: 'Test Project',
+              owner: owner.documentId,
+              collaborators: [collaborator.documentId],
+            },
             testContext,
           );
-          const collaborator: E2ETestApplicationUser =
-            await manager.registerUser(
-              `e2e-${randomUUID()}`,
-              randomUUID(),
-              testContext,
-            );
-          const project: E2ETestApplicationProject =
-            await manager.createProject(
-              'Test Project',
-              owner,
-              [collaborator],
-              testContext,
-            );
           const login: PostAuthResponseBodyDto = await manager.loginUser(
             collaborator.username,
             collaborator.password,
@@ -1228,32 +1181,33 @@ describe('/project', (suiteContext: SuiteContext): void => {
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project.documentId}`,
+            `${manager.apiUrl}/project/${project}`,
             {
               method: 'PUT',
-              headers: {
-                Authorization: `Bearer ${login.jwt}`,
-                'Content-Type': 'application/json',
-              },
+              headers: new Headers([
+                ['Authorization', `Bearer ${login.jwt}`],
+                ['Content-Type', 'application/json'],
+              ]),
               body: JSON.stringify({ title: 'Changed Project' }),
-              signal: testContext.signal,
-            },
-          );
-          const persisted: Response = await fetch(
-            `${manager.apiUrl}/project/${project.documentId}`,
-            {
-              headers: { Authorization: `Bearer ${login.jwt}` },
               signal: testContext.signal,
             },
           );
 
           // then
+          const persisted: Response = await fetch(
+            `${manager.apiUrl}/project/${project}`,
+            {
+              headers: new Headers([['Authorization', `Bearer ${login.jwt}`]]),
+              signal: testContext.signal,
+            },
+          );
+
           assert.equal(response.status, 200);
           const body: ProjectPageDto = projectSchema.parse(
             await response.json(),
           );
           assert.deepEqual(body, {
-            id: project.documentId,
+            id: project,
             title: 'Changed Project',
             owner: { id: owner.documentId, displayName: owner.username },
             collaborators: [
@@ -1274,13 +1228,17 @@ describe('/project', (suiteContext: SuiteContext): void => {
       describe('400', (): void => {
         test('rejects a missing title', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser = await manager.registerUser(
-            `e2e-${randomUUID()}`,
-            randomUUID(),
+          const owner: E2ETestApplicationUser =
+            await manager.registerUser(testContext);
+          const project: string = await manager.createPublishedDocument(
+            'api::project.project',
+            {
+              title: 'Test Project',
+              owner: owner.documentId,
+              collaborators: [],
+            },
             testContext,
           );
-          const project: E2ETestApplicationProject =
-            await manager.createProject('Test Project', owner, [], testContext);
           const login: PostAuthResponseBodyDto = await manager.loginUser(
             owner.username,
             owner.password,
@@ -1289,26 +1247,27 @@ describe('/project', (suiteContext: SuiteContext): void => {
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project.documentId}`,
+            `${manager.apiUrl}/project/${project}`,
             {
               method: 'PUT',
-              headers: {
-                Authorization: `Bearer ${login.jwt}`,
-                'Content-Type': 'application/json',
-              },
+              headers: new Headers([
+                ['Authorization', `Bearer ${login.jwt}`],
+                ['Content-Type', 'application/json'],
+              ]),
               body: JSON.stringify({}),
-              signal: testContext.signal,
-            },
-          );
-          const unchanged: Response = await fetch(
-            `${manager.apiUrl}/project/${project.documentId}`,
-            {
-              headers: { Authorization: `Bearer ${login.jwt}` },
               signal: testContext.signal,
             },
           );
 
           // then
+          const unchanged: Response = await fetch(
+            `${manager.apiUrl}/project/${project}`,
+            {
+              headers: new Headers([['Authorization', `Bearer ${login.jwt}`]]),
+              signal: testContext.signal,
+            },
+          );
+
           assert.equal(response.status, 400);
           assert.deepEqual(await response.json(), {
             statusCode: 400,
@@ -1317,8 +1276,8 @@ describe('/project', (suiteContext: SuiteContext): void => {
           });
           assert.equal(unchanged.status, 200);
           assert.deepEqual(await unchanged.json(), {
-            id: project.documentId,
-            title: project.title,
+            id: project,
+            title: 'Test Project',
             owner: { id: owner.documentId, displayName: owner.username },
             collaborators: [],
             databases: [],
@@ -1330,13 +1289,17 @@ describe('/project', (suiteContext: SuiteContext): void => {
 
         test('rejects an empty title', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser = await manager.registerUser(
-            `e2e-${randomUUID()}`,
-            randomUUID(),
+          const owner: E2ETestApplicationUser =
+            await manager.registerUser(testContext);
+          const project: string = await manager.createPublishedDocument(
+            'api::project.project',
+            {
+              title: 'Test Project',
+              owner: owner.documentId,
+              collaborators: [],
+            },
             testContext,
           );
-          const project: E2ETestApplicationProject =
-            await manager.createProject('Test Project', owner, [], testContext);
           const login: PostAuthResponseBodyDto = await manager.loginUser(
             owner.username,
             owner.password,
@@ -1345,26 +1308,27 @@ describe('/project', (suiteContext: SuiteContext): void => {
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project.documentId}`,
+            `${manager.apiUrl}/project/${project}`,
             {
               method: 'PUT',
-              headers: {
-                Authorization: `Bearer ${login.jwt}`,
-                'Content-Type': 'application/json',
-              },
+              headers: new Headers([
+                ['Authorization', `Bearer ${login.jwt}`],
+                ['Content-Type', 'application/json'],
+              ]),
               body: JSON.stringify({ title: '' }),
-              signal: testContext.signal,
-            },
-          );
-          const unchanged: Response = await fetch(
-            `${manager.apiUrl}/project/${project.documentId}`,
-            {
-              headers: { Authorization: `Bearer ${login.jwt}` },
               signal: testContext.signal,
             },
           );
 
           // then
+          const unchanged: Response = await fetch(
+            `${manager.apiUrl}/project/${project}`,
+            {
+              headers: new Headers([['Authorization', `Bearer ${login.jwt}`]]),
+              signal: testContext.signal,
+            },
+          );
+
           assert.equal(response.status, 400);
           assert.deepEqual(await response.json(), {
             statusCode: 400,
@@ -1373,8 +1337,8 @@ describe('/project', (suiteContext: SuiteContext): void => {
           });
           assert.equal(unchanged.status, 200);
           assert.deepEqual(await unchanged.json(), {
-            id: project.documentId,
-            title: project.title,
+            id: project,
+            title: 'Test Project',
             owner: { id: owner.documentId, displayName: owner.username },
             collaborators: [],
             databases: [],
@@ -1386,13 +1350,17 @@ describe('/project', (suiteContext: SuiteContext): void => {
 
         test('rejects a non-string title', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser = await manager.registerUser(
-            `e2e-${randomUUID()}`,
-            randomUUID(),
+          const owner: E2ETestApplicationUser =
+            await manager.registerUser(testContext);
+          const project: string = await manager.createPublishedDocument(
+            'api::project.project',
+            {
+              title: 'Test Project',
+              owner: owner.documentId,
+              collaborators: [],
+            },
             testContext,
           );
-          const project: E2ETestApplicationProject =
-            await manager.createProject('Test Project', owner, [], testContext);
           const login: PostAuthResponseBodyDto = await manager.loginUser(
             owner.username,
             owner.password,
@@ -1401,26 +1369,27 @@ describe('/project', (suiteContext: SuiteContext): void => {
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project.documentId}`,
+            `${manager.apiUrl}/project/${project}`,
             {
               method: 'PUT',
-              headers: {
-                Authorization: `Bearer ${login.jwt}`,
-                'Content-Type': 'application/json',
-              },
+              headers: new Headers([
+                ['Authorization', `Bearer ${login.jwt}`],
+                ['Content-Type', 'application/json'],
+              ]),
               body: JSON.stringify({ title: 123 }),
-              signal: testContext.signal,
-            },
-          );
-          const unchanged: Response = await fetch(
-            `${manager.apiUrl}/project/${project.documentId}`,
-            {
-              headers: { Authorization: `Bearer ${login.jwt}` },
               signal: testContext.signal,
             },
           );
 
           // then
+          const unchanged: Response = await fetch(
+            `${manager.apiUrl}/project/${project}`,
+            {
+              headers: new Headers([['Authorization', `Bearer ${login.jwt}`]]),
+              signal: testContext.signal,
+            },
+          );
+
           assert.equal(response.status, 400);
           assert.deepEqual(await response.json(), {
             statusCode: 400,
@@ -1429,8 +1398,8 @@ describe('/project', (suiteContext: SuiteContext): void => {
           });
           assert.equal(unchanged.status, 200);
           assert.deepEqual(await unchanged.json(), {
-            id: project.documentId,
-            title: project.title,
+            id: project,
+            title: 'Test Project',
             owner: { id: owner.documentId, displayName: owner.username },
             collaborators: [],
             databases: [],
@@ -1442,13 +1411,17 @@ describe('/project', (suiteContext: SuiteContext): void => {
 
         test('rejects a null title', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser = await manager.registerUser(
-            `e2e-${randomUUID()}`,
-            randomUUID(),
+          const owner: E2ETestApplicationUser =
+            await manager.registerUser(testContext);
+          const project: string = await manager.createPublishedDocument(
+            'api::project.project',
+            {
+              title: 'Test Project',
+              owner: owner.documentId,
+              collaborators: [],
+            },
             testContext,
           );
-          const project: E2ETestApplicationProject =
-            await manager.createProject('Test Project', owner, [], testContext);
           const login: PostAuthResponseBodyDto = await manager.loginUser(
             owner.username,
             owner.password,
@@ -1457,26 +1430,27 @@ describe('/project', (suiteContext: SuiteContext): void => {
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project.documentId}`,
+            `${manager.apiUrl}/project/${project}`,
             {
               method: 'PUT',
-              headers: {
-                Authorization: `Bearer ${login.jwt}`,
-                'Content-Type': 'application/json',
-              },
+              headers: new Headers([
+                ['Authorization', `Bearer ${login.jwt}`],
+                ['Content-Type', 'application/json'],
+              ]),
               body: JSON.stringify({ title: null }),
-              signal: testContext.signal,
-            },
-          );
-          const unchanged: Response = await fetch(
-            `${manager.apiUrl}/project/${project.documentId}`,
-            {
-              headers: { Authorization: `Bearer ${login.jwt}` },
               signal: testContext.signal,
             },
           );
 
           // then
+          const unchanged: Response = await fetch(
+            `${manager.apiUrl}/project/${project}`,
+            {
+              headers: new Headers([['Authorization', `Bearer ${login.jwt}`]]),
+              signal: testContext.signal,
+            },
+          );
+
           assert.equal(response.status, 400);
           assert.deepEqual(await response.json(), {
             statusCode: 400,
@@ -1485,8 +1459,8 @@ describe('/project', (suiteContext: SuiteContext): void => {
           });
           assert.equal(unchanged.status, 200);
           assert.deepEqual(await unchanged.json(), {
-            id: project.documentId,
-            title: project.title,
+            id: project,
+            title: 'Test Project',
             owner: { id: owner.documentId, displayName: owner.username },
             collaborators: [],
             databases: [],
@@ -1498,13 +1472,17 @@ describe('/project', (suiteContext: SuiteContext): void => {
 
         test('rejects unexpected properties', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser = await manager.registerUser(
-            `e2e-${randomUUID()}`,
-            randomUUID(),
+          const owner: E2ETestApplicationUser =
+            await manager.registerUser(testContext);
+          const project: string = await manager.createPublishedDocument(
+            'api::project.project',
+            {
+              title: 'Test Project',
+              owner: owner.documentId,
+              collaborators: [],
+            },
             testContext,
           );
-          const project: E2ETestApplicationProject =
-            await manager.createProject('Test Project', owner, [], testContext);
           const login: PostAuthResponseBodyDto = await manager.loginUser(
             owner.username,
             owner.password,
@@ -1513,26 +1491,27 @@ describe('/project', (suiteContext: SuiteContext): void => {
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project.documentId}`,
+            `${manager.apiUrl}/project/${project}`,
             {
               method: 'PUT',
-              headers: {
-                Authorization: `Bearer ${login.jwt}`,
-                'Content-Type': 'application/json',
-              },
+              headers: new Headers([
+                ['Authorization', `Bearer ${login.jwt}`],
+                ['Content-Type', 'application/json'],
+              ]),
               body: JSON.stringify({ title: 'Test Project', unexpected: true }),
-              signal: testContext.signal,
-            },
-          );
-          const unchanged: Response = await fetch(
-            `${manager.apiUrl}/project/${project.documentId}`,
-            {
-              headers: { Authorization: `Bearer ${login.jwt}` },
               signal: testContext.signal,
             },
           );
 
           // then
+          const unchanged: Response = await fetch(
+            `${manager.apiUrl}/project/${project}`,
+            {
+              headers: new Headers([['Authorization', `Bearer ${login.jwt}`]]),
+              signal: testContext.signal,
+            },
+          );
+
           assert.equal(response.status, 400);
           assert.deepEqual(await response.json(), {
             statusCode: 400,
@@ -1541,8 +1520,8 @@ describe('/project', (suiteContext: SuiteContext): void => {
           });
           assert.equal(unchanged.status, 200);
           assert.deepEqual(await unchanged.json(), {
-            id: project.documentId,
-            title: project.title,
+            id: project,
+            title: 'Test Project',
             owner: { id: owner.documentId, displayName: owner.username },
             collaborators: [],
             databases: [],
@@ -1555,39 +1534,38 @@ describe('/project', (suiteContext: SuiteContext): void => {
       describe('403', (): void => {
         test('rejects other project owner access', async (testContext: TestContext): Promise<void> => {
           // given
-          const actor: E2ETestApplicationUser = await manager.registerUser(
-            `e2e-${randomUUID()}`,
-            randomUUID(),
+          const actor: E2ETestApplicationUser =
+            await manager.registerUser(testContext);
+
+          const owner: E2ETestApplicationUser =
+            await manager.registerUser(testContext);
+          const sourceProject: string = await manager.createPublishedDocument(
+            'api::project.project',
+            {
+              title: 'Source Project',
+              owner: actor.documentId,
+              collaborators: [],
+            },
             testContext,
           );
-          const owner: E2ETestApplicationUser = await manager.registerUser(
-            `e2e-${randomUUID()}`,
-            randomUUID(),
+          const project: string = await manager.createPublishedDocument(
+            'api::project.project',
+            {
+              title: 'Target Project',
+              owner: owner.documentId,
+              collaborators: [],
+            },
             testContext,
           );
-          const sourceProject: E2ETestApplicationProject =
-            await manager.createProject(
-              'Source Project',
-              actor,
-              [],
-              testContext,
-            );
-          const project: E2ETestApplicationProject =
-            await manager.createProject(
-              'Target Project',
-              owner,
-              [],
-              testContext,
-            );
           const login: PostAuthResponseBodyDto = await manager.loginUser(
             actor.username,
             actor.password,
             testContext,
           );
           const authorized: Response = await fetch(
-            `${manager.apiUrl}/project/${sourceProject.documentId}`,
+            `${manager.apiUrl}/project/${sourceProject}`,
             {
-              headers: { Authorization: `Bearer ${login.jwt}` },
+              headers: new Headers([['Authorization', `Bearer ${login.jwt}`]]),
               signal: testContext.signal,
             },
           );
@@ -1601,26 +1579,29 @@ describe('/project', (suiteContext: SuiteContext): void => {
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project.documentId}`,
+            `${manager.apiUrl}/project/${project}`,
             {
               method: 'PUT',
-              headers: {
-                Authorization: `Bearer ${login.jwt}`,
-                'Content-Type': 'application/json',
-              },
+              headers: new Headers([
+                ['Authorization', `Bearer ${login.jwt}`],
+                ['Content-Type', 'application/json'],
+              ]),
               body: JSON.stringify({ title: 'Unauthorized Change' }),
-              signal: testContext.signal,
-            },
-          );
-          const unchanged: Response = await fetch(
-            `${manager.apiUrl}/project/${project.documentId}`,
-            {
-              headers: { Authorization: `Bearer ${ownerLogin.jwt}` },
               signal: testContext.signal,
             },
           );
 
           // then
+          const unchanged: Response = await fetch(
+            `${manager.apiUrl}/project/${project}`,
+            {
+              headers: new Headers([
+                ['Authorization', `Bearer ${ownerLogin.jwt}`],
+              ]),
+              signal: testContext.signal,
+            },
+          );
+
           assert.equal(response.status, 403);
           assert.deepEqual(await response.json(), {
             statusCode: 403,
@@ -1629,8 +1610,8 @@ describe('/project', (suiteContext: SuiteContext): void => {
           });
           assert.equal(unchanged.status, 200);
           assert.deepEqual(await unchanged.json(), {
-            id: project.documentId,
-            title: project.title,
+            id: project,
+            title: 'Target Project',
             owner: { id: owner.documentId, displayName: owner.username },
             collaborators: [],
             databases: [],
@@ -1642,45 +1623,41 @@ describe('/project', (suiteContext: SuiteContext): void => {
 
         test('rejects other project collaborator access', async (testContext: TestContext): Promise<void> => {
           // given
-          const actor: E2ETestApplicationUser = await manager.registerUser(
-            `e2e-${randomUUID()}`,
-            randomUUID(),
-            testContext,
-          );
-          const owner: E2ETestApplicationUser = await manager.registerUser(
-            `e2e-${randomUUID()}`,
-            randomUUID(),
-            testContext,
-          );
+          const actor: E2ETestApplicationUser =
+            await manager.registerUser(testContext);
+
+          const owner: E2ETestApplicationUser =
+            await manager.registerUser(testContext);
+
           const sourceOwner: E2ETestApplicationUser =
-            await manager.registerUser(
-              `e2e-${randomUUID()}`,
-              randomUUID(),
-              testContext,
-            );
-          const sourceProject: E2ETestApplicationProject =
-            await manager.createProject(
-              'Source Project',
-              sourceOwner,
-              [actor],
-              testContext,
-            );
-          const project: E2ETestApplicationProject =
-            await manager.createProject(
-              'Target Project',
-              owner,
-              [],
-              testContext,
-            );
+            await manager.registerUser(testContext);
+          const sourceProject: string = await manager.createPublishedDocument(
+            'api::project.project',
+            {
+              title: 'Source Project',
+              owner: sourceOwner.documentId,
+              collaborators: [actor.documentId],
+            },
+            testContext,
+          );
+          const project: string = await manager.createPublishedDocument(
+            'api::project.project',
+            {
+              title: 'Target Project',
+              owner: owner.documentId,
+              collaborators: [],
+            },
+            testContext,
+          );
           const login: PostAuthResponseBodyDto = await manager.loginUser(
             actor.username,
             actor.password,
             testContext,
           );
           const authorized: Response = await fetch(
-            `${manager.apiUrl}/project/${sourceProject.documentId}`,
+            `${manager.apiUrl}/project/${sourceProject}`,
             {
-              headers: { Authorization: `Bearer ${login.jwt}` },
+              headers: new Headers([['Authorization', `Bearer ${login.jwt}`]]),
               signal: testContext.signal,
             },
           );
@@ -1694,26 +1671,29 @@ describe('/project', (suiteContext: SuiteContext): void => {
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project.documentId}`,
+            `${manager.apiUrl}/project/${project}`,
             {
               method: 'PUT',
-              headers: {
-                Authorization: `Bearer ${login.jwt}`,
-                'Content-Type': 'application/json',
-              },
+              headers: new Headers([
+                ['Authorization', `Bearer ${login.jwt}`],
+                ['Content-Type', 'application/json'],
+              ]),
               body: JSON.stringify({ title: 'Unauthorized Change' }),
-              signal: testContext.signal,
-            },
-          );
-          const unchanged: Response = await fetch(
-            `${manager.apiUrl}/project/${project.documentId}`,
-            {
-              headers: { Authorization: `Bearer ${ownerLogin.jwt}` },
               signal: testContext.signal,
             },
           );
 
           // then
+          const unchanged: Response = await fetch(
+            `${manager.apiUrl}/project/${project}`,
+            {
+              headers: new Headers([
+                ['Authorization', `Bearer ${ownerLogin.jwt}`],
+              ]),
+              signal: testContext.signal,
+            },
+          );
+
           assert.equal(response.status, 403);
           assert.deepEqual(await response.json(), {
             statusCode: 403,
@@ -1722,8 +1702,8 @@ describe('/project', (suiteContext: SuiteContext): void => {
           });
           assert.equal(unchanged.status, 200);
           assert.deepEqual(await unchanged.json(), {
-            id: project.documentId,
-            title: project.title,
+            id: project,
+            title: 'Target Project',
             owner: { id: owner.documentId, displayName: owner.username },
             collaborators: [],
             databases: [],
@@ -1735,24 +1715,20 @@ describe('/project', (suiteContext: SuiteContext): void => {
 
         test('rejects removed collaborator access', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser = await manager.registerUser(
-            `e2e-${randomUUID()}`,
-            randomUUID(),
+          const owner: E2ETestApplicationUser =
+            await manager.registerUser(testContext);
+
+          const collaborator: E2ETestApplicationUser =
+            await manager.registerUser(testContext);
+          const project: string = await manager.createPublishedDocument(
+            'api::project.project',
+            {
+              title: 'Test Project',
+              owner: owner.documentId,
+              collaborators: [collaborator.documentId],
+            },
             testContext,
           );
-          const collaborator: E2ETestApplicationUser =
-            await manager.registerUser(
-              `e2e-${randomUUID()}`,
-              randomUUID(),
-              testContext,
-            );
-          const project: E2ETestApplicationProject =
-            await manager.createProject(
-              'Test Project',
-              owner,
-              [collaborator],
-              testContext,
-            );
           const login: PostAuthResponseBodyDto = await manager.loginUser(
             collaborator.username,
             collaborator.password,
@@ -1764,9 +1740,9 @@ describe('/project', (suiteContext: SuiteContext): void => {
             testContext,
           );
           const authorized: Response = await fetch(
-            `${manager.apiUrl}/project/${project.documentId}`,
+            `${manager.apiUrl}/project/${project}`,
             {
-              headers: { Authorization: `Bearer ${login.jwt}` },
+              headers: new Headers([['Authorization', `Bearer ${login.jwt}`]]),
               signal: testContext.signal,
             },
           );
@@ -1780,23 +1756,19 @@ describe('/project', (suiteContext: SuiteContext): void => {
               },
             ],
           );
-          const removal: Response = await fetch(
-            `${manager.strapiUrl}/content-manager/collection-types/api::project.project/${project.documentId}/actions/publish`,
-            {
-              method: 'POST',
-              headers: {
-                Authorization: `Bearer ${manager.context.admin.token}`,
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({ collaborators: [] }),
-              signal: testContext.signal,
-            },
+          const removal: Response = await manager.publishDocument(
+            'api::project.project',
+            project,
+            { collaborators: [] },
+            testContext,
           );
           assert.equal(removal.status, 200, await removal.text());
           const revoked: Response = await fetch(
-            `${manager.apiUrl}/project/${project.documentId}`,
+            `${manager.apiUrl}/project/${project}`,
             {
-              headers: { Authorization: `Bearer ${ownerLogin.jwt}` },
+              headers: new Headers([
+                ['Authorization', `Bearer ${ownerLogin.jwt}`],
+              ]),
               signal: testContext.signal,
             },
           );
@@ -1808,26 +1780,29 @@ describe('/project', (suiteContext: SuiteContext): void => {
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project.documentId}`,
+            `${manager.apiUrl}/project/${project}`,
             {
               method: 'PUT',
-              headers: {
-                Authorization: `Bearer ${login.jwt}`,
-                'Content-Type': 'application/json',
-              },
+              headers: new Headers([
+                ['Authorization', `Bearer ${login.jwt}`],
+                ['Content-Type', 'application/json'],
+              ]),
               body: JSON.stringify({ title: 'Unauthorized Change' }),
-              signal: testContext.signal,
-            },
-          );
-          const unchanged: Response = await fetch(
-            `${manager.apiUrl}/project/${project.documentId}`,
-            {
-              headers: { Authorization: `Bearer ${ownerLogin.jwt}` },
               signal: testContext.signal,
             },
           );
 
           // then
+          const unchanged: Response = await fetch(
+            `${manager.apiUrl}/project/${project}`,
+            {
+              headers: new Headers([
+                ['Authorization', `Bearer ${ownerLogin.jwt}`],
+              ]),
+              signal: testContext.signal,
+            },
+          );
+
           assert.equal(response.status, 403);
           assert.deepEqual(await response.json(), {
             statusCode: 403,
@@ -1836,8 +1811,8 @@ describe('/project', (suiteContext: SuiteContext): void => {
           });
           assert.equal(unchanged.status, 200);
           assert.deepEqual(await unchanged.json(), {
-            id: project.documentId,
-            title: project.title,
+            id: project,
+            title: 'Test Project',
             owner: { id: owner.documentId, displayName: owner.username },
             collaborators: [],
             databases: [],
@@ -1849,13 +1824,17 @@ describe('/project', (suiteContext: SuiteContext): void => {
 
         test('rejects anonymous access', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser = await manager.registerUser(
-            `e2e-${randomUUID()}`,
-            randomUUID(),
+          const owner: E2ETestApplicationUser =
+            await manager.registerUser(testContext);
+          const project: string = await manager.createPublishedDocument(
+            'api::project.project',
+            {
+              title: 'Test Project',
+              owner: owner.documentId,
+              collaborators: [],
+            },
             testContext,
           );
-          const project: E2ETestApplicationProject =
-            await manager.createProject('Test Project', owner, [], testContext);
           const login: PostAuthResponseBodyDto = await manager.loginUser(
             owner.username,
             owner.password,
@@ -1864,23 +1843,24 @@ describe('/project', (suiteContext: SuiteContext): void => {
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project.documentId}`,
+            `${manager.apiUrl}/project/${project}`,
             {
               method: 'PUT',
-              headers: { 'Content-Type': 'application/json' },
+              headers: new Headers([['Content-Type', 'application/json']]),
               body: JSON.stringify({ title: 'Changed Project' }),
-              signal: testContext.signal,
-            },
-          );
-          const unchanged: Response = await fetch(
-            `${manager.apiUrl}/project/${project.documentId}`,
-            {
-              headers: { Authorization: `Bearer ${login.jwt}` },
               signal: testContext.signal,
             },
           );
 
           // then
+          const unchanged: Response = await fetch(
+            `${manager.apiUrl}/project/${project}`,
+            {
+              headers: new Headers([['Authorization', `Bearer ${login.jwt}`]]),
+              signal: testContext.signal,
+            },
+          );
+
           assert.equal(response.status, 403);
           assert.deepEqual(await response.json(), {
             statusCode: 403,
@@ -1889,8 +1869,8 @@ describe('/project', (suiteContext: SuiteContext): void => {
           });
           assert.equal(unchanged.status, 200);
           assert.deepEqual(await unchanged.json(), {
-            id: project.documentId,
-            title: project.title,
+            id: project,
+            title: 'Test Project',
             owner: { id: owner.documentId, displayName: owner.username },
             collaborators: [],
             databases: [],
@@ -1902,13 +1882,17 @@ describe('/project', (suiteContext: SuiteContext): void => {
 
         test('rejects invalid jwt access', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser = await manager.registerUser(
-            `e2e-${randomUUID()}`,
-            randomUUID(),
+          const owner: E2ETestApplicationUser =
+            await manager.registerUser(testContext);
+          const project: string = await manager.createPublishedDocument(
+            'api::project.project',
+            {
+              title: 'Test Project',
+              owner: owner.documentId,
+              collaborators: [],
+            },
             testContext,
           );
-          const project: E2ETestApplicationProject =
-            await manager.createProject('Test Project', owner, [], testContext);
           const login: PostAuthResponseBodyDto = await manager.loginUser(
             owner.username,
             owner.password,
@@ -1917,26 +1901,27 @@ describe('/project', (suiteContext: SuiteContext): void => {
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project.documentId}`,
+            `${manager.apiUrl}/project/${project}`,
             {
               method: 'PUT',
-              headers: {
-                Authorization: 'Bearer invalid-jwt',
-                'Content-Type': 'application/json',
-              },
+              headers: new Headers([
+                ['Authorization', 'Bearer invalid-jwt'],
+                ['Content-Type', 'application/json'],
+              ]),
               body: JSON.stringify({ title: 'Changed Project' }),
-              signal: testContext.signal,
-            },
-          );
-          const unchanged: Response = await fetch(
-            `${manager.apiUrl}/project/${project.documentId}`,
-            {
-              headers: { Authorization: `Bearer ${login.jwt}` },
               signal: testContext.signal,
             },
           );
 
           // then
+          const unchanged: Response = await fetch(
+            `${manager.apiUrl}/project/${project}`,
+            {
+              headers: new Headers([['Authorization', `Bearer ${login.jwt}`]]),
+              signal: testContext.signal,
+            },
+          );
+
           assert.equal(response.status, 403);
           assert.deepEqual(await response.json(), {
             statusCode: 403,
@@ -1945,8 +1930,8 @@ describe('/project', (suiteContext: SuiteContext): void => {
           });
           assert.equal(unchanged.status, 200);
           assert.deepEqual(await unchanged.json(), {
-            id: project.documentId,
-            title: project.title,
+            id: project,
+            title: 'Test Project',
             owner: { id: owner.documentId, displayName: owner.username },
             collaborators: [],
             databases: [],
@@ -1958,18 +1943,20 @@ describe('/project', (suiteContext: SuiteContext): void => {
 
         test('rejects outsider access', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser = await manager.registerUser(
-            `e2e-${randomUUID()}`,
-            randomUUID(),
+          const owner: E2ETestApplicationUser =
+            await manager.registerUser(testContext);
+
+          const outsider: E2ETestApplicationUser =
+            await manager.registerUser(testContext);
+          const project: string = await manager.createPublishedDocument(
+            'api::project.project',
+            {
+              title: 'Test Project',
+              owner: owner.documentId,
+              collaborators: [],
+            },
             testContext,
           );
-          const outsider: E2ETestApplicationUser = await manager.registerUser(
-            `e2e-${randomUUID()}`,
-            randomUUID(),
-            testContext,
-          );
-          const project: E2ETestApplicationProject =
-            await manager.createProject('Test Project', owner, [], testContext);
           const login: PostAuthResponseBodyDto = await manager.loginUser(
             outsider.username,
             outsider.password,
@@ -1983,26 +1970,29 @@ describe('/project', (suiteContext: SuiteContext): void => {
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project.documentId}`,
+            `${manager.apiUrl}/project/${project}`,
             {
               method: 'PUT',
-              headers: {
-                Authorization: `Bearer ${login.jwt}`,
-                'Content-Type': 'application/json',
-              },
+              headers: new Headers([
+                ['Authorization', `Bearer ${login.jwt}`],
+                ['Content-Type', 'application/json'],
+              ]),
               body: JSON.stringify({ title: 'Changed Project' }),
-              signal: testContext.signal,
-            },
-          );
-          const unchanged: Response = await fetch(
-            `${manager.apiUrl}/project/${project.documentId}`,
-            {
-              headers: { Authorization: `Bearer ${ownerLogin.jwt}` },
               signal: testContext.signal,
             },
           );
 
           // then
+          const unchanged: Response = await fetch(
+            `${manager.apiUrl}/project/${project}`,
+            {
+              headers: new Headers([
+                ['Authorization', `Bearer ${ownerLogin.jwt}`],
+              ]),
+              signal: testContext.signal,
+            },
+          );
+
           assert.equal(response.status, 403);
           assert.deepEqual(await response.json(), {
             statusCode: 403,
@@ -2011,8 +2001,8 @@ describe('/project', (suiteContext: SuiteContext): void => {
           });
           assert.equal(unchanged.status, 200);
           assert.deepEqual(await unchanged.json(), {
-            id: project.documentId,
-            title: project.title,
+            id: project,
+            title: 'Test Project',
             owner: { id: owner.documentId, displayName: owner.username },
             collaborators: [],
             databases: [],
@@ -2025,25 +2015,15 @@ describe('/project', (suiteContext: SuiteContext): void => {
       describe('404', (): void => {
         test('rejects a draft project even for its owner', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser = await manager.registerUser(
-            `e2e-${randomUUID()}`,
-            randomUUID(),
-            testContext,
-          );
-          const creation: Response = await fetch(
-            `${manager.strapiUrl}/content-manager/collection-types/api::project.project`,
+          const owner: E2ETestApplicationUser =
+            await manager.registerUser(testContext);
+          const creation: Response = await manager.createDocument(
+            'api::project.project',
             {
-              method: 'POST',
-              headers: {
-                Authorization: `Bearer ${manager.context.admin.token}`,
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                title: 'Draft Project',
-                owner: owner.documentId,
-              }),
-              signal: testContext.signal,
+              title: 'Draft Project',
+              owner: owner.documentId,
             },
+            testContext,
           );
           assert.equal(creation.status, 201);
           const draft: { data: { documentId: string; publishedAt: null } } = z
@@ -2065,10 +2045,10 @@ describe('/project', (suiteContext: SuiteContext): void => {
             `${manager.apiUrl}/project/${draft.data.documentId}`,
             {
               method: 'PUT',
-              headers: {
-                Authorization: `Bearer ${login.jwt}`,
-                'Content-Type': 'application/json',
-              },
+              headers: new Headers([
+                ['Authorization', `Bearer ${login.jwt}`],
+                ['Content-Type', 'application/json'],
+              ]),
               body: JSON.stringify({ title: 'Changed Project' }),
               signal: testContext.signal,
             },
@@ -2080,14 +2060,10 @@ describe('/project', (suiteContext: SuiteContext): void => {
             statusCode: 404,
             message: 'Not Found',
           });
-          const storedDraft: Response = await fetch(
-            `${manager.strapiUrl}/content-manager/collection-types/api::project.project/${draft.data.documentId}`,
-            {
-              headers: {
-                Authorization: `Bearer ${manager.context.admin.token}`,
-              },
-              signal: testContext.signal,
-            },
+          const storedDraft: Response = await manager.readDocument(
+            'api::project.project',
+            draft.data.documentId,
+            testContext,
           );
           assert.equal(storedDraft.status, 200);
           z.object({
@@ -2101,11 +2077,8 @@ describe('/project', (suiteContext: SuiteContext): void => {
 
         test('rejects an unknown project', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser = await manager.registerUser(
-            `e2e-${randomUUID()}`,
-            randomUUID(),
-            testContext,
-          );
+          const owner: E2ETestApplicationUser =
+            await manager.registerUser(testContext);
           const login: PostAuthResponseBodyDto = await manager.loginUser(
             owner.username,
             owner.password,
@@ -2117,10 +2090,10 @@ describe('/project', (suiteContext: SuiteContext): void => {
             `${manager.apiUrl}/project/${randomUUID()}`,
             {
               method: 'PUT',
-              headers: {
-                Authorization: `Bearer ${login.jwt}`,
-                'Content-Type': 'application/json',
-              },
+              headers: new Headers([
+                ['Authorization', `Bearer ${login.jwt}`],
+                ['Content-Type', 'application/json'],
+              ]),
               body: JSON.stringify({ title: 'Changed Project' }),
               signal: testContext.signal,
             },
@@ -2140,34 +2113,34 @@ describe('/project', (suiteContext: SuiteContext): void => {
       describe('200', (): void => {
         test('owner can delete the project', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser = await manager.registerUser(
-            `e2e-${randomUUID()}`,
-            randomUUID(),
-            testContext,
-          );
-          const project: E2ETestApplicationProject =
-            await manager.createProject('Test Project', owner, [], testContext);
-          const room: E2ETestApplicationRoom = await manager.createRoom(
-            'Project Room',
-            RoomVisibilityDto.private,
-            project,
-            testContext,
-          );
-          const draftCreation: Response = await fetch(
-            `${manager.strapiUrl}/content-manager/collection-types/api::room.room`,
+          const owner: E2ETestApplicationUser =
+            await manager.registerUser(testContext);
+          const project: string = await manager.createPublishedDocument(
+            'api::project.project',
             {
-              method: 'POST',
-              headers: {
-                Authorization: `Bearer ${manager.context.admin.token}`,
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                title: 'Draft Project Room',
-                visibility: RoomVisibilityDto.private,
-                project: project.documentId,
-              }),
-              signal: testContext.signal,
+              title: 'Test Project',
+              owner: owner.documentId,
+              collaborators: [],
             },
+            testContext,
+          );
+          const room: string = await manager.createPublishedDocument(
+            'api::room.room',
+            {
+              title: 'Project Room',
+              visibility: RoomVisibilityDto.private,
+              project: project,
+            },
+            testContext,
+          );
+          const draftCreation: Response = await manager.createDocument(
+            'api::room.room',
+            {
+              title: 'Draft Project Room',
+              visibility: RoomVisibilityDto.private,
+              project: project,
+            },
+            testContext,
           );
           assert.equal(draftCreation.status, 201);
           const draft: { data: { documentId: string; publishedAt: null } } = z
@@ -2178,30 +2151,29 @@ describe('/project', (suiteContext: SuiteContext): void => {
               }),
             })
             .parse(await draftCreation.json());
-          const otherProject: E2ETestApplicationProject =
-            await manager.createProject(
-              'Other Project',
-              owner,
-              [],
-              testContext,
-            );
-          const otherRoom: E2ETestApplicationRoom = await manager.createRoom(
-            'Other Room',
-            RoomVisibilityDto.private,
-            otherProject,
+          const otherProject: string = await manager.createPublishedDocument(
+            'api::project.project',
+            {
+              title: 'Other Project',
+              owner: owner.documentId,
+              collaborators: [],
+            },
             testContext,
           );
-          const draftReassignment: Response = await fetch(
-            `${manager.strapiUrl}/content-manager/collection-types/api::room.room/${otherRoom.documentId}`,
+          const otherRoom: string = await manager.createPublishedDocument(
+            'api::room.room',
             {
-              method: 'PUT',
-              headers: {
-                Authorization: `Bearer ${manager.context.admin.token}`,
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({ project: project.documentId }),
-              signal: testContext.signal,
+              title: 'Other Room',
+              visibility: RoomVisibilityDto.private,
+              project: otherProject,
             },
+            testContext,
+          );
+          const draftReassignment: Response = await manager.updateDocument(
+            'api::room.room',
+            otherRoom,
+            { project: project },
+            testContext,
           );
           assert.equal(
             draftReassignment.status,
@@ -2216,10 +2188,10 @@ describe('/project', (suiteContext: SuiteContext): void => {
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project.documentId}`,
+            `${manager.apiUrl}/project/${project}`,
             {
               method: 'DELETE',
-              headers: { Authorization: `Bearer ${login.jwt}` },
+              headers: new Headers([['Authorization', `Bearer ${login.jwt}`]]),
               signal: testContext.signal,
             },
           );
@@ -2228,9 +2200,9 @@ describe('/project', (suiteContext: SuiteContext): void => {
           assert.equal(response.status, 200);
           assert.equal(await response.text(), '');
           const deleted: Response = await fetch(
-            `${manager.apiUrl}/project/${project.documentId}`,
+            `${manager.apiUrl}/project/${project}`,
             {
-              headers: { Authorization: `Bearer ${login.jwt}` },
+              headers: new Headers([['Authorization', `Bearer ${login.jwt}`]]),
               signal: testContext.signal,
             },
           );
@@ -2240,38 +2212,26 @@ describe('/project', (suiteContext: SuiteContext): void => {
             statusCode: 404,
             message: 'Not Found',
           });
-          const deletedRoom: Response = await fetch(
-            `${manager.strapiUrl}/content-manager/collection-types/api::room.room/${room.documentId}`,
-            {
-              headers: {
-                Authorization: `Bearer ${manager.context.admin.token}`,
-              },
-              signal: testContext.signal,
-            },
+          const deletedRoom: Response = await manager.readDocument(
+            'api::room.room',
+            room,
+            testContext,
           );
           assert.equal(deletedRoom.status, 404, await deletedRoom.text());
-          const deletedDraftRoom: Response = await fetch(
-            `${manager.strapiUrl}/content-manager/collection-types/api::room.room/${draft.data.documentId}`,
-            {
-              headers: {
-                Authorization: `Bearer ${manager.context.admin.token}`,
-              },
-              signal: testContext.signal,
-            },
+          const deletedDraftRoom: Response = await manager.readDocument(
+            'api::room.room',
+            draft.data.documentId,
+            testContext,
           );
           assert.equal(
             deletedDraftRoom.status,
             404,
             await deletedDraftRoom.text(),
           );
-          const deletedReassignedRoom: Response = await fetch(
-            `${manager.strapiUrl}/content-manager/collection-types/api::room.room/${otherRoom.documentId}`,
-            {
-              headers: {
-                Authorization: `Bearer ${manager.context.admin.token}`,
-              },
-              signal: testContext.signal,
-            },
+          const deletedReassignedRoom: Response = await manager.readDocument(
+            'api::room.room',
+            otherRoom,
+            testContext,
           );
           assert.equal(
             deletedReassignedRoom.status,
@@ -2282,24 +2242,20 @@ describe('/project', (suiteContext: SuiteContext): void => {
 
         test('collaborator can delete the project', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser = await manager.registerUser(
-            `e2e-${randomUUID()}`,
-            randomUUID(),
+          const owner: E2ETestApplicationUser =
+            await manager.registerUser(testContext);
+
+          const collaborator: E2ETestApplicationUser =
+            await manager.registerUser(testContext);
+          const project: string = await manager.createPublishedDocument(
+            'api::project.project',
+            {
+              title: 'Test Project',
+              owner: owner.documentId,
+              collaborators: [collaborator.documentId],
+            },
             testContext,
           );
-          const collaborator: E2ETestApplicationUser =
-            await manager.registerUser(
-              `e2e-${randomUUID()}`,
-              randomUUID(),
-              testContext,
-            );
-          const project: E2ETestApplicationProject =
-            await manager.createProject(
-              'Test Project',
-              owner,
-              [collaborator],
-              testContext,
-            );
           const login: PostAuthResponseBodyDto = await manager.loginUser(
             collaborator.username,
             collaborator.password,
@@ -2308,22 +2264,23 @@ describe('/project', (suiteContext: SuiteContext): void => {
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project.documentId}`,
+            `${manager.apiUrl}/project/${project}`,
             {
               method: 'DELETE',
-              headers: { Authorization: `Bearer ${login.jwt}` },
-              signal: testContext.signal,
-            },
-          );
-          const deleted: Response = await fetch(
-            `${manager.apiUrl}/project/${project.documentId}`,
-            {
-              headers: { Authorization: `Bearer ${login.jwt}` },
+              headers: new Headers([['Authorization', `Bearer ${login.jwt}`]]),
               signal: testContext.signal,
             },
           );
 
           // then
+          const deleted: Response = await fetch(
+            `${manager.apiUrl}/project/${project}`,
+            {
+              headers: new Headers([['Authorization', `Bearer ${login.jwt}`]]),
+              signal: testContext.signal,
+            },
+          );
+
           assert.equal(response.status, 200);
           assert.equal(await response.text(), '');
           assert.equal(deleted.status, 404);
@@ -2337,39 +2294,38 @@ describe('/project', (suiteContext: SuiteContext): void => {
       describe('403', (): void => {
         test('rejects other project owner access', async (testContext: TestContext): Promise<void> => {
           // given
-          const actor: E2ETestApplicationUser = await manager.registerUser(
-            `e2e-${randomUUID()}`,
-            randomUUID(),
+          const actor: E2ETestApplicationUser =
+            await manager.registerUser(testContext);
+
+          const owner: E2ETestApplicationUser =
+            await manager.registerUser(testContext);
+          const sourceProject: string = await manager.createPublishedDocument(
+            'api::project.project',
+            {
+              title: 'Source Project',
+              owner: actor.documentId,
+              collaborators: [],
+            },
             testContext,
           );
-          const owner: E2ETestApplicationUser = await manager.registerUser(
-            `e2e-${randomUUID()}`,
-            randomUUID(),
+          const project: string = await manager.createPublishedDocument(
+            'api::project.project',
+            {
+              title: 'Target Project',
+              owner: owner.documentId,
+              collaborators: [],
+            },
             testContext,
           );
-          const sourceProject: E2ETestApplicationProject =
-            await manager.createProject(
-              'Source Project',
-              actor,
-              [],
-              testContext,
-            );
-          const project: E2ETestApplicationProject =
-            await manager.createProject(
-              'Target Project',
-              owner,
-              [],
-              testContext,
-            );
           const login: PostAuthResponseBodyDto = await manager.loginUser(
             actor.username,
             actor.password,
             testContext,
           );
           const authorized: Response = await fetch(
-            `${manager.apiUrl}/project/${sourceProject.documentId}`,
+            `${manager.apiUrl}/project/${sourceProject}`,
             {
-              headers: { Authorization: `Bearer ${login.jwt}` },
+              headers: new Headers([['Authorization', `Bearer ${login.jwt}`]]),
               signal: testContext.signal,
             },
           );
@@ -2383,22 +2339,25 @@ describe('/project', (suiteContext: SuiteContext): void => {
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project.documentId}`,
+            `${manager.apiUrl}/project/${project}`,
             {
               method: 'DELETE',
-              headers: { Authorization: `Bearer ${login.jwt}` },
-              signal: testContext.signal,
-            },
-          );
-          const unchanged: Response = await fetch(
-            `${manager.apiUrl}/project/${project.documentId}`,
-            {
-              headers: { Authorization: `Bearer ${ownerLogin.jwt}` },
+              headers: new Headers([['Authorization', `Bearer ${login.jwt}`]]),
               signal: testContext.signal,
             },
           );
 
           // then
+          const unchanged: Response = await fetch(
+            `${manager.apiUrl}/project/${project}`,
+            {
+              headers: new Headers([
+                ['Authorization', `Bearer ${ownerLogin.jwt}`],
+              ]),
+              signal: testContext.signal,
+            },
+          );
+
           assert.equal(response.status, 403);
           assert.deepEqual(await response.json(), {
             statusCode: 403,
@@ -2407,8 +2366,8 @@ describe('/project', (suiteContext: SuiteContext): void => {
           });
           assert.equal(unchanged.status, 200);
           assert.deepEqual(await unchanged.json(), {
-            id: project.documentId,
-            title: project.title,
+            id: project,
+            title: 'Target Project',
             owner: { id: owner.documentId, displayName: owner.username },
             collaborators: [],
             databases: [],
@@ -2420,45 +2379,41 @@ describe('/project', (suiteContext: SuiteContext): void => {
 
         test('rejects other project collaborator access', async (testContext: TestContext): Promise<void> => {
           // given
-          const actor: E2ETestApplicationUser = await manager.registerUser(
-            `e2e-${randomUUID()}`,
-            randomUUID(),
-            testContext,
-          );
-          const owner: E2ETestApplicationUser = await manager.registerUser(
-            `e2e-${randomUUID()}`,
-            randomUUID(),
-            testContext,
-          );
+          const actor: E2ETestApplicationUser =
+            await manager.registerUser(testContext);
+
+          const owner: E2ETestApplicationUser =
+            await manager.registerUser(testContext);
+
           const sourceOwner: E2ETestApplicationUser =
-            await manager.registerUser(
-              `e2e-${randomUUID()}`,
-              randomUUID(),
-              testContext,
-            );
-          const sourceProject: E2ETestApplicationProject =
-            await manager.createProject(
-              'Source Project',
-              sourceOwner,
-              [actor],
-              testContext,
-            );
-          const project: E2ETestApplicationProject =
-            await manager.createProject(
-              'Target Project',
-              owner,
-              [],
-              testContext,
-            );
+            await manager.registerUser(testContext);
+          const sourceProject: string = await manager.createPublishedDocument(
+            'api::project.project',
+            {
+              title: 'Source Project',
+              owner: sourceOwner.documentId,
+              collaborators: [actor.documentId],
+            },
+            testContext,
+          );
+          const project: string = await manager.createPublishedDocument(
+            'api::project.project',
+            {
+              title: 'Target Project',
+              owner: owner.documentId,
+              collaborators: [],
+            },
+            testContext,
+          );
           const login: PostAuthResponseBodyDto = await manager.loginUser(
             actor.username,
             actor.password,
             testContext,
           );
           const authorized: Response = await fetch(
-            `${manager.apiUrl}/project/${sourceProject.documentId}`,
+            `${manager.apiUrl}/project/${sourceProject}`,
             {
-              headers: { Authorization: `Bearer ${login.jwt}` },
+              headers: new Headers([['Authorization', `Bearer ${login.jwt}`]]),
               signal: testContext.signal,
             },
           );
@@ -2472,22 +2427,25 @@ describe('/project', (suiteContext: SuiteContext): void => {
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project.documentId}`,
+            `${manager.apiUrl}/project/${project}`,
             {
               method: 'DELETE',
-              headers: { Authorization: `Bearer ${login.jwt}` },
-              signal: testContext.signal,
-            },
-          );
-          const unchanged: Response = await fetch(
-            `${manager.apiUrl}/project/${project.documentId}`,
-            {
-              headers: { Authorization: `Bearer ${ownerLogin.jwt}` },
+              headers: new Headers([['Authorization', `Bearer ${login.jwt}`]]),
               signal: testContext.signal,
             },
           );
 
           // then
+          const unchanged: Response = await fetch(
+            `${manager.apiUrl}/project/${project}`,
+            {
+              headers: new Headers([
+                ['Authorization', `Bearer ${ownerLogin.jwt}`],
+              ]),
+              signal: testContext.signal,
+            },
+          );
+
           assert.equal(response.status, 403);
           assert.deepEqual(await response.json(), {
             statusCode: 403,
@@ -2496,8 +2454,8 @@ describe('/project', (suiteContext: SuiteContext): void => {
           });
           assert.equal(unchanged.status, 200);
           assert.deepEqual(await unchanged.json(), {
-            id: project.documentId,
-            title: project.title,
+            id: project,
+            title: 'Target Project',
             owner: { id: owner.documentId, displayName: owner.username },
             collaborators: [],
             databases: [],
@@ -2509,24 +2467,20 @@ describe('/project', (suiteContext: SuiteContext): void => {
 
         test('rejects removed collaborator access', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser = await manager.registerUser(
-            `e2e-${randomUUID()}`,
-            randomUUID(),
+          const owner: E2ETestApplicationUser =
+            await manager.registerUser(testContext);
+
+          const collaborator: E2ETestApplicationUser =
+            await manager.registerUser(testContext);
+          const project: string = await manager.createPublishedDocument(
+            'api::project.project',
+            {
+              title: 'Test Project',
+              owner: owner.documentId,
+              collaborators: [collaborator.documentId],
+            },
             testContext,
           );
-          const collaborator: E2ETestApplicationUser =
-            await manager.registerUser(
-              `e2e-${randomUUID()}`,
-              randomUUID(),
-              testContext,
-            );
-          const project: E2ETestApplicationProject =
-            await manager.createProject(
-              'Test Project',
-              owner,
-              [collaborator],
-              testContext,
-            );
           const login: PostAuthResponseBodyDto = await manager.loginUser(
             collaborator.username,
             collaborator.password,
@@ -2538,9 +2492,9 @@ describe('/project', (suiteContext: SuiteContext): void => {
             testContext,
           );
           const authorized: Response = await fetch(
-            `${manager.apiUrl}/project/${project.documentId}`,
+            `${manager.apiUrl}/project/${project}`,
             {
-              headers: { Authorization: `Bearer ${login.jwt}` },
+              headers: new Headers([['Authorization', `Bearer ${login.jwt}`]]),
               signal: testContext.signal,
             },
           );
@@ -2554,23 +2508,19 @@ describe('/project', (suiteContext: SuiteContext): void => {
               },
             ],
           );
-          const removal: Response = await fetch(
-            `${manager.strapiUrl}/content-manager/collection-types/api::project.project/${project.documentId}/actions/publish`,
-            {
-              method: 'POST',
-              headers: {
-                Authorization: `Bearer ${manager.context.admin.token}`,
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({ collaborators: [] }),
-              signal: testContext.signal,
-            },
+          const removal: Response = await manager.publishDocument(
+            'api::project.project',
+            project,
+            { collaborators: [] },
+            testContext,
           );
           assert.equal(removal.status, 200, await removal.text());
           const revoked: Response = await fetch(
-            `${manager.apiUrl}/project/${project.documentId}`,
+            `${manager.apiUrl}/project/${project}`,
             {
-              headers: { Authorization: `Bearer ${ownerLogin.jwt}` },
+              headers: new Headers([
+                ['Authorization', `Bearer ${ownerLogin.jwt}`],
+              ]),
               signal: testContext.signal,
             },
           );
@@ -2582,22 +2532,25 @@ describe('/project', (suiteContext: SuiteContext): void => {
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project.documentId}`,
+            `${manager.apiUrl}/project/${project}`,
             {
               method: 'DELETE',
-              headers: { Authorization: `Bearer ${login.jwt}` },
-              signal: testContext.signal,
-            },
-          );
-          const unchanged: Response = await fetch(
-            `${manager.apiUrl}/project/${project.documentId}`,
-            {
-              headers: { Authorization: `Bearer ${ownerLogin.jwt}` },
+              headers: new Headers([['Authorization', `Bearer ${login.jwt}`]]),
               signal: testContext.signal,
             },
           );
 
           // then
+          const unchanged: Response = await fetch(
+            `${manager.apiUrl}/project/${project}`,
+            {
+              headers: new Headers([
+                ['Authorization', `Bearer ${ownerLogin.jwt}`],
+              ]),
+              signal: testContext.signal,
+            },
+          );
+
           assert.equal(response.status, 403);
           assert.deepEqual(await response.json(), {
             statusCode: 403,
@@ -2606,8 +2559,8 @@ describe('/project', (suiteContext: SuiteContext): void => {
           });
           assert.equal(unchanged.status, 200);
           assert.deepEqual(await unchanged.json(), {
-            id: project.documentId,
-            title: project.title,
+            id: project,
+            title: 'Test Project',
             owner: { id: owner.documentId, displayName: owner.username },
             collaborators: [],
             databases: [],
@@ -2619,13 +2572,17 @@ describe('/project', (suiteContext: SuiteContext): void => {
 
         test('rejects anonymous access', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser = await manager.registerUser(
-            `e2e-${randomUUID()}`,
-            randomUUID(),
+          const owner: E2ETestApplicationUser =
+            await manager.registerUser(testContext);
+          const project: string = await manager.createPublishedDocument(
+            'api::project.project',
+            {
+              title: 'Test Project',
+              owner: owner.documentId,
+              collaborators: [],
+            },
             testContext,
           );
-          const project: E2ETestApplicationProject =
-            await manager.createProject('Test Project', owner, [], testContext);
           const login: PostAuthResponseBodyDto = await manager.loginUser(
             owner.username,
             owner.password,
@@ -2634,22 +2591,23 @@ describe('/project', (suiteContext: SuiteContext): void => {
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project.documentId}`,
+            `${manager.apiUrl}/project/${project}`,
             {
               method: 'DELETE',
-              headers: {},
-              signal: testContext.signal,
-            },
-          );
-          const unchanged: Response = await fetch(
-            `${manager.apiUrl}/project/${project.documentId}`,
-            {
-              headers: { Authorization: `Bearer ${login.jwt}` },
+              headers: new Headers([]),
               signal: testContext.signal,
             },
           );
 
           // then
+          const unchanged: Response = await fetch(
+            `${manager.apiUrl}/project/${project}`,
+            {
+              headers: new Headers([['Authorization', `Bearer ${login.jwt}`]]),
+              signal: testContext.signal,
+            },
+          );
+
           assert.equal(response.status, 403);
           assert.deepEqual(await response.json(), {
             statusCode: 403,
@@ -2658,8 +2616,8 @@ describe('/project', (suiteContext: SuiteContext): void => {
           });
           assert.equal(unchanged.status, 200);
           assert.deepEqual(await unchanged.json(), {
-            id: project.documentId,
-            title: project.title,
+            id: project,
+            title: 'Test Project',
             owner: { id: owner.documentId, displayName: owner.username },
             collaborators: [],
             databases: [],
@@ -2671,13 +2629,17 @@ describe('/project', (suiteContext: SuiteContext): void => {
 
         test('rejects invalid jwt access', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser = await manager.registerUser(
-            `e2e-${randomUUID()}`,
-            randomUUID(),
+          const owner: E2ETestApplicationUser =
+            await manager.registerUser(testContext);
+          const project: string = await manager.createPublishedDocument(
+            'api::project.project',
+            {
+              title: 'Test Project',
+              owner: owner.documentId,
+              collaborators: [],
+            },
             testContext,
           );
-          const project: E2ETestApplicationProject =
-            await manager.createProject('Test Project', owner, [], testContext);
           const login: PostAuthResponseBodyDto = await manager.loginUser(
             owner.username,
             owner.password,
@@ -2686,22 +2648,23 @@ describe('/project', (suiteContext: SuiteContext): void => {
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project.documentId}`,
+            `${manager.apiUrl}/project/${project}`,
             {
               method: 'DELETE',
-              headers: { Authorization: 'Bearer invalid-jwt' },
-              signal: testContext.signal,
-            },
-          );
-          const unchanged: Response = await fetch(
-            `${manager.apiUrl}/project/${project.documentId}`,
-            {
-              headers: { Authorization: `Bearer ${login.jwt}` },
+              headers: new Headers([['Authorization', 'Bearer invalid-jwt']]),
               signal: testContext.signal,
             },
           );
 
           // then
+          const unchanged: Response = await fetch(
+            `${manager.apiUrl}/project/${project}`,
+            {
+              headers: new Headers([['Authorization', `Bearer ${login.jwt}`]]),
+              signal: testContext.signal,
+            },
+          );
+
           assert.equal(response.status, 403);
           assert.deepEqual(await response.json(), {
             statusCode: 403,
@@ -2710,8 +2673,8 @@ describe('/project', (suiteContext: SuiteContext): void => {
           });
           assert.equal(unchanged.status, 200);
           assert.deepEqual(await unchanged.json(), {
-            id: project.documentId,
-            title: project.title,
+            id: project,
+            title: 'Test Project',
             owner: { id: owner.documentId, displayName: owner.username },
             collaborators: [],
             databases: [],
@@ -2723,18 +2686,20 @@ describe('/project', (suiteContext: SuiteContext): void => {
 
         test('rejects outsider access', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser = await manager.registerUser(
-            `e2e-${randomUUID()}`,
-            randomUUID(),
+          const owner: E2ETestApplicationUser =
+            await manager.registerUser(testContext);
+
+          const outsider: E2ETestApplicationUser =
+            await manager.registerUser(testContext);
+          const project: string = await manager.createPublishedDocument(
+            'api::project.project',
+            {
+              title: 'Test Project',
+              owner: owner.documentId,
+              collaborators: [],
+            },
             testContext,
           );
-          const outsider: E2ETestApplicationUser = await manager.registerUser(
-            `e2e-${randomUUID()}`,
-            randomUUID(),
-            testContext,
-          );
-          const project: E2ETestApplicationProject =
-            await manager.createProject('Test Project', owner, [], testContext);
           const login: PostAuthResponseBodyDto = await manager.loginUser(
             outsider.username,
             outsider.password,
@@ -2748,22 +2713,25 @@ describe('/project', (suiteContext: SuiteContext): void => {
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project.documentId}`,
+            `${manager.apiUrl}/project/${project}`,
             {
               method: 'DELETE',
-              headers: { Authorization: `Bearer ${login.jwt}` },
-              signal: testContext.signal,
-            },
-          );
-          const unchanged: Response = await fetch(
-            `${manager.apiUrl}/project/${project.documentId}`,
-            {
-              headers: { Authorization: `Bearer ${ownerLogin.jwt}` },
+              headers: new Headers([['Authorization', `Bearer ${login.jwt}`]]),
               signal: testContext.signal,
             },
           );
 
           // then
+          const unchanged: Response = await fetch(
+            `${manager.apiUrl}/project/${project}`,
+            {
+              headers: new Headers([
+                ['Authorization', `Bearer ${ownerLogin.jwt}`],
+              ]),
+              signal: testContext.signal,
+            },
+          );
+
           assert.equal(response.status, 403);
           assert.deepEqual(await response.json(), {
             statusCode: 403,
@@ -2772,8 +2740,8 @@ describe('/project', (suiteContext: SuiteContext): void => {
           });
           assert.equal(unchanged.status, 200);
           assert.deepEqual(await unchanged.json(), {
-            id: project.documentId,
-            title: project.title,
+            id: project,
+            title: 'Test Project',
             owner: { id: owner.documentId, displayName: owner.username },
             collaborators: [],
             databases: [],
@@ -2786,25 +2754,15 @@ describe('/project', (suiteContext: SuiteContext): void => {
       describe('404', (): void => {
         test('rejects a draft project even for its owner', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser = await manager.registerUser(
-            `e2e-${randomUUID()}`,
-            randomUUID(),
-            testContext,
-          );
-          const creation: Response = await fetch(
-            `${manager.strapiUrl}/content-manager/collection-types/api::project.project`,
+          const owner: E2ETestApplicationUser =
+            await manager.registerUser(testContext);
+          const creation: Response = await manager.createDocument(
+            'api::project.project',
             {
-              method: 'POST',
-              headers: {
-                Authorization: `Bearer ${manager.context.admin.token}`,
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                title: 'Draft Project',
-                owner: owner.documentId,
-              }),
-              signal: testContext.signal,
+              title: 'Draft Project',
+              owner: owner.documentId,
             },
+            testContext,
           );
           assert.equal(creation.status, 201);
           const draft: { data: { documentId: string; publishedAt: null } } = z
@@ -2826,7 +2784,7 @@ describe('/project', (suiteContext: SuiteContext): void => {
             `${manager.apiUrl}/project/${draft.data.documentId}`,
             {
               method: 'DELETE',
-              headers: { Authorization: `Bearer ${login.jwt}` },
+              headers: new Headers([['Authorization', `Bearer ${login.jwt}`]]),
               signal: testContext.signal,
             },
           );
@@ -2837,14 +2795,10 @@ describe('/project', (suiteContext: SuiteContext): void => {
             statusCode: 404,
             message: 'Not Found',
           });
-          const storedDraft: Response = await fetch(
-            `${manager.strapiUrl}/content-manager/collection-types/api::project.project/${draft.data.documentId}`,
-            {
-              headers: {
-                Authorization: `Bearer ${manager.context.admin.token}`,
-              },
-              signal: testContext.signal,
-            },
+          const storedDraft: Response = await manager.readDocument(
+            'api::project.project',
+            draft.data.documentId,
+            testContext,
           );
           assert.equal(storedDraft.status, 200);
           z.object({
@@ -2858,11 +2812,8 @@ describe('/project', (suiteContext: SuiteContext): void => {
 
         test('rejects an unknown project', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser = await manager.registerUser(
-            `e2e-${randomUUID()}`,
-            randomUUID(),
-            testContext,
-          );
+          const owner: E2ETestApplicationUser =
+            await manager.registerUser(testContext);
           const login: PostAuthResponseBodyDto = await manager.loginUser(
             owner.username,
             owner.password,
@@ -2874,7 +2825,7 @@ describe('/project', (suiteContext: SuiteContext): void => {
             `${manager.apiUrl}/project/${randomUUID()}`,
             {
               method: 'DELETE',
-              headers: { Authorization: `Bearer ${login.jwt}` },
+              headers: new Headers([['Authorization', `Bearer ${login.jwt}`]]),
               signal: testContext.signal,
             },
           );
