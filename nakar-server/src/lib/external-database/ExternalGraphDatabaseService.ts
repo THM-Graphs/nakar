@@ -7,7 +7,7 @@ import type { ExternalGraphDatabaseQueryResult } from './data/ExternalGraphDatab
 import type { ExternalGraphDatabaseExpandNodePreview } from './data/ExternalGraphDatabaseExpandNodePreview';
 import type { ExternalGraphDatabaseSearchCapabilities } from './data/ExternalGraphDatabaseSearchCapabilities';
 import type { ExternalGraphDatabaseNode } from './data/ExternalGraphDatabaseNode';
-import type { ExternalGraphDatabaseQueryLimitConfig } from './data/ExternalGraphDatabaseQueryLimitConfig';
+import { ExternalGraphDatabaseQueryLimitConfig } from './data/ExternalGraphDatabaseQueryLimitConfig';
 import { Neo4jExternalDatabase } from './adapters/neo4j/Neo4jExternalDatabase';
 import { SparqlExternalDatabase } from './adapters/sparql/SparqlExternalDatabase';
 import type { ExternalGraphDatabase } from './ExternalGraphDatabase';
@@ -97,6 +97,41 @@ export class ExternalGraphDatabaseService implements OnModuleDestroy {
       queryArguments,
       limitConfig,
     );
+  }
+
+  public async getSchema(
+    database: Modules.Documents.Result<'api::database-connection.database-connection'>,
+  ): Promise<string> {
+    const credentials: ExternalGraphDatabaseCredentials =
+      this.parseCredentials(database);
+    return await this._getAdapter(credentials.databaseType).getSchema(
+      credentials,
+    );
+  }
+
+  public async executeReadOnlyQuery(
+    database: Modules.Documents.Result<'api::database-connection.database-connection'>,
+    query: string,
+    limitConfig: ExternalGraphDatabaseQueryLimitConfig,
+  ): Promise<ExternalGraphDatabaseQueryResult> {
+    const credentials: ExternalGraphDatabaseCredentials =
+      this.parseCredentials(database);
+    const adapter: ExternalGraphDatabase = this._getAdapter(
+      credentials.databaseType,
+    );
+    return await adapter.executeReadOnlyQuery(credentials, query, limitConfig);
+  }
+
+  public async validateReadOnlyQuery(
+    database: Modules.Documents.Result<'api::database-connection.database-connection'>,
+    query: string,
+  ): Promise<string> {
+    const credentials: ExternalGraphDatabaseCredentials =
+      this.parseCredentials(database);
+    const adapter: ExternalGraphDatabase = this._getAdapter(
+      credentials.databaseType,
+    );
+    return await adapter.validateReadOnlyQuery(credentials, query);
   }
 
   public async loadConnectingRelationships(

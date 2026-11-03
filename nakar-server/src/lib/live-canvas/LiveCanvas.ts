@@ -1125,6 +1125,7 @@ export class LiveCanvas {
     databaseId: string;
     query: string;
     replace: boolean;
+    readOnly?: boolean;
   }): void {
     this._queue.addTask(
       new TaskQueueTask('Running query', async (): Promise<void> => {
@@ -1143,16 +1144,24 @@ export class LiveCanvas {
           );
         }
 
-        const graphElements: ExternalGraphDatabaseQueryResult =
-          await this._externalGraphDatabase.executeQuery(
-            database,
-            params.query,
-            {},
-            new ExternalGraphDatabaseQueryLimitConfig(
-              ExternalGraphDatabaseQueryLimitConfigType.default,
-              ExternalGraphDatabaseQueryLimitConfigCollectionType.graphElements,
-            ),
+        const limitConfig: ExternalGraphDatabaseQueryLimitConfig =
+          new ExternalGraphDatabaseQueryLimitConfig(
+            ExternalGraphDatabaseQueryLimitConfigType.default,
+            ExternalGraphDatabaseQueryLimitConfigCollectionType.graphElements,
           );
+        const graphElements: ExternalGraphDatabaseQueryResult =
+          params.readOnly === true
+            ? await this._externalGraphDatabase.executeReadOnlyQuery(
+                database,
+                params.query,
+                limitConfig,
+              )
+            : await this._externalGraphDatabase.executeQuery(
+                database,
+                params.query,
+                {},
+                limitConfig,
+              );
 
         if (graphElements.limitReached) {
           this._onEvent.next({

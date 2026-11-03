@@ -25,6 +25,8 @@ import { RunScenarioModal } from "../room/run-scenario-modal/RunScenarioModal.ts
 import { ExpandNodePreviewModal } from "../room/expand-node-preview-modal/ExpandNodePreviewModal.tsx";
 import { QueryPanel } from "../room/query-panel/QueryPanel.tsx";
 import { QueryPanelButton } from "../room/query-panel/QueryPanelButton.tsx";
+import { PromptPanel } from "../room/prompt-panel/PromptPanel.tsx";
+import { PromptPanelButton } from "../room/prompt-panel/PromptPanelButton.tsx";
 import { MenuBar } from "../shared/bars/MenuBar.tsx";
 import { NotesPanel } from "../room/notes-panel/NotesPanel.tsx";
 import { NotesPanelButton } from "../room/notes-panel/NotesPanelButton.tsx";
@@ -402,6 +404,7 @@ function CanvasContent({
             >
               <ScenariosPanelButton></ScenariosPanelButton>
               <QueryPanelButton></QueryPanelButton>
+              <PromptPanelButton />
               <NotesPanelButton></NotesPanelButton>
               <SearchPanelButton></SearchPanelButton>
             </Stack>
@@ -419,6 +422,7 @@ function CanvasContent({
                       <ScenariosPanel></ScenariosPanel>
                     )}
                     {leftPanel === "query" && <QueryPanel></QueryPanel>}
+                    {leftPanel === "prompt" && <PromptPanel />}
                     {leftPanel === "notes" && <NotesPanel></NotesPanel>}
                     {leftPanel === "search" && <SearchPanel></SearchPanel>}
                   </Panel>

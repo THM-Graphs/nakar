@@ -511,6 +511,24 @@ export const useBearStore = create<BearState>()(
                   });
                 },
               },
+              prompt: {
+                promptText: "",
+                setPromptText: (text) => {
+                  set((s) => {
+                    s.room.panels.prompt.promptText = text;
+                  });
+                },
+                show: () => {
+                  set((s) => {
+                    s.room.panels.left = "prompt";
+                  });
+                },
+                hide: () => {
+                  set((s) => {
+                    s.room.panels.left = null;
+                  });
+                },
+              },
               notes: {
                 show: () => {
                   set((s) => {

@@ -8,6 +8,17 @@ import type { ExternalGraphDatabaseQueryLimitConfig } from './data/ExternalGraph
 import type { ExternalGraphDatabaseStats } from './data/ExternalGraphDatabaseStats';
 
 export interface ExternalGraphDatabase {
+  getSchema(credentials: ExternalGraphDatabaseCredentials): Promise<string>;
+  validateReadOnlyQuery(
+    credentials: ExternalGraphDatabaseCredentials,
+    query: string,
+  ): Promise<string>;
+  executeReadOnlyQuery(
+    credentials: ExternalGraphDatabaseCredentials,
+    query: string,
+    limitConfig: ExternalGraphDatabaseQueryLimitConfig,
+  ): Promise<ExternalGraphDatabaseQueryResult>;
+
   equalityHashKey(credentials: ExternalGraphDatabaseCredentials): string;
 
   executeQuery(

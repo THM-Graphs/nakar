@@ -282,6 +282,14 @@ export type UpdateNoteRequestBodyDto = {
     content: string;
 };
 
+export type RunPromptRequestBodyDto = {
+    prompt: string;
+};
+
+export type RunPromptResponseBodyDto = {
+    query: string;
+};
+
 export type DatabaseStatsLabelDto = {
     label: string;
     exploreQuery: string;
@@ -1206,6 +1214,26 @@ export type CanvasNoteControllerUpdateNoteData = {
 export type CanvasNoteControllerUpdateNoteResponses = {
     200: unknown;
 };
+
+export type CanvasDatabaseConnectionControllerRunPromptData = {
+    body: RunPromptRequestBodyDto;
+    path: {
+        databaseId: string;
+        canvasId: string;
+        roomId: string;
+    };
+    query?: never;
+    url: '/api/room/{roomId}/canvas/{canvasId}/database-connection/{databaseId}/run-prompt';
+};
+
+export type CanvasDatabaseConnectionControllerRunPromptResponses = {
+    /**
+     * The generated read-only query has been queued for execution on the canvas.
+     */
+    200: RunPromptResponseBodyDto;
+};
+
+export type CanvasDatabaseConnectionControllerRunPromptResponse = CanvasDatabaseConnectionControllerRunPromptResponses[keyof CanvasDatabaseConnectionControllerRunPromptResponses];
 
 export type CanvasDatabaseConnectionControllerGetStatsData = {
     body?: never;

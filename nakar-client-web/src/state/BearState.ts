@@ -148,7 +148,7 @@ export interface BearState {
       setState: (state: SocketState) => void;
     };
     panels: {
-      left: "scenarios" | "query" | "notes" | "search" | null;
+      left: "scenarios" | "query" | "prompt" | "notes" | "search" | null;
       right:
         "histogram" | "inspector" | "visualization" | "knowledgeCard" | null;
       knowledgeCard: {
@@ -179,6 +179,12 @@ export interface BearState {
         show: () => void;
         hide: () => void;
         setQueryText: (queryText: string) => void;
+      };
+      prompt: {
+        promptText: string;
+        setPromptText: (text: string) => void;
+        show: () => void;
+        hide: () => void;
       };
       notes: {
         show: () => void;

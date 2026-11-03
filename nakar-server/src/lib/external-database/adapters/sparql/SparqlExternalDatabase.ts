@@ -1,3 +1,5 @@
+import { Generator, Parser } from 'sparqljs';
+import type { SparqlQuery } from 'sparqljs';
 import { SMap } from '../../../../packages/map/Map';
 import type { ExternalGraphDatabase } from '../../ExternalGraphDatabase';
 import type { ExternalGraphDatabaseCredentials } from '../../data/ExternalGraphDatabaseCredentials';
@@ -41,6 +43,98 @@ export class SparqlExternalDatabase implements ExternalGraphDatabase {
 
   public constructor() {
     this._logger = createChildLogger(this);
+  }
+
+  public async getSchema(
+    credentials: ExternalGraphDatabaseCredentials,
+  ): Promise<string> {
+    const result: ExternalGraphDatabaseQueryResult = await this.executeQuery(
+      credentials,
+      `SELECT ?subjectType ?predicate ?objectType WHERE {
+        { SELECT ?s ?predicate ?o WHERE { ?s ?predicate ?o } LIMIT 300 }
+        OPTIONAL { ?s a ?subjectType }
+        OPTIONAL { ?o a ?objectClass }
+        BIND(IF(isLiteral(?o), STR(DATATYPE(?o)), COALESCE(STR(?objectClass), "IRI")) AS ?objectType)
+      } LIMIT 1000`,
+      {},
+      new ExternalGraphDatabaseQueryLimitConfig(
+        ExternalGraphDatabaseQueryLimitConfigType.default,
+        ExternalGraphDatabaseQueryLimitConfigCollectionType.tableData,
+      ),
+    );
+    return (
+      'RDF schema sampled from up to 300 triples; incomplete, absence does not imply nonexistence.\n' +
+      result.tableData
+        .map((row: SMap<string, unknown>): string =>
+          JSON.stringify(row.toRecord()),
+        )
+        .join('\n')
+    );
+  }
+
+  public validateReadOnlyQuery(
+    credentials: ExternalGraphDatabaseCredentials,
+    text: string,
+  ): Promise<string> {
+    const query: string = text
+      .trim()
+      .replace(/^```(?:sparql)?\s*\n([\s\S]*?)\n```$/iu, '$1')
+      .trim();
+    let parsed: SparqlQuery;
+    try {
+      parsed = new Parser().parse(query);
+    } catch (error: unknown) {
+      throw new SyntaxError(
+        error instanceof Error ? error.message : String(error),
+        { cause: error },
+      );
+    }
+    if (parsed.type !== 'query' || parsed.queryType !== 'CONSTRUCT') {
+      throw new Error(
+        'Graph prompts require a read-only SPARQL CONSTRUCT query.',
+      );
+    }
+    // Keep generated queries on the selected endpoint, including nested patterns.
+    const inspect = (value: unknown): void => {
+      if (value == null || typeof value !== 'object') {
+        return;
+      }
+      if ('type' in value && value.type === 'service') {
+        throw new Error(
+          'External SERVICE clauses are not supported for generated queries.',
+        );
+      }
+      if ('from' in value) {
+        throw new Error(
+          'External datasets are not supported for generated queries.',
+        );
+      }
+      for (const child of Object.values(value)) {
+        inspect(child);
+      }
+    };
+    inspect(parsed);
+    this._assertConnectionUrl(credentials);
+    const existingLimit: unknown = 'limit' in parsed ? parsed.limit : undefined;
+    const bounded: SparqlQuery & { limit: number } = {
+      ...parsed,
+      limit:
+        typeof existingLimit === 'number' ? Math.min(existingLimit, 300) : 300,
+    };
+    return Promise.resolve(new Generator().stringify(bounded));
+  }
+
+  public async executeReadOnlyQuery(
+    credentials: ExternalGraphDatabaseCredentials,
+    query: string,
+    limitConfig: ExternalGraphDatabaseQueryLimitConfig,
+  ): Promise<ExternalGraphDatabaseQueryResult> {
+    return await this.executeQuery(
+      credentials,
+      await this.validateReadOnlyQuery(credentials, query),
+      {},
+      limitConfig,
+    );
   }
 
   public equalityHashKey(

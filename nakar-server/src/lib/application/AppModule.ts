@@ -26,6 +26,7 @@ import { MonitoringService } from '../monitoring/MonitoringService';
 import { MediaService } from '../media/MediaService';
 import { EncryptionService } from '../encryption/EncryptionService';
 import { IsValidRegex } from '../schema/IsValidRegex';
+import { AIService } from '../ai/AIService';
 
 @Module({
   controllers: [
@@ -46,6 +47,7 @@ import { IsValidRegex } from '../schema/IsValidRegex';
     RedirectController,
   ],
   providers: [
+    AIService,
     DatabaseService,
     LiveCanvasService,
     SchemaFactoryService,

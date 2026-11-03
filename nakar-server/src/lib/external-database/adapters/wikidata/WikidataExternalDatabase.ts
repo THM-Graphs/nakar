@@ -25,6 +25,35 @@ export class WikidataExternalDatabase implements ExternalGraphDatabase {
     this._sparqlAdapter = new SparqlExternalDatabase();
   }
 
+  public async getSchema(
+    credentials: ExternalGraphDatabaseCredentials,
+  ): Promise<string> {
+    return (
+      'Wikidata RDF model: wd: entities http://www.wikidata.org/entity/; wdt: direct properties http://www.wikidata.org/prop/direct/; p: statements http://www.wikidata.org/prop/; ps: statement values http://www.wikidata.org/prop/statement/; pq: qualifiers http://www.wikidata.org/prop/qualifier/. P31 = instance of; P279 = subclass of. Labels use rdfs:label, descriptions schema:description. Use SPARQL CONSTRUCT returning entity triples; avoid label SERVICE, labels are resolved by the adapter. The following is a small sample, not a complete Wikidata ontology.\n' +
+      (await this._sparqlAdapter.getSchema(credentials))
+    );
+  }
+
+  public async validateReadOnlyQuery(
+    credentials: ExternalGraphDatabaseCredentials,
+    query: string,
+  ): Promise<string> {
+    return await this._sparqlAdapter.validateReadOnlyQuery(credentials, query);
+  }
+
+  public async executeReadOnlyQuery(
+    credentials: ExternalGraphDatabaseCredentials,
+    query: string,
+    limitConfig: ExternalGraphDatabaseQueryLimitConfig,
+  ): Promise<ExternalGraphDatabaseQueryResult> {
+    return await this.executeQuery(
+      credentials,
+      await this.validateReadOnlyQuery(credentials, query),
+      {},
+      limitConfig,
+    );
+  }
+
   public equalityHashKey(
     credentials: ExternalGraphDatabaseCredentials,
   ): string {
