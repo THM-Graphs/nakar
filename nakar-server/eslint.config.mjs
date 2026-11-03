@@ -65,6 +65,12 @@ export default defineConfig([
           leadingUnderscore: 'require',
         },
         {
+          selector: 'memberLike',
+          modifiers: ['public'],
+          format: ['camelCase'],
+          leadingUnderscore: 'forbid',
+        },
+        {
           selector: 'interface',
           format: ['PascalCase'],
           custom: {
@@ -118,6 +124,24 @@ export default defineConfig([
       '@typescript-eslint/prefer-destructuring': 'off',
       curly: ['error', 'all'],
       '@typescript-eslint/promise-function-async': 'off',
+      '@typescript-eslint/no-floating-promises': [
+        'error',
+        {
+          allowForKnownSafeCalls: [
+            {
+              from: 'package',
+              package: 'node:test',
+              name: ['describe', 'test'],
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
+    files: ['eslint.config.mjs'],
+    rules: {
+      '@typescript-eslint/naming-convention': 'off',
     },
   },
   {

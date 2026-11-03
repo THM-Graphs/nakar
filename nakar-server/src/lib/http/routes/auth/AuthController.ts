@@ -32,9 +32,7 @@ export class AuthController {
           identifier: body.username,
           password: body.password,
         }),
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: new undici.Headers([['Content-Type', 'application/json']]),
       },
     );
     if (result.status === 429) {
