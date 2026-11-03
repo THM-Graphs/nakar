@@ -2991,6 +2991,754 @@ describe('/project', (suiteContext: SuiteContext): void => {
           assert.equal(persisted.status, 404);
         });
 
+        test('deletes all common properties of the project and preserves those of other projects', async (testContext: TestContext): Promise<void> => {
+          // given
+          const owner: E2ETestApplicationUser =
+            await manager.registerUser(testContext);
+          const project: string = await manager.createPublishedDocument(
+            'api::project.project',
+            {
+              title: 'Target Project',
+              owner: owner.documentId,
+              collaborators: [],
+            },
+            testContext,
+          );
+          const otherProject: string = await manager.createPublishedDocument(
+            'api::project.project',
+            {
+              title: 'Other Project',
+              owner: owner.documentId,
+              collaborators: [],
+            },
+            testContext,
+          );
+
+          const normal: string = await manager.createPublishedDocument(
+            'api::common-property.common-property',
+            {
+              project,
+              leftLabel: 'Normal Left',
+              leftProperty: 'normalLeft',
+              rightLabel: 'Normal Right',
+              rightProperty: 'normalRight',
+            },
+            testContext,
+          );
+          const draftCreation: Response = await manager.createDocument(
+            'api::common-property.common-property',
+            {
+              project,
+              leftLabel: 'Draft Left',
+              leftProperty: 'draftLeft',
+              rightLabel: 'Draft Right',
+              rightProperty: 'draftRight',
+            },
+            testContext,
+          );
+          assert.equal(draftCreation.status, 201);
+          const unpublished: {
+            data: { documentId: string; publishedAt: null };
+          } = z
+            .object({
+              data: z.object({
+                documentId: z.string().min(1),
+                publishedAt: z.null(),
+              }),
+            })
+            .parse(await draftCreation.json());
+          const changed: string = await manager.createPublishedDocument(
+            'api::common-property.common-property',
+            {
+              project,
+              leftLabel: 'Published Left',
+              leftProperty: 'publishedLeft',
+              rightLabel: 'Published Right',
+              rightProperty: 'publishedRight',
+            },
+            testContext,
+          );
+          const draftUpdate: Response = await manager.updateDocument(
+            'api::common-property.common-property',
+            changed,
+            {
+              leftLabel: 'Changed Draft Left',
+              leftProperty: 'changedDraftLeft',
+            },
+            testContext,
+          );
+          assert.equal(draftUpdate.status, 200);
+          const draftResponse: Response = await manager.readDocument(
+            'api::common-property.common-property',
+            changed,
+            testContext,
+          );
+          assert.equal(draftResponse.status, 200);
+          z.object({
+            data: z.object({
+              documentId: z.literal(changed),
+              publishedAt: z.null(),
+              leftLabel: z.literal('Changed Draft Left'),
+            }),
+          }).parse(await draftResponse.json());
+          const foreign: string = await manager.createPublishedDocument(
+            'api::common-property.common-property',
+            {
+              project: otherProject,
+              leftLabel: 'Foreign Left',
+              leftProperty: 'foreignLeft',
+              rightLabel: 'Foreign Right',
+              rightProperty: 'foreignRight',
+            },
+            testContext,
+          );
+          const originalForeignResponse: Response = await manager.readDocument(
+            'api::common-property.common-property',
+            foreign,
+            testContext,
+          );
+          assert.equal(originalForeignResponse.status, 200);
+          const originalForeign: unknown = await originalForeignResponse.json();
+          z.object({
+            data: z.object({ documentId: z.literal(foreign) }),
+          }).parse(originalForeign);
+          const login: PostAuthResponseBodyDto = await manager.loginUser(
+            owner.username,
+            owner.password,
+            testContext,
+          );
+
+          // when
+          const response: Response = await fetch(
+            `${manager.apiUrl}/project/${project}`,
+            {
+              method: 'DELETE',
+              headers: new Headers([['Authorization', `Bearer ${login.jwt}`]]),
+              signal: testContext.signal,
+            },
+          );
+
+          // then
+          assert.equal(response.status, 200);
+          assert.equal(await response.text(), '');
+          const deletedProject: Response = await manager.readDocument(
+            'api::project.project',
+            project,
+            testContext,
+          );
+          assert.equal(deletedProject.status, 404);
+          const normalResponse: Response = await manager.readDocument(
+            'api::common-property.common-property',
+            normal,
+            testContext,
+          );
+          const unpublishedResponse: Response = await manager.readDocument(
+            'api::common-property.common-property',
+            unpublished.data.documentId,
+            testContext,
+          );
+          const changedResponse: Response = await manager.readDocument(
+            'api::common-property.common-property',
+            changed,
+            testContext,
+          );
+          const foreignResponse: Response = await manager.readDocument(
+            'api::common-property.common-property',
+            foreign,
+            testContext,
+          );
+          assert.deepEqual(
+            {
+              normal: normalResponse.status,
+              unpublished: unpublishedResponse.status,
+              changed: changedResponse.status,
+              foreign: foreignResponse.status,
+            },
+            { normal: 404, unpublished: 404, changed: 404, foreign: 200 },
+          );
+          assert.deepEqual(await foreignResponse.json(), originalForeign);
+          const remainingProject: Response = await manager.readDocument(
+            'api::project.project',
+            otherProject,
+            testContext,
+          );
+          assert.equal(remainingProject.status, 200);
+          z.object({
+            data: z.object({
+              documentId: z.literal(otherProject),
+              title: z.literal('Other Project'),
+            }),
+          }).parse(await remainingProject.json());
+        });
+
+        test('deletes all database connections of the project and preserves those of other projects', async (testContext: TestContext): Promise<void> => {
+          // given
+          const owner: E2ETestApplicationUser =
+            await manager.registerUser(testContext);
+          const project: string = await manager.createPublishedDocument(
+            'api::project.project',
+            {
+              title: 'Target Project',
+              owner: owner.documentId,
+              collaborators: [],
+            },
+            testContext,
+          );
+          const otherProject: string = await manager.createPublishedDocument(
+            'api::project.project',
+            {
+              title: 'Other Project',
+              owner: owner.documentId,
+              collaborators: [],
+            },
+            testContext,
+          );
+
+          const normal: string = await manager.createPublishedDocument(
+            'api::database-connection.database-connection',
+            { project, title: 'Normal Database', databaseType: 'neo4j' },
+            testContext,
+          );
+          const draftCreation: Response = await manager.createDocument(
+            'api::database-connection.database-connection',
+            { project, title: 'Draft Database', databaseType: 'sparql' },
+            testContext,
+          );
+          assert.equal(draftCreation.status, 201);
+          const unpublished: {
+            data: { documentId: string; publishedAt: null };
+          } = z
+            .object({
+              data: z.object({
+                documentId: z.string().min(1),
+                publishedAt: z.null(),
+              }),
+            })
+            .parse(await draftCreation.json());
+          const changed: string = await manager.createPublishedDocument(
+            'api::database-connection.database-connection',
+            { project, title: 'Published Database', databaseType: 'neo4j' },
+            testContext,
+          );
+          const draftUpdate: Response = await manager.updateDocument(
+            'api::database-connection.database-connection',
+            changed,
+            { title: 'Changed Draft Database', database: 'changedDraft' },
+            testContext,
+          );
+          assert.equal(draftUpdate.status, 200);
+          const draftResponse: Response = await manager.readDocument(
+            'api::database-connection.database-connection',
+            changed,
+            testContext,
+          );
+          assert.equal(draftResponse.status, 200);
+          z.object({
+            data: z.object({
+              documentId: z.literal(changed),
+              publishedAt: z.null(),
+              title: z.literal('Changed Draft Database'),
+            }),
+          }).parse(await draftResponse.json());
+          const foreign: string = await manager.createPublishedDocument(
+            'api::database-connection.database-connection',
+            {
+              project: otherProject,
+              title: 'Foreign Database',
+              databaseType: 'neo4j',
+            },
+            testContext,
+          );
+          const originalForeignResponse: Response = await manager.readDocument(
+            'api::database-connection.database-connection',
+            foreign,
+            testContext,
+          );
+          assert.equal(originalForeignResponse.status, 200);
+          const originalForeign: unknown = await originalForeignResponse.json();
+          z.object({
+            data: z.object({ documentId: z.literal(foreign) }),
+          }).parse(originalForeign);
+          const login: PostAuthResponseBodyDto = await manager.loginUser(
+            owner.username,
+            owner.password,
+            testContext,
+          );
+
+          // when
+          const response: Response = await fetch(
+            `${manager.apiUrl}/project/${project}`,
+            {
+              method: 'DELETE',
+              headers: new Headers([['Authorization', `Bearer ${login.jwt}`]]),
+              signal: testContext.signal,
+            },
+          );
+
+          // then
+          assert.equal(response.status, 200);
+          assert.equal(await response.text(), '');
+          const deletedProject: Response = await manager.readDocument(
+            'api::project.project',
+            project,
+            testContext,
+          );
+          assert.equal(deletedProject.status, 404);
+          const normalResponse: Response = await manager.readDocument(
+            'api::database-connection.database-connection',
+            normal,
+            testContext,
+          );
+          const unpublishedResponse: Response = await manager.readDocument(
+            'api::database-connection.database-connection',
+            unpublished.data.documentId,
+            testContext,
+          );
+          const changedResponse: Response = await manager.readDocument(
+            'api::database-connection.database-connection',
+            changed,
+            testContext,
+          );
+          const foreignResponse: Response = await manager.readDocument(
+            'api::database-connection.database-connection',
+            foreign,
+            testContext,
+          );
+          assert.deepEqual(
+            {
+              normal: normalResponse.status,
+              unpublished: unpublishedResponse.status,
+              changed: changedResponse.status,
+              foreign: foreignResponse.status,
+            },
+            { normal: 404, unpublished: 404, changed: 404, foreign: 200 },
+          );
+          assert.deepEqual(await foreignResponse.json(), originalForeign);
+          const remainingProject: Response = await manager.readDocument(
+            'api::project.project',
+            otherProject,
+            testContext,
+          );
+          assert.equal(remainingProject.status, 200);
+          z.object({
+            data: z.object({
+              documentId: z.literal(otherProject),
+              title: z.literal('Other Project'),
+            }),
+          }).parse(await remainingProject.json());
+        });
+
+        test('deletes all scenarios of the project and preserves those of other projects', async (testContext: TestContext): Promise<void> => {
+          // given
+          const owner: E2ETestApplicationUser =
+            await manager.registerUser(testContext);
+          const project: string = await manager.createPublishedDocument(
+            'api::project.project',
+            {
+              title: 'Target Project',
+              owner: owner.documentId,
+              collaborators: [],
+            },
+            testContext,
+          );
+          const otherProject: string = await manager.createPublishedDocument(
+            'api::project.project',
+            {
+              title: 'Other Project',
+              owner: owner.documentId,
+              collaborators: [],
+            },
+            testContext,
+          );
+          const group: string = await manager.createPublishedDocument(
+            'api::scenario-group.scenario-group',
+            { project, title: 'Published Group' },
+            testContext,
+          );
+          const draftParentCreation: Response = await manager.createDocument(
+            'api::scenario-group.scenario-group',
+            { project, title: 'Draft Group' },
+            testContext,
+          );
+          assert.equal(draftParentCreation.status, 201);
+          const draftParent: {
+            data: { documentId: string; publishedAt: null };
+          } = z
+            .object({
+              data: z.object({
+                documentId: z.string().min(1),
+                publishedAt: z.null(),
+              }),
+            })
+            .parse(await draftParentCreation.json());
+          const otherGroup: string = await manager.createPublishedDocument(
+            'api::scenario-group.scenario-group',
+            { project: otherProject, title: 'Foreign Group' },
+            testContext,
+          );
+          const normal: string = await manager.createPublishedDocument(
+            'api::scenario.scenario',
+            {
+              group,
+              title: 'Normal Scenario',
+              description: 'Normal description',
+            },
+            testContext,
+          );
+          const draftCreation: Response = await manager.createDocument(
+            'api::scenario.scenario',
+            {
+              group: draftParent.data.documentId,
+              title: 'Draft Scenario',
+              description: 'Draft description',
+            },
+            testContext,
+          );
+          assert.equal(draftCreation.status, 201);
+          const unpublished: {
+            data: { documentId: string; publishedAt: null };
+          } = z
+            .object({
+              data: z.object({
+                documentId: z.string().min(1),
+                publishedAt: z.null(),
+              }),
+            })
+            .parse(await draftCreation.json());
+          const changed: string = await manager.createPublishedDocument(
+            'api::scenario.scenario',
+            {
+              group,
+              title: 'Published Scenario',
+              description: 'Published description',
+            },
+            testContext,
+          );
+          const draftUpdate: Response = await manager.updateDocument(
+            'api::scenario.scenario',
+            changed,
+            {
+              title: 'Changed Draft Scenario',
+              description: 'Changed draft description',
+            },
+            testContext,
+          );
+          assert.equal(draftUpdate.status, 200);
+          const draftResponse: Response = await manager.readDocument(
+            'api::scenario.scenario',
+            changed,
+            testContext,
+          );
+          assert.equal(draftResponse.status, 200);
+          z.object({
+            data: z.object({
+              documentId: z.literal(changed),
+              publishedAt: z.null(),
+              title: z.literal('Changed Draft Scenario'),
+            }),
+          }).parse(await draftResponse.json());
+          const foreign: string = await manager.createPublishedDocument(
+            'api::scenario.scenario',
+            {
+              group: otherGroup,
+              title: 'Foreign Scenario',
+              description: 'Foreign description',
+            },
+            testContext,
+          );
+          const originalForeignResponse: Response = await manager.readDocument(
+            'api::scenario.scenario',
+            foreign,
+            testContext,
+          );
+          assert.equal(originalForeignResponse.status, 200);
+          const originalForeign: unknown = await originalForeignResponse.json();
+          z.object({
+            data: z.object({ documentId: z.literal(foreign) }),
+          }).parse(originalForeign);
+          const login: PostAuthResponseBodyDto = await manager.loginUser(
+            owner.username,
+            owner.password,
+            testContext,
+          );
+
+          // when
+          const response: Response = await fetch(
+            `${manager.apiUrl}/project/${project}`,
+            {
+              method: 'DELETE',
+              headers: new Headers([['Authorization', `Bearer ${login.jwt}`]]),
+              signal: testContext.signal,
+            },
+          );
+
+          // then
+          assert.equal(response.status, 200);
+          assert.equal(await response.text(), '');
+          const deletedProject: Response = await manager.readDocument(
+            'api::project.project',
+            project,
+            testContext,
+          );
+          assert.equal(deletedProject.status, 404);
+          const normalResponse: Response = await manager.readDocument(
+            'api::scenario.scenario',
+            normal,
+            testContext,
+          );
+          const unpublishedResponse: Response = await manager.readDocument(
+            'api::scenario.scenario',
+            unpublished.data.documentId,
+            testContext,
+          );
+          const changedResponse: Response = await manager.readDocument(
+            'api::scenario.scenario',
+            changed,
+            testContext,
+          );
+          const foreignResponse: Response = await manager.readDocument(
+            'api::scenario.scenario',
+            foreign,
+            testContext,
+          );
+          assert.deepEqual(
+            {
+              normal: normalResponse.status,
+              unpublished: unpublishedResponse.status,
+              changed: changedResponse.status,
+              foreign: foreignResponse.status,
+            },
+            { normal: 404, unpublished: 404, changed: 404, foreign: 200 },
+          );
+          assert.deepEqual(await foreignResponse.json(), originalForeign);
+          const remainingProject: Response = await manager.readDocument(
+            'api::project.project',
+            otherProject,
+            testContext,
+          );
+          assert.equal(remainingProject.status, 200);
+          z.object({
+            data: z.object({
+              documentId: z.literal(otherProject),
+              title: z.literal('Other Project'),
+            }),
+          }).parse(await remainingProject.json());
+        });
+
+        test('deletes all node configurations of the project and preserves those of other projects', async (testContext: TestContext): Promise<void> => {
+          // given
+          const owner: E2ETestApplicationUser =
+            await manager.registerUser(testContext);
+          const project: string = await manager.createPublishedDocument(
+            'api::project.project',
+            {
+              title: 'Target Project',
+              owner: owner.documentId,
+              collaborators: [],
+            },
+            testContext,
+          );
+          const otherProject: string = await manager.createPublishedDocument(
+            'api::project.project',
+            {
+              title: 'Other Project',
+              owner: owner.documentId,
+              collaborators: [],
+            },
+            testContext,
+          );
+          const database: string = await manager.createPublishedDocument(
+            'api::database-connection.database-connection',
+            { project, title: 'Published Database', databaseType: 'neo4j' },
+            testContext,
+          );
+          const draftParentCreation: Response = await manager.createDocument(
+            'api::database-connection.database-connection',
+            { project, title: 'Draft Database', databaseType: 'neo4j' },
+            testContext,
+          );
+          assert.equal(draftParentCreation.status, 201);
+          const draftParent: {
+            data: { documentId: string; publishedAt: null };
+          } = z
+            .object({
+              data: z.object({
+                documentId: z.string().min(1),
+                publishedAt: z.null(),
+              }),
+            })
+            .parse(await draftParentCreation.json());
+          const otherDatabase: string = await manager.createPublishedDocument(
+            'api::database-connection.database-connection',
+            {
+              project: otherProject,
+              title: 'Foreign Database',
+              databaseType: 'neo4j',
+            },
+            testContext,
+          );
+          const normal: string = await manager.createPublishedDocument(
+            'api::node-configuration.node-configuration',
+            {
+              database,
+              type: 'link',
+              label: 'Normal Label',
+              property: 'normal',
+              linkTemplate: 'https://example.test/normal/{value}',
+              urlEncode: true,
+              valueRegex: '.*',
+            },
+            testContext,
+          );
+          const draftCreation: Response = await manager.createDocument(
+            'api::node-configuration.node-configuration',
+            {
+              database: draftParent.data.documentId,
+              type: 'link',
+              label: 'Draft Label',
+              property: 'draft',
+              linkTemplate: 'https://example.test/draft/{value}',
+              urlEncode: false,
+              valueRegex: '.*',
+            },
+            testContext,
+          );
+          assert.equal(draftCreation.status, 201);
+          const unpublished: {
+            data: { documentId: string; publishedAt: null };
+          } = z
+            .object({
+              data: z.object({
+                documentId: z.string().min(1),
+                publishedAt: z.null(),
+              }),
+            })
+            .parse(await draftCreation.json());
+          const changed: string = await manager.createPublishedDocument(
+            'api::node-configuration.node-configuration',
+            {
+              database,
+              type: 'image',
+              label: 'Published Label',
+              property: 'published',
+              linkTemplate: 'https://example.test/published/{value}',
+              urlEncode: true,
+              valueRegex: '.*',
+            },
+            testContext,
+          );
+          const draftUpdate: Response = await manager.updateDocument(
+            'api::node-configuration.node-configuration',
+            changed,
+            { label: 'Changed Draft Label', property: 'changedDraft' },
+            testContext,
+          );
+          assert.equal(draftUpdate.status, 200);
+          const draftResponse: Response = await manager.readDocument(
+            'api::node-configuration.node-configuration',
+            changed,
+            testContext,
+          );
+          assert.equal(draftResponse.status, 200);
+          z.object({
+            data: z.object({
+              documentId: z.literal(changed),
+              publishedAt: z.null(),
+              label: z.literal('Changed Draft Label'),
+            }),
+          }).parse(await draftResponse.json());
+          const foreign: string = await manager.createPublishedDocument(
+            'api::node-configuration.node-configuration',
+            {
+              database: otherDatabase,
+              type: 'link',
+              label: 'Foreign Label',
+              property: 'foreign',
+              linkTemplate: 'https://example.test/foreign/{value}',
+              urlEncode: false,
+              valueRegex: '.*',
+            },
+            testContext,
+          );
+          const originalForeignResponse: Response = await manager.readDocument(
+            'api::node-configuration.node-configuration',
+            foreign,
+            testContext,
+          );
+          assert.equal(originalForeignResponse.status, 200);
+          const originalForeign: unknown = await originalForeignResponse.json();
+          z.object({
+            data: z.object({ documentId: z.literal(foreign) }),
+          }).parse(originalForeign);
+          const login: PostAuthResponseBodyDto = await manager.loginUser(
+            owner.username,
+            owner.password,
+            testContext,
+          );
+
+          // when
+          const response: Response = await fetch(
+            `${manager.apiUrl}/project/${project}`,
+            {
+              method: 'DELETE',
+              headers: new Headers([['Authorization', `Bearer ${login.jwt}`]]),
+              signal: testContext.signal,
+            },
+          );
+
+          // then
+          assert.equal(response.status, 200);
+          assert.equal(await response.text(), '');
+          const deletedProject: Response = await manager.readDocument(
+            'api::project.project',
+            project,
+            testContext,
+          );
+          assert.equal(deletedProject.status, 404);
+          const normalResponse: Response = await manager.readDocument(
+            'api::node-configuration.node-configuration',
+            normal,
+            testContext,
+          );
+          const unpublishedResponse: Response = await manager.readDocument(
+            'api::node-configuration.node-configuration',
+            unpublished.data.documentId,
+            testContext,
+          );
+          const changedResponse: Response = await manager.readDocument(
+            'api::node-configuration.node-configuration',
+            changed,
+            testContext,
+          );
+          const foreignResponse: Response = await manager.readDocument(
+            'api::node-configuration.node-configuration',
+            foreign,
+            testContext,
+          );
+          assert.deepEqual(
+            {
+              normal: normalResponse.status,
+              unpublished: unpublishedResponse.status,
+              changed: changedResponse.status,
+              foreign: foreignResponse.status,
+            },
+            { normal: 404, unpublished: 404, changed: 404, foreign: 200 },
+          );
+          assert.deepEqual(await foreignResponse.json(), originalForeign);
+          const remainingProject: Response = await manager.readDocument(
+            'api::project.project',
+            otherProject,
+            testContext,
+          );
+          assert.equal(remainingProject.status, 200);
+          z.object({
+            data: z.object({
+              documentId: z.literal(otherProject),
+              title: z.literal('Other Project'),
+            }),
+          }).parse(await remainingProject.json());
+        });
+
         test('deletes all scenario groups of the project and preserves groups of other projects', async (testContext: TestContext): Promise<void> => {
           // given
           const owner: E2ETestApplicationUser =
