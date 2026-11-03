@@ -2111,6 +2111,119 @@ describe('/project', (suiteContext: SuiteContext): void => {
     });
     describe('DELETE', (): void => {
       describe('200', (): void => {
+        test('deletes all scenario groups of the project and preserves groups of other projects', async (testContext: TestContext): Promise<void> => {
+          // given
+          const owner: E2ETestApplicationUser =
+            await manager.registerUser(testContext);
+          const project: string = await manager.createPublishedDocument(
+            'api::project.project',
+            {
+              title: 'Scenario Project',
+              owner: owner.documentId,
+              collaborators: [],
+            },
+            testContext,
+          );
+          const firstGroup: string = await manager.createPublishedDocument(
+            'api::scenario-group.scenario-group',
+            { title: 'First Group', project },
+            testContext,
+          );
+          const secondGroup: string = await manager.createPublishedDocument(
+            'api::scenario-group.scenario-group',
+            { title: 'Second Group', project },
+            testContext,
+          );
+          const draftCreation: Response = await manager.createDocument(
+            'api::scenario-group.scenario-group',
+            { title: 'Draft Group', project },
+            testContext,
+          );
+          assert.equal(draftCreation.status, 201);
+          const draft: { data: { documentId: string; publishedAt: null } } = z
+            .object({
+              data: z.object({
+                documentId: z.string().min(1),
+                publishedAt: z.null(),
+              }),
+            })
+            .parse(await draftCreation.json());
+          const otherProject: string = await manager.createPublishedDocument(
+            'api::project.project',
+            {
+              title: 'Other Project',
+              owner: owner.documentId,
+              collaborators: [],
+            },
+            testContext,
+          );
+          const otherGroup: string = await manager.createPublishedDocument(
+            'api::scenario-group.scenario-group',
+            { title: 'Other Group', project: otherProject },
+            testContext,
+          );
+          const login: PostAuthResponseBodyDto = await manager.loginUser(
+            owner.username,
+            owner.password,
+            testContext,
+          );
+
+          // when
+          const response: Response = await fetch(
+            `${manager.apiUrl}/project/${project}`,
+            {
+              method: 'DELETE',
+              headers: new Headers([['Authorization', `Bearer ${login.jwt}`]]),
+              signal: testContext.signal,
+            },
+          );
+
+          // then
+          assert.equal(response.status, 200);
+          assert.equal(await response.text(), '');
+          const deletedProject: Response = await manager.readDocument(
+            'api::project.project',
+            project,
+            testContext,
+          );
+          assert.equal(deletedProject.status, 404);
+          const firstStored: Response = await manager.readDocument(
+            'api::scenario-group.scenario-group',
+            firstGroup,
+            testContext,
+          );
+          const secondStored: Response = await manager.readDocument(
+            'api::scenario-group.scenario-group',
+            secondGroup,
+            testContext,
+          );
+          const draftStored: Response = await manager.readDocument(
+            'api::scenario-group.scenario-group',
+            draft.data.documentId,
+            testContext,
+          );
+          const otherStored: Response = await manager.readDocument(
+            'api::scenario-group.scenario-group',
+            otherGroup,
+            testContext,
+          );
+          assert.deepEqual(
+            {
+              first: firstStored.status,
+              second: secondStored.status,
+              draft: draftStored.status,
+              other: otherStored.status,
+            },
+            { first: 404, second: 404, draft: 404, other: 200 },
+          );
+          z.object({
+            data: z.object({
+              documentId: z.literal(otherGroup),
+              title: z.literal('Other Group'),
+            }),
+          }).parse(await otherStored.json());
+        });
+
         test('owner can delete the project', async (testContext: TestContext): Promise<void> => {
           // given
           const owner: E2ETestApplicationUser =

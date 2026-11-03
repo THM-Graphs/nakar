@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Delete,
+  NotFoundException,
   Param,
   Post,
   Put,
@@ -14,6 +15,7 @@ import { SchemaFactoryService } from '../../../schema/SchemaFactoryService';
 import { ScenarioGroupDto } from '../../../schema/dtos/ScenarioGroupDto';
 import { UpdateScenarioGroupRequestBodyDto } from './dto/UpdateScenarioGroupRequestBodyDto';
 import { ScenarioGroupBelongsToProject } from '../../guards/ScenarioGroupBelongsToProject';
+import { DatabaseService } from '../../../database/DatabaseService';
 
 @Controller('/project/:projectId/scenario-group')
 @ApiParam({
@@ -23,7 +25,10 @@ import { ScenarioGroupBelongsToProject } from '../../guards/ScenarioGroupBelongs
 })
 @UseGuards(UserCanAccessProject)
 export class ScenarioGroupController {
-  public constructor(private readonly _schemaFactory: SchemaFactoryService) {}
+  public constructor(
+    private readonly _schemaFactory: SchemaFactoryService,
+    private readonly _databaseService: DatabaseService,
+  ) {}
 
   @Post()
   @ApiResponse({ type: ScenarioGroupDto })
@@ -47,9 +52,11 @@ export class ScenarioGroupController {
   public async deleteScenarioGroup(
     @Param('scenarioGroupId') scenarioGroupId: string,
   ): Promise<void> {
-    await strapi.documents('api::scenario-group.scenario-group').delete({
-      documentId: scenarioGroupId,
-    });
+    const deleted: boolean =
+      await this._databaseService.deleteScenarioGroup(scenarioGroupId);
+    if (!deleted) {
+      throw new NotFoundException();
+    }
   }
 
   @Put(':scenarioGroupId')

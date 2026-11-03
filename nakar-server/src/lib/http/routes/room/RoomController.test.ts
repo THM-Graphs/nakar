@@ -802,7 +802,9 @@ describe('/project/:projectId/room', (suiteContext: SuiteContext): void => {
             error: 'Forbidden',
           });
         });
-        test('rejects a room belonging to another project', async (testContext: TestContext): Promise<void> => {
+      });
+      describe('404', (): void => {
+        test('rejects a room belonging to another existing project', async (testContext: TestContext): Promise<void> => {
           // given
           const owner: E2ETestApplicationUser =
             await manager.registerUser(testContext);
@@ -849,15 +851,13 @@ describe('/project/:projectId/room', (suiteContext: SuiteContext): void => {
           });
 
           // then
-          assert.equal(response.status, 403);
+          assert.equal(response.status, 404);
           assert.deepEqual(await response.json(), {
-            statusCode: 403,
-            message: 'Forbidden resource',
-            error: 'Forbidden',
+            statusCode: 404,
+            message: 'Not Found',
           });
         });
-      });
-      describe('404', (): void => {
+
         test('rejects an unknown room', async (testContext: TestContext): Promise<void> => {
           // given
           const owner: E2ETestApplicationUser =
@@ -1618,7 +1618,9 @@ describe('/project/:projectId/room', (suiteContext: SuiteContext): void => {
             original,
           );
         });
-        test('rejects a room belonging to another project', async (testContext: TestContext): Promise<void> => {
+      });
+      describe('404', (): void => {
+        test('rejects a room belonging to another existing project', async (testContext: TestContext): Promise<void> => {
           // given
           const owner: E2ETestApplicationUser =
             await manager.registerUser(testContext);
@@ -1681,11 +1683,10 @@ describe('/project/:projectId/room', (suiteContext: SuiteContext): void => {
           });
 
           // then
-          assert.equal(response.status, 403);
+          assert.equal(response.status, 404);
           assert.deepEqual(await response.json(), {
-            statusCode: 403,
-            message: 'Forbidden resource',
-            error: 'Forbidden',
+            statusCode: 404,
+            message: 'Not Found',
           });
           const persisted: Response = await manager.readDocument(
             'api::room.room',
@@ -1698,8 +1699,7 @@ describe('/project/:projectId/room', (suiteContext: SuiteContext): void => {
             original,
           );
         });
-      });
-      describe('404', (): void => {
+
         test('rejects an unknown room', async (testContext: TestContext): Promise<void> => {
           // given
           const owner: E2ETestApplicationUser =
@@ -2775,7 +2775,9 @@ describe('/project/:projectId/room', (suiteContext: SuiteContext): void => {
             original,
           );
         });
-        test('rejects a room belonging to another project', async (testContext: TestContext): Promise<void> => {
+      });
+      describe('404', (): void => {
+        test('rejects a room belonging to another existing project', async (testContext: TestContext): Promise<void> => {
           // given
           const owner: E2ETestApplicationUser =
             await manager.registerUser(testContext);
@@ -2831,11 +2833,10 @@ describe('/project/:projectId/room', (suiteContext: SuiteContext): void => {
           });
 
           // then
-          assert.equal(response.status, 403);
+          assert.equal(response.status, 404);
           assert.deepEqual(await response.json(), {
-            statusCode: 403,
-            message: 'Forbidden resource',
-            error: 'Forbidden',
+            statusCode: 404,
+            message: 'Not Found',
           });
           const persisted: Response = await manager.readDocument(
             'api::room.room',
@@ -2848,8 +2849,7 @@ describe('/project/:projectId/room', (suiteContext: SuiteContext): void => {
             original,
           );
         });
-      });
-      describe('404', (): void => {
+
         test('rejects an unknown room', async (testContext: TestContext): Promise<void> => {
           // given
           const owner: E2ETestApplicationUser =

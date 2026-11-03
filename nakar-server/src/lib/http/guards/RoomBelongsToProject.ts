@@ -30,12 +30,10 @@ export class RoomBelongsToProject implements CanActivate {
       populate: { project: { populate: [] } },
     });
 
-    if (room == null) {
+    if (room == null || room.project?.documentId !== projectId) {
       throw new NotFoundException();
     }
 
-    const isOkay: boolean = room.project?.documentId === projectId;
-
-    return isOkay;
+    return true;
   }
 }

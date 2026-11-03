@@ -331,7 +331,10 @@ export class E2ETestManager {
   }
 
   public async createPublishedDocument(
-    model: 'api::project.project' | 'api::room.room',
+    model:
+      | 'api::project.project'
+      | 'api::room.room'
+      | 'api::scenario-group.scenario-group',
     data: Record<string, unknown>,
     testContext: TestContext,
   ): Promise<string> {

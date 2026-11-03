@@ -43,6 +43,24 @@ export class DatabaseService {
       await this.deleteRoom(roomId);
     }
 
+    const scenarioGroups: { documentId: string }[] = z
+      .array(z.object({ documentId: z.string() }))
+      .parse(
+        await strapi.db.query('api::scenario-group.scenario-group').findMany({
+          select: ['documentId'],
+          where: { project: { documentId: projectId } },
+        }),
+      );
+    const scenarioGroupIds: SSet<string> = new SSet<string>(
+      scenarioGroups.map(
+        (scenarioGroup: { documentId: string }): string =>
+          scenarioGroup.documentId,
+      ),
+    );
+    for (const scenarioGroupId of scenarioGroupIds) {
+      await this.deleteScenarioGroup(scenarioGroupId);
+    }
+
     const result: Awaited<
       ReturnType<Modules.Documents.ServiceInstance['delete']>
     > = await strapi.documents('api::project.project').delete({
@@ -58,6 +76,15 @@ export class DatabaseService {
     const result: Awaited<
       ReturnType<Modules.Documents.ServiceInstance['delete']>
     > = await strapi.documents('api::room.room').delete({ documentId: roomId });
+    return result.entries.length > 0;
+  }
+
+  public async deleteScenarioGroup(scenarioGroupId: string): Promise<boolean> {
+    const result: Awaited<
+      ReturnType<Modules.Documents.ServiceInstance['delete']>
+    > = await strapi
+      .documents('api::scenario-group.scenario-group')
+      .delete({ documentId: scenarioGroupId });
     return result.entries.length > 0;
   }
 

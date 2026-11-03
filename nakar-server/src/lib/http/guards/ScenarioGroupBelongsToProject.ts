@@ -28,11 +28,17 @@ export class ScenarioGroupBelongsToProject implements CanActivate {
       .documents('api::scenario-group.scenario-group')
       .findOne({
         documentId: scenarioGroupId,
+        status: 'published',
         populate: { project: { populate: [] } },
       });
 
-    const isOkay: boolean = scenarioGroup?.project?.documentId === projectId;
+    if (
+      scenarioGroup == null ||
+      scenarioGroup.project?.documentId !== projectId
+    ) {
+      throw new NotFoundException();
+    }
 
-    return isOkay;
+    return true;
   }
 }
