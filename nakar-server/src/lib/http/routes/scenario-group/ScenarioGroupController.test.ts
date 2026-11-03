@@ -1,3 +1,4 @@
+import type { UpdateScenarioGroupRequestBodyDto } from './dto/UpdateScenarioGroupRequestBodyDto';
 import type { E2ETestApplicationUser } from '../../../../e2e/E2ETestApplicationUser';
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
@@ -439,7 +440,9 @@ describe('/project/:projectId/scenario-group', (suiteContext: SuiteContext): voi
                 ['Authorization', `Bearer ${login.jwt}`],
                 ['Content-Type', 'application/json'],
               ]),
-              body: JSON.stringify({ title: 'Updated Group' }),
+              body: JSON.stringify({
+                title: 'Updated Group',
+              } satisfies UpdateScenarioGroupRequestBodyDto),
               signal: testContext.signal,
             },
           );
@@ -516,7 +519,9 @@ describe('/project/:projectId/scenario-group', (suiteContext: SuiteContext): voi
                 ['Authorization', `Bearer ${login.jwt}`],
                 ['Content-Type', 'application/json'],
               ]),
-              body: JSON.stringify({ title: 'Updated Group' }),
+              body: JSON.stringify({
+                title: 'Updated Group',
+              } satisfies UpdateScenarioGroupRequestBodyDto),
               signal: testContext.signal,
             },
           );
@@ -571,7 +576,9 @@ describe('/project/:projectId/scenario-group', (suiteContext: SuiteContext): voi
                 ['Authorization', `Bearer ${login.jwt}`],
                 ['Content-Type', 'application/json'],
               ]),
-              body: JSON.stringify({ title: 'Updated Group' }),
+              body: JSON.stringify({
+                title: 'Updated Group',
+              } satisfies UpdateScenarioGroupRequestBodyDto),
               signal: testContext.signal,
             },
           );
@@ -618,7 +625,9 @@ describe('/project/:projectId/scenario-group', (suiteContext: SuiteContext): voi
                 ['Authorization', `Bearer ${login.jwt}`],
                 ['Content-Type', 'application/json'],
               ]),
-              body: JSON.stringify({ title: '' }),
+              body: JSON.stringify({
+                title: '',
+              } satisfies UpdateScenarioGroupRequestBodyDto),
               signal: testContext.signal,
             },
           );
@@ -667,7 +676,10 @@ describe('/project/:projectId/scenario-group', (suiteContext: SuiteContext): voi
                 ['Authorization', `Bearer ${login.jwt}`],
                 ['Content-Type', 'application/json'],
               ]),
-              body: JSON.stringify({}),
+              body: JSON.stringify(
+                {} satisfies Omit<UpdateScenarioGroupRequestBodyDto, 'title'> &
+                  Record<string, never>,
+              ),
               signal: testContext.signal,
             },
           );
@@ -715,7 +727,10 @@ describe('/project/:projectId/scenario-group', (suiteContext: SuiteContext): voi
                 ['Authorization', `Bearer ${login.jwt}`],
                 ['Content-Type', 'application/json'],
               ]),
-              body: JSON.stringify({ title: null }),
+              body: JSON.stringify({ title: null } satisfies Omit<
+                UpdateScenarioGroupRequestBodyDto,
+                'title'
+              > & { title: null }),
               signal: testContext.signal,
             },
           );
@@ -763,7 +778,10 @@ describe('/project/:projectId/scenario-group', (suiteContext: SuiteContext): voi
                 ['Authorization', `Bearer ${login.jwt}`],
                 ['Content-Type', 'application/json'],
               ]),
-              body: JSON.stringify({ title: 123 }),
+              body: JSON.stringify({ title: 123 } satisfies Omit<
+                UpdateScenarioGroupRequestBodyDto,
+                'title'
+              > & { title: number }),
               signal: testContext.signal,
             },
           );
@@ -814,6 +832,8 @@ describe('/project/:projectId/scenario-group', (suiteContext: SuiteContext): voi
               body: JSON.stringify({
                 title: 'Updated Group',
                 unexpected: true,
+              } satisfies UpdateScenarioGroupRequestBodyDto & {
+                unexpected: boolean;
               }),
               signal: testContext.signal,
             },
@@ -869,7 +889,9 @@ describe('/project/:projectId/scenario-group', (suiteContext: SuiteContext): voi
                 ['Authorization', `Bearer ${login.jwt}`],
                 ['Content-Type', 'application/json'],
               ]),
-              body: JSON.stringify({ title: 'Updated Group' }),
+              body: JSON.stringify({
+                title: 'Updated Group',
+              } satisfies UpdateScenarioGroupRequestBodyDto),
               signal: testContext.signal,
             },
           );
@@ -918,7 +940,9 @@ describe('/project/:projectId/scenario-group', (suiteContext: SuiteContext): voi
             {
               method: 'PUT',
               headers: new Headers([['Content-Type', 'application/json']]),
-              body: JSON.stringify({ title: 'Updated Group' }),
+              body: JSON.stringify({
+                title: 'Updated Group',
+              } satisfies UpdateScenarioGroupRequestBodyDto),
               signal: testContext.signal,
             },
           );
@@ -982,7 +1006,9 @@ describe('/project/:projectId/scenario-group', (suiteContext: SuiteContext): voi
                 ['Authorization', `Bearer ${login.jwt}`],
                 ['Content-Type', 'application/json'],
               ]),
-              body: JSON.stringify({ title: 'Updated Group' }),
+              body: JSON.stringify({
+                title: 'Updated Group',
+              } satisfies UpdateScenarioGroupRequestBodyDto),
               signal: testContext.signal,
             },
           );
@@ -1044,7 +1070,9 @@ describe('/project/:projectId/scenario-group', (suiteContext: SuiteContext): voi
                 ['Authorization', `Bearer ${login.jwt}`],
                 ['Content-Type', 'application/json'],
               ]),
-              body: JSON.stringify({ title: 'Updated Group' }),
+              body: JSON.stringify({
+                title: 'Updated Group',
+              } satisfies UpdateScenarioGroupRequestBodyDto),
               signal: testContext.signal,
             },
           );
@@ -1108,7 +1136,9 @@ describe('/project/:projectId/scenario-group', (suiteContext: SuiteContext): voi
                 ['Authorization', `Bearer ${login.jwt}`],
                 ['Content-Type', 'application/json'],
               ]),
-              body: JSON.stringify({ title: 'Updated Group' }),
+              body: JSON.stringify({
+                title: 'Updated Group',
+              } satisfies UpdateScenarioGroupRequestBodyDto),
               signal: testContext.signal,
             },
           );
@@ -1159,7 +1189,9 @@ describe('/project/:projectId/scenario-group', (suiteContext: SuiteContext): voi
                 ['Authorization', `Bearer ${login.jwt}`],
                 ['Content-Type', 'application/json'],
               ]),
-              body: JSON.stringify({ title: 'Updated Group' }),
+              body: JSON.stringify({
+                title: 'Updated Group',
+              } satisfies UpdateScenarioGroupRequestBodyDto),
               signal: testContext.signal,
             },
           );
@@ -1205,7 +1237,9 @@ describe('/project/:projectId/scenario-group', (suiteContext: SuiteContext): voi
                 ['Authorization', `Bearer ${login.jwt}`],
                 ['Content-Type', 'application/json'],
               ]),
-              body: JSON.stringify({ title: 'Updated Group' }),
+              body: JSON.stringify({
+                title: 'Updated Group',
+              } satisfies UpdateScenarioGroupRequestBodyDto),
               signal: testContext.signal,
             },
           );

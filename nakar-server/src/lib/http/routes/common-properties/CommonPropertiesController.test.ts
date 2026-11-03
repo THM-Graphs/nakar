@@ -1,3 +1,4 @@
+import type { UpdateCommonPropertyRequestBodyDto } from './dto/UpdateCommonPropertyRequestBodyDto';
 import type { E2ETestApplicationUser } from '../../../../e2e/E2ETestApplicationUser';
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
@@ -1048,14 +1049,6 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
             testContext,
           );
           assert.equal(draftChange.status, 200);
-          const body: Record<string, unknown> = {
-            leftLabel: 'Person',
-            leftProperty: 'name',
-            rightLabel: 'Human',
-            rightProperty: 'label',
-            leftDatabaseId: '',
-            rightDatabaseId: '',
-          };
 
           // when
           const response: Response = await fetch(
@@ -1066,7 +1059,14 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
                 ['Authorization', `Bearer ${ownerLogin.jwt}`],
                 ['Content-Type', 'application/json'],
               ]),
-              body: JSON.stringify(body),
+              body: JSON.stringify({
+                leftLabel: 'Person',
+                leftProperty: 'name',
+                rightLabel: 'Human',
+                rightProperty: 'label',
+                leftDatabaseId: '',
+                rightDatabaseId: '',
+              } satisfies UpdateCommonPropertyRequestBodyDto),
               signal: testContext.signal,
             },
           );
@@ -1093,10 +1093,10 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
             (item: CommonPropertyDto): boolean => item.id === resource,
           );
           assert.ok(persisted);
-          assert.equal(persisted.leftLabel, body['leftLabel']);
-          assert.equal(persisted.leftProperty, body['leftProperty']);
-          assert.equal(persisted.rightLabel, body['rightLabel']);
-          assert.equal(persisted.rightProperty, body['rightProperty']);
+          assert.equal(persisted.leftLabel, 'Person');
+          assert.equal(persisted.leftProperty, 'name');
+          assert.equal(persisted.rightLabel, 'Human');
+          assert.equal(persisted.rightProperty, 'label');
         });
 
         test('published collaborator retains access after draft removal', async (testContext: TestContext): Promise<void> => {
@@ -1142,14 +1142,6 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
             testContext,
           );
           assert.equal(draftRemoval.status, 200);
-          const body: Record<string, unknown> = {
-            leftLabel: 'Person',
-            leftProperty: 'name',
-            rightLabel: 'Human',
-            rightProperty: 'label',
-            leftDatabaseId: '',
-            rightDatabaseId: '',
-          };
 
           // when
           const response: Response = await fetch(
@@ -1160,7 +1152,14 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
                 ['Authorization', `Bearer ${login.jwt}`],
                 ['Content-Type', 'application/json'],
               ]),
-              body: JSON.stringify(body),
+              body: JSON.stringify({
+                leftLabel: 'Person',
+                leftProperty: 'name',
+                rightLabel: 'Human',
+                rightProperty: 'label',
+                leftDatabaseId: '',
+                rightDatabaseId: '',
+              } satisfies UpdateCommonPropertyRequestBodyDto),
               signal: testContext.signal,
             },
           );
@@ -1187,10 +1186,10 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
             (item: CommonPropertyDto): boolean => item.id === resource,
           );
           assert.ok(persisted);
-          assert.equal(persisted.leftLabel, body['leftLabel']);
-          assert.equal(persisted.leftProperty, body['leftProperty']);
-          assert.equal(persisted.rightLabel, body['rightLabel']);
-          assert.equal(persisted.rightProperty, body['rightProperty']);
+          assert.equal(persisted.leftLabel, 'Person');
+          assert.equal(persisted.leftProperty, 'name');
+          assert.equal(persisted.rightLabel, 'Human');
+          assert.equal(persisted.rightProperty, 'label');
         });
 
         test('links databases belonging to the project', async (testContext: TestContext): Promise<void> => {
@@ -1232,18 +1231,6 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
             { title: 'Right Database', project, databaseType: 'sparql' },
             testContext,
           );
-          const body: Record<string, unknown> = {
-            ...{
-              leftLabel: 'Person',
-              leftProperty: 'name',
-              rightLabel: 'Human',
-              rightProperty: 'label',
-              leftDatabaseId: '',
-              rightDatabaseId: '',
-            },
-            leftDatabaseId: leftDatabase,
-            rightDatabaseId: rightDatabase,
-          };
 
           // when
           const response: Response = await fetch(
@@ -1254,7 +1241,14 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
                 ['Authorization', `Bearer ${ownerLogin.jwt}`],
                 ['Content-Type', 'application/json'],
               ]),
-              body: JSON.stringify(body),
+              body: JSON.stringify({
+                leftLabel: 'Person',
+                leftProperty: 'name',
+                rightLabel: 'Human',
+                rightProperty: 'label',
+                leftDatabaseId: leftDatabase,
+                rightDatabaseId: rightDatabase,
+              } satisfies UpdateCommonPropertyRequestBodyDto),
               signal: testContext.signal,
             },
           );
@@ -1281,10 +1275,10 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
             (item: CommonPropertyDto): boolean => item.id === resource,
           );
           assert.ok(persisted);
-          assert.equal(persisted.leftLabel, body['leftLabel']);
-          assert.equal(persisted.leftProperty, body['leftProperty']);
-          assert.equal(persisted.rightLabel, body['rightLabel']);
-          assert.equal(persisted.rightProperty, body['rightProperty']);
+          assert.equal(persisted.leftLabel, 'Person');
+          assert.equal(persisted.leftProperty, 'name');
+          assert.equal(persisted.rightLabel, 'Human');
+          assert.equal(persisted.rightProperty, 'label');
           assert.equal(persisted.leftDatabase?.id, leftDatabase);
           assert.equal(persisted.rightDatabase?.id, rightDatabase);
         });
@@ -1335,14 +1329,6 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
             testContext,
           );
           assert.equal(assignment.status, 200);
-          const body: Record<string, unknown> = {
-            leftLabel: 'Person',
-            leftProperty: 'name',
-            rightLabel: 'Human',
-            rightProperty: 'label',
-            leftDatabaseId: '',
-            rightDatabaseId: '',
-          };
 
           // when
           const response: Response = await fetch(
@@ -1353,7 +1339,14 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
                 ['Authorization', `Bearer ${ownerLogin.jwt}`],
                 ['Content-Type', 'application/json'],
               ]),
-              body: JSON.stringify(body),
+              body: JSON.stringify({
+                leftLabel: 'Person',
+                leftProperty: 'name',
+                rightLabel: 'Human',
+                rightProperty: 'label',
+                leftDatabaseId: '',
+                rightDatabaseId: '',
+              } satisfies UpdateCommonPropertyRequestBodyDto),
               signal: testContext.signal,
             },
           );
@@ -1380,10 +1373,10 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
             (item: CommonPropertyDto): boolean => item.id === resource,
           );
           assert.ok(persisted);
-          assert.equal(persisted.leftLabel, body['leftLabel']);
-          assert.equal(persisted.leftProperty, body['leftProperty']);
-          assert.equal(persisted.rightLabel, body['rightLabel']);
-          assert.equal(persisted.rightProperty, body['rightProperty']);
+          assert.equal(persisted.leftLabel, 'Person');
+          assert.equal(persisted.leftProperty, 'name');
+          assert.equal(persisted.rightLabel, 'Human');
+          assert.equal(persisted.rightProperty, 'label');
           assert.equal(persisted.leftDatabase, null);
           assert.equal(persisted.rightDatabase, null);
         });
@@ -1417,14 +1410,6 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
             owner.password,
             testContext,
           );
-          const body: Record<string, unknown> = {
-            leftLabel: 'Person',
-            leftProperty: 'name',
-            rightLabel: 'Human',
-            rightProperty: 'label',
-            leftDatabaseId: '',
-            rightDatabaseId: '',
-          };
 
           // when
           const response: Response = await fetch(
@@ -1435,7 +1420,14 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
                 ['Authorization', `Bearer ${ownerLogin.jwt}`],
                 ['Content-Type', 'application/json'],
               ]),
-              body: JSON.stringify(body),
+              body: JSON.stringify({
+                leftLabel: 'Person',
+                leftProperty: 'name',
+                rightLabel: 'Human',
+                rightProperty: 'label',
+                leftDatabaseId: '',
+                rightDatabaseId: '',
+              } satisfies UpdateCommonPropertyRequestBodyDto),
               signal: testContext.signal,
             },
           );
@@ -1461,10 +1453,10 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
             (item: CommonPropertyDto): boolean => item.id === resource,
           );
           assert.ok(persisted);
-          assert.equal(persisted.leftLabel, body['leftLabel']);
-          assert.equal(persisted.leftProperty, body['leftProperty']);
-          assert.equal(persisted.rightLabel, body['rightLabel']);
-          assert.equal(persisted.rightProperty, body['rightProperty']);
+          assert.equal(persisted.leftLabel, 'Person');
+          assert.equal(persisted.leftProperty, 'name');
+          assert.equal(persisted.rightLabel, 'Human');
+          assert.equal(persisted.rightProperty, 'label');
         });
 
         test('collaborator can update a common property', async (testContext: TestContext): Promise<void> => {
@@ -1503,14 +1495,6 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
             collaborator.password,
             testContext,
           );
-          const body: Record<string, unknown> = {
-            leftLabel: 'Person',
-            leftProperty: 'name',
-            rightLabel: 'Human',
-            rightProperty: 'label',
-            leftDatabaseId: '',
-            rightDatabaseId: '',
-          };
 
           // when
           const response: Response = await fetch(
@@ -1521,7 +1505,14 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
                 ['Authorization', `Bearer ${login.jwt}`],
                 ['Content-Type', 'application/json'],
               ]),
-              body: JSON.stringify(body),
+              body: JSON.stringify({
+                leftLabel: 'Person',
+                leftProperty: 'name',
+                rightLabel: 'Human',
+                rightProperty: 'label',
+                leftDatabaseId: '',
+                rightDatabaseId: '',
+              } satisfies UpdateCommonPropertyRequestBodyDto),
               signal: testContext.signal,
             },
           );
@@ -1547,10 +1538,10 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
             (item: CommonPropertyDto): boolean => item.id === resource,
           );
           assert.ok(persisted);
-          assert.equal(persisted.leftLabel, body['leftLabel']);
-          assert.equal(persisted.leftProperty, body['leftProperty']);
-          assert.equal(persisted.rightLabel, body['rightLabel']);
-          assert.equal(persisted.rightProperty, body['rightProperty']);
+          assert.equal(persisted.leftLabel, 'Person');
+          assert.equal(persisted.leftProperty, 'name');
+          assert.equal(persisted.rightLabel, 'Human');
+          assert.equal(persisted.rightProperty, 'label');
         });
 
         test('accepts empty property fields and clears database relations', async (testContext: TestContext): Promise<void> => {
@@ -1582,14 +1573,6 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
             owner.password,
             testContext,
           );
-          const body: Record<string, unknown> = {
-            leftLabel: '',
-            leftProperty: '',
-            rightLabel: '',
-            rightProperty: '',
-            leftDatabaseId: '',
-            rightDatabaseId: '',
-          };
 
           // when
           const response: Response = await fetch(
@@ -1600,7 +1583,14 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
                 ['Authorization', `Bearer ${ownerLogin.jwt}`],
                 ['Content-Type', 'application/json'],
               ]),
-              body: JSON.stringify(body),
+              body: JSON.stringify({
+                leftLabel: '',
+                leftProperty: '',
+                rightLabel: '',
+                rightProperty: '',
+                leftDatabaseId: '',
+                rightDatabaseId: '',
+              } satisfies UpdateCommonPropertyRequestBodyDto),
               signal: testContext.signal,
             },
           );
@@ -1626,10 +1616,10 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
             (item: CommonPropertyDto): boolean => item.id === resource,
           );
           assert.ok(persisted);
-          assert.equal(persisted.leftLabel, body['leftLabel']);
-          assert.equal(persisted.leftProperty, body['leftProperty']);
-          assert.equal(persisted.rightLabel, body['rightLabel']);
-          assert.equal(persisted.rightProperty, body['rightProperty']);
+          assert.equal(persisted.leftLabel, '');
+          assert.equal(persisted.leftProperty, '');
+          assert.equal(persisted.rightLabel, '');
+          assert.equal(persisted.rightProperty, '');
         });
       });
       describe('400', (): void => {
@@ -1690,15 +1680,6 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
           assert.equal(originalPublishedResponse.status, 200);
           const originalPublished: z.infer<typeof listStateSchema> =
             listStateSchema.parse(await originalPublishedResponse.json());
-          const body: Record<string, unknown> = {
-            leftLabel: 'Person',
-            leftProperty: 'name',
-            rightLabel: 'Human',
-            rightProperty: 'label',
-            leftDatabaseId: '',
-            rightDatabaseId: '',
-          };
-          delete body['leftLabel'];
 
           // when
           const response: Response = await fetch(
@@ -1709,7 +1690,16 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
                 ['Authorization', `Bearer ${ownerLogin.jwt}`],
                 ['Content-Type', 'application/json'],
               ]),
-              body: JSON.stringify(body),
+              body: JSON.stringify({
+                leftProperty: 'name',
+                rightLabel: 'Human',
+                rightProperty: 'label',
+                leftDatabaseId: '',
+                rightDatabaseId: '',
+              } satisfies Omit<
+                UpdateCommonPropertyRequestBodyDto,
+                'leftLabel'
+              >),
               signal: testContext.signal,
             },
           );
@@ -1811,17 +1801,6 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
           assert.equal(originalPublishedResponse.status, 200);
           const originalPublished: z.infer<typeof listStateSchema> =
             listStateSchema.parse(await originalPublishedResponse.json());
-          const body: Record<string, unknown> = {
-            ...{
-              leftLabel: 'Person',
-              leftProperty: 'name',
-              rightLabel: 'Human',
-              rightProperty: 'label',
-              leftDatabaseId: '',
-              rightDatabaseId: '',
-            },
-            leftLabel: null,
-          };
 
           // when
           const response: Response = await fetch(
@@ -1832,7 +1811,19 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
                 ['Authorization', `Bearer ${ownerLogin.jwt}`],
                 ['Content-Type', 'application/json'],
               ]),
-              body: JSON.stringify(body),
+              body: JSON.stringify({
+                leftLabel: null,
+                leftProperty: 'name',
+                rightLabel: 'Human',
+                rightProperty: 'label',
+                leftDatabaseId: '',
+                rightDatabaseId: '',
+              } satisfies Omit<
+                UpdateCommonPropertyRequestBodyDto,
+                'leftLabel'
+              > & {
+                leftLabel: null;
+              }),
               signal: testContext.signal,
             },
           );
@@ -1934,17 +1925,6 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
           assert.equal(originalPublishedResponse.status, 200);
           const originalPublished: z.infer<typeof listStateSchema> =
             listStateSchema.parse(await originalPublishedResponse.json());
-          const body: Record<string, unknown> = {
-            ...{
-              leftLabel: 'Person',
-              leftProperty: 'name',
-              rightLabel: 'Human',
-              rightProperty: 'label',
-              leftDatabaseId: '',
-              rightDatabaseId: '',
-            },
-            leftLabel: 123,
-          };
 
           // when
           const response: Response = await fetch(
@@ -1955,7 +1935,19 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
                 ['Authorization', `Bearer ${ownerLogin.jwt}`],
                 ['Content-Type', 'application/json'],
               ]),
-              body: JSON.stringify(body),
+              body: JSON.stringify({
+                leftLabel: 123,
+                leftProperty: 'name',
+                rightLabel: 'Human',
+                rightProperty: 'label',
+                leftDatabaseId: '',
+                rightDatabaseId: '',
+              } satisfies Omit<
+                UpdateCommonPropertyRequestBodyDto,
+                'leftLabel'
+              > & {
+                leftLabel: number;
+              }),
               signal: testContext.signal,
             },
           );
@@ -2057,15 +2049,6 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
           assert.equal(originalPublishedResponse.status, 200);
           const originalPublished: z.infer<typeof listStateSchema> =
             listStateSchema.parse(await originalPublishedResponse.json());
-          const body: Record<string, unknown> = {
-            leftLabel: 'Person',
-            leftProperty: 'name',
-            rightLabel: 'Human',
-            rightProperty: 'label',
-            leftDatabaseId: '',
-            rightDatabaseId: '',
-          };
-          delete body['leftProperty'];
 
           // when
           const response: Response = await fetch(
@@ -2076,7 +2059,16 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
                 ['Authorization', `Bearer ${ownerLogin.jwt}`],
                 ['Content-Type', 'application/json'],
               ]),
-              body: JSON.stringify(body),
+              body: JSON.stringify({
+                leftLabel: 'Person',
+                rightLabel: 'Human',
+                rightProperty: 'label',
+                leftDatabaseId: '',
+                rightDatabaseId: '',
+              } satisfies Omit<
+                UpdateCommonPropertyRequestBodyDto,
+                'leftProperty'
+              >),
               signal: testContext.signal,
             },
           );
@@ -2178,17 +2170,6 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
           assert.equal(originalPublishedResponse.status, 200);
           const originalPublished: z.infer<typeof listStateSchema> =
             listStateSchema.parse(await originalPublishedResponse.json());
-          const body: Record<string, unknown> = {
-            ...{
-              leftLabel: 'Person',
-              leftProperty: 'name',
-              rightLabel: 'Human',
-              rightProperty: 'label',
-              leftDatabaseId: '',
-              rightDatabaseId: '',
-            },
-            leftProperty: null,
-          };
 
           // when
           const response: Response = await fetch(
@@ -2199,7 +2180,17 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
                 ['Authorization', `Bearer ${ownerLogin.jwt}`],
                 ['Content-Type', 'application/json'],
               ]),
-              body: JSON.stringify(body),
+              body: JSON.stringify({
+                leftLabel: 'Person',
+                leftProperty: null,
+                rightLabel: 'Human',
+                rightProperty: 'label',
+                leftDatabaseId: '',
+                rightDatabaseId: '',
+              } satisfies Omit<
+                UpdateCommonPropertyRequestBodyDto,
+                'leftProperty'
+              > & { leftProperty: null }),
               signal: testContext.signal,
             },
           );
@@ -2301,17 +2292,6 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
           assert.equal(originalPublishedResponse.status, 200);
           const originalPublished: z.infer<typeof listStateSchema> =
             listStateSchema.parse(await originalPublishedResponse.json());
-          const body: Record<string, unknown> = {
-            ...{
-              leftLabel: 'Person',
-              leftProperty: 'name',
-              rightLabel: 'Human',
-              rightProperty: 'label',
-              leftDatabaseId: '',
-              rightDatabaseId: '',
-            },
-            leftProperty: 123,
-          };
 
           // when
           const response: Response = await fetch(
@@ -2322,7 +2302,17 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
                 ['Authorization', `Bearer ${ownerLogin.jwt}`],
                 ['Content-Type', 'application/json'],
               ]),
-              body: JSON.stringify(body),
+              body: JSON.stringify({
+                leftLabel: 'Person',
+                leftProperty: 123,
+                rightLabel: 'Human',
+                rightProperty: 'label',
+                leftDatabaseId: '',
+                rightDatabaseId: '',
+              } satisfies Omit<
+                UpdateCommonPropertyRequestBodyDto,
+                'leftProperty'
+              > & { leftProperty: number }),
               signal: testContext.signal,
             },
           );
@@ -2424,15 +2414,6 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
           assert.equal(originalPublishedResponse.status, 200);
           const originalPublished: z.infer<typeof listStateSchema> =
             listStateSchema.parse(await originalPublishedResponse.json());
-          const body: Record<string, unknown> = {
-            leftLabel: 'Person',
-            leftProperty: 'name',
-            rightLabel: 'Human',
-            rightProperty: 'label',
-            leftDatabaseId: '',
-            rightDatabaseId: '',
-          };
-          delete body['rightLabel'];
 
           // when
           const response: Response = await fetch(
@@ -2443,7 +2424,16 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
                 ['Authorization', `Bearer ${ownerLogin.jwt}`],
                 ['Content-Type', 'application/json'],
               ]),
-              body: JSON.stringify(body),
+              body: JSON.stringify({
+                leftLabel: 'Person',
+                leftProperty: 'name',
+                rightProperty: 'label',
+                leftDatabaseId: '',
+                rightDatabaseId: '',
+              } satisfies Omit<
+                UpdateCommonPropertyRequestBodyDto,
+                'rightLabel'
+              >),
               signal: testContext.signal,
             },
           );
@@ -2545,17 +2535,6 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
           assert.equal(originalPublishedResponse.status, 200);
           const originalPublished: z.infer<typeof listStateSchema> =
             listStateSchema.parse(await originalPublishedResponse.json());
-          const body: Record<string, unknown> = {
-            ...{
-              leftLabel: 'Person',
-              leftProperty: 'name',
-              rightLabel: 'Human',
-              rightProperty: 'label',
-              leftDatabaseId: '',
-              rightDatabaseId: '',
-            },
-            rightLabel: null,
-          };
 
           // when
           const response: Response = await fetch(
@@ -2566,7 +2545,19 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
                 ['Authorization', `Bearer ${ownerLogin.jwt}`],
                 ['Content-Type', 'application/json'],
               ]),
-              body: JSON.stringify(body),
+              body: JSON.stringify({
+                leftLabel: 'Person',
+                leftProperty: 'name',
+                rightLabel: null,
+                rightProperty: 'label',
+                leftDatabaseId: '',
+                rightDatabaseId: '',
+              } satisfies Omit<
+                UpdateCommonPropertyRequestBodyDto,
+                'rightLabel'
+              > & {
+                rightLabel: null;
+              }),
               signal: testContext.signal,
             },
           );
@@ -2668,17 +2659,6 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
           assert.equal(originalPublishedResponse.status, 200);
           const originalPublished: z.infer<typeof listStateSchema> =
             listStateSchema.parse(await originalPublishedResponse.json());
-          const body: Record<string, unknown> = {
-            ...{
-              leftLabel: 'Person',
-              leftProperty: 'name',
-              rightLabel: 'Human',
-              rightProperty: 'label',
-              leftDatabaseId: '',
-              rightDatabaseId: '',
-            },
-            rightLabel: 123,
-          };
 
           // when
           const response: Response = await fetch(
@@ -2689,7 +2669,19 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
                 ['Authorization', `Bearer ${ownerLogin.jwt}`],
                 ['Content-Type', 'application/json'],
               ]),
-              body: JSON.stringify(body),
+              body: JSON.stringify({
+                leftLabel: 'Person',
+                leftProperty: 'name',
+                rightLabel: 123,
+                rightProperty: 'label',
+                leftDatabaseId: '',
+                rightDatabaseId: '',
+              } satisfies Omit<
+                UpdateCommonPropertyRequestBodyDto,
+                'rightLabel'
+              > & {
+                rightLabel: number;
+              }),
               signal: testContext.signal,
             },
           );
@@ -2791,15 +2783,6 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
           assert.equal(originalPublishedResponse.status, 200);
           const originalPublished: z.infer<typeof listStateSchema> =
             listStateSchema.parse(await originalPublishedResponse.json());
-          const body: Record<string, unknown> = {
-            leftLabel: 'Person',
-            leftProperty: 'name',
-            rightLabel: 'Human',
-            rightProperty: 'label',
-            leftDatabaseId: '',
-            rightDatabaseId: '',
-          };
-          delete body['rightProperty'];
 
           // when
           const response: Response = await fetch(
@@ -2810,7 +2793,16 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
                 ['Authorization', `Bearer ${ownerLogin.jwt}`],
                 ['Content-Type', 'application/json'],
               ]),
-              body: JSON.stringify(body),
+              body: JSON.stringify({
+                leftLabel: 'Person',
+                leftProperty: 'name',
+                rightLabel: 'Human',
+                leftDatabaseId: '',
+                rightDatabaseId: '',
+              } satisfies Omit<
+                UpdateCommonPropertyRequestBodyDto,
+                'rightProperty'
+              >),
               signal: testContext.signal,
             },
           );
@@ -2912,17 +2904,6 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
           assert.equal(originalPublishedResponse.status, 200);
           const originalPublished: z.infer<typeof listStateSchema> =
             listStateSchema.parse(await originalPublishedResponse.json());
-          const body: Record<string, unknown> = {
-            ...{
-              leftLabel: 'Person',
-              leftProperty: 'name',
-              rightLabel: 'Human',
-              rightProperty: 'label',
-              leftDatabaseId: '',
-              rightDatabaseId: '',
-            },
-            rightProperty: null,
-          };
 
           // when
           const response: Response = await fetch(
@@ -2933,7 +2914,17 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
                 ['Authorization', `Bearer ${ownerLogin.jwt}`],
                 ['Content-Type', 'application/json'],
               ]),
-              body: JSON.stringify(body),
+              body: JSON.stringify({
+                leftLabel: 'Person',
+                leftProperty: 'name',
+                rightLabel: 'Human',
+                rightProperty: null,
+                leftDatabaseId: '',
+                rightDatabaseId: '',
+              } satisfies Omit<
+                UpdateCommonPropertyRequestBodyDto,
+                'rightProperty'
+              > & { rightProperty: null }),
               signal: testContext.signal,
             },
           );
@@ -3035,17 +3026,6 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
           assert.equal(originalPublishedResponse.status, 200);
           const originalPublished: z.infer<typeof listStateSchema> =
             listStateSchema.parse(await originalPublishedResponse.json());
-          const body: Record<string, unknown> = {
-            ...{
-              leftLabel: 'Person',
-              leftProperty: 'name',
-              rightLabel: 'Human',
-              rightProperty: 'label',
-              leftDatabaseId: '',
-              rightDatabaseId: '',
-            },
-            rightProperty: 123,
-          };
 
           // when
           const response: Response = await fetch(
@@ -3056,7 +3036,17 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
                 ['Authorization', `Bearer ${ownerLogin.jwt}`],
                 ['Content-Type', 'application/json'],
               ]),
-              body: JSON.stringify(body),
+              body: JSON.stringify({
+                leftLabel: 'Person',
+                leftProperty: 'name',
+                rightLabel: 'Human',
+                rightProperty: 123,
+                leftDatabaseId: '',
+                rightDatabaseId: '',
+              } satisfies Omit<
+                UpdateCommonPropertyRequestBodyDto,
+                'rightProperty'
+              > & { rightProperty: number }),
               signal: testContext.signal,
             },
           );
@@ -3158,15 +3148,6 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
           assert.equal(originalPublishedResponse.status, 200);
           const originalPublished: z.infer<typeof listStateSchema> =
             listStateSchema.parse(await originalPublishedResponse.json());
-          const body: Record<string, unknown> = {
-            leftLabel: 'Person',
-            leftProperty: 'name',
-            rightLabel: 'Human',
-            rightProperty: 'label',
-            leftDatabaseId: '',
-            rightDatabaseId: '',
-          };
-          delete body['leftDatabaseId'];
 
           // when
           const response: Response = await fetch(
@@ -3177,7 +3158,16 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
                 ['Authorization', `Bearer ${ownerLogin.jwt}`],
                 ['Content-Type', 'application/json'],
               ]),
-              body: JSON.stringify(body),
+              body: JSON.stringify({
+                leftLabel: 'Person',
+                leftProperty: 'name',
+                rightLabel: 'Human',
+                rightProperty: 'label',
+                rightDatabaseId: '',
+              } satisfies Omit<
+                UpdateCommonPropertyRequestBodyDto,
+                'leftDatabaseId'
+              >),
               signal: testContext.signal,
             },
           );
@@ -3279,17 +3269,6 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
           assert.equal(originalPublishedResponse.status, 200);
           const originalPublished: z.infer<typeof listStateSchema> =
             listStateSchema.parse(await originalPublishedResponse.json());
-          const body: Record<string, unknown> = {
-            ...{
-              leftLabel: 'Person',
-              leftProperty: 'name',
-              rightLabel: 'Human',
-              rightProperty: 'label',
-              leftDatabaseId: '',
-              rightDatabaseId: '',
-            },
-            leftDatabaseId: null,
-          };
 
           // when
           const response: Response = await fetch(
@@ -3300,7 +3279,17 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
                 ['Authorization', `Bearer ${ownerLogin.jwt}`],
                 ['Content-Type', 'application/json'],
               ]),
-              body: JSON.stringify(body),
+              body: JSON.stringify({
+                leftLabel: 'Person',
+                leftProperty: 'name',
+                rightLabel: 'Human',
+                rightProperty: 'label',
+                leftDatabaseId: null,
+                rightDatabaseId: '',
+              } satisfies Omit<
+                UpdateCommonPropertyRequestBodyDto,
+                'leftDatabaseId'
+              > & { leftDatabaseId: null }),
               signal: testContext.signal,
             },
           );
@@ -3402,17 +3391,6 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
           assert.equal(originalPublishedResponse.status, 200);
           const originalPublished: z.infer<typeof listStateSchema> =
             listStateSchema.parse(await originalPublishedResponse.json());
-          const body: Record<string, unknown> = {
-            ...{
-              leftLabel: 'Person',
-              leftProperty: 'name',
-              rightLabel: 'Human',
-              rightProperty: 'label',
-              leftDatabaseId: '',
-              rightDatabaseId: '',
-            },
-            leftDatabaseId: 123,
-          };
 
           // when
           const response: Response = await fetch(
@@ -3423,7 +3401,17 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
                 ['Authorization', `Bearer ${ownerLogin.jwt}`],
                 ['Content-Type', 'application/json'],
               ]),
-              body: JSON.stringify(body),
+              body: JSON.stringify({
+                leftLabel: 'Person',
+                leftProperty: 'name',
+                rightLabel: 'Human',
+                rightProperty: 'label',
+                leftDatabaseId: 123,
+                rightDatabaseId: '',
+              } satisfies Omit<
+                UpdateCommonPropertyRequestBodyDto,
+                'leftDatabaseId'
+              > & { leftDatabaseId: number }),
               signal: testContext.signal,
             },
           );
@@ -3525,15 +3513,6 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
           assert.equal(originalPublishedResponse.status, 200);
           const originalPublished: z.infer<typeof listStateSchema> =
             listStateSchema.parse(await originalPublishedResponse.json());
-          const body: Record<string, unknown> = {
-            leftLabel: 'Person',
-            leftProperty: 'name',
-            rightLabel: 'Human',
-            rightProperty: 'label',
-            leftDatabaseId: '',
-            rightDatabaseId: '',
-          };
-          delete body['rightDatabaseId'];
 
           // when
           const response: Response = await fetch(
@@ -3544,7 +3523,16 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
                 ['Authorization', `Bearer ${ownerLogin.jwt}`],
                 ['Content-Type', 'application/json'],
               ]),
-              body: JSON.stringify(body),
+              body: JSON.stringify({
+                leftLabel: 'Person',
+                leftProperty: 'name',
+                rightLabel: 'Human',
+                rightProperty: 'label',
+                leftDatabaseId: '',
+              } satisfies Omit<
+                UpdateCommonPropertyRequestBodyDto,
+                'rightDatabaseId'
+              >),
               signal: testContext.signal,
             },
           );
@@ -3646,17 +3634,6 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
           assert.equal(originalPublishedResponse.status, 200);
           const originalPublished: z.infer<typeof listStateSchema> =
             listStateSchema.parse(await originalPublishedResponse.json());
-          const body: Record<string, unknown> = {
-            ...{
-              leftLabel: 'Person',
-              leftProperty: 'name',
-              rightLabel: 'Human',
-              rightProperty: 'label',
-              leftDatabaseId: '',
-              rightDatabaseId: '',
-            },
-            rightDatabaseId: null,
-          };
 
           // when
           const response: Response = await fetch(
@@ -3667,7 +3644,17 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
                 ['Authorization', `Bearer ${ownerLogin.jwt}`],
                 ['Content-Type', 'application/json'],
               ]),
-              body: JSON.stringify(body),
+              body: JSON.stringify({
+                leftLabel: 'Person',
+                leftProperty: 'name',
+                rightLabel: 'Human',
+                rightProperty: 'label',
+                leftDatabaseId: '',
+                rightDatabaseId: null,
+              } satisfies Omit<
+                UpdateCommonPropertyRequestBodyDto,
+                'rightDatabaseId'
+              > & { rightDatabaseId: null }),
               signal: testContext.signal,
             },
           );
@@ -3769,17 +3756,6 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
           assert.equal(originalPublishedResponse.status, 200);
           const originalPublished: z.infer<typeof listStateSchema> =
             listStateSchema.parse(await originalPublishedResponse.json());
-          const body: Record<string, unknown> = {
-            ...{
-              leftLabel: 'Person',
-              leftProperty: 'name',
-              rightLabel: 'Human',
-              rightProperty: 'label',
-              leftDatabaseId: '',
-              rightDatabaseId: '',
-            },
-            rightDatabaseId: 123,
-          };
 
           // when
           const response: Response = await fetch(
@@ -3790,7 +3766,17 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
                 ['Authorization', `Bearer ${ownerLogin.jwt}`],
                 ['Content-Type', 'application/json'],
               ]),
-              body: JSON.stringify(body),
+              body: JSON.stringify({
+                leftLabel: 'Person',
+                leftProperty: 'name',
+                rightLabel: 'Human',
+                rightProperty: 'label',
+                leftDatabaseId: '',
+                rightDatabaseId: 123,
+              } satisfies Omit<
+                UpdateCommonPropertyRequestBodyDto,
+                'rightDatabaseId'
+              > & { rightDatabaseId: number }),
               signal: testContext.signal,
             },
           );
@@ -3892,17 +3878,6 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
           assert.equal(originalPublishedResponse.status, 200);
           const originalPublished: z.infer<typeof listStateSchema> =
             listStateSchema.parse(await originalPublishedResponse.json());
-          const body: Record<string, unknown> = {
-            ...{
-              leftLabel: 'Person',
-              leftProperty: 'name',
-              rightLabel: 'Human',
-              rightProperty: 'label',
-              leftDatabaseId: '',
-              rightDatabaseId: '',
-            },
-            unexpected: true,
-          };
 
           // when
           const response: Response = await fetch(
@@ -3913,7 +3888,17 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
                 ['Authorization', `Bearer ${ownerLogin.jwt}`],
                 ['Content-Type', 'application/json'],
               ]),
-              body: JSON.stringify(body),
+              body: JSON.stringify({
+                leftLabel: 'Person',
+                leftProperty: 'name',
+                rightLabel: 'Human',
+                rightProperty: 'label',
+                leftDatabaseId: '',
+                rightDatabaseId: '',
+                unexpected: true,
+              } satisfies UpdateCommonPropertyRequestBodyDto & {
+                unexpected: boolean;
+              }),
               signal: testContext.signal,
             },
           );
@@ -4019,14 +4004,6 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
           assert.equal(originalPublishedResponse.status, 200);
           const originalPublished: z.infer<typeof listStateSchema> =
             listStateSchema.parse(await originalPublishedResponse.json());
-          const body: Record<string, unknown> = {
-            leftLabel: 'Person',
-            leftProperty: 'name',
-            rightLabel: 'Human',
-            rightProperty: 'label',
-            leftDatabaseId: '',
-            rightDatabaseId: '',
-          };
 
           // when
           const response: Response = await fetch(
@@ -4037,7 +4014,14 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
                 ['Authorization', `Bearer ${login.jwt}`],
                 ['Content-Type', 'application/json'],
               ]),
-              body: JSON.stringify(body),
+              body: JSON.stringify({
+                leftLabel: 'Person',
+                leftProperty: 'name',
+                rightLabel: 'Human',
+                rightProperty: 'label',
+                leftDatabaseId: '',
+                rightDatabaseId: '',
+              } satisfies UpdateCommonPropertyRequestBodyDto),
               signal: testContext.signal,
             },
           );
@@ -4124,14 +4108,6 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
           assert.equal(originalPublishedResponse.status, 200);
           const originalPublished: z.infer<typeof listStateSchema> =
             listStateSchema.parse(await originalPublishedResponse.json());
-          const body: Record<string, unknown> = {
-            leftLabel: 'Person',
-            leftProperty: 'name',
-            rightLabel: 'Human',
-            rightProperty: 'label',
-            leftDatabaseId: '',
-            rightDatabaseId: '',
-          };
 
           // when
           const response: Response = await fetch(
@@ -4139,7 +4115,14 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
             {
               method: 'PUT',
               headers: new Headers([['Content-Type', 'application/json']]),
-              body: JSON.stringify(body),
+              body: JSON.stringify({
+                leftLabel: 'Person',
+                leftProperty: 'name',
+                rightLabel: 'Human',
+                rightProperty: 'label',
+                leftDatabaseId: '',
+                rightDatabaseId: '',
+              } satisfies UpdateCommonPropertyRequestBodyDto),
               signal: testContext.signal,
             },
           );
@@ -4226,14 +4209,6 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
           assert.equal(originalPublishedResponse.status, 200);
           const originalPublished: z.infer<typeof listStateSchema> =
             listStateSchema.parse(await originalPublishedResponse.json());
-          const body: Record<string, unknown> = {
-            leftLabel: 'Person',
-            leftProperty: 'name',
-            rightLabel: 'Human',
-            rightProperty: 'label',
-            leftDatabaseId: '',
-            rightDatabaseId: '',
-          };
 
           // when
           const response: Response = await fetch(
@@ -4244,7 +4219,14 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
                 ['Authorization', 'Bearer invalid-jwt'],
                 ['Content-Type', 'application/json'],
               ]),
-              body: JSON.stringify(body),
+              body: JSON.stringify({
+                leftLabel: 'Person',
+                leftProperty: 'name',
+                rightLabel: 'Human',
+                rightProperty: 'label',
+                leftDatabaseId: '',
+                rightDatabaseId: '',
+              } satisfies UpdateCommonPropertyRequestBodyDto),
               signal: testContext.signal,
             },
           );
@@ -4345,14 +4327,6 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
           assert.equal(originalPublishedResponse.status, 200);
           const originalPublished: z.infer<typeof listStateSchema> =
             listStateSchema.parse(await originalPublishedResponse.json());
-          const body: Record<string, unknown> = {
-            leftLabel: 'Person',
-            leftProperty: 'name',
-            rightLabel: 'Human',
-            rightProperty: 'label',
-            leftDatabaseId: '',
-            rightDatabaseId: '',
-          };
 
           // when
           const response: Response = await fetch(
@@ -4363,7 +4337,14 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
                 ['Authorization', `Bearer ${login.jwt}`],
                 ['Content-Type', 'application/json'],
               ]),
-              body: JSON.stringify(body),
+              body: JSON.stringify({
+                leftLabel: 'Person',
+                leftProperty: 'name',
+                rightLabel: 'Human',
+                rightProperty: 'label',
+                leftDatabaseId: '',
+                rightDatabaseId: '',
+              } satisfies UpdateCommonPropertyRequestBodyDto),
               signal: testContext.signal,
             },
           );
@@ -4464,14 +4445,6 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
           assert.equal(originalPublishedResponse.status, 200);
           const originalPublished: z.infer<typeof listStateSchema> =
             listStateSchema.parse(await originalPublishedResponse.json());
-          const body: Record<string, unknown> = {
-            leftLabel: 'Person',
-            leftProperty: 'name',
-            rightLabel: 'Human',
-            rightProperty: 'label',
-            leftDatabaseId: '',
-            rightDatabaseId: '',
-          };
 
           // when
           const response: Response = await fetch(
@@ -4482,7 +4455,14 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
                 ['Authorization', `Bearer ${login.jwt}`],
                 ['Content-Type', 'application/json'],
               ]),
-              body: JSON.stringify(body),
+              body: JSON.stringify({
+                leftLabel: 'Person',
+                leftProperty: 'name',
+                rightLabel: 'Human',
+                rightProperty: 'label',
+                leftDatabaseId: '',
+                rightDatabaseId: '',
+              } satisfies UpdateCommonPropertyRequestBodyDto),
               signal: testContext.signal,
             },
           );
@@ -4575,17 +4555,6 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
           assert.equal(originalPublishedResponse.status, 200);
           const originalPublished: z.infer<typeof listStateSchema> =
             listStateSchema.parse(await originalPublishedResponse.json());
-          const body: Record<string, unknown> = {
-            ...{
-              leftLabel: 'Person',
-              leftProperty: 'name',
-              rightLabel: 'Human',
-              rightProperty: 'label',
-              leftDatabaseId: '',
-              rightDatabaseId: '',
-            },
-            leftDatabaseId: database,
-          };
 
           // when
           const response: Response = await fetch(
@@ -4596,7 +4565,14 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
                 ['Authorization', `Bearer ${ownerLogin.jwt}`],
                 ['Content-Type', 'application/json'],
               ]),
-              body: JSON.stringify(body),
+              body: JSON.stringify({
+                leftLabel: 'Person',
+                leftProperty: 'name',
+                rightLabel: 'Human',
+                rightProperty: 'label',
+                leftDatabaseId: database,
+                rightDatabaseId: '',
+              } satisfies UpdateCommonPropertyRequestBodyDto),
               signal: testContext.signal,
             },
           );
@@ -4702,17 +4678,6 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
           assert.equal(originalPublishedResponse.status, 200);
           const originalPublished: z.infer<typeof listStateSchema> =
             listStateSchema.parse(await originalPublishedResponse.json());
-          const body: Record<string, unknown> = {
-            ...{
-              leftLabel: 'Person',
-              leftProperty: 'name',
-              rightLabel: 'Human',
-              rightProperty: 'label',
-              leftDatabaseId: '',
-              rightDatabaseId: '',
-            },
-            leftDatabaseId: database,
-          };
 
           // when
           const response: Response = await fetch(
@@ -4723,7 +4688,14 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
                 ['Authorization', `Bearer ${ownerLogin.jwt}`],
                 ['Content-Type', 'application/json'],
               ]),
-              body: JSON.stringify(body),
+              body: JSON.stringify({
+                leftLabel: 'Person',
+                leftProperty: 'name',
+                rightLabel: 'Human',
+                rightProperty: 'label',
+                leftDatabaseId: database,
+                rightDatabaseId: '',
+              } satisfies UpdateCommonPropertyRequestBodyDto),
               signal: testContext.signal,
             },
           );
@@ -4831,17 +4803,6 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
           assert.equal(originalPublishedResponse.status, 200);
           const originalPublished: z.infer<typeof listStateSchema> =
             listStateSchema.parse(await originalPublishedResponse.json());
-          const body: Record<string, unknown> = {
-            ...{
-              leftLabel: 'Person',
-              leftProperty: 'name',
-              rightLabel: 'Human',
-              rightProperty: 'label',
-              leftDatabaseId: '',
-              rightDatabaseId: '',
-            },
-            leftDatabaseId: database,
-          };
 
           // when
           const response: Response = await fetch(
@@ -4852,7 +4813,14 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
                 ['Authorization', `Bearer ${ownerLogin.jwt}`],
                 ['Content-Type', 'application/json'],
               ]),
-              body: JSON.stringify(body),
+              body: JSON.stringify({
+                leftLabel: 'Person',
+                leftProperty: 'name',
+                rightLabel: 'Human',
+                rightProperty: 'label',
+                leftDatabaseId: database,
+                rightDatabaseId: '',
+              } satisfies UpdateCommonPropertyRequestBodyDto),
               signal: testContext.signal,
             },
           );
@@ -4944,17 +4912,6 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
           assert.equal(originalPublishedResponse.status, 200);
           const originalPublished: z.infer<typeof listStateSchema> =
             listStateSchema.parse(await originalPublishedResponse.json());
-          const body: Record<string, unknown> = {
-            ...{
-              leftLabel: 'Person',
-              leftProperty: 'name',
-              rightLabel: 'Human',
-              rightProperty: 'label',
-              leftDatabaseId: '',
-              rightDatabaseId: '',
-            },
-            rightDatabaseId: database,
-          };
 
           // when
           const response: Response = await fetch(
@@ -4965,7 +4922,14 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
                 ['Authorization', `Bearer ${ownerLogin.jwt}`],
                 ['Content-Type', 'application/json'],
               ]),
-              body: JSON.stringify(body),
+              body: JSON.stringify({
+                leftLabel: 'Person',
+                leftProperty: 'name',
+                rightLabel: 'Human',
+                rightProperty: 'label',
+                leftDatabaseId: '',
+                rightDatabaseId: database,
+              } satisfies UpdateCommonPropertyRequestBodyDto),
               signal: testContext.signal,
             },
           );
@@ -5071,17 +5035,6 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
           assert.equal(originalPublishedResponse.status, 200);
           const originalPublished: z.infer<typeof listStateSchema> =
             listStateSchema.parse(await originalPublishedResponse.json());
-          const body: Record<string, unknown> = {
-            ...{
-              leftLabel: 'Person',
-              leftProperty: 'name',
-              rightLabel: 'Human',
-              rightProperty: 'label',
-              leftDatabaseId: '',
-              rightDatabaseId: '',
-            },
-            rightDatabaseId: database,
-          };
 
           // when
           const response: Response = await fetch(
@@ -5092,7 +5045,14 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
                 ['Authorization', `Bearer ${ownerLogin.jwt}`],
                 ['Content-Type', 'application/json'],
               ]),
-              body: JSON.stringify(body),
+              body: JSON.stringify({
+                leftLabel: 'Person',
+                leftProperty: 'name',
+                rightLabel: 'Human',
+                rightProperty: 'label',
+                leftDatabaseId: '',
+                rightDatabaseId: database,
+              } satisfies UpdateCommonPropertyRequestBodyDto),
               signal: testContext.signal,
             },
           );
@@ -5200,17 +5160,6 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
           assert.equal(originalPublishedResponse.status, 200);
           const originalPublished: z.infer<typeof listStateSchema> =
             listStateSchema.parse(await originalPublishedResponse.json());
-          const body: Record<string, unknown> = {
-            ...{
-              leftLabel: 'Person',
-              leftProperty: 'name',
-              rightLabel: 'Human',
-              rightProperty: 'label',
-              leftDatabaseId: '',
-              rightDatabaseId: '',
-            },
-            rightDatabaseId: database,
-          };
 
           // when
           const response: Response = await fetch(
@@ -5221,7 +5170,14 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
                 ['Authorization', `Bearer ${ownerLogin.jwt}`],
                 ['Content-Type', 'application/json'],
               ]),
-              body: JSON.stringify(body),
+              body: JSON.stringify({
+                leftLabel: 'Person',
+                leftProperty: 'name',
+                rightLabel: 'Human',
+                rightProperty: 'label',
+                leftDatabaseId: '',
+                rightDatabaseId: database,
+              } satisfies UpdateCommonPropertyRequestBodyDto),
               signal: testContext.signal,
             },
           );
@@ -5312,14 +5268,6 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
           assert.equal(originalPublishedResponse.status, 200);
           const originalPublished: z.infer<typeof listStateSchema> =
             listStateSchema.parse(await originalPublishedResponse.json());
-          const body: Record<string, unknown> = {
-            leftLabel: 'Person',
-            leftProperty: 'name',
-            rightLabel: 'Human',
-            rightProperty: 'label',
-            leftDatabaseId: '',
-            rightDatabaseId: '',
-          };
 
           // when
           const response: Response = await fetch(
@@ -5330,7 +5278,14 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
                 ['Authorization', `Bearer ${ownerLogin.jwt}`],
                 ['Content-Type', 'application/json'],
               ]),
-              body: JSON.stringify(body),
+              body: JSON.stringify({
+                leftLabel: 'Person',
+                leftProperty: 'name',
+                rightLabel: 'Human',
+                rightProperty: 'label',
+                leftDatabaseId: '',
+                rightDatabaseId: '',
+              } satisfies UpdateCommonPropertyRequestBodyDto),
               signal: testContext.signal,
             },
           );
@@ -5436,14 +5391,6 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
           assert.equal(originalPublishedResponse.status, 200);
           const originalPublished: z.infer<typeof listStateSchema> =
             listStateSchema.parse(await originalPublishedResponse.json());
-          const body: Record<string, unknown> = {
-            leftLabel: 'Person',
-            leftProperty: 'name',
-            rightLabel: 'Human',
-            rightProperty: 'label',
-            leftDatabaseId: '',
-            rightDatabaseId: '',
-          };
 
           // when
           const response: Response = await fetch(
@@ -5454,7 +5401,14 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
                 ['Authorization', `Bearer ${ownerLogin.jwt}`],
                 ['Content-Type', 'application/json'],
               ]),
-              body: JSON.stringify(body),
+              body: JSON.stringify({
+                leftLabel: 'Person',
+                leftProperty: 'name',
+                rightLabel: 'Human',
+                rightProperty: 'label',
+                leftDatabaseId: '',
+                rightDatabaseId: '',
+              } satisfies UpdateCommonPropertyRequestBodyDto),
               signal: testContext.signal,
             },
           );
@@ -5544,14 +5498,6 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
           assert.equal(originalPublishedResponse.status, 200);
           const originalPublished: z.infer<typeof listStateSchema> =
             listStateSchema.parse(await originalPublishedResponse.json());
-          const body: Record<string, unknown> = {
-            leftLabel: 'Person',
-            leftProperty: 'name',
-            rightLabel: 'Human',
-            rightProperty: 'label',
-            leftDatabaseId: '',
-            rightDatabaseId: '',
-          };
 
           // when
           const response: Response = await fetch(
@@ -5562,7 +5508,14 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
                 ['Authorization', `Bearer ${ownerLogin.jwt}`],
                 ['Content-Type', 'application/json'],
               ]),
-              body: JSON.stringify(body),
+              body: JSON.stringify({
+                leftLabel: 'Person',
+                leftProperty: 'name',
+                rightLabel: 'Human',
+                rightProperty: 'label',
+                leftDatabaseId: '',
+                rightDatabaseId: '',
+              } satisfies UpdateCommonPropertyRequestBodyDto),
               signal: testContext.signal,
             },
           );
@@ -5668,14 +5621,6 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
           assert.equal(originalPublishedResponse.status, 200);
           const originalPublished: z.infer<typeof listStateSchema> =
             listStateSchema.parse(await originalPublishedResponse.json());
-          const body: Record<string, unknown> = {
-            leftLabel: 'Person',
-            leftProperty: 'name',
-            rightLabel: 'Human',
-            rightProperty: 'label',
-            leftDatabaseId: '',
-            rightDatabaseId: '',
-          };
 
           // when
           const response: Response = await fetch(
@@ -5686,7 +5631,14 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
                 ['Authorization', `Bearer ${ownerLogin.jwt}`],
                 ['Content-Type', 'application/json'],
               ]),
-              body: JSON.stringify(body),
+              body: JSON.stringify({
+                leftLabel: 'Person',
+                leftProperty: 'name',
+                rightLabel: 'Human',
+                rightProperty: 'label',
+                leftDatabaseId: '',
+                rightDatabaseId: '',
+              } satisfies UpdateCommonPropertyRequestBodyDto),
               signal: testContext.signal,
             },
           );
@@ -5785,14 +5737,6 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
           assert.equal(originalPublishedResponse.status, 200);
           const originalPublished: z.infer<typeof listStateSchema> =
             listStateSchema.parse(await originalPublishedResponse.json());
-          const body: Record<string, unknown> = {
-            leftLabel: 'Person',
-            leftProperty: 'name',
-            rightLabel: 'Human',
-            rightProperty: 'label',
-            leftDatabaseId: '',
-            rightDatabaseId: '',
-          };
 
           // when
           const response: Response = await fetch(
@@ -5803,7 +5747,14 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
                 ['Authorization', `Bearer ${ownerLogin.jwt}`],
                 ['Content-Type', 'application/json'],
               ]),
-              body: JSON.stringify(body),
+              body: JSON.stringify({
+                leftLabel: 'Person',
+                leftProperty: 'name',
+                rightLabel: 'Human',
+                rightProperty: 'label',
+                leftDatabaseId: '',
+                rightDatabaseId: '',
+              } satisfies UpdateCommonPropertyRequestBodyDto),
               signal: testContext.signal,
             },
           );

@@ -1,3 +1,4 @@
+import type { PostAuthRequestBodyDto } from './dto/PostAuthRequestBodyDto';
 import type { E2ETestApplicationUser } from '../../../../e2e/E2ETestApplicationUser';
 import assert from 'node:assert/strict';
 import { createHmac, randomUUID } from 'node:crypto';
@@ -39,7 +40,7 @@ describe('/auth', (suiteContext: SuiteContext): void => {
           body: JSON.stringify({
             username: primaryUser.username,
             password: primaryUser.password,
-          }),
+          } satisfies PostAuthRequestBodyDto),
           signal: testContext.signal,
         });
 
@@ -64,7 +65,7 @@ describe('/auth', (suiteContext: SuiteContext): void => {
           body: JSON.stringify({
             username: secondaryUser.username,
             password: secondaryUser.password,
-          }),
+          } satisfies PostAuthRequestBodyDto),
           signal: testContext.signal,
         });
 
@@ -91,7 +92,7 @@ describe('/auth', (suiteContext: SuiteContext): void => {
           body: JSON.stringify({
             username: primaryUser.username,
             password: 'wrong password',
-          }),
+          } satisfies PostAuthRequestBodyDto),
           signal: testContext.signal,
         });
 
@@ -112,7 +113,7 @@ describe('/auth', (suiteContext: SuiteContext): void => {
           body: JSON.stringify({
             username: `unknown-${randomUUID()}`,
             password: randomUUID(),
-          }),
+          } satisfies PostAuthRequestBodyDto),
           signal: testContext.signal,
         });
 
@@ -145,7 +146,7 @@ describe('/auth', (suiteContext: SuiteContext): void => {
           body: JSON.stringify({
             username: user.username,
             password: user.password,
-          }),
+          } satisfies PostAuthRequestBodyDto),
           signal: testContext.signal,
         });
 
@@ -166,7 +167,7 @@ describe('/auth', (suiteContext: SuiteContext): void => {
           headers: new Headers([['Content-Type', 'application/json']]),
           body: JSON.stringify({
             password: randomUUID(),
-          }),
+          } satisfies Omit<PostAuthRequestBodyDto, 'username'>),
           signal: testContext.signal,
         });
 
@@ -186,7 +187,7 @@ describe('/auth', (suiteContext: SuiteContext): void => {
           headers: new Headers([['Content-Type', 'application/json']]),
           body: JSON.stringify({
             username: `e2e-${randomUUID()}`,
-          }),
+          } satisfies Omit<PostAuthRequestBodyDto, 'password'>),
           signal: testContext.signal,
         });
 
@@ -207,6 +208,8 @@ describe('/auth', (suiteContext: SuiteContext): void => {
           body: JSON.stringify({
             username: 123,
             password: randomUUID(),
+          } satisfies Omit<PostAuthRequestBodyDto, 'username'> & {
+            username: number;
           }),
           signal: testContext.signal,
         });
@@ -228,6 +231,8 @@ describe('/auth', (suiteContext: SuiteContext): void => {
           body: JSON.stringify({
             username: `e2e-${randomUUID()}`,
             password: 123,
+          } satisfies Omit<PostAuthRequestBodyDto, 'password'> & {
+            password: number;
           }),
           signal: testContext.signal,
         });
@@ -250,7 +255,7 @@ describe('/auth', (suiteContext: SuiteContext): void => {
             username: `e2e-${randomUUID()}`,
             password: randomUUID(),
             unexpected: true,
-          }),
+          } satisfies PostAuthRequestBodyDto & { unexpected: boolean }),
           signal: testContext.signal,
         });
 
@@ -271,7 +276,7 @@ describe('/auth', (suiteContext: SuiteContext): void => {
           body: JSON.stringify({
             username: '',
             password: randomUUID(),
-          }),
+          } satisfies PostAuthRequestBodyDto),
           signal: testContext.signal,
         });
 
@@ -292,7 +297,7 @@ describe('/auth', (suiteContext: SuiteContext): void => {
           body: JSON.stringify({
             username: `e2e-${randomUUID()}`,
             password: '',
-          }),
+          } satisfies PostAuthRequestBodyDto),
           signal: testContext.signal,
         });
 

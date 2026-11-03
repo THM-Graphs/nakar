@@ -1,3 +1,4 @@
+import type { UpdateRoomRequestBodyDto } from './dto/UpdateRoomRequestBodyDto';
 import type { E2ETestApplicationUser } from '../../../../e2e/E2ETestApplicationUser';
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
@@ -1120,7 +1121,7 @@ describe('/project/:projectId/room', (suiteContext: SuiteContext): void => {
               body: JSON.stringify({
                 title: 'Updated Room',
                 visibility: RoomVisibilityDto.public,
-              }),
+              } satisfies UpdateRoomRequestBodyDto),
               signal: testContext.signal,
             },
           );
@@ -1216,7 +1217,7 @@ describe('/project/:projectId/room', (suiteContext: SuiteContext): void => {
             body: JSON.stringify({
               title: 'Updated Room',
               visibility: RoomVisibilityDto.public,
-            }),
+            } satisfies UpdateRoomRequestBodyDto),
             signal: testContext.signal,
           });
 
@@ -1284,7 +1285,7 @@ describe('/project/:projectId/room', (suiteContext: SuiteContext): void => {
             body: JSON.stringify({
               title: 'Updated Room',
               visibility: RoomVisibilityDto.public,
-            }),
+            } satisfies UpdateRoomRequestBodyDto),
             signal: testContext.signal,
           });
 
@@ -1350,7 +1351,7 @@ describe('/project/:projectId/room', (suiteContext: SuiteContext): void => {
             body: JSON.stringify({
               title: 'Original Room',
               visibility: RoomVisibilityDto.private,
-            }),
+            } satisfies UpdateRoomRequestBodyDto),
             signal: testContext.signal,
           });
 
@@ -1409,7 +1410,7 @@ describe('/project/:projectId/room', (suiteContext: SuiteContext): void => {
             body: JSON.stringify({
               title: 'Original Room',
               visibility: RoomVisibilityDto.unlisted,
-            }),
+            } satisfies UpdateRoomRequestBodyDto),
             signal: testContext.signal,
           });
 
@@ -1468,7 +1469,7 @@ describe('/project/:projectId/room', (suiteContext: SuiteContext): void => {
             body: JSON.stringify({
               title: '',
               visibility: RoomVisibilityDto.private,
-            }),
+            } satisfies UpdateRoomRequestBodyDto),
             signal: testContext.signal,
           });
 
@@ -1571,7 +1572,7 @@ describe('/project/:projectId/room', (suiteContext: SuiteContext): void => {
             body: JSON.stringify({
               title: 'Denied',
               visibility: RoomVisibilityDto.public,
-            }),
+            } satisfies UpdateRoomRequestBodyDto),
             signal: testContext.signal,
           });
 
@@ -1637,7 +1638,7 @@ describe('/project/:projectId/room', (suiteContext: SuiteContext): void => {
             body: JSON.stringify({
               title: 'Denied',
               visibility: RoomVisibilityDto.private,
-            }),
+            } satisfies UpdateRoomRequestBodyDto),
             signal: testContext.signal,
           });
 
@@ -1711,7 +1712,7 @@ describe('/project/:projectId/room', (suiteContext: SuiteContext): void => {
             body: JSON.stringify({
               title: 'Denied',
               visibility: RoomVisibilityDto.private,
-            }),
+            } satisfies UpdateRoomRequestBodyDto),
             signal: testContext.signal,
           });
 
@@ -1793,7 +1794,7 @@ describe('/project/:projectId/room', (suiteContext: SuiteContext): void => {
             body: JSON.stringify({
               title: 'Denied',
               visibility: RoomVisibilityDto.private,
-            }),
+            } satisfies UpdateRoomRequestBodyDto),
             signal: testContext.signal,
           });
 
@@ -1846,7 +1847,7 @@ describe('/project/:projectId/room', (suiteContext: SuiteContext): void => {
             body: JSON.stringify({
               title: 'Denied',
               visibility: RoomVisibilityDto.private,
-            }),
+            } satisfies UpdateRoomRequestBodyDto),
             signal: testContext.signal,
           });
 
@@ -1907,7 +1908,7 @@ describe('/project/:projectId/room', (suiteContext: SuiteContext): void => {
               body: JSON.stringify({
                 title: 'Changed Room',
                 visibility: RoomVisibilityDto.private,
-              }),
+              } satisfies UpdateRoomRequestBodyDto),
               signal: testContext.signal,
             },
           );
@@ -1990,7 +1991,7 @@ describe('/project/:projectId/room', (suiteContext: SuiteContext): void => {
               body: JSON.stringify({
                 title: 'Changed Room',
                 visibility: RoomVisibilityDto.private,
-              }),
+              } satisfies UpdateRoomRequestBodyDto),
               signal: testContext.signal,
             },
           );
@@ -2057,7 +2058,7 @@ describe('/project/:projectId/room', (suiteContext: SuiteContext): void => {
             body: JSON.stringify({
               title: 'Denied',
               visibility: RoomVisibilityDto.private,
-            }),
+            } satisfies UpdateRoomRequestBodyDto),
             signal: testContext.signal,
           });
 
@@ -2108,7 +2109,9 @@ describe('/project/:projectId/room', (suiteContext: SuiteContext): void => {
               ['Authorization', `Bearer ${login.jwt}`],
               ['Content-Type', 'application/json'],
             ]),
-            body: JSON.stringify({ visibility: RoomVisibilityDto.private }),
+            body: JSON.stringify({
+              visibility: RoomVisibilityDto.private,
+            } satisfies Omit<UpdateRoomRequestBodyDto, 'title'>),
             signal: testContext.signal,
           });
 
@@ -2170,6 +2173,8 @@ describe('/project/:projectId/room', (suiteContext: SuiteContext): void => {
             body: JSON.stringify({
               title: null,
               visibility: RoomVisibilityDto.private,
+            } satisfies Omit<UpdateRoomRequestBodyDto, 'title'> & {
+              title: null;
             }),
             signal: testContext.signal,
           });
@@ -2232,6 +2237,8 @@ describe('/project/:projectId/room', (suiteContext: SuiteContext): void => {
             body: JSON.stringify({
               title: 42,
               visibility: RoomVisibilityDto.private,
+            } satisfies Omit<UpdateRoomRequestBodyDto, 'title'> & {
+              title: number;
             }),
             signal: testContext.signal,
           });
@@ -2291,7 +2298,10 @@ describe('/project/:projectId/room', (suiteContext: SuiteContext): void => {
               ['Authorization', `Bearer ${login.jwt}`],
               ['Content-Type', 'application/json'],
             ]),
-            body: JSON.stringify({ title: 'Changed' }),
+            body: JSON.stringify({ title: 'Changed' } satisfies Omit<
+              UpdateRoomRequestBodyDto,
+              'visibility'
+            >),
             signal: testContext.signal,
           });
 
@@ -2352,7 +2362,12 @@ describe('/project/:projectId/room', (suiteContext: SuiteContext): void => {
               ['Authorization', `Bearer ${login.jwt}`],
               ['Content-Type', 'application/json'],
             ]),
-            body: JSON.stringify({ title: 'Changed', visibility: null }),
+            body: JSON.stringify({
+              title: 'Changed',
+              visibility: null,
+            } satisfies Omit<UpdateRoomRequestBodyDto, 'visibility'> & {
+              visibility: null;
+            }),
             signal: testContext.signal,
           });
 
@@ -2413,7 +2428,12 @@ describe('/project/:projectId/room', (suiteContext: SuiteContext): void => {
               ['Authorization', `Bearer ${login.jwt}`],
               ['Content-Type', 'application/json'],
             ]),
-            body: JSON.stringify({ title: 'Changed', visibility: 'unknown' }),
+            body: JSON.stringify({
+              title: 'Changed',
+              visibility: 'unknown',
+            } satisfies Omit<UpdateRoomRequestBodyDto, 'visibility'> & {
+              visibility: 'unknown';
+            }),
             signal: testContext.signal,
           });
 
@@ -2474,7 +2494,12 @@ describe('/project/:projectId/room', (suiteContext: SuiteContext): void => {
               ['Authorization', `Bearer ${login.jwt}`],
               ['Content-Type', 'application/json'],
             ]),
-            body: JSON.stringify({ title: 'Changed', visibility: 42 }),
+            body: JSON.stringify({
+              title: 'Changed',
+              visibility: 42,
+            } satisfies Omit<UpdateRoomRequestBodyDto, 'visibility'> & {
+              visibility: number;
+            }),
             signal: testContext.signal,
           });
 
@@ -2539,7 +2564,7 @@ describe('/project/:projectId/room', (suiteContext: SuiteContext): void => {
               title: 'Changed',
               visibility: RoomVisibilityDto.private,
               unexpected: true,
-            }),
+            } satisfies UpdateRoomRequestBodyDto & { unexpected: boolean }),
             signal: testContext.signal,
           });
 

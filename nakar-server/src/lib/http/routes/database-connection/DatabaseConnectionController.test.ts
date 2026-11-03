@@ -1,3 +1,6 @@
+import type { UpdateDatabaseConnectionRequestBodyDto } from './dto/UpdateDatabaseConnectionRequestBodyDto';
+import type { UpdateNodeConfigurationRequestBodyDto } from './dto/UpdateNodeConfigurationRequestBodyDto';
+import type { TestDatabaseConnectionRequestBodyDto } from './dto/TestDatabaseConnectionRequestBodyDto';
 import { once } from 'node:events';
 import type { IncomingMessage, Server, ServerResponse } from 'node:http';
 import { createServer } from 'node:http';
@@ -154,26 +157,7 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
           `${manager.apiUrl}/project/${project}/database-connection`,
           {
             method: 'POST',
-            headers: new Headers([
-              ['Authorization', `Bearer ${login.jwt}`],
-              ['Content-Type', 'application/json'],
-            ]),
-            body: JSON.stringify({
-              connectionUrl: 'bolt://created.example.test:7687',
-              browserUrl: 'https://created.example.test/browser',
-              database: 'created-database',
-              nodeConfigurations: [
-                {
-                  id: 'created-node-configuration',
-                  type: 'link',
-                  label: 'Person',
-                  property: 'identifier',
-                  linkTemplate: 'https://created.example.test/person/{value}',
-                  urlEncode: true,
-                  valueRegex: '^[0-9]+$',
-                },
-              ],
-            }),
+            headers: new Headers([['Authorization', `Bearer ${login.jwt}`]]),
             signal: testContext.signal,
           },
         );
@@ -187,22 +171,12 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
         assert.deepEqual(body, {
           id: body.id,
           title: 'Untitled Database Connection',
-          browserUrl: 'https://created.example.test/browser',
-          connectionUrl: 'bolt://created.example.test:7687',
-          database: 'created-database',
+          browserUrl: '',
+          connectionUrl: '',
+          database: '',
           databaseType: DatabaseConnectionDatabaseType.neo4j,
           language: null,
-          nodeConfigurations: [
-            {
-              id: body.nodeConfigurations[0]?.id,
-              type: NodeConfigurationTypeDto.link,
-              label: 'Person',
-              property: 'identifier',
-              linkTemplate: 'https://created.example.test/person/{value}',
-              urlEncode: true,
-              valueRegex: '^[0-9]+$',
-            },
-          ],
+          nodeConfigurations: [],
         });
         const projectResponse: Response = await fetch(
           `${manager.apiUrl}/project/${project}`,
@@ -258,24 +232,7 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
             method: 'POST',
             headers: new Headers([
               ['Authorization', `Bearer ${ownerLogin.jwt}`],
-              ['Content-Type', 'application/json'],
             ]),
-            body: JSON.stringify({
-              connectionUrl: 'bolt://created.example.test:7687',
-              browserUrl: 'https://created.example.test/browser',
-              database: 'created-database',
-              nodeConfigurations: [
-                {
-                  id: 'created-node-configuration',
-                  type: 'link',
-                  label: 'Person',
-                  property: 'identifier',
-                  linkTemplate: 'https://created.example.test/person/{value}',
-                  urlEncode: true,
-                  valueRegex: '^[0-9]+$',
-                },
-              ],
-            }),
             signal: testContext.signal,
           },
         );
@@ -289,22 +246,12 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
         assert.deepEqual(body, {
           id: body.id,
           title: 'Untitled Database Connection',
-          browserUrl: 'https://created.example.test/browser',
-          connectionUrl: 'bolt://created.example.test:7687',
-          database: 'created-database',
+          browserUrl: '',
+          connectionUrl: '',
+          database: '',
           databaseType: DatabaseConnectionDatabaseType.neo4j,
           language: null,
-          nodeConfigurations: [
-            {
-              id: body.nodeConfigurations[0]?.id,
-              type: NodeConfigurationTypeDto.link,
-              label: 'Person',
-              property: 'identifier',
-              linkTemplate: 'https://created.example.test/person/{value}',
-              urlEncode: true,
-              valueRegex: '^[0-9]+$',
-            },
-          ],
+          nodeConfigurations: [],
         });
         const projectResponse: Response = await fetch(
           `${manager.apiUrl}/project/${project}`,
@@ -368,26 +315,7 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
           `${manager.apiUrl}/project/${project}/database-connection`,
           {
             method: 'POST',
-            headers: new Headers([
-              ['Authorization', `Bearer ${login.jwt}`],
-              ['Content-Type', 'application/json'],
-            ]),
-            body: JSON.stringify({
-              connectionUrl: 'bolt://created.example.test:7687',
-              browserUrl: 'https://created.example.test/browser',
-              database: 'created-database',
-              nodeConfigurations: [
-                {
-                  id: 'created-node-configuration',
-                  type: 'link',
-                  label: 'Person',
-                  property: 'identifier',
-                  linkTemplate: 'https://created.example.test/person/{value}',
-                  urlEncode: true,
-                  valueRegex: '^[0-9]+$',
-                },
-              ],
-            }),
+            headers: new Headers([['Authorization', `Bearer ${login.jwt}`]]),
             signal: testContext.signal,
           },
         );
@@ -401,22 +329,12 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
         assert.deepEqual(body, {
           id: body.id,
           title: 'Untitled Database Connection',
-          browserUrl: 'https://created.example.test/browser',
-          connectionUrl: 'bolt://created.example.test:7687',
-          database: 'created-database',
+          browserUrl: '',
+          connectionUrl: '',
+          database: '',
           databaseType: DatabaseConnectionDatabaseType.neo4j,
           language: null,
-          nodeConfigurations: [
-            {
-              id: body.nodeConfigurations[0]?.id,
-              type: NodeConfigurationTypeDto.link,
-              label: 'Person',
-              property: 'identifier',
-              linkTemplate: 'https://created.example.test/person/{value}',
-              urlEncode: true,
-              valueRegex: '^[0-9]+$',
-            },
-          ],
+          nodeConfigurations: [],
         });
         const projectResponse: Response = await fetch(
           `${manager.apiUrl}/project/${project}`,
@@ -1202,13 +1120,13 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
               ]),
               body: JSON.stringify({
                 connectionUrl: `${sparqlUrl}/${randomUUID()}`,
-                databaseType: 'sparql',
+                databaseType: DatabaseConnectionDatabaseType.sparql,
                 id: null,
                 username: null,
                 password: null,
                 database: null,
                 language: null,
-              }),
+              } satisfies TestDatabaseConnectionRequestBodyDto),
               signal: testContext.signal,
             },
           );
@@ -1316,13 +1234,13 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
               ]),
               body: JSON.stringify({
                 connectionUrl: `${sparqlUrl}/${randomUUID()}`,
-                databaseType: 'sparql',
+                databaseType: DatabaseConnectionDatabaseType.sparql,
                 id: null,
                 username: null,
                 password: null,
                 database: null,
                 language: null,
-              }),
+              } satisfies TestDatabaseConnectionRequestBodyDto),
               signal: testContext.signal,
             },
           );
@@ -1427,13 +1345,13 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
               ]),
               body: JSON.stringify({
                 connectionUrl: 'invalid-url',
-                databaseType: 'sparql',
+                databaseType: DatabaseConnectionDatabaseType.sparql,
                 id: null,
                 username: null,
                 password: null,
                 database: null,
                 language: null,
-              }),
+              } satisfies TestDatabaseConnectionRequestBodyDto),
               signal: testContext.signal,
             },
           );
@@ -1466,7 +1384,7 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
             originalPublished,
           );
         });
-        test('accepts omitted optional connection fields', async (testContext: TestContext): Promise<void> => {
+        test('accepts null optional connection fields', async (testContext: TestContext): Promise<void> => {
           // given
           const owner: E2ETestApplicationUser =
             await manager.registerUser(testContext);
@@ -1536,8 +1454,13 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
               ]),
               body: JSON.stringify({
                 connectionUrl: `${sparqlUrl}/${randomUUID()}`,
-                databaseType: 'sparql',
-              }),
+                databaseType: DatabaseConnectionDatabaseType.sparql,
+                id: null,
+                username: null,
+                password: null,
+                database: null,
+                language: null,
+              } satisfies TestDatabaseConnectionRequestBodyDto),
               signal: testContext.signal,
             },
           );
@@ -1642,13 +1565,13 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
               ]),
               body: JSON.stringify({
                 connectionUrl: `${sparqlUrl}/${randomUUID()}`,
-                databaseType: 'sparql',
+                databaseType: DatabaseConnectionDatabaseType.sparql,
                 id: resource,
                 username: null,
                 password: null,
                 database: null,
                 language: null,
-              }),
+              } satisfies TestDatabaseConnectionRequestBodyDto),
               signal: testContext.signal,
             },
           );
@@ -1771,13 +1694,13 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
               ]),
               body: JSON.stringify({
                 connectionUrl: `${sparqlUrl}/${randomUUID()}`,
-                databaseType: 'sparql',
+                databaseType: DatabaseConnectionDatabaseType.sparql,
                 id: otherDatabase,
                 username: null,
                 password: null,
                 database: null,
                 language: null,
-              }),
+              } satisfies TestDatabaseConnectionRequestBodyDto),
               signal: testContext.signal,
             },
           );
@@ -1883,13 +1806,16 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
                 ['Content-Type', 'application/json'],
               ]),
               body: JSON.stringify({
-                databaseType: 'sparql',
+                databaseType: DatabaseConnectionDatabaseType.sparql,
                 id: null,
                 username: null,
                 password: null,
                 database: null,
                 language: null,
-              }),
+              } satisfies Omit<
+                TestDatabaseConnectionRequestBodyDto,
+                'connectionUrl'
+              >),
               signal: testContext.signal,
             },
           );
@@ -2008,7 +1934,10 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
                 password: null,
                 database: null,
                 language: null,
-              }),
+              } satisfies Omit<
+                TestDatabaseConnectionRequestBodyDto,
+                'databaseType'
+              >),
               signal: testContext.signal,
             },
           );
@@ -2122,13 +2051,13 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
               ]),
               body: JSON.stringify({
                 connectionUrl: '',
-                databaseType: 'sparql',
+                databaseType: DatabaseConnectionDatabaseType.sparql,
                 id: null,
                 username: null,
                 password: null,
                 database: null,
                 language: null,
-              }),
+              } satisfies TestDatabaseConnectionRequestBodyDto),
               signal: testContext.signal,
             },
           );
@@ -2242,13 +2171,16 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
               ]),
               body: JSON.stringify({
                 connectionUrl: null,
-                databaseType: 'sparql',
+                databaseType: DatabaseConnectionDatabaseType.sparql,
                 id: null,
                 username: null,
                 password: null,
                 database: null,
                 language: null,
-              }),
+              } satisfies Omit<
+                TestDatabaseConnectionRequestBodyDto,
+                'connectionUrl'
+              > & { connectionUrl: null }),
               signal: testContext.signal,
             },
           );
@@ -2362,13 +2294,16 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
               ]),
               body: JSON.stringify({
                 connectionUrl: 123,
-                databaseType: 'sparql',
+                databaseType: DatabaseConnectionDatabaseType.sparql,
                 id: null,
                 username: null,
                 password: null,
                 database: null,
                 language: null,
-              }),
+              } satisfies Omit<
+                TestDatabaseConnectionRequestBodyDto,
+                'connectionUrl'
+              > & { connectionUrl: number }),
               signal: testContext.signal,
             },
           );
@@ -2488,7 +2423,10 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
                 password: null,
                 database: null,
                 language: null,
-              }),
+              } satisfies Omit<
+                TestDatabaseConnectionRequestBodyDto,
+                'databaseType'
+              > & { databaseType: 'unknown' }),
               signal: testContext.signal,
             },
           );
@@ -2608,7 +2546,10 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
                 password: null,
                 database: null,
                 language: null,
-              }),
+              } satisfies Omit<
+                TestDatabaseConnectionRequestBodyDto,
+                'databaseType'
+              > & { databaseType: null }),
               signal: testContext.signal,
             },
           );
@@ -2722,13 +2663,13 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
               ]),
               body: JSON.stringify({
                 connectionUrl: `${sparqlUrl}/${randomUUID()}`,
-                databaseType: 'sparql',
+                databaseType: DatabaseConnectionDatabaseType.sparql,
                 id: '',
                 username: null,
                 password: null,
                 database: null,
                 language: null,
-              }),
+              } satisfies TestDatabaseConnectionRequestBodyDto),
               signal: testContext.signal,
             },
           );
@@ -2842,12 +2783,14 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
               ]),
               body: JSON.stringify({
                 connectionUrl: `${sparqlUrl}/${randomUUID()}`,
-                databaseType: 'sparql',
+                databaseType: DatabaseConnectionDatabaseType.sparql,
                 id: 123,
                 username: null,
                 password: null,
                 database: null,
                 language: null,
+              } satisfies Omit<TestDatabaseConnectionRequestBodyDto, 'id'> & {
+                id: number;
               }),
               signal: testContext.signal,
             },
@@ -2962,13 +2905,13 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
               ]),
               body: JSON.stringify({
                 connectionUrl: `${sparqlUrl}/${randomUUID()}`,
-                databaseType: 'sparql',
+                databaseType: DatabaseConnectionDatabaseType.sparql,
                 id: null,
                 username: '',
                 password: null,
                 database: null,
                 language: null,
-              }),
+              } satisfies TestDatabaseConnectionRequestBodyDto),
               signal: testContext.signal,
             },
           );
@@ -3082,13 +3025,16 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
               ]),
               body: JSON.stringify({
                 connectionUrl: `${sparqlUrl}/${randomUUID()}`,
-                databaseType: 'sparql',
+                databaseType: DatabaseConnectionDatabaseType.sparql,
                 id: null,
                 username: 123,
                 password: null,
                 database: null,
                 language: null,
-              }),
+              } satisfies Omit<
+                TestDatabaseConnectionRequestBodyDto,
+                'username'
+              > & { username: number }),
               signal: testContext.signal,
             },
           );
@@ -3202,13 +3148,16 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
               ]),
               body: JSON.stringify({
                 connectionUrl: `${sparqlUrl}/${randomUUID()}`,
-                databaseType: 'sparql',
+                databaseType: DatabaseConnectionDatabaseType.sparql,
                 id: null,
                 username: null,
                 password: 123,
                 database: null,
                 language: null,
-              }),
+              } satisfies Omit<
+                TestDatabaseConnectionRequestBodyDto,
+                'password'
+              > & { password: number }),
               signal: testContext.signal,
             },
           );
@@ -3322,13 +3271,16 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
               ]),
               body: JSON.stringify({
                 connectionUrl: `${sparqlUrl}/${randomUUID()}`,
-                databaseType: 'sparql',
+                databaseType: DatabaseConnectionDatabaseType.sparql,
                 id: null,
                 username: null,
                 password: null,
                 database: 123,
                 language: null,
-              }),
+              } satisfies Omit<
+                TestDatabaseConnectionRequestBodyDto,
+                'database'
+              > & { database: number }),
               signal: testContext.signal,
             },
           );
@@ -3442,13 +3394,13 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
               ]),
               body: JSON.stringify({
                 connectionUrl: `${sparqlUrl}/${randomUUID()}`,
-                databaseType: 'sparql',
+                databaseType: DatabaseConnectionDatabaseType.sparql,
                 id: null,
                 username: null,
                 password: null,
                 database: null,
                 language: 'e',
-              }),
+              } satisfies TestDatabaseConnectionRequestBodyDto),
               signal: testContext.signal,
             },
           );
@@ -3562,13 +3514,16 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
               ]),
               body: JSON.stringify({
                 connectionUrl: `${sparqlUrl}/${randomUUID()}`,
-                databaseType: 'sparql',
+                databaseType: DatabaseConnectionDatabaseType.sparql,
                 id: null,
                 username: null,
                 password: null,
                 database: null,
                 language: 123,
-              }),
+              } satisfies Omit<
+                TestDatabaseConnectionRequestBodyDto,
+                'language'
+              > & { language: number }),
               signal: testContext.signal,
             },
           );
@@ -3682,13 +3637,15 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
               ]),
               body: JSON.stringify({
                 connectionUrl: `${sparqlUrl}/${randomUUID()}`,
-                databaseType: 'sparql',
+                databaseType: DatabaseConnectionDatabaseType.sparql,
                 id: null,
                 username: null,
                 password: null,
                 database: null,
                 language: null,
                 unexpected: true,
+              } satisfies TestDatabaseConnectionRequestBodyDto & {
+                unexpected: boolean;
               }),
               signal: testContext.signal,
             },
@@ -3808,13 +3765,13 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
               ]),
               body: JSON.stringify({
                 connectionUrl: `${sparqlUrl}/${randomUUID()}`,
-                databaseType: 'sparql',
+                databaseType: DatabaseConnectionDatabaseType.sparql,
                 id: null,
                 username: null,
                 password: null,
                 database: null,
                 language: null,
-              }),
+              } satisfies TestDatabaseConnectionRequestBodyDto),
               signal: testContext.signal,
             },
           );
@@ -3910,13 +3867,13 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
               headers: new Headers([['Content-Type', 'application/json']]),
               body: JSON.stringify({
                 connectionUrl: `${sparqlUrl}/${randomUUID()}`,
-                databaseType: 'sparql',
+                databaseType: DatabaseConnectionDatabaseType.sparql,
                 id: null,
                 username: null,
                 password: null,
                 database: null,
                 language: null,
-              }),
+              } satisfies TestDatabaseConnectionRequestBodyDto),
               signal: testContext.signal,
             },
           );
@@ -4015,13 +3972,13 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
               ]),
               body: JSON.stringify({
                 connectionUrl: `${sparqlUrl}/${randomUUID()}`,
-                databaseType: 'sparql',
+                databaseType: DatabaseConnectionDatabaseType.sparql,
                 id: null,
                 username: null,
                 password: null,
                 database: null,
                 language: null,
-              }),
+              } satisfies TestDatabaseConnectionRequestBodyDto),
               signal: testContext.signal,
             },
           );
@@ -4134,13 +4091,13 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
               ]),
               body: JSON.stringify({
                 connectionUrl: `${sparqlUrl}/${randomUUID()}`,
-                databaseType: 'sparql',
+                databaseType: DatabaseConnectionDatabaseType.sparql,
                 id: null,
                 username: null,
                 password: null,
                 database: null,
                 language: null,
-              }),
+              } satisfies TestDatabaseConnectionRequestBodyDto),
               signal: testContext.signal,
             },
           );
@@ -4253,13 +4210,13 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
               ]),
               body: JSON.stringify({
                 connectionUrl: `${sparqlUrl}/${randomUUID()}`,
-                databaseType: 'sparql',
+                databaseType: DatabaseConnectionDatabaseType.sparql,
                 id: null,
                 username: null,
                 password: null,
                 database: null,
                 language: null,
-              }),
+              } satisfies TestDatabaseConnectionRequestBodyDto),
               signal: testContext.signal,
             },
           );
@@ -4364,13 +4321,13 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
               ]),
               body: JSON.stringify({
                 connectionUrl: `${sparqlUrl}/${randomUUID()}`,
-                databaseType: 'sparql',
+                databaseType: DatabaseConnectionDatabaseType.sparql,
                 id: null,
                 username: null,
                 password: null,
                 database: null,
                 language: null,
-              }),
+              } satisfies TestDatabaseConnectionRequestBodyDto),
               signal: testContext.signal,
             },
           );
@@ -4479,13 +4436,13 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
               ]),
               body: JSON.stringify({
                 connectionUrl: `${sparqlUrl}/${randomUUID()}`,
-                databaseType: 'sparql',
+                databaseType: DatabaseConnectionDatabaseType.sparql,
                 id: null,
                 username: null,
                 password: null,
                 database: null,
                 language: null,
-              }),
+              } satisfies TestDatabaseConnectionRequestBodyDto),
               signal: testContext.signal,
             },
           );
@@ -5954,10 +5911,13 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
                 connectionUrl: 'bolt://127.0.0.1:7687',
                 browserUrl: 'https://example.test/browser',
                 credentialStoreConsent: false,
-                databaseType: 'neo4j',
+                databaseType: DatabaseConnectionDatabaseType.neo4j,
                 nodeConfigurations: [],
                 language: null,
-              }),
+              } satisfies Omit<
+                UpdateDatabaseConnectionRequestBodyDto,
+                'username' | 'password'
+              >),
               signal: testContext.signal,
             },
           );
@@ -6053,10 +6013,13 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
                 connectionUrl: 'bolt://127.0.0.1:7687',
                 browserUrl: 'https://example.test/browser',
                 credentialStoreConsent: false,
-                databaseType: 'neo4j',
+                databaseType: DatabaseConnectionDatabaseType.neo4j,
                 nodeConfigurations: [],
                 language: null,
-              }),
+              } satisfies Omit<
+                UpdateDatabaseConnectionRequestBodyDto,
+                'username' | 'password'
+              >),
               signal: testContext.signal,
             },
           );
@@ -6138,12 +6101,12 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
                 connectionUrl: 'bolt://127.0.0.1:7687',
                 browserUrl: 'https://example.test/browser',
                 credentialStoreConsent: true,
-                databaseType: 'neo4j',
+                databaseType: DatabaseConnectionDatabaseType.neo4j,
                 nodeConfigurations: [],
                 language: null,
                 username: 'alice',
                 password: 'secret-value',
-              }),
+              } satisfies UpdateDatabaseConnectionRequestBodyDto),
               signal: testContext.signal,
             },
           );
@@ -6244,20 +6207,17 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
                 ['Content-Type', 'application/json'],
               ]),
               body: JSON.stringify({
-                ...{
-                  title: 'Updated Database',
-                  database: 'neo4j',
-                  connectionUrl: 'bolt://127.0.0.1:7687',
-                  browserUrl: 'https://example.test/browser',
-                  credentialStoreConsent: false,
-                  databaseType: 'neo4j',
-                  nodeConfigurations: [],
-                  language: null,
-                },
+                title: 'Updated Database',
+                database: 'neo4j',
+                connectionUrl: 'bolt://127.0.0.1:7687',
+                browserUrl: 'https://example.test/browser',
+                credentialStoreConsent: true,
+                databaseType: DatabaseConnectionDatabaseType.neo4j,
+                nodeConfigurations: [],
+                language: null,
                 username: 'alice',
                 password: 'stored-secret',
-                credentialStoreConsent: true,
-              }),
+              } satisfies UpdateDatabaseConnectionRequestBodyDto),
               signal: testContext.signal,
             },
           );
@@ -6292,10 +6252,13 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
                 connectionUrl: 'bolt://127.0.0.1:7687',
                 browserUrl: 'https://example.test/browser',
                 credentialStoreConsent: false,
-                databaseType: 'neo4j',
+                databaseType: DatabaseConnectionDatabaseType.neo4j,
                 nodeConfigurations: [],
                 language: null,
-              }),
+              } satisfies Omit<
+                UpdateDatabaseConnectionRequestBodyDto,
+                'username' | 'password'
+              >),
               signal: testContext.signal,
             },
           );
@@ -6385,20 +6348,17 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
                 ['Content-Type', 'application/json'],
               ]),
               body: JSON.stringify({
-                ...{
-                  title: 'Updated Database',
-                  database: 'neo4j',
-                  connectionUrl: 'bolt://127.0.0.1:7687',
-                  browserUrl: 'https://example.test/browser',
-                  credentialStoreConsent: false,
-                  databaseType: 'neo4j',
-                  nodeConfigurations: [],
-                  language: null,
-                },
+                title: 'Updated Database',
+                database: 'neo4j',
+                connectionUrl: 'bolt://127.0.0.1:7687',
+                browserUrl: 'https://example.test/browser',
+                credentialStoreConsent: true,
+                databaseType: DatabaseConnectionDatabaseType.neo4j,
+                nodeConfigurations: [],
+                language: null,
                 username: 'alice',
                 password: 'stored-secret',
-                credentialStoreConsent: true,
-              }),
+              } satisfies UpdateDatabaseConnectionRequestBodyDto),
               signal: testContext.signal,
             },
           );
@@ -6433,12 +6393,12 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
                 connectionUrl: 'bolt://127.0.0.1:7687',
                 browserUrl: 'https://example.test/browser',
                 credentialStoreConsent: false,
-                databaseType: 'neo4j',
+                databaseType: DatabaseConnectionDatabaseType.neo4j,
                 nodeConfigurations: [],
                 language: null,
                 username: null,
                 password: null,
-              }),
+              } satisfies UpdateDatabaseConnectionRequestBodyDto),
               signal: testContext.signal,
             },
           );
@@ -6528,20 +6488,17 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
                 ['Content-Type', 'application/json'],
               ]),
               body: JSON.stringify({
-                ...{
-                  title: 'Updated Database',
-                  database: 'neo4j',
-                  connectionUrl: 'bolt://127.0.0.1:7687',
-                  browserUrl: 'https://example.test/browser',
-                  credentialStoreConsent: false,
-                  databaseType: 'neo4j',
-                  nodeConfigurations: [],
-                  language: null,
-                },
+                title: 'Updated Database',
+                database: 'neo4j',
+                connectionUrl: 'bolt://127.0.0.1:7687',
+                browserUrl: 'https://example.test/browser',
+                credentialStoreConsent: true,
+                databaseType: DatabaseConnectionDatabaseType.neo4j,
+                nodeConfigurations: [],
+                language: null,
                 username: 'alice',
                 password: 'stored-secret',
-                credentialStoreConsent: true,
-              }),
+              } satisfies UpdateDatabaseConnectionRequestBodyDto),
               signal: testContext.signal,
             },
           );
@@ -6576,11 +6533,14 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
                 connectionUrl: 'bolt://127.0.0.1:7687',
                 browserUrl: 'https://example.test/browser',
                 credentialStoreConsent: true,
-                databaseType: 'neo4j',
+                databaseType: DatabaseConnectionDatabaseType.neo4j,
                 nodeConfigurations: [],
                 language: null,
                 password: '',
-              }),
+              } satisfies Omit<
+                UpdateDatabaseConnectionRequestBodyDto,
+                'username'
+              >),
               signal: testContext.signal,
             },
           );
@@ -6684,11 +6644,11 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
                 connectionUrl: 'bolt://127.0.0.1:7687',
                 browserUrl: 'https://example.test/browser',
                 credentialStoreConsent: false,
-                databaseType: 'neo4j',
+                databaseType: DatabaseConnectionDatabaseType.neo4j,
                 nodeConfigurations: [
                   {
                     id: randomUUID(),
-                    type: 'link',
+                    type: NodeConfigurationTypeDto.link,
                     label: 'Person',
                     property: 'id',
                     linkTemplate: 'https://example.test/{value}',
@@ -6697,7 +6657,10 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
                   },
                 ],
                 language: null,
-              }),
+              } satisfies Omit<
+                UpdateDatabaseConnectionRequestBodyDto,
+                'username' | 'password'
+              >),
               signal: testContext.signal,
             },
           );
@@ -6799,24 +6762,23 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
                 connectionUrl: 'bolt://127.0.0.1:7687',
                 browserUrl: 'https://example.test/browser',
                 credentialStoreConsent: false,
-                databaseType: 'neo4j',
+                databaseType: DatabaseConnectionDatabaseType.neo4j,
                 nodeConfigurations: [
                   {
-                    ...{
-                      id: randomUUID(),
-                      type: 'link',
-                      label: 'Person',
-                      property: 'id',
-                      linkTemplate: 'https://example.test/{value}',
-                      urlEncode: true,
-                      valueRegex: '.*',
-                    },
                     id: child,
-                    type: 'image',
+                    type: NodeConfigurationTypeDto.image,
+                    label: 'Person',
+                    property: 'id',
+                    linkTemplate: 'https://example.test/{value}',
+                    urlEncode: true,
+                    valueRegex: '.*',
                   },
                 ],
                 language: null,
-              }),
+              } satisfies Omit<
+                UpdateDatabaseConnectionRequestBodyDto,
+                'username' | 'password'
+              >),
               signal: testContext.signal,
             },
           );
@@ -6918,10 +6880,13 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
                 connectionUrl: 'bolt://127.0.0.1:7687',
                 browserUrl: 'https://example.test/browser',
                 credentialStoreConsent: false,
-                databaseType: 'neo4j',
+                databaseType: DatabaseConnectionDatabaseType.neo4j,
                 nodeConfigurations: [],
                 language: null,
-              }),
+              } satisfies Omit<
+                UpdateDatabaseConnectionRequestBodyDto,
+                'username' | 'password'
+              >),
               signal: testContext.signal,
             },
           );
@@ -7011,10 +6976,13 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
                 connectionUrl: 'bolt://127.0.0.1:7687',
                 browserUrl: 'https://example.test/browser',
                 credentialStoreConsent: false,
-                databaseType: 'neo4j',
+                databaseType: DatabaseConnectionDatabaseType.neo4j,
                 nodeConfigurations: [],
                 language: null,
-              }),
+              } satisfies Omit<
+                UpdateDatabaseConnectionRequestBodyDto,
+                'username' | 'password'
+              >),
               signal: testContext.signal,
             },
           );
@@ -7102,10 +7070,13 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
                 connectionUrl: 'bolt://127.0.0.1:7687',
                 browserUrl: 'https://example.test/browser',
                 credentialStoreConsent: false,
-                databaseType: 'neo4j',
+                databaseType: DatabaseConnectionDatabaseType.neo4j,
                 nodeConfigurations: [],
                 language: null,
-              }),
+              } satisfies Omit<
+                UpdateDatabaseConnectionRequestBodyDto,
+                'username' | 'password'
+              >),
               signal: testContext.signal,
             },
           );
@@ -7186,10 +7157,13 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
                 connectionUrl: 'bolt://127.0.0.1:7687',
                 browserUrl: 'https://example.test/browser',
                 credentialStoreConsent: false,
-                databaseType: 'sparql',
+                databaseType: DatabaseConnectionDatabaseType.sparql,
                 nodeConfigurations: [],
                 language: 'de',
-              }),
+              } satisfies Omit<
+                UpdateDatabaseConnectionRequestBodyDto,
+                'username' | 'password'
+              >),
               signal: testContext.signal,
             },
           );
@@ -7270,10 +7244,13 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
                 connectionUrl: 'bolt://127.0.0.1:7687',
                 browserUrl: 'https://example.test/browser',
                 credentialStoreConsent: false,
-                databaseType: 'wikidata',
+                databaseType: DatabaseConnectionDatabaseType.wikidata,
                 nodeConfigurations: [],
                 language: 'de',
-              }),
+              } satisfies Omit<
+                UpdateDatabaseConnectionRequestBodyDto,
+                'username' | 'password'
+              >),
               signal: testContext.signal,
             },
           );
@@ -7382,10 +7359,13 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
                 connectionUrl: 'bolt://127.0.0.1:7687',
                 browserUrl: 'https://example.test/browser',
                 credentialStoreConsent: false,
-                databaseType: 'neo4j',
+                databaseType: DatabaseConnectionDatabaseType.neo4j,
                 nodeConfigurations: [],
                 language: null,
-              }),
+              } satisfies Omit<
+                UpdateDatabaseConnectionRequestBodyDto,
+                'title' | 'username' | 'password'
+              >),
               signal: testContext.signal,
             },
           );
@@ -7504,10 +7484,13 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
                 connectionUrl: 'bolt://127.0.0.1:7687',
                 browserUrl: 'https://example.test/browser',
                 credentialStoreConsent: false,
-                databaseType: 'neo4j',
+                databaseType: DatabaseConnectionDatabaseType.neo4j,
                 nodeConfigurations: [],
                 language: null,
-              }),
+              } satisfies Omit<
+                UpdateDatabaseConnectionRequestBodyDto,
+                'title' | 'username' | 'password'
+              > & { title: null }),
               signal: testContext.signal,
             },
           );
@@ -7626,10 +7609,13 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
                 connectionUrl: 'bolt://127.0.0.1:7687',
                 browserUrl: 'https://example.test/browser',
                 credentialStoreConsent: false,
-                databaseType: 'neo4j',
+                databaseType: DatabaseConnectionDatabaseType.neo4j,
                 nodeConfigurations: [],
                 language: null,
-              }),
+              } satisfies Omit<
+                UpdateDatabaseConnectionRequestBodyDto,
+                'title' | 'username' | 'password'
+              > & { title: number }),
               signal: testContext.signal,
             },
           );
@@ -7748,10 +7734,13 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
                 connectionUrl: 'bolt://127.0.0.1:7687',
                 browserUrl: 'https://example.test/browser',
                 credentialStoreConsent: false,
-                databaseType: 'neo4j',
+                databaseType: DatabaseConnectionDatabaseType.neo4j,
                 nodeConfigurations: [],
                 language: null,
-              }),
+              } satisfies Omit<
+                UpdateDatabaseConnectionRequestBodyDto,
+                'username' | 'password'
+              >),
               signal: testContext.signal,
             },
           );
@@ -7869,10 +7858,13 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
                 connectionUrl: 'bolt://127.0.0.1:7687',
                 browserUrl: 'https://example.test/browser',
                 credentialStoreConsent: false,
-                databaseType: 'neo4j',
+                databaseType: DatabaseConnectionDatabaseType.neo4j,
                 nodeConfigurations: [],
                 language: null,
-              }),
+              } satisfies Omit<
+                UpdateDatabaseConnectionRequestBodyDto,
+                'username' | 'password' | 'database'
+              >),
               signal: testContext.signal,
             },
           );
@@ -7991,10 +7983,13 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
                 connectionUrl: 'bolt://127.0.0.1:7687',
                 browserUrl: 'https://example.test/browser',
                 credentialStoreConsent: false,
-                databaseType: 'neo4j',
+                databaseType: DatabaseConnectionDatabaseType.neo4j,
                 nodeConfigurations: [],
                 language: null,
-              }),
+              } satisfies Omit<
+                UpdateDatabaseConnectionRequestBodyDto,
+                'username' | 'password' | 'database'
+              > & { database: null }),
               signal: testContext.signal,
             },
           );
@@ -8113,10 +8108,13 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
                 connectionUrl: 'bolt://127.0.0.1:7687',
                 browserUrl: 'https://example.test/browser',
                 credentialStoreConsent: false,
-                databaseType: 'neo4j',
+                databaseType: DatabaseConnectionDatabaseType.neo4j,
                 nodeConfigurations: [],
                 language: null,
-              }),
+              } satisfies Omit<
+                UpdateDatabaseConnectionRequestBodyDto,
+                'username' | 'password' | 'database'
+              > & { database: number }),
               signal: testContext.signal,
             },
           );
@@ -8234,10 +8232,13 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
                 database: 'neo4j',
                 browserUrl: 'https://example.test/browser',
                 credentialStoreConsent: false,
-                databaseType: 'neo4j',
+                databaseType: DatabaseConnectionDatabaseType.neo4j,
                 nodeConfigurations: [],
                 language: null,
-              }),
+              } satisfies Omit<
+                UpdateDatabaseConnectionRequestBodyDto,
+                'username' | 'password' | 'connectionUrl'
+              >),
               signal: testContext.signal,
             },
           );
@@ -8356,10 +8357,13 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
                 connectionUrl: null,
                 browserUrl: 'https://example.test/browser',
                 credentialStoreConsent: false,
-                databaseType: 'neo4j',
+                databaseType: DatabaseConnectionDatabaseType.neo4j,
                 nodeConfigurations: [],
                 language: null,
-              }),
+              } satisfies Omit<
+                UpdateDatabaseConnectionRequestBodyDto,
+                'username' | 'password' | 'connectionUrl'
+              > & { connectionUrl: null }),
               signal: testContext.signal,
             },
           );
@@ -8478,10 +8482,13 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
                 connectionUrl: 123,
                 browserUrl: 'https://example.test/browser',
                 credentialStoreConsent: false,
-                databaseType: 'neo4j',
+                databaseType: DatabaseConnectionDatabaseType.neo4j,
                 nodeConfigurations: [],
                 language: null,
-              }),
+              } satisfies Omit<
+                UpdateDatabaseConnectionRequestBodyDto,
+                'username' | 'password' | 'connectionUrl'
+              > & { connectionUrl: number }),
               signal: testContext.signal,
             },
           );
@@ -8599,10 +8606,13 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
                 database: 'neo4j',
                 connectionUrl: 'bolt://127.0.0.1:7687',
                 credentialStoreConsent: false,
-                databaseType: 'neo4j',
+                databaseType: DatabaseConnectionDatabaseType.neo4j,
                 nodeConfigurations: [],
                 language: null,
-              }),
+              } satisfies Omit<
+                UpdateDatabaseConnectionRequestBodyDto,
+                'username' | 'password' | 'browserUrl'
+              >),
               signal: testContext.signal,
             },
           );
@@ -8721,10 +8731,13 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
                 connectionUrl: 'bolt://127.0.0.1:7687',
                 browserUrl: null,
                 credentialStoreConsent: false,
-                databaseType: 'neo4j',
+                databaseType: DatabaseConnectionDatabaseType.neo4j,
                 nodeConfigurations: [],
                 language: null,
-              }),
+              } satisfies Omit<
+                UpdateDatabaseConnectionRequestBodyDto,
+                'username' | 'password' | 'browserUrl'
+              > & { browserUrl: null }),
               signal: testContext.signal,
             },
           );
@@ -8843,10 +8856,13 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
                 connectionUrl: 'bolt://127.0.0.1:7687',
                 browserUrl: 123,
                 credentialStoreConsent: false,
-                databaseType: 'neo4j',
+                databaseType: DatabaseConnectionDatabaseType.neo4j,
                 nodeConfigurations: [],
                 language: null,
-              }),
+              } satisfies Omit<
+                UpdateDatabaseConnectionRequestBodyDto,
+                'username' | 'password' | 'browserUrl'
+              > & { browserUrl: number }),
               signal: testContext.signal,
             },
           );
@@ -8964,10 +8980,13 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
                 database: 'neo4j',
                 connectionUrl: 'bolt://127.0.0.1:7687',
                 browserUrl: 'https://example.test/browser',
-                databaseType: 'neo4j',
+                databaseType: DatabaseConnectionDatabaseType.neo4j,
                 nodeConfigurations: [],
                 language: null,
-              }),
+              } satisfies Omit<
+                UpdateDatabaseConnectionRequestBodyDto,
+                'username' | 'password' | 'credentialStoreConsent'
+              >),
               signal: testContext.signal,
             },
           );
@@ -9086,10 +9105,13 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
                 connectionUrl: 'bolt://127.0.0.1:7687',
                 browserUrl: 'https://example.test/browser',
                 credentialStoreConsent: null,
-                databaseType: 'neo4j',
+                databaseType: DatabaseConnectionDatabaseType.neo4j,
                 nodeConfigurations: [],
                 language: null,
-              }),
+              } satisfies Omit<
+                UpdateDatabaseConnectionRequestBodyDto,
+                'username' | 'password' | 'credentialStoreConsent'
+              > & { credentialStoreConsent: null }),
               signal: testContext.signal,
             },
           );
@@ -9208,10 +9230,13 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
                 connectionUrl: 'bolt://127.0.0.1:7687',
                 browserUrl: 'https://example.test/browser',
                 credentialStoreConsent: 'true',
-                databaseType: 'neo4j',
+                databaseType: DatabaseConnectionDatabaseType.neo4j,
                 nodeConfigurations: [],
                 language: null,
-              }),
+              } satisfies Omit<
+                UpdateDatabaseConnectionRequestBodyDto,
+                'username' | 'password' | 'credentialStoreConsent'
+              > & { credentialStoreConsent: string }),
               signal: testContext.signal,
             },
           );
@@ -9332,7 +9357,10 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
                 credentialStoreConsent: false,
                 nodeConfigurations: [],
                 language: null,
-              }),
+              } satisfies Omit<
+                UpdateDatabaseConnectionRequestBodyDto,
+                'username' | 'password' | 'databaseType'
+              >),
               signal: testContext.signal,
             },
           );
@@ -9454,7 +9482,10 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
                 databaseType: null,
                 nodeConfigurations: [],
                 language: null,
-              }),
+              } satisfies Omit<
+                UpdateDatabaseConnectionRequestBodyDto,
+                'username' | 'password' | 'databaseType'
+              > & { databaseType: null }),
               signal: testContext.signal,
             },
           );
@@ -9576,7 +9607,10 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
                 databaseType: 123,
                 nodeConfigurations: [],
                 language: null,
-              }),
+              } satisfies Omit<
+                UpdateDatabaseConnectionRequestBodyDto,
+                'username' | 'password' | 'databaseType'
+              > & { databaseType: number }),
               signal: testContext.signal,
             },
           );
@@ -9698,7 +9732,10 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
                 databaseType: 'unknown',
                 nodeConfigurations: [],
                 language: null,
-              }),
+              } satisfies Omit<
+                UpdateDatabaseConnectionRequestBodyDto,
+                'username' | 'password' | 'databaseType'
+              > & { databaseType: 'unknown' }),
               signal: testContext.signal,
             },
           );
@@ -9817,9 +9854,12 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
                 connectionUrl: 'bolt://127.0.0.1:7687',
                 browserUrl: 'https://example.test/browser',
                 credentialStoreConsent: false,
-                databaseType: 'neo4j',
+                databaseType: DatabaseConnectionDatabaseType.neo4j,
                 language: null,
-              }),
+              } satisfies Omit<
+                UpdateDatabaseConnectionRequestBodyDto,
+                'username' | 'password' | 'nodeConfigurations'
+              >),
               signal: testContext.signal,
             },
           );
@@ -9938,10 +9978,13 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
                 connectionUrl: 'bolt://127.0.0.1:7687',
                 browserUrl: 'https://example.test/browser',
                 credentialStoreConsent: false,
-                databaseType: 'neo4j',
+                databaseType: DatabaseConnectionDatabaseType.neo4j,
                 nodeConfigurations: null,
                 language: null,
-              }),
+              } satisfies Omit<
+                UpdateDatabaseConnectionRequestBodyDto,
+                'username' | 'password' | 'nodeConfigurations'
+              > & { nodeConfigurations: null }),
               signal: testContext.signal,
             },
           );
@@ -10060,10 +10103,13 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
                 connectionUrl: 'bolt://127.0.0.1:7687',
                 browserUrl: 'https://example.test/browser',
                 credentialStoreConsent: false,
-                databaseType: 'neo4j',
+                databaseType: DatabaseConnectionDatabaseType.neo4j,
                 nodeConfigurations: {},
                 language: null,
-              }),
+              } satisfies Omit<
+                UpdateDatabaseConnectionRequestBodyDto,
+                'username' | 'password' | 'nodeConfigurations'
+              > & { nodeConfigurations: Record<string, never> }),
               signal: testContext.signal,
             },
           );
@@ -10182,11 +10228,14 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
                 connectionUrl: 'bolt://127.0.0.1:7687',
                 browserUrl: 'https://example.test/browser',
                 credentialStoreConsent: false,
-                databaseType: 'neo4j',
+                databaseType: DatabaseConnectionDatabaseType.neo4j,
                 nodeConfigurations: [],
                 language: null,
                 unexpected: true,
-              }),
+              } satisfies Omit<
+                UpdateDatabaseConnectionRequestBodyDto,
+                'username' | 'password'
+              > & { unexpected: boolean }),
               signal: testContext.signal,
             },
           );
@@ -10305,11 +10354,14 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
                 connectionUrl: 'bolt://127.0.0.1:7687',
                 browserUrl: 'https://example.test/browser',
                 credentialStoreConsent: false,
-                databaseType: 'neo4j',
+                databaseType: DatabaseConnectionDatabaseType.neo4j,
                 nodeConfigurations: [],
                 language: null,
                 username: '',
-              }),
+              } satisfies Omit<
+                UpdateDatabaseConnectionRequestBodyDto,
+                'password'
+              >),
               signal: testContext.signal,
             },
           );
@@ -10428,11 +10480,14 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
                 connectionUrl: 'bolt://127.0.0.1:7687',
                 browserUrl: 'https://example.test/browser',
                 credentialStoreConsent: false,
-                databaseType: 'neo4j',
+                databaseType: DatabaseConnectionDatabaseType.neo4j,
                 nodeConfigurations: [],
                 language: null,
                 username: 123,
-              }),
+              } satisfies Omit<
+                UpdateDatabaseConnectionRequestBodyDto,
+                'username' | 'password'
+              > & { username: number }),
               signal: testContext.signal,
             },
           );
@@ -10551,11 +10606,14 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
                 connectionUrl: 'bolt://127.0.0.1:7687',
                 browserUrl: 'https://example.test/browser',
                 credentialStoreConsent: false,
-                databaseType: 'neo4j',
+                databaseType: DatabaseConnectionDatabaseType.neo4j,
                 nodeConfigurations: [],
                 language: null,
                 password: 123,
-              }),
+              } satisfies Omit<
+                UpdateDatabaseConnectionRequestBodyDto,
+                'username' | 'password'
+              > & { password: number }),
               signal: testContext.signal,
             },
           );
@@ -10674,10 +10732,13 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
                 connectionUrl: 'bolt://127.0.0.1:7687',
                 browserUrl: 'https://example.test/browser',
                 credentialStoreConsent: false,
-                databaseType: 'neo4j',
+                databaseType: DatabaseConnectionDatabaseType.neo4j,
                 nodeConfigurations: [],
                 language: 'e',
-              }),
+              } satisfies Omit<
+                UpdateDatabaseConnectionRequestBodyDto,
+                'username' | 'password'
+              >),
               signal: testContext.signal,
             },
           );
@@ -10796,10 +10857,13 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
                 connectionUrl: 'bolt://127.0.0.1:7687',
                 browserUrl: 'https://example.test/browser',
                 credentialStoreConsent: false,
-                databaseType: 'neo4j',
+                databaseType: DatabaseConnectionDatabaseType.neo4j,
                 nodeConfigurations: [],
                 language: 123,
-              }),
+              } satisfies Omit<
+                UpdateDatabaseConnectionRequestBodyDto,
+                'username' | 'password' | 'language'
+              > & { language: number }),
               signal: testContext.signal,
             },
           );
@@ -10918,22 +10982,27 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
                 connectionUrl: 'bolt://127.0.0.1:7687',
                 browserUrl: 'https://example.test/browser',
                 credentialStoreConsent: false,
-                databaseType: 'neo4j',
+                databaseType: DatabaseConnectionDatabaseType.neo4j,
                 nodeConfigurations: [
                   {
-                    ...{
-                      id: randomUUID(),
-                      type: 'link',
-                      label: 'Person',
-                      property: 'id',
-                      linkTemplate: 'https://example.test/{value}',
-                      urlEncode: true,
-                      valueRegex: '.*',
-                    },
+                    id: randomUUID(),
                     type: 'unknown',
+                    label: 'Person',
+                    property: 'id',
+                    linkTemplate: 'https://example.test/{value}',
+                    urlEncode: true,
+                    valueRegex: '.*',
                   },
                 ],
                 language: null,
+              } satisfies Omit<
+                UpdateDatabaseConnectionRequestBodyDto,
+                'username' | 'password' | 'nodeConfigurations'
+              > & {
+                nodeConfigurations: (Omit<
+                  UpdateNodeConfigurationRequestBodyDto,
+                  'type'
+                > & { type: 'unknown' })[];
               }),
               signal: testContext.signal,
             },
@@ -11053,23 +11122,23 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
                 connectionUrl: 'bolt://127.0.0.1:7687',
                 browserUrl: 'https://example.test/browser',
                 credentialStoreConsent: false,
-                databaseType: 'neo4j',
+                databaseType: DatabaseConnectionDatabaseType.neo4j,
                 nodeConfigurations: [
                   {
-                    ...{
-                      id: randomUUID(),
-                      type: 'link',
-                      label: 'Person',
-                      property: 'id',
-                      linkTemplate: 'https://example.test/{value}',
-                      urlEncode: true,
-                      valueRegex: '.*',
-                    },
                     id: '',
+                    type: NodeConfigurationTypeDto.link,
+                    label: 'Person',
+                    property: 'id',
+                    linkTemplate: 'https://example.test/{value}',
+                    urlEncode: true,
+                    valueRegex: '.*',
                   },
                 ],
                 language: null,
-              }),
+              } satisfies Omit<
+                UpdateDatabaseConnectionRequestBodyDto,
+                'username' | 'password'
+              >),
               signal: testContext.signal,
             },
           );
@@ -11188,22 +11257,27 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
                 connectionUrl: 'bolt://127.0.0.1:7687',
                 browserUrl: 'https://example.test/browser',
                 credentialStoreConsent: false,
-                databaseType: 'neo4j',
+                databaseType: DatabaseConnectionDatabaseType.neo4j,
                 nodeConfigurations: [
                   {
-                    ...{
-                      id: randomUUID(),
-                      type: 'link',
-                      label: 'Person',
-                      property: 'id',
-                      linkTemplate: 'https://example.test/{value}',
-                      urlEncode: true,
-                      valueRegex: '.*',
-                    },
+                    id: randomUUID(),
+                    type: NodeConfigurationTypeDto.link,
+                    label: 'Person',
+                    property: 'id',
+                    linkTemplate: 'https://example.test/{value}',
                     urlEncode: 'true',
+                    valueRegex: '.*',
                   },
                 ],
                 language: null,
+              } satisfies Omit<
+                UpdateDatabaseConnectionRequestBodyDto,
+                'username' | 'password' | 'nodeConfigurations'
+              > & {
+                nodeConfigurations: (Omit<
+                  UpdateNodeConfigurationRequestBodyDto,
+                  'urlEncode'
+                > & { urlEncode: string })[];
               }),
               signal: testContext.signal,
             },
@@ -11323,23 +11397,23 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
                 connectionUrl: 'bolt://127.0.0.1:7687',
                 browserUrl: 'https://example.test/browser',
                 credentialStoreConsent: false,
-                databaseType: 'neo4j',
+                databaseType: DatabaseConnectionDatabaseType.neo4j,
                 nodeConfigurations: [
                   {
-                    ...{
-                      id: randomUUID(),
-                      type: 'link',
-                      label: 'Person',
-                      property: 'id',
-                      linkTemplate: 'https://example.test/{value}',
-                      urlEncode: true,
-                      valueRegex: '.*',
-                    },
+                    id: randomUUID(),
+                    type: NodeConfigurationTypeDto.link,
+                    label: 'Person',
+                    property: 'id',
+                    linkTemplate: 'https://example.test/{value}',
+                    urlEncode: true,
                     valueRegex: '[',
                   },
                 ],
                 language: null,
-              }),
+              } satisfies Omit<
+                UpdateDatabaseConnectionRequestBodyDto,
+                'username' | 'password'
+              >),
               signal: testContext.signal,
             },
           );
@@ -11458,22 +11532,27 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
                 connectionUrl: 'bolt://127.0.0.1:7687',
                 browserUrl: 'https://example.test/browser',
                 credentialStoreConsent: false,
-                databaseType: 'neo4j',
+                databaseType: DatabaseConnectionDatabaseType.neo4j,
                 nodeConfigurations: [
                   {
-                    ...{
-                      id: randomUUID(),
-                      type: 'link',
-                      label: 'Person',
-                      property: 'id',
-                      linkTemplate: 'https://example.test/{value}',
-                      urlEncode: true,
-                      valueRegex: '.*',
-                    },
+                    id: randomUUID(),
+                    type: NodeConfigurationTypeDto.link,
+                    label: 'Person',
+                    property: 'id',
+                    linkTemplate: 'https://example.test/{value}',
+                    urlEncode: true,
+                    valueRegex: '.*',
                     unexpected: true,
                   },
                 ],
                 language: null,
+              } satisfies Omit<
+                UpdateDatabaseConnectionRequestBodyDto,
+                'username' | 'password' | 'nodeConfigurations'
+              > & {
+                nodeConfigurations: (UpdateNodeConfigurationRequestBodyDto & {
+                  unexpected: boolean;
+                })[];
               }),
               signal: testContext.signal,
             },
@@ -11593,11 +11672,14 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
                 connectionUrl: 'bolt://127.0.0.1:7687',
                 browserUrl: 'https://example.test/browser',
                 credentialStoreConsent: false,
-                databaseType: 'neo4j',
+                databaseType: DatabaseConnectionDatabaseType.neo4j,
                 nodeConfigurations: [],
                 language: null,
                 username: 'alice',
-              }),
+              } satisfies Omit<
+                UpdateDatabaseConnectionRequestBodyDto,
+                'password'
+              >),
               signal: testContext.signal,
             },
           );
@@ -11705,11 +11787,14 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
                 connectionUrl: 'bolt://127.0.0.1:7687',
                 browserUrl: 'https://example.test/browser',
                 credentialStoreConsent: false,
-                databaseType: 'neo4j',
+                databaseType: DatabaseConnectionDatabaseType.neo4j,
                 nodeConfigurations: [],
                 language: null,
                 password: 'secret',
-              }),
+              } satisfies Omit<
+                UpdateDatabaseConnectionRequestBodyDto,
+                'username'
+              >),
               signal: testContext.signal,
             },
           );
@@ -11817,11 +11902,14 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
                 connectionUrl: 'bolt://127.0.0.1:7687',
                 browserUrl: 'https://example.test/browser',
                 credentialStoreConsent: false,
-                databaseType: 'neo4j',
+                databaseType: DatabaseConnectionDatabaseType.neo4j,
                 nodeConfigurations: [],
                 language: null,
                 password: '',
-              }),
+              } satisfies Omit<
+                UpdateDatabaseConnectionRequestBodyDto,
+                'username'
+              >),
               signal: testContext.signal,
             },
           );
@@ -11933,10 +12021,13 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
                 connectionUrl: 'bolt://127.0.0.1:7687',
                 browserUrl: 'https://example.test/browser',
                 credentialStoreConsent: false,
-                databaseType: 'neo4j',
+                databaseType: DatabaseConnectionDatabaseType.neo4j,
                 nodeConfigurations: [],
                 language: null,
-              }),
+              } satisfies Omit<
+                UpdateDatabaseConnectionRequestBodyDto,
+                'username' | 'password'
+              >),
               signal: testContext.signal,
             },
           );
@@ -12037,10 +12128,13 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
                 connectionUrl: 'bolt://127.0.0.1:7687',
                 browserUrl: 'https://example.test/browser',
                 credentialStoreConsent: false,
-                databaseType: 'neo4j',
+                databaseType: DatabaseConnectionDatabaseType.neo4j,
                 nodeConfigurations: [],
                 language: null,
-              }),
+              } satisfies Omit<
+                UpdateDatabaseConnectionRequestBodyDto,
+                'username' | 'password'
+              >),
               signal: testContext.signal,
             },
           );
@@ -12144,10 +12238,13 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
                 connectionUrl: 'bolt://127.0.0.1:7687',
                 browserUrl: 'https://example.test/browser',
                 credentialStoreConsent: false,
-                databaseType: 'neo4j',
+                databaseType: DatabaseConnectionDatabaseType.neo4j,
                 nodeConfigurations: [],
                 language: null,
-              }),
+              } satisfies Omit<
+                UpdateDatabaseConnectionRequestBodyDto,
+                'username' | 'password'
+              >),
               signal: testContext.signal,
             },
           );
@@ -12265,10 +12362,13 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
                 connectionUrl: 'bolt://127.0.0.1:7687',
                 browserUrl: 'https://example.test/browser',
                 credentialStoreConsent: false,
-                databaseType: 'neo4j',
+                databaseType: DatabaseConnectionDatabaseType.neo4j,
                 nodeConfigurations: [],
                 language: null,
-              }),
+              } satisfies Omit<
+                UpdateDatabaseConnectionRequestBodyDto,
+                'username' | 'password'
+              >),
               signal: testContext.signal,
             },
           );
@@ -12386,10 +12486,13 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
                 connectionUrl: 'bolt://127.0.0.1:7687',
                 browserUrl: 'https://example.test/browser',
                 credentialStoreConsent: false,
-                databaseType: 'neo4j',
+                databaseType: DatabaseConnectionDatabaseType.neo4j,
                 nodeConfigurations: [],
                 language: null,
-              }),
+              } satisfies Omit<
+                UpdateDatabaseConnectionRequestBodyDto,
+                'username' | 'password'
+              >),
               signal: testContext.signal,
             },
           );
@@ -12498,10 +12601,13 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
                 connectionUrl: 'bolt://127.0.0.1:7687',
                 browserUrl: 'https://example.test/browser',
                 credentialStoreConsent: false,
-                databaseType: 'neo4j',
+                databaseType: DatabaseConnectionDatabaseType.neo4j,
                 nodeConfigurations: [],
                 language: null,
-              }),
+              } satisfies Omit<
+                UpdateDatabaseConnectionRequestBodyDto,
+                'username' | 'password'
+              >),
               signal: testContext.signal,
             },
           );
@@ -12624,10 +12730,13 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
                 connectionUrl: 'bolt://127.0.0.1:7687',
                 browserUrl: 'https://example.test/browser',
                 credentialStoreConsent: false,
-                databaseType: 'neo4j',
+                databaseType: DatabaseConnectionDatabaseType.neo4j,
                 nodeConfigurations: [],
                 language: null,
-              }),
+              } satisfies Omit<
+                UpdateDatabaseConnectionRequestBodyDto,
+                'username' | 'password'
+              >),
               signal: testContext.signal,
             },
           );
@@ -12734,10 +12843,13 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
                 connectionUrl: 'bolt://127.0.0.1:7687',
                 browserUrl: 'https://example.test/browser',
                 credentialStoreConsent: false,
-                databaseType: 'neo4j',
+                databaseType: DatabaseConnectionDatabaseType.neo4j,
                 nodeConfigurations: [],
                 language: null,
-              }),
+              } satisfies Omit<
+                UpdateDatabaseConnectionRequestBodyDto,
+                'username' | 'password'
+              >),
               signal: testContext.signal,
             },
           );
@@ -12860,10 +12972,13 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
                 connectionUrl: 'bolt://127.0.0.1:7687',
                 browserUrl: 'https://example.test/browser',
                 credentialStoreConsent: false,
-                databaseType: 'neo4j',
+                databaseType: DatabaseConnectionDatabaseType.neo4j,
                 nodeConfigurations: [],
                 language: null,
-              }),
+              } satisfies Omit<
+                UpdateDatabaseConnectionRequestBodyDto,
+                'username' | 'password'
+              >),
               signal: testContext.signal,
             },
           );
@@ -12979,10 +13094,13 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
                 connectionUrl: 'bolt://127.0.0.1:7687',
                 browserUrl: 'https://example.test/browser',
                 credentialStoreConsent: false,
-                databaseType: 'neo4j',
+                databaseType: DatabaseConnectionDatabaseType.neo4j,
                 nodeConfigurations: [],
                 language: null,
-              }),
+              } satisfies Omit<
+                UpdateDatabaseConnectionRequestBodyDto,
+                'username' | 'password'
+              >),
               signal: testContext.signal,
             },
           );

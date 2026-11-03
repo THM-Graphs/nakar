@@ -1,3 +1,5 @@
+import type { CreateProjectRequestBodyDto } from './dto/CreateProjectRequestBodyDto';
+import type { UpdateProjectRequestBodyDto } from './dto/UpdateProjectRequestBodyDto';
 import type { E2ETestApplicationUser } from '../../../../e2e/E2ETestApplicationUser';
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
@@ -100,7 +102,9 @@ describe('/project', (suiteContext: SuiteContext): void => {
             ['Authorization', `Bearer ${login.jwt}`],
             ['Content-Type', 'application/json'],
           ]),
-          body: JSON.stringify({ title: 'Created Project' }),
+          body: JSON.stringify({
+            title: 'Created Project',
+          } satisfies CreateProjectRequestBodyDto),
           signal: testContext.signal,
         });
 
@@ -137,7 +141,10 @@ describe('/project', (suiteContext: SuiteContext): void => {
             ['Authorization', `Bearer ${login.jwt}`],
             ['Content-Type', 'application/json'],
           ]),
-          body: JSON.stringify({}),
+          body: JSON.stringify(
+            {} satisfies Omit<CreateProjectRequestBodyDto, 'title'> &
+              Record<string, never>,
+          ),
           signal: testContext.signal,
         });
 
@@ -167,7 +174,9 @@ describe('/project', (suiteContext: SuiteContext): void => {
             ['Authorization', `Bearer ${login.jwt}`],
             ['Content-Type', 'application/json'],
           ]),
-          body: JSON.stringify({ title: '' }),
+          body: JSON.stringify({
+            title: '',
+          } satisfies CreateProjectRequestBodyDto),
           signal: testContext.signal,
         });
 
@@ -197,7 +206,10 @@ describe('/project', (suiteContext: SuiteContext): void => {
             ['Authorization', `Bearer ${login.jwt}`],
             ['Content-Type', 'application/json'],
           ]),
-          body: JSON.stringify({ title: 123 }),
+          body: JSON.stringify({ title: 123 } satisfies Omit<
+            CreateProjectRequestBodyDto,
+            'title'
+          > & { title: number }),
           signal: testContext.signal,
         });
 
@@ -227,7 +239,10 @@ describe('/project', (suiteContext: SuiteContext): void => {
             ['Authorization', `Bearer ${login.jwt}`],
             ['Content-Type', 'application/json'],
           ]),
-          body: JSON.stringify({ title: null }),
+          body: JSON.stringify({ title: null } satisfies Omit<
+            CreateProjectRequestBodyDto,
+            'title'
+          > & { title: null }),
           signal: testContext.signal,
         });
 
@@ -257,7 +272,10 @@ describe('/project', (suiteContext: SuiteContext): void => {
             ['Authorization', `Bearer ${login.jwt}`],
             ['Content-Type', 'application/json'],
           ]),
-          body: JSON.stringify({ title: 'Test Project', unexpected: true }),
+          body: JSON.stringify({
+            title: 'Test Project',
+            unexpected: true,
+          } satisfies CreateProjectRequestBodyDto & { unexpected: boolean }),
           signal: testContext.signal,
         });
 
@@ -276,7 +294,9 @@ describe('/project', (suiteContext: SuiteContext): void => {
         const response: Response = await fetch(`${manager.apiUrl}/project`, {
           method: 'POST',
           headers: new Headers([['Content-Type', 'application/json']]),
-          body: JSON.stringify({ title: 'Test Project' }),
+          body: JSON.stringify({
+            title: 'Test Project',
+          } satisfies CreateProjectRequestBodyDto),
           signal: testContext.signal,
         });
 
@@ -297,7 +317,9 @@ describe('/project', (suiteContext: SuiteContext): void => {
             ['Authorization', 'Bearer invalid-jwt'],
             ['Content-Type', 'application/json'],
           ]),
-          body: JSON.stringify({ title: 'Test Project' }),
+          body: JSON.stringify({
+            title: 'Test Project',
+          } satisfies CreateProjectRequestBodyDto),
           signal: testContext.signal,
         });
 
@@ -1898,7 +1920,9 @@ describe('/project', (suiteContext: SuiteContext): void => {
                 ['Authorization', `Bearer ${login.jwt}`],
                 ['Content-Type', 'application/json'],
               ]),
-              body: JSON.stringify({ title: 'Updated Project' }),
+              body: JSON.stringify({
+                title: 'Updated Project',
+              } satisfies UpdateProjectRequestBodyDto),
               signal: testContext.signal,
             },
           );
@@ -1953,7 +1977,9 @@ describe('/project', (suiteContext: SuiteContext): void => {
                 ['Authorization', `Bearer ${login.jwt}`],
                 ['Content-Type', 'application/json'],
               ]),
-              body: JSON.stringify({ title: 'Changed Project' }),
+              body: JSON.stringify({
+                title: 'Changed Project',
+              } satisfies UpdateProjectRequestBodyDto),
               signal: testContext.signal,
             },
           );
@@ -2016,7 +2042,9 @@ describe('/project', (suiteContext: SuiteContext): void => {
                 ['Authorization', `Bearer ${login.jwt}`],
                 ['Content-Type', 'application/json'],
               ]),
-              body: JSON.stringify({ title: 'Changed Project' }),
+              body: JSON.stringify({
+                title: 'Changed Project',
+              } satisfies UpdateProjectRequestBodyDto),
               signal: testContext.signal,
             },
           );
@@ -2082,7 +2110,10 @@ describe('/project', (suiteContext: SuiteContext): void => {
                 ['Authorization', `Bearer ${login.jwt}`],
                 ['Content-Type', 'application/json'],
               ]),
-              body: JSON.stringify({}),
+              body: JSON.stringify(
+                {} satisfies Omit<UpdateProjectRequestBodyDto, 'title'> &
+                  Record<string, never>,
+              ),
               signal: testContext.signal,
             },
           );
@@ -2143,7 +2174,9 @@ describe('/project', (suiteContext: SuiteContext): void => {
                 ['Authorization', `Bearer ${login.jwt}`],
                 ['Content-Type', 'application/json'],
               ]),
-              body: JSON.stringify({ title: '' }),
+              body: JSON.stringify({
+                title: '',
+              } satisfies UpdateProjectRequestBodyDto),
               signal: testContext.signal,
             },
           );
@@ -2204,7 +2237,10 @@ describe('/project', (suiteContext: SuiteContext): void => {
                 ['Authorization', `Bearer ${login.jwt}`],
                 ['Content-Type', 'application/json'],
               ]),
-              body: JSON.stringify({ title: 123 }),
+              body: JSON.stringify({ title: 123 } satisfies Omit<
+                UpdateProjectRequestBodyDto,
+                'title'
+              > & { title: number }),
               signal: testContext.signal,
             },
           );
@@ -2265,7 +2301,10 @@ describe('/project', (suiteContext: SuiteContext): void => {
                 ['Authorization', `Bearer ${login.jwt}`],
                 ['Content-Type', 'application/json'],
               ]),
-              body: JSON.stringify({ title: null }),
+              body: JSON.stringify({ title: null } satisfies Omit<
+                UpdateProjectRequestBodyDto,
+                'title'
+              > & { title: null }),
               signal: testContext.signal,
             },
           );
@@ -2326,7 +2365,12 @@ describe('/project', (suiteContext: SuiteContext): void => {
                 ['Authorization', `Bearer ${login.jwt}`],
                 ['Content-Type', 'application/json'],
               ]),
-              body: JSON.stringify({ title: 'Test Project', unexpected: true }),
+              body: JSON.stringify({
+                title: 'Test Project',
+                unexpected: true,
+              } satisfies UpdateProjectRequestBodyDto & {
+                unexpected: boolean;
+              }),
               signal: testContext.signal,
             },
           );
@@ -2414,7 +2458,9 @@ describe('/project', (suiteContext: SuiteContext): void => {
                 ['Authorization', `Bearer ${login.jwt}`],
                 ['Content-Type', 'application/json'],
               ]),
-              body: JSON.stringify({ title: 'Unauthorized Change' }),
+              body: JSON.stringify({
+                title: 'Unauthorized Change',
+              } satisfies UpdateProjectRequestBodyDto),
               signal: testContext.signal,
             },
           );
@@ -2506,7 +2552,9 @@ describe('/project', (suiteContext: SuiteContext): void => {
                 ['Authorization', `Bearer ${login.jwt}`],
                 ['Content-Type', 'application/json'],
               ]),
-              body: JSON.stringify({ title: 'Unauthorized Change' }),
+              body: JSON.stringify({
+                title: 'Unauthorized Change',
+              } satisfies UpdateProjectRequestBodyDto),
               signal: testContext.signal,
             },
           );
@@ -2615,7 +2663,9 @@ describe('/project', (suiteContext: SuiteContext): void => {
                 ['Authorization', `Bearer ${login.jwt}`],
                 ['Content-Type', 'application/json'],
               ]),
-              body: JSON.stringify({ title: 'Unauthorized Change' }),
+              body: JSON.stringify({
+                title: 'Unauthorized Change',
+              } satisfies UpdateProjectRequestBodyDto),
               signal: testContext.signal,
             },
           );
@@ -2675,7 +2725,9 @@ describe('/project', (suiteContext: SuiteContext): void => {
             {
               method: 'PUT',
               headers: new Headers([['Content-Type', 'application/json']]),
-              body: JSON.stringify({ title: 'Changed Project' }),
+              body: JSON.stringify({
+                title: 'Changed Project',
+              } satisfies UpdateProjectRequestBodyDto),
               signal: testContext.signal,
             },
           );
@@ -2736,7 +2788,9 @@ describe('/project', (suiteContext: SuiteContext): void => {
                 ['Authorization', 'Bearer invalid-jwt'],
                 ['Content-Type', 'application/json'],
               ]),
-              body: JSON.stringify({ title: 'Changed Project' }),
+              body: JSON.stringify({
+                title: 'Changed Project',
+              } satisfies UpdateProjectRequestBodyDto),
               signal: testContext.signal,
             },
           );
@@ -2805,7 +2859,9 @@ describe('/project', (suiteContext: SuiteContext): void => {
                 ['Authorization', `Bearer ${login.jwt}`],
                 ['Content-Type', 'application/json'],
               ]),
-              body: JSON.stringify({ title: 'Changed Project' }),
+              body: JSON.stringify({
+                title: 'Changed Project',
+              } satisfies UpdateProjectRequestBodyDto),
               signal: testContext.signal,
             },
           );
@@ -2877,7 +2933,9 @@ describe('/project', (suiteContext: SuiteContext): void => {
                 ['Authorization', `Bearer ${login.jwt}`],
                 ['Content-Type', 'application/json'],
               ]),
-              body: JSON.stringify({ title: 'Changed Project' }),
+              body: JSON.stringify({
+                title: 'Changed Project',
+              } satisfies UpdateProjectRequestBodyDto),
               signal: testContext.signal,
             },
           );
@@ -2922,7 +2980,9 @@ describe('/project', (suiteContext: SuiteContext): void => {
                 ['Authorization', `Bearer ${login.jwt}`],
                 ['Content-Type', 'application/json'],
               ]),
-              body: JSON.stringify({ title: 'Changed Project' }),
+              body: JSON.stringify({
+                title: 'Changed Project',
+              } satisfies UpdateProjectRequestBodyDto),
               signal: testContext.signal,
             },
           );

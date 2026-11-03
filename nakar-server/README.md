@@ -86,6 +86,8 @@ Place each test file next to the class it tests. Use the class name followed by 
 
 Each test covers one aspect and is declared explicitly. Do not generate tests using loops. Use descriptive test names without repeating information already provided by the surrounding suites.
 
+Prefer the implementation's DTO classes for typing test data and request bodies so that incompatible DTO changes produce compiler errors in the tests. Write request bodies as literals directly in the `fetch` call and use `satisfies`, for example `body: JSON.stringify({ title: 'Updated Project' } satisfies UpdateProjectRequestBodyDto)`. For negative tests, use `Omit` for intentionally missing fields and intersections (`&`) for additional fields or, together with `Omit`, deliberately invalid field types. Avoid broad types such as `Record<string, unknown>` or type assertions that bypass these checks. Response bodies still require runtime validation, for example with Zod; DTO types alone do not validate JSON.
+
 Divide each test into these phases, using the comments exactly as shown. Separate consecutive phases with exactly one blank line before the next phase comment (`// when` or `// then`). Do not add a blank line between a phase comment and its code:
 
 - `// given`: Prepare the input and required test data. E2E tests may use public `E2ETestManager` helpers here, including registration, login, and project or room creation. Assertions may verify that the preparation succeeded. Omit this comment when no preparation is needed.

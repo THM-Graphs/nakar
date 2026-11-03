@@ -1,3 +1,11 @@
+import type { UpdateScenarioRequestBodyDto } from './dto/UpdateScenarioRequestBodyDto';
+import type { UpdateScenarioQueryEntryDto } from './dto/UpdateScenarioQueryEntryDto';
+import type { UpdateScenarioQueryParameterEntryDto } from './dto/UpdateScenarioQueryParameterEntryDto';
+import type { UpdateScenarioPostActionEntryDto } from './dto/UpdateScenarioPostActionEntryDto';
+import { UpdateScenarioPostActionTypeDto } from './dto/UpdateScenarioPostActionTypeDto';
+import { UpdateScenarioPostActionLayoutAlgorithmDto } from './dto/UpdateScenarioPostActionLayoutAlgorithmDto';
+import type { UpdateScenarioPostActionColorPresetDto } from './dto/UpdateScenarioPostActionColorPresetDto';
+import { ColorPresetIndexDto } from '../../../schema/dtos/ColorPresetIndexDto';
 import type { E2ETestApplicationUser } from '../../../../e2e/E2ETestApplicationUser';
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
@@ -1423,13 +1431,6 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
             testContext,
           );
           assert.equal(draftChange.status, 200);
-          const body: Record<string, unknown> = {
-            title: 'Updated Scenario',
-            description: 'Updated description',
-            queries: [],
-            parameters: [],
-            postScenarioActions: [],
-          };
 
           // when
           const response: Response = await fetch(
@@ -1440,7 +1441,13 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
                 ['Authorization', `Bearer ${ownerLogin.jwt}`],
                 ['Content-Type', 'application/json'],
               ]),
-              body: JSON.stringify(body),
+              body: JSON.stringify({
+                title: 'Updated Scenario',
+                description: 'Updated description',
+                queries: [],
+                parameters: [],
+                postScenarioActions: [],
+              } satisfies UpdateScenarioRequestBodyDto),
               signal: testContext.signal,
             },
           );
@@ -1451,8 +1458,8 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
             await response.json(),
           );
           assert.equal(result.id, resource);
-          assert.equal(result.title, body['title']);
-          assert.equal(result.description, body['description']);
+          assert.equal(result.title, 'Updated Scenario');
+          assert.equal(result.description, 'Updated description');
           const projectResponse: Response = await fetch(
             `${manager.apiUrl}/project/${project}`,
             {
@@ -1474,7 +1481,7 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
             (item: ScenarioDto): boolean => item.id === resource,
           );
           assert.ok(persisted);
-          assert.equal(persisted.title, body['title']);
+          assert.equal(persisted.title, 'Updated Scenario');
         });
 
         test('persists a query using a database of the project', async (testContext: TestContext): Promise<void> => {
@@ -1514,26 +1521,6 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
             { title: 'Query Database', project, databaseType: 'neo4j' },
             testContext,
           );
-          const body: Record<string, unknown> = {
-            ...{
-              title: 'Updated Scenario',
-              description: 'Updated description',
-              queries: [],
-              parameters: [],
-              postScenarioActions: [],
-            },
-            queries: [
-              {
-                ...{
-                  id: randomUUID(),
-                  query: 'MATCH (n) RETURN n',
-                  databaseId: null,
-                  isTableQuery: false,
-                },
-                databaseId: database,
-              },
-            ],
-          };
 
           // when
           const response: Response = await fetch(
@@ -1544,7 +1531,20 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
                 ['Authorization', `Bearer ${ownerLogin.jwt}`],
                 ['Content-Type', 'application/json'],
               ]),
-              body: JSON.stringify(body),
+              body: JSON.stringify({
+                title: 'Updated Scenario',
+                description: 'Updated description',
+                parameters: [],
+                postScenarioActions: [],
+                queries: [
+                  {
+                    id: randomUUID(),
+                    query: 'MATCH (n) RETURN n',
+                    isTableQuery: false,
+                    databaseId: database,
+                  },
+                ],
+              } satisfies UpdateScenarioRequestBodyDto),
               signal: testContext.signal,
             },
           );
@@ -1555,8 +1555,8 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
             await response.json(),
           );
           assert.equal(result.id, resource);
-          assert.equal(result.title, body['title']);
-          assert.equal(result.description, body['description']);
+          assert.equal(result.title, 'Updated Scenario');
+          assert.equal(result.description, 'Updated description');
           const projectResponse: Response = await fetch(
             `${manager.apiUrl}/project/${project}`,
             {
@@ -1578,7 +1578,7 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
             (item: ScenarioDto): boolean => item.id === resource,
           );
           assert.ok(persisted);
-          assert.equal(persisted.title, body['title']);
+          assert.equal(persisted.title, 'Updated Scenario');
           assert.equal(result.queries[0]?.database?.id, database);
           assert.deepEqual(persisted, result);
         });
@@ -1629,13 +1629,6 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
             testContext,
           );
           assert.equal(draftRemoval.status, 200);
-          const body: Record<string, unknown> = {
-            title: 'Updated Scenario',
-            description: 'Updated description',
-            queries: [],
-            parameters: [],
-            postScenarioActions: [],
-          };
 
           // when
           const response: Response = await fetch(
@@ -1646,7 +1639,13 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
                 ['Authorization', `Bearer ${login.jwt}`],
                 ['Content-Type', 'application/json'],
               ]),
-              body: JSON.stringify(body),
+              body: JSON.stringify({
+                title: 'Updated Scenario',
+                description: 'Updated description',
+                queries: [],
+                parameters: [],
+                postScenarioActions: [],
+              } satisfies UpdateScenarioRequestBodyDto),
               signal: testContext.signal,
             },
           );
@@ -1657,8 +1656,8 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
             await response.json(),
           );
           assert.equal(result.id, resource);
-          assert.equal(result.title, body['title']);
-          assert.equal(result.description, body['description']);
+          assert.equal(result.title, 'Updated Scenario');
+          assert.equal(result.description, 'Updated description');
           const projectResponse: Response = await fetch(
             `${manager.apiUrl}/project/${project}`,
             {
@@ -1680,7 +1679,7 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
             (item: ScenarioDto): boolean => item.id === resource,
           );
           assert.ok(persisted);
-          assert.equal(persisted.title, body['title']);
+          assert.equal(persisted.title, 'Updated Scenario');
         });
 
         test('persists a new query', async (testContext: TestContext): Promise<void> => {
@@ -1715,23 +1714,6 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
             owner.password,
             testContext,
           );
-          const body: Record<string, unknown> = {
-            ...{
-              title: 'Updated Scenario',
-              description: 'Updated description',
-              queries: [],
-              parameters: [],
-              postScenarioActions: [],
-            },
-            queries: [
-              {
-                id: randomUUID(),
-                query: 'MATCH (n) RETURN n',
-                databaseId: null,
-                isTableQuery: false,
-              },
-            ],
-          };
 
           // when
           const response: Response = await fetch(
@@ -1742,7 +1724,20 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
                 ['Authorization', `Bearer ${ownerLogin.jwt}`],
                 ['Content-Type', 'application/json'],
               ]),
-              body: JSON.stringify(body),
+              body: JSON.stringify({
+                title: 'Updated Scenario',
+                description: 'Updated description',
+                parameters: [],
+                postScenarioActions: [],
+                queries: [
+                  {
+                    id: randomUUID(),
+                    query: 'MATCH (n) RETURN n',
+                    databaseId: null,
+                    isTableQuery: false,
+                  },
+                ],
+              } satisfies UpdateScenarioRequestBodyDto),
               signal: testContext.signal,
             },
           );
@@ -1753,8 +1748,8 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
             await response.json(),
           );
           assert.equal(result.id, resource);
-          assert.equal(result.title, body['title']);
-          assert.equal(result.description, body['description']);
+          assert.equal(result.title, 'Updated Scenario');
+          assert.equal(result.description, 'Updated description');
           const projectResponse: Response = await fetch(
             `${manager.apiUrl}/project/${project}`,
             {
@@ -1776,7 +1771,7 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
             (item: ScenarioDto): boolean => item.id === resource,
           );
           assert.ok(persisted);
-          assert.equal(persisted.title, body['title']);
+          assert.equal(persisted.title, 'Updated Scenario');
           assert.equal(result.queries.length, 1);
           assert.deepEqual(result.queries[0], {
             id: result.queries[0]?.id,
@@ -1819,25 +1814,6 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
             owner.password,
             testContext,
           );
-          const body: Record<string, unknown> = {
-            ...{
-              title: 'Updated Scenario',
-              description: 'Updated description',
-              queries: [],
-              parameters: [],
-              postScenarioActions: [],
-            },
-            parameters: [
-              {
-                id: randomUUID(),
-                identifier: 'name',
-                title: 'Name',
-                defaultValue: 'Alice',
-                dataType: 'string',
-                allowedLabels: ['Person'],
-              },
-            ],
-          };
 
           // when
           const response: Response = await fetch(
@@ -1848,7 +1824,22 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
                 ['Authorization', `Bearer ${ownerLogin.jwt}`],
                 ['Content-Type', 'application/json'],
               ]),
-              body: JSON.stringify(body),
+              body: JSON.stringify({
+                title: 'Updated Scenario',
+                description: 'Updated description',
+                queries: [],
+                parameters: [
+                  {
+                    id: randomUUID(),
+                    identifier: 'name',
+                    title: 'Name',
+                    defaultValue: 'Alice',
+                    dataType: LiveCanvasParameterDataType.string,
+                    allowedLabels: ['Person'],
+                  },
+                ],
+                postScenarioActions: [],
+              } satisfies UpdateScenarioRequestBodyDto),
               signal: testContext.signal,
             },
           );
@@ -1859,8 +1850,8 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
             await response.json(),
           );
           assert.equal(result.id, resource);
-          assert.equal(result.title, body['title']);
-          assert.equal(result.description, body['description']);
+          assert.equal(result.title, 'Updated Scenario');
+          assert.equal(result.description, 'Updated description');
           const projectResponse: Response = await fetch(
             `${manager.apiUrl}/project/${project}`,
             {
@@ -1882,7 +1873,7 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
             (item: ScenarioDto): boolean => item.id === resource,
           );
           assert.ok(persisted);
-          assert.equal(persisted.title, body['title']);
+          assert.equal(persisted.title, 'Updated Scenario');
           assert.equal(result.parameters.length, 1);
           assert.deepEqual(result.parameters[0], {
             id: result.parameters[0]?.id,
@@ -1927,30 +1918,6 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
             owner.password,
             testContext,
           );
-          const body: Record<string, unknown> = {
-            ...{
-              title: 'Updated Scenario',
-              description: 'Updated description',
-              queries: [],
-              parameters: [],
-              postScenarioActions: [],
-            },
-            postScenarioActions: [
-              {
-                id: randomUUID(),
-                type: 'layout',
-                label: 'Layout',
-                circleRadius: 2000,
-                layoutAlgorithm: 'circle',
-                relationshipType: '',
-                factor: 2,
-                width: 2,
-                color: { type: 'ColorPresetDto', index: 0 },
-                radius: 10,
-                property: '',
-              },
-            ],
-          };
 
           // when
           const response: Response = await fetch(
@@ -1961,7 +1928,31 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
                 ['Authorization', `Bearer ${ownerLogin.jwt}`],
                 ['Content-Type', 'application/json'],
               ]),
-              body: JSON.stringify(body),
+              body: JSON.stringify({
+                title: 'Updated Scenario',
+                description: 'Updated description',
+                queries: [],
+                parameters: [],
+                postScenarioActions: [
+                  {
+                    id: randomUUID(),
+                    type: UpdateScenarioPostActionTypeDto.layout,
+                    label: 'Layout',
+                    circleRadius: 2000,
+                    layoutAlgorithm:
+                      UpdateScenarioPostActionLayoutAlgorithmDto.circle,
+                    relationshipType: '',
+                    factor: 2,
+                    width: 2,
+                    color: {
+                      type: 'ColorPresetDto',
+                      index: ColorPresetIndexDto._0,
+                    },
+                    radius: 10,
+                    property: '',
+                  },
+                ],
+              } satisfies UpdateScenarioRequestBodyDto),
               signal: testContext.signal,
             },
           );
@@ -1972,8 +1963,8 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
             await response.json(),
           );
           assert.equal(result.id, resource);
-          assert.equal(result.title, body['title']);
-          assert.equal(result.description, body['description']);
+          assert.equal(result.title, 'Updated Scenario');
+          assert.equal(result.description, 'Updated description');
           const projectResponse: Response = await fetch(
             `${manager.apiUrl}/project/${project}`,
             {
@@ -1995,7 +1986,7 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
             (item: ScenarioDto): boolean => item.id === resource,
           );
           assert.ok(persisted);
-          assert.equal(persisted.title, body['title']);
+          assert.equal(persisted.title, 'Updated Scenario');
           assert.equal(result.postScenarioActions.length, 1);
           assert.equal(
             result.postScenarioActions[0]?.layoutAlgorithm,
@@ -2046,28 +2037,6 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
             },
             testContext,
           );
-          const body: Record<string, unknown> = {
-            ...{
-              title: 'Updated Scenario',
-              description: 'Updated description',
-              queries: [],
-              parameters: [],
-              postScenarioActions: [],
-            },
-            queries: [
-              {
-                ...{
-                  id: randomUUID(),
-                  query: 'MATCH (n) RETURN n',
-                  databaseId: null,
-                  isTableQuery: false,
-                },
-                id: child,
-                query: 'Updated Query',
-                isTableQuery: true,
-              },
-            ],
-          };
 
           // when
           const response: Response = await fetch(
@@ -2078,7 +2047,20 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
                 ['Authorization', `Bearer ${ownerLogin.jwt}`],
                 ['Content-Type', 'application/json'],
               ]),
-              body: JSON.stringify(body),
+              body: JSON.stringify({
+                title: 'Updated Scenario',
+                description: 'Updated description',
+                queries: [
+                  {
+                    id: child,
+                    query: 'Updated Query',
+                    databaseId: null,
+                    isTableQuery: true,
+                  },
+                ],
+                parameters: [],
+                postScenarioActions: [],
+              } satisfies UpdateScenarioRequestBodyDto),
               signal: testContext.signal,
             },
           );
@@ -2089,8 +2071,8 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
             await response.json(),
           );
           assert.equal(result.id, resource);
-          assert.equal(result.title, body['title']);
-          assert.equal(result.description, body['description']);
+          assert.equal(result.title, 'Updated Scenario');
+          assert.equal(result.description, 'Updated description');
           const projectResponse: Response = await fetch(
             `${manager.apiUrl}/project/${project}`,
             {
@@ -2112,7 +2094,7 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
             (item: ScenarioDto): boolean => item.id === resource,
           );
           assert.ok(persisted);
-          assert.equal(persisted.title, body['title']);
+          assert.equal(persisted.title, 'Updated Scenario');
           assert.equal(result.queries.length, 1);
           assert.equal(result.queries[0]?.id, child);
           assert.equal(result.queries[0]?.query, 'Updated Query');
@@ -2161,13 +2143,6 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
             },
             testContext,
           );
-          const body: Record<string, unknown> = {
-            title: 'Updated Scenario',
-            description: 'Updated description',
-            queries: [],
-            parameters: [],
-            postScenarioActions: [],
-          };
 
           // when
           const response: Response = await fetch(
@@ -2178,7 +2153,13 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
                 ['Authorization', `Bearer ${ownerLogin.jwt}`],
                 ['Content-Type', 'application/json'],
               ]),
-              body: JSON.stringify(body),
+              body: JSON.stringify({
+                title: 'Updated Scenario',
+                description: 'Updated description',
+                queries: [],
+                parameters: [],
+                postScenarioActions: [],
+              } satisfies UpdateScenarioRequestBodyDto),
               signal: testContext.signal,
             },
           );
@@ -2189,8 +2170,8 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
             await response.json(),
           );
           assert.equal(result.id, resource);
-          assert.equal(result.title, body['title']);
-          assert.equal(result.description, body['description']);
+          assert.equal(result.title, 'Updated Scenario');
+          assert.equal(result.description, 'Updated description');
           const projectResponse: Response = await fetch(
             `${manager.apiUrl}/project/${project}`,
             {
@@ -2212,7 +2193,7 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
             (item: ScenarioDto): boolean => item.id === resource,
           );
           assert.ok(persisted);
-          assert.equal(persisted.title, body['title']);
+          assert.equal(persisted.title, 'Updated Scenario');
           assert.deepEqual(result.queries, []);
           const removedChild: Response = await manager.readDocument(
             'api::query.query',
@@ -2267,29 +2248,6 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
             },
             testContext,
           );
-          const body: Record<string, unknown> = {
-            ...{
-              title: 'Updated Scenario',
-              description: 'Updated description',
-              queries: [],
-              parameters: [],
-              postScenarioActions: [],
-            },
-            parameters: [
-              {
-                ...{
-                  id: randomUUID(),
-                  identifier: 'name',
-                  title: 'Name',
-                  defaultValue: 'Alice',
-                  dataType: 'string',
-                  allowedLabels: ['Person'],
-                },
-                id: child,
-                identifier: 'updated',
-              },
-            ],
-          };
 
           // when
           const response: Response = await fetch(
@@ -2300,7 +2258,22 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
                 ['Authorization', `Bearer ${ownerLogin.jwt}`],
                 ['Content-Type', 'application/json'],
               ]),
-              body: JSON.stringify(body),
+              body: JSON.stringify({
+                title: 'Updated Scenario',
+                description: 'Updated description',
+                queries: [],
+                parameters: [
+                  {
+                    id: child,
+                    identifier: 'updated',
+                    title: 'Name',
+                    defaultValue: 'Alice',
+                    dataType: LiveCanvasParameterDataType.string,
+                    allowedLabels: ['Person'],
+                  },
+                ],
+                postScenarioActions: [],
+              } satisfies UpdateScenarioRequestBodyDto),
               signal: testContext.signal,
             },
           );
@@ -2311,8 +2284,8 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
             await response.json(),
           );
           assert.equal(result.id, resource);
-          assert.equal(result.title, body['title']);
-          assert.equal(result.description, body['description']);
+          assert.equal(result.title, 'Updated Scenario');
+          assert.equal(result.description, 'Updated description');
           const projectResponse: Response = await fetch(
             `${manager.apiUrl}/project/${project}`,
             {
@@ -2334,7 +2307,7 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
             (item: ScenarioDto): boolean => item.id === resource,
           );
           assert.ok(persisted);
-          assert.equal(persisted.title, body['title']);
+          assert.equal(persisted.title, 'Updated Scenario');
           assert.equal(result.parameters.length, 1);
           assert.equal(result.parameters[0]?.id, child);
           assert.equal(result.parameters[0]?.identifier, 'updated');
@@ -2385,13 +2358,6 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
             },
             testContext,
           );
-          const body: Record<string, unknown> = {
-            title: 'Updated Scenario',
-            description: 'Updated description',
-            queries: [],
-            parameters: [],
-            postScenarioActions: [],
-          };
 
           // when
           const response: Response = await fetch(
@@ -2402,7 +2368,13 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
                 ['Authorization', `Bearer ${ownerLogin.jwt}`],
                 ['Content-Type', 'application/json'],
               ]),
-              body: JSON.stringify(body),
+              body: JSON.stringify({
+                title: 'Updated Scenario',
+                description: 'Updated description',
+                queries: [],
+                parameters: [],
+                postScenarioActions: [],
+              } satisfies UpdateScenarioRequestBodyDto),
               signal: testContext.signal,
             },
           );
@@ -2413,8 +2385,8 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
             await response.json(),
           );
           assert.equal(result.id, resource);
-          assert.equal(result.title, body['title']);
-          assert.equal(result.description, body['description']);
+          assert.equal(result.title, 'Updated Scenario');
+          assert.equal(result.description, 'Updated description');
           const projectResponse: Response = await fetch(
             `${manager.apiUrl}/project/${project}`,
             {
@@ -2436,7 +2408,7 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
             (item: ScenarioDto): boolean => item.id === resource,
           );
           assert.ok(persisted);
-          assert.equal(persisted.title, body['title']);
+          assert.equal(persisted.title, 'Updated Scenario');
           assert.deepEqual(result.parameters, []);
           const removedChild: Response = await manager.readDocument(
             'api::query-parameter.query-parameter',
@@ -2490,34 +2462,6 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
             },
             testContext,
           );
-          const body: Record<string, unknown> = {
-            ...{
-              title: 'Updated Scenario',
-              description: 'Updated description',
-              queries: [],
-              parameters: [],
-              postScenarioActions: [],
-            },
-            postScenarioActions: [
-              {
-                ...{
-                  id: randomUUID(),
-                  type: 'layout',
-                  label: 'Layout',
-                  circleRadius: 2000,
-                  layoutAlgorithm: 'circle',
-                  relationshipType: '',
-                  factor: 2,
-                  width: 2,
-                  color: { type: 'ColorPresetDto', index: 0 },
-                  radius: 10,
-                  property: '',
-                },
-                id: child,
-                label: 'Updated Action',
-              },
-            ],
-          };
 
           // when
           const response: Response = await fetch(
@@ -2528,7 +2472,31 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
                 ['Authorization', `Bearer ${ownerLogin.jwt}`],
                 ['Content-Type', 'application/json'],
               ]),
-              body: JSON.stringify(body),
+              body: JSON.stringify({
+                title: 'Updated Scenario',
+                description: 'Updated description',
+                queries: [],
+                parameters: [],
+                postScenarioActions: [
+                  {
+                    id: child,
+                    type: UpdateScenarioPostActionTypeDto.layout,
+                    label: 'Updated Action',
+                    circleRadius: 2000,
+                    layoutAlgorithm:
+                      UpdateScenarioPostActionLayoutAlgorithmDto.circle,
+                    relationshipType: '',
+                    factor: 2,
+                    width: 2,
+                    color: {
+                      type: 'ColorPresetDto',
+                      index: ColorPresetIndexDto._0,
+                    },
+                    radius: 10,
+                    property: '',
+                  },
+                ],
+              } satisfies UpdateScenarioRequestBodyDto),
               signal: testContext.signal,
             },
           );
@@ -2539,8 +2507,8 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
             await response.json(),
           );
           assert.equal(result.id, resource);
-          assert.equal(result.title, body['title']);
-          assert.equal(result.description, body['description']);
+          assert.equal(result.title, 'Updated Scenario');
+          assert.equal(result.description, 'Updated description');
           const projectResponse: Response = await fetch(
             `${manager.apiUrl}/project/${project}`,
             {
@@ -2562,7 +2530,7 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
             (item: ScenarioDto): boolean => item.id === resource,
           );
           assert.ok(persisted);
-          assert.equal(persisted.title, body['title']);
+          assert.equal(persisted.title, 'Updated Scenario');
           assert.equal(result.postScenarioActions.length, 1);
           assert.equal(result.postScenarioActions[0]?.id, child);
           assert.equal(result.postScenarioActions[0]?.label, 'Updated Action');
@@ -2612,13 +2580,6 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
             },
             testContext,
           );
-          const body: Record<string, unknown> = {
-            title: 'Updated Scenario',
-            description: 'Updated description',
-            queries: [],
-            parameters: [],
-            postScenarioActions: [],
-          };
 
           // when
           const response: Response = await fetch(
@@ -2629,7 +2590,13 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
                 ['Authorization', `Bearer ${ownerLogin.jwt}`],
                 ['Content-Type', 'application/json'],
               ]),
-              body: JSON.stringify(body),
+              body: JSON.stringify({
+                title: 'Updated Scenario',
+                description: 'Updated description',
+                queries: [],
+                parameters: [],
+                postScenarioActions: [],
+              } satisfies UpdateScenarioRequestBodyDto),
               signal: testContext.signal,
             },
           );
@@ -2640,8 +2607,8 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
             await response.json(),
           );
           assert.equal(result.id, resource);
-          assert.equal(result.title, body['title']);
-          assert.equal(result.description, body['description']);
+          assert.equal(result.title, 'Updated Scenario');
+          assert.equal(result.description, 'Updated description');
           const projectResponse: Response = await fetch(
             `${manager.apiUrl}/project/${project}`,
             {
@@ -2663,7 +2630,7 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
             (item: ScenarioDto): boolean => item.id === resource,
           );
           assert.ok(persisted);
-          assert.equal(persisted.title, body['title']);
+          assert.equal(persisted.title, 'Updated Scenario');
           assert.deepEqual(result.postScenarioActions, []);
           const removedChild: Response = await manager.readDocument(
             'api::post-scenario-action.post-scenario-action',
@@ -2706,13 +2673,6 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
             owner.password,
             testContext,
           );
-          const body: Record<string, unknown> = {
-            title: 'Updated Scenario',
-            description: 'Updated description',
-            queries: [],
-            parameters: [],
-            postScenarioActions: [],
-          };
 
           // when
           const response: Response = await fetch(
@@ -2723,7 +2683,13 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
                 ['Authorization', `Bearer ${ownerLogin.jwt}`],
                 ['Content-Type', 'application/json'],
               ]),
-              body: JSON.stringify(body),
+              body: JSON.stringify({
+                title: 'Updated Scenario',
+                description: 'Updated description',
+                queries: [],
+                parameters: [],
+                postScenarioActions: [],
+              } satisfies UpdateScenarioRequestBodyDto),
               signal: testContext.signal,
             },
           );
@@ -2734,8 +2700,8 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
             await response.json(),
           );
           assert.equal(result.id, resource);
-          assert.equal(result.title, body['title']);
-          assert.equal(result.description, body['description']);
+          assert.equal(result.title, 'Updated Scenario');
+          assert.equal(result.description, 'Updated description');
           const projectResponse: Response = await fetch(
             `${manager.apiUrl}/project/${project}`,
             {
@@ -2757,7 +2723,7 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
             (item: ScenarioDto): boolean => item.id === resource,
           );
           assert.ok(persisted);
-          assert.equal(persisted.title, body['title']);
+          assert.equal(persisted.title, 'Updated Scenario');
         });
 
         test('collaborator can update a scenario', async (testContext: TestContext): Promise<void> => {
@@ -2799,13 +2765,6 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
             collaborator.password,
             testContext,
           );
-          const body: Record<string, unknown> = {
-            title: 'Updated Scenario',
-            description: 'Updated description',
-            queries: [],
-            parameters: [],
-            postScenarioActions: [],
-          };
 
           // when
           const response: Response = await fetch(
@@ -2816,7 +2775,13 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
                 ['Authorization', `Bearer ${login.jwt}`],
                 ['Content-Type', 'application/json'],
               ]),
-              body: JSON.stringify(body),
+              body: JSON.stringify({
+                title: 'Updated Scenario',
+                description: 'Updated description',
+                queries: [],
+                parameters: [],
+                postScenarioActions: [],
+              } satisfies UpdateScenarioRequestBodyDto),
               signal: testContext.signal,
             },
           );
@@ -2827,8 +2792,8 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
             await response.json(),
           );
           assert.equal(result.id, resource);
-          assert.equal(result.title, body['title']);
-          assert.equal(result.description, body['description']);
+          assert.equal(result.title, 'Updated Scenario');
+          assert.equal(result.description, 'Updated description');
           const projectResponse: Response = await fetch(
             `${manager.apiUrl}/project/${project}`,
             {
@@ -2850,7 +2815,7 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
             (item: ScenarioDto): boolean => item.id === resource,
           );
           assert.ok(persisted);
-          assert.equal(persisted.title, body['title']);
+          assert.equal(persisted.title, 'Updated Scenario');
         });
 
         test('accepts empty title and description', async (testContext: TestContext): Promise<void> => {
@@ -2885,17 +2850,6 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
             owner.password,
             testContext,
           );
-          const body: Record<string, unknown> = {
-            ...{
-              title: 'Updated Scenario',
-              description: 'Updated description',
-              queries: [],
-              parameters: [],
-              postScenarioActions: [],
-            },
-            title: '',
-            description: '',
-          };
 
           // when
           const response: Response = await fetch(
@@ -2906,7 +2860,13 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
                 ['Authorization', `Bearer ${ownerLogin.jwt}`],
                 ['Content-Type', 'application/json'],
               ]),
-              body: JSON.stringify(body),
+              body: JSON.stringify({
+                title: '',
+                description: '',
+                queries: [],
+                parameters: [],
+                postScenarioActions: [],
+              } satisfies UpdateScenarioRequestBodyDto),
               signal: testContext.signal,
             },
           );
@@ -2917,8 +2877,8 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
             await response.json(),
           );
           assert.equal(result.id, resource);
-          assert.equal(result.title, body['title']);
-          assert.equal(result.description, body['description']);
+          assert.equal(result.title, '');
+          assert.equal(result.description, '');
           const projectResponse: Response = await fetch(
             `${manager.apiUrl}/project/${project}`,
             {
@@ -2940,7 +2900,7 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
             (item: ScenarioDto): boolean => item.id === resource,
           );
           assert.ok(persisted);
-          assert.equal(persisted.title, body['title']);
+          assert.equal(persisted.title, '');
         });
       });
       describe('400', (): void => {
@@ -3004,14 +2964,6 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
           assert.equal(originalPublishedResponse.status, 200);
           const originalPublished: z.infer<typeof listStateSchema> =
             listStateSchema.parse(await originalPublishedResponse.json());
-          const body: Record<string, unknown> = {
-            title: 'Updated Scenario',
-            description: 'Updated description',
-            queries: [],
-            parameters: [],
-            postScenarioActions: [],
-          };
-          delete body['title'];
 
           // when
           const response: Response = await fetch(
@@ -3022,7 +2974,12 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
                 ['Authorization', `Bearer ${ownerLogin.jwt}`],
                 ['Content-Type', 'application/json'],
               ]),
-              body: JSON.stringify(body),
+              body: JSON.stringify({
+                description: 'Updated description',
+                queries: [],
+                parameters: [],
+                postScenarioActions: [],
+              } satisfies Omit<UpdateScenarioRequestBodyDto, 'title'>),
               signal: testContext.signal,
             },
           );
@@ -3127,16 +3084,6 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
           assert.equal(originalPublishedResponse.status, 200);
           const originalPublished: z.infer<typeof listStateSchema> =
             listStateSchema.parse(await originalPublishedResponse.json());
-          const body: Record<string, unknown> = {
-            ...{
-              title: 'Updated Scenario',
-              description: 'Updated description',
-              queries: [],
-              parameters: [],
-              postScenarioActions: [],
-            },
-            title: null,
-          };
 
           // when
           const response: Response = await fetch(
@@ -3147,7 +3094,15 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
                 ['Authorization', `Bearer ${ownerLogin.jwt}`],
                 ['Content-Type', 'application/json'],
               ]),
-              body: JSON.stringify(body),
+              body: JSON.stringify({
+                title: null,
+                description: 'Updated description',
+                queries: [],
+                parameters: [],
+                postScenarioActions: [],
+              } satisfies Omit<UpdateScenarioRequestBodyDto, 'title'> & {
+                title: null;
+              }),
               signal: testContext.signal,
             },
           );
@@ -3252,16 +3207,6 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
           assert.equal(originalPublishedResponse.status, 200);
           const originalPublished: z.infer<typeof listStateSchema> =
             listStateSchema.parse(await originalPublishedResponse.json());
-          const body: Record<string, unknown> = {
-            ...{
-              title: 'Updated Scenario',
-              description: 'Updated description',
-              queries: [],
-              parameters: [],
-              postScenarioActions: [],
-            },
-            title: 123,
-          };
 
           // when
           const response: Response = await fetch(
@@ -3272,7 +3217,15 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
                 ['Authorization', `Bearer ${ownerLogin.jwt}`],
                 ['Content-Type', 'application/json'],
               ]),
-              body: JSON.stringify(body),
+              body: JSON.stringify({
+                title: 123,
+                description: 'Updated description',
+                queries: [],
+                parameters: [],
+                postScenarioActions: [],
+              } satisfies Omit<UpdateScenarioRequestBodyDto, 'title'> & {
+                title: number;
+              }),
               signal: testContext.signal,
             },
           );
@@ -3377,14 +3330,6 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
           assert.equal(originalPublishedResponse.status, 200);
           const originalPublished: z.infer<typeof listStateSchema> =
             listStateSchema.parse(await originalPublishedResponse.json());
-          const body: Record<string, unknown> = {
-            title: 'Updated Scenario',
-            description: 'Updated description',
-            queries: [],
-            parameters: [],
-            postScenarioActions: [],
-          };
-          delete body['description'];
 
           // when
           const response: Response = await fetch(
@@ -3395,7 +3340,12 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
                 ['Authorization', `Bearer ${ownerLogin.jwt}`],
                 ['Content-Type', 'application/json'],
               ]),
-              body: JSON.stringify(body),
+              body: JSON.stringify({
+                title: 'Updated Scenario',
+                queries: [],
+                parameters: [],
+                postScenarioActions: [],
+              } satisfies Omit<UpdateScenarioRequestBodyDto, 'description'>),
               signal: testContext.signal,
             },
           );
@@ -3500,16 +3450,6 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
           assert.equal(originalPublishedResponse.status, 200);
           const originalPublished: z.infer<typeof listStateSchema> =
             listStateSchema.parse(await originalPublishedResponse.json());
-          const body: Record<string, unknown> = {
-            ...{
-              title: 'Updated Scenario',
-              description: 'Updated description',
-              queries: [],
-              parameters: [],
-              postScenarioActions: [],
-            },
-            description: null,
-          };
 
           // when
           const response: Response = await fetch(
@@ -3520,7 +3460,15 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
                 ['Authorization', `Bearer ${ownerLogin.jwt}`],
                 ['Content-Type', 'application/json'],
               ]),
-              body: JSON.stringify(body),
+              body: JSON.stringify({
+                title: 'Updated Scenario',
+                description: null,
+                queries: [],
+                parameters: [],
+                postScenarioActions: [],
+              } satisfies Omit<UpdateScenarioRequestBodyDto, 'description'> & {
+                description: null;
+              }),
               signal: testContext.signal,
             },
           );
@@ -3625,16 +3573,6 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
           assert.equal(originalPublishedResponse.status, 200);
           const originalPublished: z.infer<typeof listStateSchema> =
             listStateSchema.parse(await originalPublishedResponse.json());
-          const body: Record<string, unknown> = {
-            ...{
-              title: 'Updated Scenario',
-              description: 'Updated description',
-              queries: [],
-              parameters: [],
-              postScenarioActions: [],
-            },
-            description: 123,
-          };
 
           // when
           const response: Response = await fetch(
@@ -3645,7 +3583,15 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
                 ['Authorization', `Bearer ${ownerLogin.jwt}`],
                 ['Content-Type', 'application/json'],
               ]),
-              body: JSON.stringify(body),
+              body: JSON.stringify({
+                title: 'Updated Scenario',
+                description: 123,
+                queries: [],
+                parameters: [],
+                postScenarioActions: [],
+              } satisfies Omit<UpdateScenarioRequestBodyDto, 'description'> & {
+                description: number;
+              }),
               signal: testContext.signal,
             },
           );
@@ -3750,14 +3696,6 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
           assert.equal(originalPublishedResponse.status, 200);
           const originalPublished: z.infer<typeof listStateSchema> =
             listStateSchema.parse(await originalPublishedResponse.json());
-          const body: Record<string, unknown> = {
-            title: 'Updated Scenario',
-            description: 'Updated description',
-            queries: [],
-            parameters: [],
-            postScenarioActions: [],
-          };
-          delete body['queries'];
 
           // when
           const response: Response = await fetch(
@@ -3768,7 +3706,12 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
                 ['Authorization', `Bearer ${ownerLogin.jwt}`],
                 ['Content-Type', 'application/json'],
               ]),
-              body: JSON.stringify(body),
+              body: JSON.stringify({
+                title: 'Updated Scenario',
+                description: 'Updated description',
+                parameters: [],
+                postScenarioActions: [],
+              } satisfies Omit<UpdateScenarioRequestBodyDto, 'queries'>),
               signal: testContext.signal,
             },
           );
@@ -3873,16 +3816,6 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
           assert.equal(originalPublishedResponse.status, 200);
           const originalPublished: z.infer<typeof listStateSchema> =
             listStateSchema.parse(await originalPublishedResponse.json());
-          const body: Record<string, unknown> = {
-            ...{
-              title: 'Updated Scenario',
-              description: 'Updated description',
-              queries: [],
-              parameters: [],
-              postScenarioActions: [],
-            },
-            queries: null,
-          };
 
           // when
           const response: Response = await fetch(
@@ -3893,7 +3826,15 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
                 ['Authorization', `Bearer ${ownerLogin.jwt}`],
                 ['Content-Type', 'application/json'],
               ]),
-              body: JSON.stringify(body),
+              body: JSON.stringify({
+                title: 'Updated Scenario',
+                description: 'Updated description',
+                queries: null,
+                parameters: [],
+                postScenarioActions: [],
+              } satisfies Omit<UpdateScenarioRequestBodyDto, 'queries'> & {
+                queries: null;
+              }),
               signal: testContext.signal,
             },
           );
@@ -3998,16 +3939,6 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
           assert.equal(originalPublishedResponse.status, 200);
           const originalPublished: z.infer<typeof listStateSchema> =
             listStateSchema.parse(await originalPublishedResponse.json());
-          const body: Record<string, unknown> = {
-            ...{
-              title: 'Updated Scenario',
-              description: 'Updated description',
-              queries: [],
-              parameters: [],
-              postScenarioActions: [],
-            },
-            queries: {},
-          };
 
           // when
           const response: Response = await fetch(
@@ -4018,7 +3949,15 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
                 ['Authorization', `Bearer ${ownerLogin.jwt}`],
                 ['Content-Type', 'application/json'],
               ]),
-              body: JSON.stringify(body),
+              body: JSON.stringify({
+                title: 'Updated Scenario',
+                description: 'Updated description',
+                queries: {},
+                parameters: [],
+                postScenarioActions: [],
+              } satisfies Omit<UpdateScenarioRequestBodyDto, 'queries'> & {
+                queries: Record<string, never>;
+              }),
               signal: testContext.signal,
             },
           );
@@ -4123,14 +4062,6 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
           assert.equal(originalPublishedResponse.status, 200);
           const originalPublished: z.infer<typeof listStateSchema> =
             listStateSchema.parse(await originalPublishedResponse.json());
-          const body: Record<string, unknown> = {
-            title: 'Updated Scenario',
-            description: 'Updated description',
-            queries: [],
-            parameters: [],
-            postScenarioActions: [],
-          };
-          delete body['parameters'];
 
           // when
           const response: Response = await fetch(
@@ -4141,7 +4072,12 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
                 ['Authorization', `Bearer ${ownerLogin.jwt}`],
                 ['Content-Type', 'application/json'],
               ]),
-              body: JSON.stringify(body),
+              body: JSON.stringify({
+                title: 'Updated Scenario',
+                description: 'Updated description',
+                queries: [],
+                postScenarioActions: [],
+              } satisfies Omit<UpdateScenarioRequestBodyDto, 'parameters'>),
               signal: testContext.signal,
             },
           );
@@ -4246,16 +4182,6 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
           assert.equal(originalPublishedResponse.status, 200);
           const originalPublished: z.infer<typeof listStateSchema> =
             listStateSchema.parse(await originalPublishedResponse.json());
-          const body: Record<string, unknown> = {
-            ...{
-              title: 'Updated Scenario',
-              description: 'Updated description',
-              queries: [],
-              parameters: [],
-              postScenarioActions: [],
-            },
-            parameters: null,
-          };
 
           // when
           const response: Response = await fetch(
@@ -4266,7 +4192,15 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
                 ['Authorization', `Bearer ${ownerLogin.jwt}`],
                 ['Content-Type', 'application/json'],
               ]),
-              body: JSON.stringify(body),
+              body: JSON.stringify({
+                title: 'Updated Scenario',
+                description: 'Updated description',
+                queries: [],
+                parameters: null,
+                postScenarioActions: [],
+              } satisfies Omit<UpdateScenarioRequestBodyDto, 'parameters'> & {
+                parameters: null;
+              }),
               signal: testContext.signal,
             },
           );
@@ -4371,16 +4305,6 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
           assert.equal(originalPublishedResponse.status, 200);
           const originalPublished: z.infer<typeof listStateSchema> =
             listStateSchema.parse(await originalPublishedResponse.json());
-          const body: Record<string, unknown> = {
-            ...{
-              title: 'Updated Scenario',
-              description: 'Updated description',
-              queries: [],
-              parameters: [],
-              postScenarioActions: [],
-            },
-            parameters: {},
-          };
 
           // when
           const response: Response = await fetch(
@@ -4391,7 +4315,15 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
                 ['Authorization', `Bearer ${ownerLogin.jwt}`],
                 ['Content-Type', 'application/json'],
               ]),
-              body: JSON.stringify(body),
+              body: JSON.stringify({
+                title: 'Updated Scenario',
+                description: 'Updated description',
+                queries: [],
+                parameters: {},
+                postScenarioActions: [],
+              } satisfies Omit<UpdateScenarioRequestBodyDto, 'parameters'> & {
+                parameters: Record<string, never>;
+              }),
               signal: testContext.signal,
             },
           );
@@ -4496,14 +4428,6 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
           assert.equal(originalPublishedResponse.status, 200);
           const originalPublished: z.infer<typeof listStateSchema> =
             listStateSchema.parse(await originalPublishedResponse.json());
-          const body: Record<string, unknown> = {
-            title: 'Updated Scenario',
-            description: 'Updated description',
-            queries: [],
-            parameters: [],
-            postScenarioActions: [],
-          };
-          delete body['postScenarioActions'];
 
           // when
           const response: Response = await fetch(
@@ -4514,7 +4438,15 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
                 ['Authorization', `Bearer ${ownerLogin.jwt}`],
                 ['Content-Type', 'application/json'],
               ]),
-              body: JSON.stringify(body),
+              body: JSON.stringify({
+                title: 'Updated Scenario',
+                description: 'Updated description',
+                queries: [],
+                parameters: [],
+              } satisfies Omit<
+                UpdateScenarioRequestBodyDto,
+                'postScenarioActions'
+              >),
               signal: testContext.signal,
             },
           );
@@ -4619,16 +4551,6 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
           assert.equal(originalPublishedResponse.status, 200);
           const originalPublished: z.infer<typeof listStateSchema> =
             listStateSchema.parse(await originalPublishedResponse.json());
-          const body: Record<string, unknown> = {
-            ...{
-              title: 'Updated Scenario',
-              description: 'Updated description',
-              queries: [],
-              parameters: [],
-              postScenarioActions: [],
-            },
-            postScenarioActions: null,
-          };
 
           // when
           const response: Response = await fetch(
@@ -4639,7 +4561,16 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
                 ['Authorization', `Bearer ${ownerLogin.jwt}`],
                 ['Content-Type', 'application/json'],
               ]),
-              body: JSON.stringify(body),
+              body: JSON.stringify({
+                title: 'Updated Scenario',
+                description: 'Updated description',
+                queries: [],
+                parameters: [],
+                postScenarioActions: null,
+              } satisfies Omit<
+                UpdateScenarioRequestBodyDto,
+                'postScenarioActions'
+              > & { postScenarioActions: null }),
               signal: testContext.signal,
             },
           );
@@ -4744,16 +4675,6 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
           assert.equal(originalPublishedResponse.status, 200);
           const originalPublished: z.infer<typeof listStateSchema> =
             listStateSchema.parse(await originalPublishedResponse.json());
-          const body: Record<string, unknown> = {
-            ...{
-              title: 'Updated Scenario',
-              description: 'Updated description',
-              queries: [],
-              parameters: [],
-              postScenarioActions: [],
-            },
-            postScenarioActions: {},
-          };
 
           // when
           const response: Response = await fetch(
@@ -4764,7 +4685,16 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
                 ['Authorization', `Bearer ${ownerLogin.jwt}`],
                 ['Content-Type', 'application/json'],
               ]),
-              body: JSON.stringify(body),
+              body: JSON.stringify({
+                title: 'Updated Scenario',
+                description: 'Updated description',
+                queries: [],
+                parameters: [],
+                postScenarioActions: {},
+              } satisfies Omit<
+                UpdateScenarioRequestBodyDto,
+                'postScenarioActions'
+              > & { postScenarioActions: Record<string, never> }),
               signal: testContext.signal,
             },
           );
@@ -4869,16 +4799,6 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
           assert.equal(originalPublishedResponse.status, 200);
           const originalPublished: z.infer<typeof listStateSchema> =
             listStateSchema.parse(await originalPublishedResponse.json());
-          const body: Record<string, unknown> = {
-            ...{
-              title: 'Updated Scenario',
-              description: 'Updated description',
-              queries: [],
-              parameters: [],
-              postScenarioActions: [],
-            },
-            unexpected: true,
-          };
 
           // when
           const response: Response = await fetch(
@@ -4889,7 +4809,16 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
                 ['Authorization', `Bearer ${ownerLogin.jwt}`],
                 ['Content-Type', 'application/json'],
               ]),
-              body: JSON.stringify(body),
+              body: JSON.stringify({
+                title: 'Updated Scenario',
+                description: 'Updated description',
+                queries: [],
+                parameters: [],
+                postScenarioActions: [],
+                unexpected: true,
+              } satisfies UpdateScenarioRequestBodyDto & {
+                unexpected: boolean;
+              }),
               signal: testContext.signal,
             },
           );
@@ -4994,26 +4923,6 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
           assert.equal(originalPublishedResponse.status, 200);
           const originalPublished: z.infer<typeof listStateSchema> =
             listStateSchema.parse(await originalPublishedResponse.json());
-          const body: Record<string, unknown> = {
-            ...{
-              title: 'Updated Scenario',
-              description: 'Updated description',
-              queries: [],
-              parameters: [],
-              postScenarioActions: [],
-            },
-            queries: [
-              {
-                ...{
-                  id: randomUUID(),
-                  query: 'MATCH (n) RETURN n',
-                  databaseId: null,
-                  isTableQuery: false,
-                },
-                isTableQuery: 'false',
-              },
-            ],
-          };
 
           // when
           const response: Response = await fetch(
@@ -5024,7 +4933,24 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
                 ['Authorization', `Bearer ${ownerLogin.jwt}`],
                 ['Content-Type', 'application/json'],
               ]),
-              body: JSON.stringify(body),
+              body: JSON.stringify({
+                title: 'Updated Scenario',
+                description: 'Updated description',
+                queries: [
+                  {
+                    id: randomUUID(),
+                    query: 'MATCH (n) RETURN n',
+                    databaseId: null,
+                    isTableQuery: 'false',
+                  },
+                ],
+                parameters: [],
+                postScenarioActions: [],
+              } satisfies Omit<UpdateScenarioRequestBodyDto, 'queries'> & {
+                queries: (Omit<UpdateScenarioQueryEntryDto, 'isTableQuery'> & {
+                  isTableQuery: string;
+                })[];
+              }),
               signal: testContext.signal,
             },
           );
@@ -5129,26 +5055,6 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
           assert.equal(originalPublishedResponse.status, 200);
           const originalPublished: z.infer<typeof listStateSchema> =
             listStateSchema.parse(await originalPublishedResponse.json());
-          const body: Record<string, unknown> = {
-            ...{
-              title: 'Updated Scenario',
-              description: 'Updated description',
-              queries: [],
-              parameters: [],
-              postScenarioActions: [],
-            },
-            queries: [
-              {
-                ...{
-                  id: randomUUID(),
-                  query: 'MATCH (n) RETURN n',
-                  databaseId: null,
-                  isTableQuery: false,
-                },
-                query: 123,
-              },
-            ],
-          };
 
           // when
           const response: Response = await fetch(
@@ -5159,7 +5065,24 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
                 ['Authorization', `Bearer ${ownerLogin.jwt}`],
                 ['Content-Type', 'application/json'],
               ]),
-              body: JSON.stringify(body),
+              body: JSON.stringify({
+                title: 'Updated Scenario',
+                description: 'Updated description',
+                queries: [
+                  {
+                    id: randomUUID(),
+                    query: 123,
+                    databaseId: null,
+                    isTableQuery: false,
+                  },
+                ],
+                parameters: [],
+                postScenarioActions: [],
+              } satisfies Omit<UpdateScenarioRequestBodyDto, 'queries'> & {
+                queries: (Omit<UpdateScenarioQueryEntryDto, 'query'> & {
+                  query: number;
+                })[];
+              }),
               signal: testContext.signal,
             },
           );
@@ -5264,26 +5187,6 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
           assert.equal(originalPublishedResponse.status, 200);
           const originalPublished: z.infer<typeof listStateSchema> =
             listStateSchema.parse(await originalPublishedResponse.json());
-          const body: Record<string, unknown> = {
-            ...{
-              title: 'Updated Scenario',
-              description: 'Updated description',
-              queries: [],
-              parameters: [],
-              postScenarioActions: [],
-            },
-            queries: [
-              {
-                ...{
-                  id: randomUUID(),
-                  query: 'MATCH (n) RETURN n',
-                  databaseId: null,
-                  isTableQuery: false,
-                },
-                databaseId: 123,
-              },
-            ],
-          };
 
           // when
           const response: Response = await fetch(
@@ -5294,7 +5197,24 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
                 ['Authorization', `Bearer ${ownerLogin.jwt}`],
                 ['Content-Type', 'application/json'],
               ]),
-              body: JSON.stringify(body),
+              body: JSON.stringify({
+                title: 'Updated Scenario',
+                description: 'Updated description',
+                queries: [
+                  {
+                    id: randomUUID(),
+                    query: 'MATCH (n) RETURN n',
+                    databaseId: 123,
+                    isTableQuery: false,
+                  },
+                ],
+                parameters: [],
+                postScenarioActions: [],
+              } satisfies Omit<UpdateScenarioRequestBodyDto, 'queries'> & {
+                queries: (Omit<UpdateScenarioQueryEntryDto, 'databaseId'> & {
+                  databaseId: number;
+                })[];
+              }),
               signal: testContext.signal,
             },
           );
@@ -5399,26 +5319,6 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
           assert.equal(originalPublishedResponse.status, 200);
           const originalPublished: z.infer<typeof listStateSchema> =
             listStateSchema.parse(await originalPublishedResponse.json());
-          const body: Record<string, unknown> = {
-            ...{
-              title: 'Updated Scenario',
-              description: 'Updated description',
-              queries: [],
-              parameters: [],
-              postScenarioActions: [],
-            },
-            queries: [
-              {
-                ...{
-                  id: randomUUID(),
-                  query: 'MATCH (n) RETURN n',
-                  databaseId: null,
-                  isTableQuery: false,
-                },
-                unexpected: true,
-              },
-            ],
-          };
 
           // when
           const response: Response = await fetch(
@@ -5429,7 +5329,25 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
                 ['Authorization', `Bearer ${ownerLogin.jwt}`],
                 ['Content-Type', 'application/json'],
               ]),
-              body: JSON.stringify(body),
+              body: JSON.stringify({
+                title: 'Updated Scenario',
+                description: 'Updated description',
+                queries: [
+                  {
+                    id: randomUUID(),
+                    query: 'MATCH (n) RETURN n',
+                    databaseId: null,
+                    isTableQuery: false,
+                    unexpected: true,
+                  },
+                ],
+                parameters: [],
+                postScenarioActions: [],
+              } satisfies Omit<UpdateScenarioRequestBodyDto, 'queries'> & {
+                queries: (UpdateScenarioQueryEntryDto & {
+                  unexpected: boolean;
+                })[];
+              }),
               signal: testContext.signal,
             },
           );
@@ -5534,28 +5452,6 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
           assert.equal(originalPublishedResponse.status, 200);
           const originalPublished: z.infer<typeof listStateSchema> =
             listStateSchema.parse(await originalPublishedResponse.json());
-          const body: Record<string, unknown> = {
-            ...{
-              title: 'Updated Scenario',
-              description: 'Updated description',
-              queries: [],
-              parameters: [],
-              postScenarioActions: [],
-            },
-            parameters: [
-              {
-                ...{
-                  id: randomUUID(),
-                  identifier: 'name',
-                  title: 'Name',
-                  defaultValue: 'Alice',
-                  dataType: 'string',
-                  allowedLabels: ['Person'],
-                },
-                identifier: '',
-              },
-            ],
-          };
 
           // when
           const response: Response = await fetch(
@@ -5566,7 +5462,22 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
                 ['Authorization', `Bearer ${ownerLogin.jwt}`],
                 ['Content-Type', 'application/json'],
               ]),
-              body: JSON.stringify(body),
+              body: JSON.stringify({
+                title: 'Updated Scenario',
+                description: 'Updated description',
+                queries: [],
+                parameters: [
+                  {
+                    id: randomUUID(),
+                    identifier: '',
+                    title: 'Name',
+                    defaultValue: 'Alice',
+                    dataType: LiveCanvasParameterDataType.string,
+                    allowedLabels: ['Person'],
+                  },
+                ],
+                postScenarioActions: [],
+              } satisfies UpdateScenarioRequestBodyDto),
               signal: testContext.signal,
             },
           );
@@ -5671,28 +5582,6 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
           assert.equal(originalPublishedResponse.status, 200);
           const originalPublished: z.infer<typeof listStateSchema> =
             listStateSchema.parse(await originalPublishedResponse.json());
-          const body: Record<string, unknown> = {
-            ...{
-              title: 'Updated Scenario',
-              description: 'Updated description',
-              queries: [],
-              parameters: [],
-              postScenarioActions: [],
-            },
-            parameters: [
-              {
-                ...{
-                  id: randomUUID(),
-                  identifier: 'name',
-                  title: 'Name',
-                  defaultValue: 'Alice',
-                  dataType: 'string',
-                  allowedLabels: ['Person'],
-                },
-                title: '',
-              },
-            ],
-          };
 
           // when
           const response: Response = await fetch(
@@ -5703,7 +5592,22 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
                 ['Authorization', `Bearer ${ownerLogin.jwt}`],
                 ['Content-Type', 'application/json'],
               ]),
-              body: JSON.stringify(body),
+              body: JSON.stringify({
+                title: 'Updated Scenario',
+                description: 'Updated description',
+                queries: [],
+                parameters: [
+                  {
+                    id: randomUUID(),
+                    identifier: 'name',
+                    title: '',
+                    defaultValue: 'Alice',
+                    dataType: LiveCanvasParameterDataType.string,
+                    allowedLabels: ['Person'],
+                  },
+                ],
+                postScenarioActions: [],
+              } satisfies UpdateScenarioRequestBodyDto),
               signal: testContext.signal,
             },
           );
@@ -5808,28 +5712,6 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
           assert.equal(originalPublishedResponse.status, 200);
           const originalPublished: z.infer<typeof listStateSchema> =
             listStateSchema.parse(await originalPublishedResponse.json());
-          const body: Record<string, unknown> = {
-            ...{
-              title: 'Updated Scenario',
-              description: 'Updated description',
-              queries: [],
-              parameters: [],
-              postScenarioActions: [],
-            },
-            parameters: [
-              {
-                ...{
-                  id: randomUUID(),
-                  identifier: 'name',
-                  title: 'Name',
-                  defaultValue: 'Alice',
-                  dataType: 'string',
-                  allowedLabels: ['Person'],
-                },
-                dataType: 'unknown',
-              },
-            ],
-          };
 
           // when
           const response: Response = await fetch(
@@ -5840,7 +5722,27 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
                 ['Authorization', `Bearer ${ownerLogin.jwt}`],
                 ['Content-Type', 'application/json'],
               ]),
-              body: JSON.stringify(body),
+              body: JSON.stringify({
+                title: 'Updated Scenario',
+                description: 'Updated description',
+                queries: [],
+                parameters: [
+                  {
+                    id: randomUUID(),
+                    identifier: 'name',
+                    title: 'Name',
+                    defaultValue: 'Alice',
+                    dataType: 'unknown',
+                    allowedLabels: ['Person'],
+                  },
+                ],
+                postScenarioActions: [],
+              } satisfies Omit<UpdateScenarioRequestBodyDto, 'parameters'> & {
+                parameters: (Omit<
+                  UpdateScenarioQueryParameterEntryDto,
+                  'dataType'
+                > & { dataType: 'unknown' })[];
+              }),
               signal: testContext.signal,
             },
           );
@@ -5945,28 +5847,6 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
           assert.equal(originalPublishedResponse.status, 200);
           const originalPublished: z.infer<typeof listStateSchema> =
             listStateSchema.parse(await originalPublishedResponse.json());
-          const body: Record<string, unknown> = {
-            ...{
-              title: 'Updated Scenario',
-              description: 'Updated description',
-              queries: [],
-              parameters: [],
-              postScenarioActions: [],
-            },
-            parameters: [
-              {
-                ...{
-                  id: randomUUID(),
-                  identifier: 'name',
-                  title: 'Name',
-                  defaultValue: 'Alice',
-                  dataType: 'string',
-                  allowedLabels: ['Person'],
-                },
-                allowedLabels: 'Person',
-              },
-            ],
-          };
 
           // when
           const response: Response = await fetch(
@@ -5977,7 +5857,27 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
                 ['Authorization', `Bearer ${ownerLogin.jwt}`],
                 ['Content-Type', 'application/json'],
               ]),
-              body: JSON.stringify(body),
+              body: JSON.stringify({
+                title: 'Updated Scenario',
+                description: 'Updated description',
+                queries: [],
+                parameters: [
+                  {
+                    id: randomUUID(),
+                    identifier: 'name',
+                    title: 'Name',
+                    defaultValue: 'Alice',
+                    dataType: LiveCanvasParameterDataType.string,
+                    allowedLabels: 'Person',
+                  },
+                ],
+                postScenarioActions: [],
+              } satisfies Omit<UpdateScenarioRequestBodyDto, 'parameters'> & {
+                parameters: (Omit<
+                  UpdateScenarioQueryParameterEntryDto,
+                  'allowedLabels'
+                > & { allowedLabels: string })[];
+              }),
               signal: testContext.signal,
             },
           );
@@ -6082,28 +5982,6 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
           assert.equal(originalPublishedResponse.status, 200);
           const originalPublished: z.infer<typeof listStateSchema> =
             listStateSchema.parse(await originalPublishedResponse.json());
-          const body: Record<string, unknown> = {
-            ...{
-              title: 'Updated Scenario',
-              description: 'Updated description',
-              queries: [],
-              parameters: [],
-              postScenarioActions: [],
-            },
-            parameters: [
-              {
-                ...{
-                  id: randomUUID(),
-                  identifier: 'name',
-                  title: 'Name',
-                  defaultValue: 'Alice',
-                  dataType: 'string',
-                  allowedLabels: ['Person'],
-                },
-                allowedLabels: [''],
-              },
-            ],
-          };
 
           // when
           const response: Response = await fetch(
@@ -6114,7 +5992,22 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
                 ['Authorization', `Bearer ${ownerLogin.jwt}`],
                 ['Content-Type', 'application/json'],
               ]),
-              body: JSON.stringify(body),
+              body: JSON.stringify({
+                title: 'Updated Scenario',
+                description: 'Updated description',
+                queries: [],
+                parameters: [
+                  {
+                    id: randomUUID(),
+                    identifier: 'name',
+                    title: 'Name',
+                    defaultValue: 'Alice',
+                    dataType: LiveCanvasParameterDataType.string,
+                    allowedLabels: [''],
+                  },
+                ],
+                postScenarioActions: [],
+              } satisfies UpdateScenarioRequestBodyDto),
               signal: testContext.signal,
             },
           );
@@ -6219,28 +6112,6 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
           assert.equal(originalPublishedResponse.status, 200);
           const originalPublished: z.infer<typeof listStateSchema> =
             listStateSchema.parse(await originalPublishedResponse.json());
-          const body: Record<string, unknown> = {
-            ...{
-              title: 'Updated Scenario',
-              description: 'Updated description',
-              queries: [],
-              parameters: [],
-              postScenarioActions: [],
-            },
-            parameters: [
-              {
-                ...{
-                  id: randomUUID(),
-                  identifier: 'name',
-                  title: 'Name',
-                  defaultValue: 'Alice',
-                  dataType: 'string',
-                  allowedLabels: ['Person'],
-                },
-                unexpected: true,
-              },
-            ],
-          };
 
           // when
           const response: Response = await fetch(
@@ -6251,7 +6122,27 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
                 ['Authorization', `Bearer ${ownerLogin.jwt}`],
                 ['Content-Type', 'application/json'],
               ]),
-              body: JSON.stringify(body),
+              body: JSON.stringify({
+                title: 'Updated Scenario',
+                description: 'Updated description',
+                queries: [],
+                parameters: [
+                  {
+                    id: randomUUID(),
+                    identifier: 'name',
+                    title: 'Name',
+                    defaultValue: 'Alice',
+                    dataType: LiveCanvasParameterDataType.string,
+                    allowedLabels: ['Person'],
+                    unexpected: true,
+                  },
+                ],
+                postScenarioActions: [],
+              } satisfies Omit<UpdateScenarioRequestBodyDto, 'parameters'> & {
+                parameters: (UpdateScenarioQueryParameterEntryDto & {
+                  unexpected: boolean;
+                })[];
+              }),
               signal: testContext.signal,
             },
           );
@@ -6356,33 +6247,6 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
           assert.equal(originalPublishedResponse.status, 200);
           const originalPublished: z.infer<typeof listStateSchema> =
             listStateSchema.parse(await originalPublishedResponse.json());
-          const body: Record<string, unknown> = {
-            ...{
-              title: 'Updated Scenario',
-              description: 'Updated description',
-              queries: [],
-              parameters: [],
-              postScenarioActions: [],
-            },
-            postScenarioActions: [
-              {
-                ...{
-                  id: randomUUID(),
-                  type: 'layout',
-                  label: 'Layout',
-                  circleRadius: 2000,
-                  layoutAlgorithm: 'circle',
-                  relationshipType: '',
-                  factor: 2,
-                  width: 2,
-                  color: { type: 'ColorPresetDto', index: 0 },
-                  radius: 10,
-                  property: '',
-                },
-                type: 'unknown',
-              },
-            ],
-          };
 
           // when
           const response: Response = await fetch(
@@ -6393,7 +6257,39 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
                 ['Authorization', `Bearer ${ownerLogin.jwt}`],
                 ['Content-Type', 'application/json'],
               ]),
-              body: JSON.stringify(body),
+              body: JSON.stringify({
+                title: 'Updated Scenario',
+                description: 'Updated description',
+                queries: [],
+                parameters: [],
+                postScenarioActions: [
+                  {
+                    id: randomUUID(),
+                    type: 'unknown',
+                    label: 'Layout',
+                    circleRadius: 2000,
+                    layoutAlgorithm:
+                      UpdateScenarioPostActionLayoutAlgorithmDto.circle,
+                    relationshipType: '',
+                    factor: 2,
+                    width: 2,
+                    color: {
+                      type: 'ColorPresetDto',
+                      index: ColorPresetIndexDto._0,
+                    },
+                    radius: 10,
+                    property: '',
+                  },
+                ],
+              } satisfies Omit<
+                UpdateScenarioRequestBodyDto,
+                'postScenarioActions'
+              > & {
+                postScenarioActions: (Omit<
+                  UpdateScenarioPostActionEntryDto,
+                  'type'
+                > & { type: 'unknown' })[];
+              }),
               signal: testContext.signal,
             },
           );
@@ -6498,33 +6394,6 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
           assert.equal(originalPublishedResponse.status, 200);
           const originalPublished: z.infer<typeof listStateSchema> =
             listStateSchema.parse(await originalPublishedResponse.json());
-          const body: Record<string, unknown> = {
-            ...{
-              title: 'Updated Scenario',
-              description: 'Updated description',
-              queries: [],
-              parameters: [],
-              postScenarioActions: [],
-            },
-            postScenarioActions: [
-              {
-                ...{
-                  id: randomUUID(),
-                  type: 'layout',
-                  label: 'Layout',
-                  circleRadius: 2000,
-                  layoutAlgorithm: 'circle',
-                  relationshipType: '',
-                  factor: 2,
-                  width: 2,
-                  color: { type: 'ColorPresetDto', index: 0 },
-                  radius: 10,
-                  property: '',
-                },
-                layoutAlgorithm: 'unknown',
-              },
-            ],
-          };
 
           // when
           const response: Response = await fetch(
@@ -6535,7 +6404,38 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
                 ['Authorization', `Bearer ${ownerLogin.jwt}`],
                 ['Content-Type', 'application/json'],
               ]),
-              body: JSON.stringify(body),
+              body: JSON.stringify({
+                title: 'Updated Scenario',
+                description: 'Updated description',
+                queries: [],
+                parameters: [],
+                postScenarioActions: [
+                  {
+                    id: randomUUID(),
+                    type: UpdateScenarioPostActionTypeDto.layout,
+                    label: 'Layout',
+                    circleRadius: 2000,
+                    layoutAlgorithm: 'unknown',
+                    relationshipType: '',
+                    factor: 2,
+                    width: 2,
+                    color: {
+                      type: 'ColorPresetDto',
+                      index: ColorPresetIndexDto._0,
+                    },
+                    radius: 10,
+                    property: '',
+                  },
+                ],
+              } satisfies Omit<
+                UpdateScenarioRequestBodyDto,
+                'postScenarioActions'
+              > & {
+                postScenarioActions: (Omit<
+                  UpdateScenarioPostActionEntryDto,
+                  'layoutAlgorithm'
+                > & { layoutAlgorithm: 'unknown' })[];
+              }),
               signal: testContext.signal,
             },
           );
@@ -6640,33 +6540,6 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
           assert.equal(originalPublishedResponse.status, 200);
           const originalPublished: z.infer<typeof listStateSchema> =
             listStateSchema.parse(await originalPublishedResponse.json());
-          const body: Record<string, unknown> = {
-            ...{
-              title: 'Updated Scenario',
-              description: 'Updated description',
-              queries: [],
-              parameters: [],
-              postScenarioActions: [],
-            },
-            postScenarioActions: [
-              {
-                ...{
-                  id: randomUUID(),
-                  type: 'layout',
-                  label: 'Layout',
-                  circleRadius: 2000,
-                  layoutAlgorithm: 'circle',
-                  relationshipType: '',
-                  factor: 2,
-                  width: 2,
-                  color: { type: 'ColorPresetDto', index: 0 },
-                  radius: 10,
-                  property: '',
-                },
-                radius: '10',
-              },
-            ],
-          };
 
           // when
           const response: Response = await fetch(
@@ -6677,7 +6550,39 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
                 ['Authorization', `Bearer ${ownerLogin.jwt}`],
                 ['Content-Type', 'application/json'],
               ]),
-              body: JSON.stringify(body),
+              body: JSON.stringify({
+                title: 'Updated Scenario',
+                description: 'Updated description',
+                queries: [],
+                parameters: [],
+                postScenarioActions: [
+                  {
+                    id: randomUUID(),
+                    type: UpdateScenarioPostActionTypeDto.layout,
+                    label: 'Layout',
+                    circleRadius: 2000,
+                    layoutAlgorithm:
+                      UpdateScenarioPostActionLayoutAlgorithmDto.circle,
+                    relationshipType: '',
+                    factor: 2,
+                    width: 2,
+                    color: {
+                      type: 'ColorPresetDto',
+                      index: ColorPresetIndexDto._0,
+                    },
+                    radius: '10',
+                    property: '',
+                  },
+                ],
+              } satisfies Omit<
+                UpdateScenarioRequestBodyDto,
+                'postScenarioActions'
+              > & {
+                postScenarioActions: (Omit<
+                  UpdateScenarioPostActionEntryDto,
+                  'radius'
+                > & { radius: string })[];
+              }),
               signal: testContext.signal,
             },
           );
@@ -6782,33 +6687,6 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
           assert.equal(originalPublishedResponse.status, 200);
           const originalPublished: z.infer<typeof listStateSchema> =
             listStateSchema.parse(await originalPublishedResponse.json());
-          const body: Record<string, unknown> = {
-            ...{
-              title: 'Updated Scenario',
-              description: 'Updated description',
-              queries: [],
-              parameters: [],
-              postScenarioActions: [],
-            },
-            postScenarioActions: [
-              {
-                ...{
-                  id: randomUUID(),
-                  type: 'layout',
-                  label: 'Layout',
-                  circleRadius: 2000,
-                  layoutAlgorithm: 'circle',
-                  relationshipType: '',
-                  factor: 2,
-                  width: 2,
-                  color: { type: 'ColorPresetDto', index: 0 },
-                  radius: 10,
-                  property: '',
-                },
-                color: { type: 'CustomColorDto', index: 0 },
-              },
-            ],
-          };
 
           // when
           const response: Response = await fetch(
@@ -6819,7 +6697,46 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
                 ['Authorization', `Bearer ${ownerLogin.jwt}`],
                 ['Content-Type', 'application/json'],
               ]),
-              body: JSON.stringify(body),
+              body: JSON.stringify({
+                title: 'Updated Scenario',
+                description: 'Updated description',
+                queries: [],
+                parameters: [],
+                postScenarioActions: [
+                  {
+                    id: randomUUID(),
+                    type: UpdateScenarioPostActionTypeDto.layout,
+                    label: 'Layout',
+                    circleRadius: 2000,
+                    layoutAlgorithm:
+                      UpdateScenarioPostActionLayoutAlgorithmDto.circle,
+                    relationshipType: '',
+                    factor: 2,
+                    width: 2,
+                    color: {
+                      type: 'CustomColorDto',
+                      index: ColorPresetIndexDto._0,
+                    },
+                    radius: 10,
+                    property: '',
+                  },
+                ],
+              } satisfies Omit<
+                UpdateScenarioRequestBodyDto,
+                'postScenarioActions'
+              > & {
+                postScenarioActions: (Omit<
+                  UpdateScenarioPostActionEntryDto,
+                  'color'
+                > & {
+                  color: Omit<
+                    UpdateScenarioPostActionColorPresetDto,
+                    'type'
+                  > & {
+                    type: string;
+                  };
+                })[];
+              }),
               signal: testContext.signal,
             },
           );
@@ -6924,33 +6841,6 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
           assert.equal(originalPublishedResponse.status, 200);
           const originalPublished: z.infer<typeof listStateSchema> =
             listStateSchema.parse(await originalPublishedResponse.json());
-          const body: Record<string, unknown> = {
-            ...{
-              title: 'Updated Scenario',
-              description: 'Updated description',
-              queries: [],
-              parameters: [],
-              postScenarioActions: [],
-            },
-            postScenarioActions: [
-              {
-                ...{
-                  id: randomUUID(),
-                  type: 'layout',
-                  label: 'Layout',
-                  circleRadius: 2000,
-                  layoutAlgorithm: 'circle',
-                  relationshipType: '',
-                  factor: 2,
-                  width: 2,
-                  color: { type: 'ColorPresetDto', index: 0 },
-                  radius: 10,
-                  property: '',
-                },
-                color: { type: 'ColorPresetDto', index: 99 },
-              },
-            ],
-          };
 
           // when
           const response: Response = await fetch(
@@ -6961,7 +6851,43 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
                 ['Authorization', `Bearer ${ownerLogin.jwt}`],
                 ['Content-Type', 'application/json'],
               ]),
-              body: JSON.stringify(body),
+              body: JSON.stringify({
+                title: 'Updated Scenario',
+                description: 'Updated description',
+                queries: [],
+                parameters: [],
+                postScenarioActions: [
+                  {
+                    id: randomUUID(),
+                    type: UpdateScenarioPostActionTypeDto.layout,
+                    label: 'Layout',
+                    circleRadius: 2000,
+                    layoutAlgorithm:
+                      UpdateScenarioPostActionLayoutAlgorithmDto.circle,
+                    relationshipType: '',
+                    factor: 2,
+                    width: 2,
+                    color: { type: 'ColorPresetDto', index: 99 },
+                    radius: 10,
+                    property: '',
+                  },
+                ],
+              } satisfies Omit<
+                UpdateScenarioRequestBodyDto,
+                'postScenarioActions'
+              > & {
+                postScenarioActions: (Omit<
+                  UpdateScenarioPostActionEntryDto,
+                  'color'
+                > & {
+                  color: Omit<
+                    UpdateScenarioPostActionColorPresetDto,
+                    'index'
+                  > & {
+                    index: number;
+                  };
+                })[];
+              }),
               signal: testContext.signal,
             },
           );
@@ -7066,33 +6992,6 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
           assert.equal(originalPublishedResponse.status, 200);
           const originalPublished: z.infer<typeof listStateSchema> =
             listStateSchema.parse(await originalPublishedResponse.json());
-          const body: Record<string, unknown> = {
-            ...{
-              title: 'Updated Scenario',
-              description: 'Updated description',
-              queries: [],
-              parameters: [],
-              postScenarioActions: [],
-            },
-            postScenarioActions: [
-              {
-                ...{
-                  id: randomUUID(),
-                  type: 'layout',
-                  label: 'Layout',
-                  circleRadius: 2000,
-                  layoutAlgorithm: 'circle',
-                  relationshipType: '',
-                  factor: 2,
-                  width: 2,
-                  color: { type: 'ColorPresetDto', index: 0 },
-                  radius: 10,
-                  property: '',
-                },
-                unexpected: true,
-              },
-            ],
-          };
 
           // when
           const response: Response = await fetch(
@@ -7103,7 +7002,39 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
                 ['Authorization', `Bearer ${ownerLogin.jwt}`],
                 ['Content-Type', 'application/json'],
               ]),
-              body: JSON.stringify(body),
+              body: JSON.stringify({
+                title: 'Updated Scenario',
+                description: 'Updated description',
+                queries: [],
+                parameters: [],
+                postScenarioActions: [
+                  {
+                    id: randomUUID(),
+                    type: UpdateScenarioPostActionTypeDto.layout,
+                    label: 'Layout',
+                    circleRadius: 2000,
+                    layoutAlgorithm:
+                      UpdateScenarioPostActionLayoutAlgorithmDto.circle,
+                    relationshipType: '',
+                    factor: 2,
+                    width: 2,
+                    color: {
+                      type: 'ColorPresetDto',
+                      index: ColorPresetIndexDto._0,
+                    },
+                    radius: 10,
+                    property: '',
+                    unexpected: true,
+                  },
+                ],
+              } satisfies Omit<
+                UpdateScenarioRequestBodyDto,
+                'postScenarioActions'
+              > & {
+                postScenarioActions: (UpdateScenarioPostActionEntryDto & {
+                  unexpected: boolean;
+                })[];
+              }),
               signal: testContext.signal,
             },
           );
@@ -7212,13 +7143,6 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
           assert.equal(originalPublishedResponse.status, 200);
           const originalPublished: z.infer<typeof listStateSchema> =
             listStateSchema.parse(await originalPublishedResponse.json());
-          const body: Record<string, unknown> = {
-            title: 'Updated Scenario',
-            description: 'Updated description',
-            queries: [],
-            parameters: [],
-            postScenarioActions: [],
-          };
 
           // when
           const response: Response = await fetch(
@@ -7229,7 +7153,13 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
                 ['Authorization', `Bearer ${login.jwt}`],
                 ['Content-Type', 'application/json'],
               ]),
-              body: JSON.stringify(body),
+              body: JSON.stringify({
+                title: 'Updated Scenario',
+                description: 'Updated description',
+                queries: [],
+                parameters: [],
+                postScenarioActions: [],
+              } satisfies UpdateScenarioRequestBodyDto),
               signal: testContext.signal,
             },
           );
@@ -7319,13 +7249,6 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
           assert.equal(originalPublishedResponse.status, 200);
           const originalPublished: z.infer<typeof listStateSchema> =
             listStateSchema.parse(await originalPublishedResponse.json());
-          const body: Record<string, unknown> = {
-            title: 'Updated Scenario',
-            description: 'Updated description',
-            queries: [],
-            parameters: [],
-            postScenarioActions: [],
-          };
 
           // when
           const response: Response = await fetch(
@@ -7333,7 +7256,13 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
             {
               method: 'PUT',
               headers: new Headers([['Content-Type', 'application/json']]),
-              body: JSON.stringify(body),
+              body: JSON.stringify({
+                title: 'Updated Scenario',
+                description: 'Updated description',
+                queries: [],
+                parameters: [],
+                postScenarioActions: [],
+              } satisfies UpdateScenarioRequestBodyDto),
               signal: testContext.signal,
             },
           );
@@ -7423,13 +7352,6 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
           assert.equal(originalPublishedResponse.status, 200);
           const originalPublished: z.infer<typeof listStateSchema> =
             listStateSchema.parse(await originalPublishedResponse.json());
-          const body: Record<string, unknown> = {
-            title: 'Updated Scenario',
-            description: 'Updated description',
-            queries: [],
-            parameters: [],
-            postScenarioActions: [],
-          };
 
           // when
           const response: Response = await fetch(
@@ -7440,7 +7362,13 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
                 ['Authorization', 'Bearer invalid-jwt'],
                 ['Content-Type', 'application/json'],
               ]),
-              body: JSON.stringify(body),
+              body: JSON.stringify({
+                title: 'Updated Scenario',
+                description: 'Updated description',
+                queries: [],
+                parameters: [],
+                postScenarioActions: [],
+              } satisfies UpdateScenarioRequestBodyDto),
               signal: testContext.signal,
             },
           );
@@ -7544,13 +7472,6 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
           assert.equal(originalPublishedResponse.status, 200);
           const originalPublished: z.infer<typeof listStateSchema> =
             listStateSchema.parse(await originalPublishedResponse.json());
-          const body: Record<string, unknown> = {
-            title: 'Updated Scenario',
-            description: 'Updated description',
-            queries: [],
-            parameters: [],
-            postScenarioActions: [],
-          };
 
           // when
           const response: Response = await fetch(
@@ -7561,7 +7482,13 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
                 ['Authorization', `Bearer ${login.jwt}`],
                 ['Content-Type', 'application/json'],
               ]),
-              body: JSON.stringify(body),
+              body: JSON.stringify({
+                title: 'Updated Scenario',
+                description: 'Updated description',
+                queries: [],
+                parameters: [],
+                postScenarioActions: [],
+              } satisfies UpdateScenarioRequestBodyDto),
               signal: testContext.signal,
             },
           );
@@ -7665,13 +7592,6 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
           assert.equal(originalPublishedResponse.status, 200);
           const originalPublished: z.infer<typeof listStateSchema> =
             listStateSchema.parse(await originalPublishedResponse.json());
-          const body: Record<string, unknown> = {
-            title: 'Updated Scenario',
-            description: 'Updated description',
-            queries: [],
-            parameters: [],
-            postScenarioActions: [],
-          };
 
           // when
           const response: Response = await fetch(
@@ -7682,7 +7602,13 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
                 ['Authorization', `Bearer ${login.jwt}`],
                 ['Content-Type', 'application/json'],
               ]),
-              body: JSON.stringify(body),
+              body: JSON.stringify({
+                title: 'Updated Scenario',
+                description: 'Updated description',
+                queries: [],
+                parameters: [],
+                postScenarioActions: [],
+              } satisfies UpdateScenarioRequestBodyDto),
               signal: testContext.signal,
             },
           );
@@ -7778,26 +7704,6 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
           assert.equal(originalPublishedResponse.status, 200);
           const originalPublished: z.infer<typeof listStateSchema> =
             listStateSchema.parse(await originalPublishedResponse.json());
-          const body: Record<string, unknown> = {
-            ...{
-              title: 'Updated Scenario',
-              description: 'Updated description',
-              queries: [],
-              parameters: [],
-              postScenarioActions: [],
-            },
-            queries: [
-              {
-                ...{
-                  id: randomUUID(),
-                  query: 'MATCH (n) RETURN n',
-                  databaseId: null,
-                  isTableQuery: false,
-                },
-                databaseId: database,
-              },
-            ],
-          };
 
           // when
           const response: Response = await fetch(
@@ -7808,7 +7714,20 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
                 ['Authorization', `Bearer ${ownerLogin.jwt}`],
                 ['Content-Type', 'application/json'],
               ]),
-              body: JSON.stringify(body),
+              body: JSON.stringify({
+                title: 'Updated Scenario',
+                description: 'Updated description',
+                queries: [
+                  {
+                    id: randomUUID(),
+                    query: 'MATCH (n) RETURN n',
+                    databaseId: database,
+                    isTableQuery: false,
+                  },
+                ],
+                parameters: [],
+                postScenarioActions: [],
+              } satisfies UpdateScenarioRequestBodyDto),
               signal: testContext.signal,
             },
           );
@@ -7917,26 +7836,6 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
           assert.equal(originalPublishedResponse.status, 200);
           const originalPublished: z.infer<typeof listStateSchema> =
             listStateSchema.parse(await originalPublishedResponse.json());
-          const body: Record<string, unknown> = {
-            ...{
-              title: 'Updated Scenario',
-              description: 'Updated description',
-              queries: [],
-              parameters: [],
-              postScenarioActions: [],
-            },
-            queries: [
-              {
-                ...{
-                  id: randomUUID(),
-                  query: 'MATCH (n) RETURN n',
-                  databaseId: null,
-                  isTableQuery: false,
-                },
-                databaseId: database,
-              },
-            ],
-          };
 
           // when
           const response: Response = await fetch(
@@ -7947,7 +7846,20 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
                 ['Authorization', `Bearer ${ownerLogin.jwt}`],
                 ['Content-Type', 'application/json'],
               ]),
-              body: JSON.stringify(body),
+              body: JSON.stringify({
+                title: 'Updated Scenario',
+                description: 'Updated description',
+                queries: [
+                  {
+                    id: randomUUID(),
+                    query: 'MATCH (n) RETURN n',
+                    databaseId: database,
+                    isTableQuery: false,
+                  },
+                ],
+                parameters: [],
+                postScenarioActions: [],
+              } satisfies UpdateScenarioRequestBodyDto),
               signal: testContext.signal,
             },
           );
@@ -8058,26 +7970,6 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
           assert.equal(originalPublishedResponse.status, 200);
           const originalPublished: z.infer<typeof listStateSchema> =
             listStateSchema.parse(await originalPublishedResponse.json());
-          const body: Record<string, unknown> = {
-            ...{
-              title: 'Updated Scenario',
-              description: 'Updated description',
-              queries: [],
-              parameters: [],
-              postScenarioActions: [],
-            },
-            queries: [
-              {
-                ...{
-                  id: randomUUID(),
-                  query: 'MATCH (n) RETURN n',
-                  databaseId: null,
-                  isTableQuery: false,
-                },
-                databaseId: database,
-              },
-            ],
-          };
 
           // when
           const response: Response = await fetch(
@@ -8088,7 +7980,20 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
                 ['Authorization', `Bearer ${ownerLogin.jwt}`],
                 ['Content-Type', 'application/json'],
               ]),
-              body: JSON.stringify(body),
+              body: JSON.stringify({
+                title: 'Updated Scenario',
+                description: 'Updated description',
+                queries: [
+                  {
+                    id: randomUUID(),
+                    query: 'MATCH (n) RETURN n',
+                    databaseId: database,
+                    isTableQuery: false,
+                  },
+                ],
+                parameters: [],
+                postScenarioActions: [],
+              } satisfies UpdateScenarioRequestBodyDto),
               signal: testContext.signal,
             },
           );
@@ -8181,13 +8086,6 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
           assert.equal(originalPublishedResponse.status, 200);
           const originalPublished: z.infer<typeof listStateSchema> =
             listStateSchema.parse(await originalPublishedResponse.json());
-          const body: Record<string, unknown> = {
-            title: 'Updated Scenario',
-            description: 'Updated description',
-            queries: [],
-            parameters: [],
-            postScenarioActions: [],
-          };
 
           // when
           const response: Response = await fetch(
@@ -8198,7 +8096,13 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
                 ['Authorization', `Bearer ${ownerLogin.jwt}`],
                 ['Content-Type', 'application/json'],
               ]),
-              body: JSON.stringify(body),
+              body: JSON.stringify({
+                title: 'Updated Scenario',
+                description: 'Updated description',
+                queries: [],
+                parameters: [],
+                postScenarioActions: [],
+              } satisfies UpdateScenarioRequestBodyDto),
               signal: testContext.signal,
             },
           );
@@ -8307,13 +8211,6 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
           assert.equal(originalPublishedResponse.status, 200);
           const originalPublished: z.infer<typeof listStateSchema> =
             listStateSchema.parse(await originalPublishedResponse.json());
-          const body: Record<string, unknown> = {
-            title: 'Updated Scenario',
-            description: 'Updated description',
-            queries: [],
-            parameters: [],
-            postScenarioActions: [],
-          };
 
           // when
           const response: Response = await fetch(
@@ -8324,7 +8221,13 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
                 ['Authorization', `Bearer ${ownerLogin.jwt}`],
                 ['Content-Type', 'application/json'],
               ]),
-              body: JSON.stringify(body),
+              body: JSON.stringify({
+                title: 'Updated Scenario',
+                description: 'Updated description',
+                queries: [],
+                parameters: [],
+                postScenarioActions: [],
+              } satisfies UpdateScenarioRequestBodyDto),
               signal: testContext.signal,
             },
           );
@@ -8417,13 +8320,6 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
           assert.equal(originalPublishedResponse.status, 200);
           const originalPublished: z.infer<typeof listStateSchema> =
             listStateSchema.parse(await originalPublishedResponse.json());
-          const body: Record<string, unknown> = {
-            title: 'Updated Scenario',
-            description: 'Updated description',
-            queries: [],
-            parameters: [],
-            postScenarioActions: [],
-          };
 
           // when
           const response: Response = await fetch(
@@ -8434,7 +8330,13 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
                 ['Authorization', `Bearer ${ownerLogin.jwt}`],
                 ['Content-Type', 'application/json'],
               ]),
-              body: JSON.stringify(body),
+              body: JSON.stringify({
+                title: 'Updated Scenario',
+                description: 'Updated description',
+                queries: [],
+                parameters: [],
+                postScenarioActions: [],
+              } satisfies UpdateScenarioRequestBodyDto),
               signal: testContext.signal,
             },
           );
@@ -8543,13 +8445,6 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
           assert.equal(originalPublishedResponse.status, 200);
           const originalPublished: z.infer<typeof listStateSchema> =
             listStateSchema.parse(await originalPublishedResponse.json());
-          const body: Record<string, unknown> = {
-            title: 'Updated Scenario',
-            description: 'Updated description',
-            queries: [],
-            parameters: [],
-            postScenarioActions: [],
-          };
 
           // when
           const response: Response = await fetch(
@@ -8560,7 +8455,13 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
                 ['Authorization', `Bearer ${ownerLogin.jwt}`],
                 ['Content-Type', 'application/json'],
               ]),
-              body: JSON.stringify(body),
+              body: JSON.stringify({
+                title: 'Updated Scenario',
+                description: 'Updated description',
+                queries: [],
+                parameters: [],
+                postScenarioActions: [],
+              } satisfies UpdateScenarioRequestBodyDto),
               signal: testContext.signal,
             },
           );
@@ -8662,13 +8563,6 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
           assert.equal(originalPublishedResponse.status, 200);
           const originalPublished: z.infer<typeof listStateSchema> =
             listStateSchema.parse(await originalPublishedResponse.json());
-          const body: Record<string, unknown> = {
-            title: 'Updated Scenario',
-            description: 'Updated description',
-            queries: [],
-            parameters: [],
-            postScenarioActions: [],
-          };
 
           // when
           const response: Response = await fetch(
@@ -8679,7 +8573,13 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
                 ['Authorization', `Bearer ${ownerLogin.jwt}`],
                 ['Content-Type', 'application/json'],
               ]),
-              body: JSON.stringify(body),
+              body: JSON.stringify({
+                title: 'Updated Scenario',
+                description: 'Updated description',
+                queries: [],
+                parameters: [],
+                postScenarioActions: [],
+              } satisfies UpdateScenarioRequestBodyDto),
               signal: testContext.signal,
             },
           );
@@ -8772,13 +8672,6 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
           assert.equal(originalPublishedResponse.status, 200);
           const originalPublished: z.infer<typeof listStateSchema> =
             listStateSchema.parse(await originalPublishedResponse.json());
-          const body: Record<string, unknown> = {
-            title: 'Updated Scenario',
-            description: 'Updated description',
-            queries: [],
-            parameters: [],
-            postScenarioActions: [],
-          };
 
           // when
           const response: Response = await fetch(
@@ -8789,7 +8682,13 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
                 ['Authorization', `Bearer ${ownerLogin.jwt}`],
                 ['Content-Type', 'application/json'],
               ]),
-              body: JSON.stringify(body),
+              body: JSON.stringify({
+                title: 'Updated Scenario',
+                description: 'Updated description',
+                queries: [],
+                parameters: [],
+                postScenarioActions: [],
+              } satisfies UpdateScenarioRequestBodyDto),
               signal: testContext.signal,
             },
           );
@@ -8898,13 +8797,6 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
           assert.equal(originalPublishedResponse.status, 200);
           const originalPublished: z.infer<typeof listStateSchema> =
             listStateSchema.parse(await originalPublishedResponse.json());
-          const body: Record<string, unknown> = {
-            title: 'Updated Scenario',
-            description: 'Updated description',
-            queries: [],
-            parameters: [],
-            postScenarioActions: [],
-          };
 
           // when
           const response: Response = await fetch(
@@ -8915,7 +8807,13 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
                 ['Authorization', `Bearer ${ownerLogin.jwt}`],
                 ['Content-Type', 'application/json'],
               ]),
-              body: JSON.stringify(body),
+              body: JSON.stringify({
+                title: 'Updated Scenario',
+                description: 'Updated description',
+                queries: [],
+                parameters: [],
+                postScenarioActions: [],
+              } satisfies UpdateScenarioRequestBodyDto),
               signal: testContext.signal,
             },
           );
@@ -9013,13 +8911,6 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
           assert.equal(originalPublishedResponse.status, 200);
           const originalPublished: z.infer<typeof listStateSchema> =
             listStateSchema.parse(await originalPublishedResponse.json());
-          const body: Record<string, unknown> = {
-            title: 'Updated Scenario',
-            description: 'Updated description',
-            queries: [],
-            parameters: [],
-            postScenarioActions: [],
-          };
 
           // when
           const response: Response = await fetch(
@@ -9030,7 +8921,13 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
                 ['Authorization', `Bearer ${ownerLogin.jwt}`],
                 ['Content-Type', 'application/json'],
               ]),
-              body: JSON.stringify(body),
+              body: JSON.stringify({
+                title: 'Updated Scenario',
+                description: 'Updated description',
+                queries: [],
+                parameters: [],
+                postScenarioActions: [],
+              } satisfies UpdateScenarioRequestBodyDto),
               signal: testContext.signal,
             },
           );
