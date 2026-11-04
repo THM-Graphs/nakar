@@ -21,16 +21,15 @@ export class RoomBelongsToProject implements CanActivate {
       throw new NotFoundException(`No project id provided.`);
     }
 
-    const room: Modules.Documents.Result<
-      'api::room.room',
-      { populate: { project: { populate: [] } } }
-    > | null = await strapi.documents('api::room.room').findOne({
-      documentId: roomId,
-      populate: { project: { populate: [] } },
-    });
-
-    const isOkay: boolean = room?.project?.documentId === projectId;
-
-    return isOkay;
+    const room: Modules.Documents.Result<'api::room.room'> | null = await strapi
+      .documents('api::room.room')
+      .findFirst({
+        filters: { documentId: roomId, project: { documentId: projectId } },
+        status: 'published',
+      });
+    if (room == null) {
+      throw new NotFoundException();
+    }
+    return true;
   }
 }

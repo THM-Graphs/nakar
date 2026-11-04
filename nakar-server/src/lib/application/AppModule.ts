@@ -26,6 +26,7 @@ import { MonitoringService } from '../monitoring/MonitoringService';
 import { MediaService } from '../media/MediaService';
 import { EncryptionService } from '../encryption/EncryptionService';
 import { IsValidRegex } from '../schema/IsValidRegex';
+import { StrapiService } from '../strapi/StrapiService';
 
 @Module({
   controllers: [
@@ -54,6 +55,7 @@ import { IsValidRegex } from '../schema/IsValidRegex';
     ExternalGraphDatabaseReportService,
     WebSocketManager,
     AuthService,
+    StrapiService,
     MonitoringService,
     MediaService,
     EncryptionService,

@@ -21,18 +21,17 @@ export class CommonPropertyBelongsToProject implements CanActivate {
       throw new NotFoundException(`No project id provided.`);
     }
 
-    const commonProperty: Modules.Documents.Result<
-      'api::common-property.common-property',
-      { populate: { project: { populate: [] } } }
-    > | null = await strapi
-      .documents('api::common-property.common-property')
-      .findOne({
-        documentId: commonPropertyId,
-        populate: { project: { populate: [] } },
+    const commonProperty: Modules.Documents.Result<'api::common-property.common-property'> | null =
+      await strapi.documents('api::common-property.common-property').findFirst({
+        filters: {
+          documentId: commonPropertyId,
+          project: { documentId: projectId },
+        },
+        status: 'published',
       });
-
-    const isOkay: boolean = commonProperty?.project?.documentId === projectId;
-
-    return isOkay;
+    if (commonProperty == null) {
+      throw new NotFoundException();
+    }
+    return true;
   }
 }

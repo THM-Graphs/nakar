@@ -21,16 +21,17 @@ export class ScenarioBelongsToScenarioGroup implements CanActivate {
       throw new NotFoundException(`No scenario id provided.`);
     }
 
-    const scenario: Modules.Documents.Result<
-      'api::scenario.scenario',
-      { populate: { group: { populate: [] } } }
-    > | null = await strapi.documents('api::scenario.scenario').findOne({
-      documentId: scenarioId,
-      populate: { group: { populate: [] } },
-    });
-
-    const isOkay: boolean = scenario?.group?.documentId === scenarioGroupId;
-
-    return isOkay;
+    const scenario: Modules.Documents.Result<'api::scenario.scenario'> | null =
+      await strapi.documents('api::scenario.scenario').findFirst({
+        filters: {
+          documentId: scenarioId,
+          group: { documentId: scenarioGroupId },
+        },
+        status: 'published',
+      });
+    if (scenario == null) {
+      throw new NotFoundException();
+    }
+    return true;
   }
 }

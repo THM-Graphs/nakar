@@ -4,5 +4,6 @@
     "noEmit": true,
     "allowSyntheticDefaultImports": true
   },
-  "include": ["src/**/*.test.ts"]
+  "include": ["src/**/*.test.ts"],
+  "exclude": []
 }

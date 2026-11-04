@@ -10,6 +10,7 @@ import { KeyTooShortError } from './errors/KeyTooShortError';
 void describe('Encryption', (): void => {
   void describe('constructor', (): void => {
     void it('creates instance when config has a valid key that matches currentKeyId', (): void => {
+      // when
       const service: Encryption = new Encryption({
         currentKeyId: 'key1',
         keys: {
@@ -17,51 +18,81 @@ void describe('Encryption', (): void => {
         },
       });
 
+      // then
       assert.ok(service instanceof Encryption);
     });
 
     void it('throws NoKeysConfiguredError when keys object is empty', (): void => {
-      assert.throws((): void => {
+      // when
+      let error: unknown;
+      try {
         new Encryption({ currentKeyId: 'key1', keys: {} });
-      }, NoKeysConfiguredError);
+      } catch (caught: unknown) {
+        error = caught;
+      }
+
+      // then
+      assert.ok(error instanceof NoKeysConfiguredError);
     });
 
     void it('throws UnknownKeyIdError when currentKeyId does not match any key id', (): void => {
-      assert.throws((): void => {
+      // when
+      let error: unknown;
+      try {
         new Encryption({
           currentKeyId: 'nonexistent',
           keys: {
             key1: '6e170327-c135-4f33-bac3-c4f7fffc2536',
           },
         });
-      }, UnknownKeyIdError);
+      } catch (caught: unknown) {
+        error = caught;
+      }
+
+      // then
+      assert.ok(error instanceof UnknownKeyIdError);
     });
 
     void it('throws EmptyKeyError when a key secret is an empty string', (): void => {
-      assert.throws((): void => {
+      // when
+      let error: unknown;
+      try {
         new Encryption({
           currentKeyId: 'key1',
           keys: {
             key1: '',
           },
         });
-      }, EmptyKeyError);
+      } catch (caught: unknown) {
+        error = caught;
+      }
+
+      // then
+      assert.ok(error instanceof EmptyKeyError);
     });
 
     void it('throws using short key', (): void => {
-      assert.throws((): void => {
+      // when
+      let error: unknown;
+      try {
         new Encryption({
           currentKeyId: 'key1',
           keys: {
             key1: 'short',
           },
         });
-      }, KeyTooShortError);
+      } catch (caught: unknown) {
+        error = caught;
+      }
+
+      // then
+      assert.ok(error instanceof KeyTooShortError);
     });
   });
 
   void describe('encrypt', (): void => {
     void it('returns an EncryptedPayload with keyId, iv, authTag, and ciphertext for valid plaintext', (): void => {
+      // given
       const service: Encryption = new Encryption({
         currentKeyId: 'key1',
         keys: {
@@ -69,8 +100,10 @@ void describe('Encryption', (): void => {
         },
       });
 
+      // when
       const payload: EncryptedPayload = service.encrypt('Hello World');
 
+      // then
       assert.strictEqual(payload.keyId, 'key1');
       assert.strictEqual(typeof payload.iv, 'string');
       assert.ok(payload.iv.length > 0);
@@ -82,6 +115,7 @@ void describe('Encryption', (): void => {
     });
 
     void it('encrypts various characters', (): void => {
+      // given
       const service: Encryption = new Encryption({
         currentKeyId: 'key1',
         keys: {
@@ -89,10 +123,12 @@ void describe('Encryption', (): void => {
         },
       });
 
+      // when
       const payload: EncryptedPayload = service.encrypt(
         'ÄÖÜ23456§"$%&/()😀你好，世界！',
       );
 
+      // then
       assert.ok(payload.ciphertext.length > 0);
       assert.strictEqual(
         service.decrypt(payload),
@@ -101,6 +137,7 @@ void describe('Encryption', (): void => {
     });
 
     void it('encrypts and decrypts an empty string', (): void => {
+      // given
       const service: Encryption = new Encryption({
         currentKeyId: 'key1',
         keys: {
@@ -108,48 +145,75 @@ void describe('Encryption', (): void => {
         },
       });
 
+      // when
       const payload: EncryptedPayload = service.encrypt('');
+
+      // then
       assert.strictEqual(service.decrypt(payload), '');
+    });
+
+    void it('encrypts with the new currentKeyId after rotation', (): void => {
+      // given
+      const service: Encryption = new Encryption({
+        currentKeyId: 'key2',
+        keys: {
+          key1: '164bc928-a67d-4c09-b8a7-33349eab34b9',
+          key2: 'd14bcdb6-84a9-42b8-9eb5-72df83e86ae5',
+        },
+      });
+
+      // when
+      const payload: EncryptedPayload = service.encrypt('Hello World');
+
+      // then
+      assert.strictEqual(payload.keyId, 'key2');
+      assert.strictEqual(service.decrypt(payload), 'Hello World');
     });
   });
 
   void describe('decrypt', (): void => {
     void it('returns original plaintext for a payload that was encrypted by this service', (): void => {
+      // given
       const service: Encryption = new Encryption({
         currentKeyId: 'key1',
         keys: {
           key1: 'ecc1f5b9-0051-4983-9343-1fa3654dd05b',
         },
       });
-
       const payload: EncryptedPayload = service.encrypt('Hello World');
+
+      // when
       const plainText: string = service.decrypt(payload);
 
+      // then
       assert.strictEqual(plainText, 'Hello World');
     });
 
     void it('returns original plaintext for a payload that was encrypted by another instance', (): void => {
+      // given
       const service1: Encryption = new Encryption({
         currentKeyId: 'key1',
         keys: {
           key1: 'ecc1f5b9-0051-4983-9343-1fa3654dd05b',
         },
       });
-
       const payload: EncryptedPayload = service1.encrypt('Hello World');
-
       const service2: Encryption = new Encryption({
         currentKeyId: 'key1',
         keys: {
           key1: 'ecc1f5b9-0051-4983-9343-1fa3654dd05b',
         },
       });
+
+      // when
       const plainText: string = service2.decrypt(payload);
 
+      // then
       assert.strictEqual(plainText, 'Hello World');
     });
 
     void it('throws UnknownKeyIdError when payload.keyId does not match any stored key', (): void => {
+      // given
       const service: Encryption = new Encryption({
         currentKeyId: 'key1',
         keys: {
@@ -157,7 +221,9 @@ void describe('Encryption', (): void => {
         },
       });
 
-      assert.throws((): void => {
+      // when
+      let error: unknown;
+      try {
         service.decrypt({
           keyId: 'nonexistent',
           iv: 'AAAAAAAAAAAAAAAAAAAAAA==',
@@ -165,29 +231,42 @@ void describe('Encryption', (): void => {
           ciphertext: 'AAAAAAAAAAAAAAAAAAAAAA==',
           version: 1,
         });
-      }, UnknownKeyIdError);
+      } catch (caught: unknown) {
+        error = caught;
+      }
+
+      // then
+      assert.ok(error instanceof UnknownKeyIdError);
     });
 
     void it('throws when the auth tag has been tampered with (GCM integrity check fails)', (): void => {
+      // given
       const service: Encryption = new Encryption({
         currentKeyId: 'key1',
         keys: {
           key1: 'b876c4ba-a3f7-45d0-9953-15df7074943b',
         },
       });
-
       const payload: EncryptedPayload = service.encrypt('Hello World');
       const corrupted: EncryptedPayload = {
         ...payload,
         authTag: 'AAAAAAAAAAAAAAAAAAAAAA==',
       };
 
-      assert.throws((): void => {
+      // when
+      let error: unknown;
+      try {
         service.decrypt(corrupted);
-      }, Error);
+      } catch (caught: unknown) {
+        error = caught;
+      }
+
+      // then
+      assert.ok(error instanceof Error);
     });
 
     void it('throws when the payload contains non-base64 characters in the iv', (): void => {
+      // given
       const service: Encryption = new Encryption({
         currentKeyId: 'key1',
         keys: {
@@ -195,7 +274,9 @@ void describe('Encryption', (): void => {
         },
       });
 
-      assert.throws((): void => {
+      // when
+      let error: unknown;
+      try {
         service.decrypt({
           keyId: 'key1',
           iv: '!!!',
@@ -203,19 +284,23 @@ void describe('Encryption', (): void => {
           ciphertext: 'AAAAAAAAAAAAAAAAAAAAAA==',
           version: 1,
         });
-      }, Error);
+      } catch (caught: unknown) {
+        error = caught;
+      }
+
+      // then
+      assert.ok(error instanceof Error);
     });
 
     void it('decrypts old payload after rotating currentKeyId to a newer key', (): void => {
+      // given
       const oldService: Encryption = new Encryption({
         currentKeyId: 'key1',
         keys: {
           key1: '164bc928-a67d-4c09-b8a7-33349eab34b9',
         },
       });
-
       const payload: EncryptedPayload = oldService.encrypt('Hello World');
-
       const rotatedService: Encryption = new Encryption({
         currentKeyId: 'key2',
         keys: {
@@ -224,22 +309,11 @@ void describe('Encryption', (): void => {
         },
       });
 
-      assert.strictEqual(rotatedService.decrypt(payload), 'Hello World');
-    });
+      // when
+      const actual: string = rotatedService.decrypt(payload);
 
-    void it('encrypts with the new currentKeyId after rotation', (): void => {
-      const service: Encryption = new Encryption({
-        currentKeyId: 'key2',
-        keys: {
-          key1: '164bc928-a67d-4c09-b8a7-33349eab34b9',
-          key2: 'd14bcdb6-84a9-42b8-9eb5-72df83e86ae5',
-        },
-      });
-
-      const payload: EncryptedPayload = service.encrypt('Hello World');
-
-      assert.strictEqual(payload.keyId, 'key2');
-      assert.strictEqual(service.decrypt(payload), 'Hello World');
+      // then
+      assert.strictEqual(actual, 'Hello World');
     });
   });
 });

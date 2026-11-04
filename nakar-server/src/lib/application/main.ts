@@ -16,8 +16,30 @@ import { MonitoringService } from '../monitoring/MonitoringService';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { dump } from 'js-yaml';
 import { dirname, resolve } from 'node:path';
+import { StrapiService } from '../strapi/StrapiService';
+import type { AddressInfo } from 'node:net';
 
 let nestApp: NestExpressApplication | null = null;
+
+function emitAppStarted(app: NestExpressApplication): void {
+  const monitoringService: MonitoringService = app.get(MonitoringService);
+  const strapiService: StrapiService = app.get(StrapiService);
+  const apiAddress: string | AddressInfo | null = app.getHttpServer().address();
+
+  if (apiAddress == null || typeof apiAddress === 'string') {
+    throw new Error('Unable to get address of api server.');
+  }
+
+  monitoringService.pushEvent({
+    type: 'application_did_start',
+    userInfo: null,
+    objectInfo: null,
+    metaData: {
+      strapiPort: strapiService.getStrapiPort().toString(),
+      apiPort: apiAddress.port.toString(),
+    },
+  });
+}
 
 export async function bootstrapNest(): Promise<NestExpressApplication> {
   const config: SanitizedConfig = getConfig();
@@ -64,13 +86,13 @@ export async function bootstrapNest(): Promise<NestExpressApplication> {
     );
   }
 
-  const monitoringService: MonitoringService = app.get(MonitoringService);
-  monitoringService.pushEvent({
-    type: 'application_did_start',
-    userInfo: null,
-    objectInfo: null,
-    metaData: null,
-  });
+  if (strapi.server.httpServer.listening) {
+    emitAppStarted(app);
+  } else {
+    strapi.server.httpServer.once('listening', (): void => {
+      emitAppStarted(app);
+    });
+  }
 
   return app;
 }

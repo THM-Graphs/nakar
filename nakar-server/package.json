@@ -17,7 +17,7 @@
     "format:fix": "prettier . --write",
     "analyze": "fta .",
     "audit": "npm audit --audit-level critical",
-    "test": "c8 node --import tsx --test \"src/**/*.test.ts\"",
+    "test": "tsc -P tsconfig.test.json && tsc -P tsconfig.json && c8 node --experimental-config-file=node.config.json --import tsx --test \"src/**/*.test.ts\"",
     "export": "strapi export --no-compress --no-encrypt -f ./exports/export-$(date +\"%Y-%m-%dT%H:%M:%S%z\")",
     "import": "strapi import -f export.tar",
     "version": "echo $npm_package_version",

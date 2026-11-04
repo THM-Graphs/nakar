@@ -29,14 +29,20 @@ export class NoteBelongsToCanvas implements CanActivate {
     const canvas: Modules.Documents.Result<'api::canvas.canvas'> =
       await this._databaseService.getCanvas(canvasId);
 
-    const projectOfNote: Modules.Documents.Result<'api::project.project'> =
-      await this._databaseService.getProjectOfNote(note);
     const projectOfRoom: Modules.Documents.Result<'api::project.project'> =
       await this._databaseService.getProjectOfCanvas(canvas);
 
-    const isOkay: boolean =
-      projectOfNote.documentId === projectOfRoom.documentId;
-
-    return isOkay;
+    const matchingNote: Modules.Documents.Result<'api::note.note'> | null =
+      await strapi.documents('api::note.note').findFirst({
+        status: 'published',
+        filters: {
+          documentId: note.documentId,
+          project: { documentId: projectOfRoom.documentId },
+        },
+      });
+    if (matchingNote == null) {
+      throw new NotFoundException();
+    }
+    return true;
   }
 }

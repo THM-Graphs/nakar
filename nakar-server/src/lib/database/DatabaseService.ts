@@ -27,6 +27,94 @@ export class DatabaseService {
     private readonly _encryptionService: EncryptionService,
   ) {}
 
+  public async deleteProject(projectId: string): Promise<boolean> {
+    const rooms: { documentId: string }[] = z
+      .array(z.object({ documentId: z.string() }))
+      .parse(
+        await strapi.db.query('api::room.room').findMany({
+          select: ['documentId'],
+          where: { project: { documentId: projectId } },
+        }),
+      );
+    const roomIds: SSet<string> = new SSet<string>(
+      rooms.map((room: { documentId: string }): string => room.documentId),
+    );
+    for (const roomId of roomIds) {
+      await this.deleteRoom(roomId);
+    }
+
+    const scenarioGroups: { documentId: string }[] = z
+      .array(z.object({ documentId: z.string() }))
+      .parse(
+        await strapi.db.query('api::scenario-group.scenario-group').findMany({
+          select: ['documentId'],
+          where: { project: { documentId: projectId } },
+        }),
+      );
+    const scenarioGroupIds: SSet<string> = new SSet<string>(
+      scenarioGroups.map(
+        (scenarioGroup: { documentId: string }): string =>
+          scenarioGroup.documentId,
+      ),
+    );
+    for (const scenarioGroupId of scenarioGroupIds) {
+      await this.deleteScenarioGroup(scenarioGroupId);
+    }
+
+    await this._deleteRelatedDocuments(
+      'api::common-property.common-property',
+      'project',
+      projectId,
+    );
+    const databases: { documentId: string }[] = z
+      .array(z.object({ documentId: z.string() }))
+      .parse(
+        await strapi.db
+          .query('api::database-connection.database-connection')
+          .findMany({
+            select: ['documentId'],
+            where: { project: { documentId: projectId } },
+          }),
+      );
+    for (const databaseId of new SSet<string>(
+      databases.map(
+        (database: { documentId: string }): string => database.documentId,
+      ),
+    )) {
+      await this.deleteDatabase(databaseId);
+    }
+    const result: Awaited<
+      ReturnType<Modules.Documents.ServiceInstance['delete']>
+    > = await strapi.documents('api::project.project').delete({
+      documentId: projectId,
+    } satisfies Modules.Documents.ServiceParams['delete']);
+    if (result.entries.length === 0) {
+      return false;
+    }
+    return true;
+  }
+
+  public async deleteRoom(roomId: string): Promise<boolean> {
+    const result: Awaited<
+      ReturnType<Modules.Documents.ServiceInstance['delete']>
+    > = await strapi.documents('api::room.room').delete({ documentId: roomId });
+    return result.entries.length > 0;
+  }
+
+  public async deleteScenarioGroup(scenarioGroupId: string): Promise<boolean> {
+    await this._deleteRelatedDocuments(
+      'api::scenario.scenario',
+      'group',
+      scenarioGroupId,
+    );
+    const result: Awaited<
+      ReturnType<Modules.Documents.ServiceInstance['delete']>
+    > = await strapi
+      .documents('api::scenario-group.scenario-group')
+      .delete({ documentId: scenarioGroupId });
+    return result.entries.length > 0;
+  }
+
   public async getDatabase(
     databaseId: string,
   ): Promise<
@@ -116,6 +204,11 @@ export class DatabaseService {
   }
 
   public async deleteDatabase(databaseId: string): Promise<void> {
+    await this._deleteRelatedDocuments(
+      'api::node-configuration.node-configuration',
+      'database',
+      databaseId,
+    );
     await strapi
       .documents('api::database-connection.database-connection')
       .delete({ documentId: databaseId });
@@ -127,9 +220,22 @@ export class DatabaseService {
       Modules.Documents.Params.Data.Input<'api::database-connection.database-connection'>
     >,
   ): Promise<Modules.Documents.Result<'api::database-connection.database-connection'> | null> {
+    const published: Modules.Documents.Result<
+      'api::database-connection.database-connection',
+      { populate: ['project'] }
+    > | null = await strapi
+      .documents('api::database-connection.database-connection')
+      .findOne({
+        documentId: databaseId,
+        status: 'published',
+        populate: ['project'],
+      });
+    if (published == null) {
+      return null;
+    }
     const encryptedData: Partial<
       Modules.Documents.Params.Data.Input<'api::database-connection.database-connection'>
-    > = { ...data };
+    > = { ...data, project: published.project?.documentId ?? null };
     if (encryptedData.password != null) {
       encryptedData.password = this._encryptionService.encrypt(
         encryptedData.password,
@@ -243,6 +349,9 @@ export class DatabaseService {
     return await strapi.documents('api::room.room').findMany({
       status: 'published',
       filters: {
+        project: {
+          documentId: { $notNull: true },
+        },
         visibility: {
           $eq: 'public',
         },
@@ -329,6 +438,7 @@ export class DatabaseService {
       { populate: ['scenarioGroups'] }
     > | null = await strapi.documents('api::project.project').findOne({
       documentId: project.documentId,
+      status: 'published',
       populate: ['scenarioGroups'],
     });
 
@@ -641,9 +751,11 @@ export class DatabaseService {
     const populatedProject: Modules.Documents.Result<
       'api::project.project',
       { populate: ['owner'] }
-    > | null = await strapi
-      .documents('api::project.project')
-      .findOne({ documentId: project.documentId, populate: ['owner'] });
+    > | null = await strapi.documents('api::project.project').findOne({
+      status: 'published',
+      documentId: project.documentId,
+      populate: ['owner'],
+    });
 
     if (populatedProject == null) {
       throw new Error(`Project not found: ${project.documentId}`);
@@ -660,7 +772,11 @@ export class DatabaseService {
       { populate: ['collaborators'] }
     > | null = await strapi
       .documents('api::project.project') // TODO: SORT
-      .findOne({ documentId: project.documentId, populate: ['collaborators'] });
+      .findOne({
+        status: 'published',
+        documentId: project.documentId,
+        populate: ['collaborators'],
+      });
 
     if (populatedProject == null) {
       throw new Error(`Project not found: ${project.documentId}`);
@@ -675,9 +791,11 @@ export class DatabaseService {
     const populatedProject: Modules.Documents.Result<
       'api::project.project',
       { populate: ['rooms'] }
-    > | null = await strapi
-      .documents('api::project.project')
-      .findOne({ documentId: project.documentId, populate: ['rooms'] });
+    > | null = await strapi.documents('api::project.project').findOne({
+      status: 'published',
+      documentId: project.documentId,
+      populate: ['rooms'],
+    });
 
     if (populatedProject == null) {
       throw new Error(`Project not found: ${project.documentId}`);
@@ -696,6 +814,7 @@ export class DatabaseService {
       { populate: ['commonProperties'] }
     > | null = await strapi.documents('api::project.project').findOne({
       documentId: project.documentId,
+      status: 'published',
       populate: ['commonProperties'],
     });
 
@@ -716,6 +835,7 @@ export class DatabaseService {
       { populate: ['databaseConnections'] }
     > | null = await strapi.documents('api::project.project').findOne({
       documentId: project.documentId,
+      status: 'published',
       populate: ['databaseConnections'], // TODO: SORT
     });
 
@@ -738,41 +858,19 @@ export class DatabaseService {
   public async getProjectsOfUser(
     user: Modules.Documents.Result<'plugin::users-permissions.user'>,
   ): Promise<Modules.Documents.Result<'api::project.project'>[]> {
-    const populatedUser: Modules.Documents.Result<
-      'plugin::users-permissions.user',
-      { populate: ['projects'] }
-    > | null = await strapi
-      .documents('plugin::users-permissions.user')
-      .findOne({
-        documentId: user.documentId,
-        populate: ['projects'], // TODO: SORT
-      });
-
-    if (populatedUser == null) {
-      throw new Error(`User not found: ${user.documentId}`);
-    }
-
-    return populatedUser.projects ?? [];
+    return await strapi.documents('api::project.project').findMany({
+      status: 'published',
+      filters: { owner: { documentId: user.documentId } },
+    });
   }
 
   public async getCollaborationProjectsOfUser(
     user: Modules.Documents.Result<'plugin::users-permissions.user'>,
   ): Promise<Modules.Documents.Result<'api::project.project'>[]> {
-    const populatedUser: Modules.Documents.Result<
-      'plugin::users-permissions.user',
-      { populate: ['projectCollaborations'] }
-    > | null = await strapi
-      .documents('plugin::users-permissions.user')
-      .findOne({
-        documentId: user.documentId,
-        populate: ['projectCollaborations'], // TODO: SORT
-      });
-
-    if (populatedUser == null) {
-      throw new Error(`User not found: ${user.documentId}`);
-    }
-
-    return populatedUser.projectCollaborations ?? [];
+    return await strapi.documents('api::project.project').findMany({
+      status: 'published',
+      filters: { collaborators: { documentId: user.documentId } },
+    });
   }
 
   public async getCanvasesOfRoom(
@@ -820,6 +918,7 @@ export class DatabaseService {
       { populate: ['project'] }
     > | null = await strapi.documents('api::room.room').findOne({
       documentId: room.documentId,
+      status: 'published',
       populate: ['project'],
     });
 
@@ -1057,6 +1156,7 @@ export class DatabaseService {
       (
         await strapi.documents('api::common-property.common-property').findOne({
           documentId: commonProperty.documentId,
+          status: 'published',
           populate: ['leftDatabase'],
         })
       )?.leftDatabase ?? null
@@ -1070,6 +1170,7 @@ export class DatabaseService {
       (
         await strapi.documents('api::common-property.common-property').findOne({
           documentId: commonProperty.documentId,
+          status: 'published',
           populate: ['rightDatabase'],
         })
       )?.rightDatabase ?? null
@@ -1322,5 +1423,29 @@ export class DatabaseService {
     b: { title?: string | null | undefined },
   ): number {
     return (a.title ?? '').localeCompare(b.title ?? '');
+  }
+  private async _deleteRelatedDocuments(
+    model:
+      | 'api::common-property.common-property'
+      | 'api::scenario.scenario'
+      | 'api::node-configuration.node-configuration',
+    relation: string,
+    parentId: string,
+  ): Promise<void> {
+    const documents: { documentId: string }[] = z
+      .array(z.object({ documentId: z.string() }))
+      .parse(
+        await strapi.db.query(model).findMany({
+          select: ['documentId'],
+          where: { [relation]: { documentId: parentId } },
+        }),
+      );
+    for (const documentId of new SSet<string>(
+      documents.map(
+        (document: { documentId: string }): string => document.documentId,
+      ),
+    )) {
+      await strapi.documents(model).delete({ documentId });
+    }
   }
 }

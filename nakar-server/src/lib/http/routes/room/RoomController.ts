@@ -97,11 +97,23 @@ export class RoomController {
     @Body() body: UpdateRoomRequestBodyDto,
     @Param('roomId') roomId: string,
   ): Promise<RoomDto> {
+    const published: Modules.Documents.Result<
+      'api::room.room',
+      { populate: ['project'] }
+    > | null = await strapi.documents('api::room.room').findOne({
+      documentId: roomId,
+      status: 'published',
+      populate: ['project'],
+    });
+    if (published == null) {
+      throw new NotFoundException();
+    }
     const room: Modules.Documents.Result<'api::room.room'> | null = await strapi
       .documents('api::room.room')
       .update({
         documentId: roomId,
         data: {
+          project: published.project?.documentId ?? null,
           title: body.title,
           visibility: body.visibility,
         } satisfies Modules.Documents.Params.Data.Input<'api::room.room'>,
@@ -123,8 +135,9 @@ export class RoomController {
   @Delete(':roomId')
   @UseGuards(RoomBelongsToProject)
   public async deleteRoom(@Param('roomId') roomId: string): Promise<void> {
-    await strapi.documents('api::room.room').delete({
-      documentId: roomId,
-    });
+    const deleted: boolean = await this._databaseService.deleteRoom(roomId);
+    if (!deleted) {
+      throw new NotFoundException();
+    }
   }
 }
