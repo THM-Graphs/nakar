@@ -1,3 +1,5 @@
+import type { LiveCanvasArgument } from '../../../live-canvas/graph/LiveCanvasArgument';
+import { LiveCanvasParameterDataType } from '../../../live-canvas/graph/LiveCanvasParameterDataType';
 import { SMap } from '../../../../packages/map/Map';
 import type { ExternalGraphDatabase } from '../../ExternalGraphDatabase';
 import type { ExternalGraphDatabaseCredentials } from '../../data/ExternalGraphDatabaseCredentials';
@@ -57,7 +59,7 @@ export class SparqlExternalDatabase implements ExternalGraphDatabase {
   public async executeQuery(
     credentials: ExternalGraphDatabaseCredentials,
     query: string,
-    queryArguments: Record<string, unknown>,
+    queryArguments: LiveCanvasArgument[],
     limitConfig: ExternalGraphDatabaseQueryLimitConfig,
   ): Promise<ExternalGraphDatabaseQueryResult> {
     const queryId: string = v4();
@@ -211,7 +213,7 @@ WHERE {
   ?s ?p ?o .
 }
     `,
-      {},
+      [],
       new ExternalGraphDatabaseQueryLimitConfig(
         ExternalGraphDatabaseQueryLimitConfigType.default,
         ExternalGraphDatabaseQueryLimitConfigCollectionType.graphElements,
@@ -248,7 +250,7 @@ WHERE {
 }
 LIMIT ${ExternalGraphDatabaseQueryLimitConfig.maximalPreviewElements}
     `,
-        {},
+        [],
         new ExternalGraphDatabaseQueryLimitConfig(
           ExternalGraphDatabaseQueryLimitConfigType.preview,
           ExternalGraphDatabaseQueryLimitConfigCollectionType.graphElements,
@@ -315,7 +317,7 @@ WHERE {
 }
 LIMIT ${ExternalGraphDatabaseQueryLimitConfig.maximalElements}
     `,
-        {},
+        [],
         new ExternalGraphDatabaseQueryLimitConfig(
           ExternalGraphDatabaseQueryLimitConfigType.default,
           ExternalGraphDatabaseQueryLimitConfigCollectionType.graphElements,
@@ -509,7 +511,7 @@ ORDER BY DESC(?count)
     await this.executeQuery(
       credentials,
       'SELECT ?s WHERE { ?s ?p ?o } LIMIT 1',
-      {},
+      [],
       new ExternalGraphDatabaseQueryLimitConfig(
         ExternalGraphDatabaseQueryLimitConfigType.preview,
         ExternalGraphDatabaseQueryLimitConfigCollectionType.tableData,
@@ -588,7 +590,7 @@ WHERE {
 }
 LIMIT 1
       `,
-      {},
+      [],
       new ExternalGraphDatabaseQueryLimitConfig(
         ExternalGraphDatabaseQueryLimitConfigType.preview,
         ExternalGraphDatabaseQueryLimitConfigCollectionType.graphElements,
@@ -625,7 +627,7 @@ WHERE {
 }
 LIMIT 1
       `,
-      {},
+      [],
       new ExternalGraphDatabaseQueryLimitConfig(
         ExternalGraphDatabaseQueryLimitConfigType.default,
         ExternalGraphDatabaseQueryLimitConfigCollectionType.graphElements,
@@ -672,7 +674,7 @@ WHERE {
   }
 }
       `,
-      {},
+      [],
       new ExternalGraphDatabaseQueryLimitConfig(
         ExternalGraphDatabaseQueryLimitConfigType.default,
         ExternalGraphDatabaseQueryLimitConfigCollectionType.graphElements,
@@ -713,7 +715,7 @@ WHERE {
   ?s ?p ?o .
 }
       `,
-      {},
+      [],
       new ExternalGraphDatabaseQueryLimitConfig(
         ExternalGraphDatabaseQueryLimitConfigType.default,
         ExternalGraphDatabaseQueryLimitConfigCollectionType.graphElements,
@@ -774,7 +776,7 @@ WHERE {
   }
 }
 `,
-      {},
+      [],
       new ExternalGraphDatabaseQueryLimitConfig(
         ExternalGraphDatabaseQueryLimitConfigType.default,
         ExternalGraphDatabaseQueryLimitConfigCollectionType.graphElements,
@@ -986,35 +988,64 @@ WHERE {
 
   private _applyParametersToQuery(
     query: string,
-    queryArguments: Record<string, unknown>,
+    queryArguments: LiveCanvasArgument[],
   ): string {
     let result: string = query;
-    for (const [argumentName, argumentValue] of Object.entries(
-      queryArguments,
-    )) {
-      const stringValue: string =
-        typeof argumentValue === 'string' && this._isSparqlURI(argumentValue)
-          ? argumentValue
-          : JSON.stringify(argumentValue);
-      result = result.replaceAll(`$${argumentName}`, stringValue);
+    for (const argument of queryArguments) {
+      const argumentName: string = argument.identifier;
+      const argumentValue: unknown = argument.value;
+      const dataType: LiveCanvasParameterDataType = argument.dataType;
+      const stringValue: string = match(dataType)
+        .with(LiveCanvasParameterDataType.sparqlUri, (): string => {
+          if (typeof argumentValue !== 'string') {
+            throw new Error(
+              `SparqlUri parameter "${argumentName}" must be a string.`,
+            );
+          }
+          let uri: string = argumentValue;
+          if (uri.startsWith('<')) {
+            uri = uri.slice(1);
+          }
+          if (uri.endsWith('>')) {
+            uri = uri.slice(0, -1);
+          }
+          try {
+            new URL(uri);
+          } catch {
+            throw new Error(
+              `SparqlUri parameter "${argumentName}" must be a valid URL.`,
+            );
+          }
+          return `<${uri}>`;
+        })
+        .with(LiveCanvasParameterDataType.urlPathSegment, (): string => {
+          if (typeof argumentValue !== 'string') {
+            throw new Error(
+              `UrlPathSegment parameter "${argumentName}" must be a string.`,
+            );
+          }
+          return encodeURIComponent(argumentValue);
+        })
+        .with(LiveCanvasParameterDataType.number, (): string =>
+          JSON.stringify(Number(argumentValue)),
+        )
+        .with(LiveCanvasParameterDataType.json, (): string =>
+          JSON.stringify(
+            typeof argumentValue === 'string'
+              ? JSON.parse(argumentValue)
+              : argumentValue,
+          ),
+        )
+        .with(
+          LiveCanvasParameterDataType.string,
+          LiveCanvasParameterDataType.startDateTime,
+          LiveCanvasParameterDataType.endDateTime,
+          (): string => JSON.stringify(argumentValue),
+        )
+        .exhaustive();
+      result = result.replaceAll(`$${argumentName}`, (): string => stringValue);
     }
     return result;
-  }
-
-  private _isSparqlURI(input: string): boolean {
-    if (!input.startsWith('<')) {
-      return false;
-    }
-    if (!input.endsWith('>')) {
-      return false;
-    }
-    try {
-      const url: string = input.slice(1, input.length - 1);
-      new URL(url);
-      return true;
-    } catch {
-      return false;
-    }
   }
 
   private _encodeBase64(input: string): string {

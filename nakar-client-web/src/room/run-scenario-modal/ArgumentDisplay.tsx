@@ -33,8 +33,23 @@ export function ArgumentDisplay(props: {
 
   const argumentValueIsValid: boolean = (() => {
     return match(parameter.dataType)
-      .with("string", () => {
+      .with("string", "urlPathSegment", () => {
         return true;
+      })
+      .with("sparqlUri", () => {
+        let uri = argumentValue;
+        if (uri.startsWith("<")) {
+          uri = uri.slice(1);
+        }
+        if (uri.endsWith(">")) {
+          uri = uri.slice(0, -1);
+        }
+        try {
+          new URL(uri);
+          return true;
+        } catch {
+          return false;
+        }
       })
       .with("number", () => {
         return !isNaN(Number(argumentValue));

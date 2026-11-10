@@ -1,3 +1,4 @@
+import type { LiveCanvasArgument } from '../../../live-canvas/graph/LiveCanvasArgument';
 import { SSet } from '../../../../packages/set/Set';
 import type { ExternalGraphDatabase } from '../../ExternalGraphDatabase';
 import type { ExternalGraphDatabaseCredentials } from '../../data/ExternalGraphDatabaseCredentials';
@@ -34,7 +35,7 @@ export class WikidataExternalDatabase implements ExternalGraphDatabase {
   public async executeQuery(
     credentials: ExternalGraphDatabaseCredentials,
     query: string,
-    queryArguments: Record<string, unknown>,
+    queryArguments: LiveCanvasArgument[],
     limitConfig: ExternalGraphDatabaseQueryLimitConfig,
   ): Promise<ExternalGraphDatabaseQueryResult> {
     const result: ExternalGraphDatabaseQueryResult =

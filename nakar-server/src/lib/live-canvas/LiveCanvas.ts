@@ -1,3 +1,5 @@
+import { LiveCanvasArgument } from './graph/LiveCanvasArgument';
+import { LiveCanvasParameter } from './graph/LiveCanvasParameter';
 import { SMap } from '../../packages/map/Map';
 import type { LiveCanvasUndoableData } from './data/LiveCanvasUndoableData';
 import type { Observable, Subscription } from 'rxjs';
@@ -478,6 +480,26 @@ export class LiveCanvas {
         const parameters: Modules.Documents.Result<'api::query-parameter.query-parameter'>[] =
           await this._database.getParametersOfScenario(scenario);
 
+        const queryArguments: LiveCanvasArgument[] = params.arguments
+          .map((value: string, identifier: string): LiveCanvasArgument => {
+            const parameter:
+              | Modules.Documents.Result<'api::query-parameter.query-parameter'>
+              | undefined = parameters.find(
+              (
+                entry: Modules.Documents.Result<'api::query-parameter.query-parameter'>,
+              ): boolean => entry.identifier === identifier,
+            );
+            if (parameter == null) {
+              throw new Error(`Parameter ${identifier} not found.`);
+            }
+            return new LiveCanvasArgument({
+              identifier: identifier,
+              value: value,
+              dataType: LiveCanvasParameter.fromDb(parameter).dataType,
+            });
+          })
+          .toValueArray();
+
         const tableData: SMap<string, unknown>[] = [];
         const graphElementsList: ExternalGraphDatabaseQueryResult[] = [];
 
@@ -497,33 +519,11 @@ export class LiveCanvas {
             );
           }
 
-          const argsForQuery: Record<string, unknown> = params.arguments
-            .map((value: string, identifier: string): unknown => {
-              const parameter: Modules.Documents.Result<'api::query-parameter.query-parameter'> | null =
-                parameters.find(
-                  (
-                    p: Modules.Documents.Result<'api::query-parameter.query-parameter'>,
-                  ): boolean => p.identifier === identifier,
-                ) ?? null;
-              if (parameter == null) {
-                throw new Error(`Parameter ${identifier} not found.`);
-              }
-              return match(parameter.dataType)
-                .with(P.nullish, (): string => value)
-                .with('string', (): string => value)
-                .with('number', (): number => Number(value))
-                .with('json', (): unknown => JSON.parse(value))
-                .with('startDateTime', (): string => value) // TODO: Validate format YYYY-MM-DDTHH:mm:ss
-                .with('endDateTime', (): string => value) // TODO YYYY-MM-DDTHH:mm:ss
-                .exhaustive();
-            })
-            .toRecord();
-
           const graphElements: ExternalGraphDatabaseQueryResult =
             await this._externalGraphDatabase.executeQuery(
               database,
               query.query,
-              argsForQuery,
+              queryArguments,
               new ExternalGraphDatabaseQueryLimitConfig(
                 ExternalGraphDatabaseQueryLimitConfigType.default,
                 query.isTableQuery === true
@@ -1147,7 +1147,7 @@ export class LiveCanvas {
           await this._externalGraphDatabase.executeQuery(
             database,
             params.query,
-            {},
+            [],
             new ExternalGraphDatabaseQueryLimitConfig(
               ExternalGraphDatabaseQueryLimitConfigType.default,
               ExternalGraphDatabaseQueryLimitConfigCollectionType.graphElements,
