@@ -37,12 +37,13 @@ export function ArgumentDisplay(props: {
         return true;
       })
       .with("sparqlUri", () => {
-        let uri = argumentValue;
-        if (uri.startsWith("<")) {
-          uri = uri.slice(1);
-        }
-        if (uri.endsWith(">")) {
-          uri = uri.slice(0, -1);
+        const uri =
+          argumentValue.startsWith("<") && argumentValue.endsWith(">")
+            ? argumentValue.slice(1, -1)
+            : argumentValue;
+        // eslint-disable-next-line no-control-regex -- SPARQL IRIREF forbids control characters.
+        if (/[\u0000-\u0020<>"{}|^`\\]/u.test(uri)) {
+          return false;
         }
         try {
           new URL(uri);

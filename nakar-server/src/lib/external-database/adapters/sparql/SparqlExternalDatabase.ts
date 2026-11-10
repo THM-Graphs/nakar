@@ -1,3 +1,4 @@
+import { IriValidationStrategy, validateIri } from 'validate-iri';
 import type { LiveCanvasArgument } from '../../../live-canvas/graph/LiveCanvasArgument';
 import { LiveCanvasParameterDataType } from '../../../live-canvas/graph/LiveCanvasParameterDataType';
 import { SMap } from '../../../../packages/map/Map';
@@ -996,28 +997,9 @@ WHERE {
       const argumentValue: unknown = argument.value;
       const dataType: LiveCanvasParameterDataType = argument.dataType;
       const stringValue: string = match(dataType)
-        .with(LiveCanvasParameterDataType.sparqlUri, (): string => {
-          if (typeof argumentValue !== 'string') {
-            throw new Error(
-              `SparqlUri parameter "${argumentName}" must be a string.`,
-            );
-          }
-          let uri: string = argumentValue;
-          if (uri.startsWith('<')) {
-            uri = uri.slice(1);
-          }
-          if (uri.endsWith('>')) {
-            uri = uri.slice(0, -1);
-          }
-          try {
-            new URL(uri);
-          } catch {
-            throw new Error(
-              `SparqlUri parameter "${argumentName}" must be a valid URL.`,
-            );
-          }
-          return `<${uri}>`;
-        })
+        .with(LiveCanvasParameterDataType.sparqlUri, (): string =>
+          this._serializeSparqlUri(argumentValue, argumentName),
+        )
         .with(LiveCanvasParameterDataType.urlPathSegment, (): string => {
           if (typeof argumentValue !== 'string') {
             throw new Error(
@@ -1046,6 +1028,24 @@ WHERE {
       result = result.replaceAll(`$${argumentName}`, (): string => stringValue);
     }
     return result;
+  }
+
+  private _serializeSparqlUri(value: unknown, identifier: string): string {
+    if (typeof value !== 'string') {
+      throw new Error(`SparqlUri parameter "${identifier}" must be a string.`);
+    }
+    const uri: string =
+      value.startsWith('<') && value.endsWith('>') ? value.slice(1, -1) : value;
+
+    const error: Error | null =
+      validateIri(uri, IriValidationStrategy.Strict) ?? null;
+    if (error != null) {
+      throw new Error(
+        `SparqlUri parameter "${identifier}" must be a valid IRI.`,
+        { cause: error },
+      );
+    }
+    return `<${uri}>`;
   }
 
   private _encodeBase64(input: string): string {
