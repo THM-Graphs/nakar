@@ -527,17 +527,13 @@ ORDER BY lcount DESC, label ASC`,
       const identifier: string = argument.identifier;
       const value: unknown = argument.value;
       result[identifier] = match(argument.dataType)
-        .with(LiveCanvasParameterDataType.sparqlUri, (): never => {
-          throw new Error(
-            `Neo4j does not support SparqlUri parameter "${identifier}".`,
-          );
-        })
         .with(LiveCanvasParameterDataType.number, (): number => Number(value))
         .with(LiveCanvasParameterDataType.json, (): unknown =>
           typeof value === 'string' ? JSON.parse(value) : value,
         )
         .with(
           LiveCanvasParameterDataType.string,
+          LiveCanvasParameterDataType.sparqlUri,
           LiveCanvasParameterDataType.urlPathSegment,
           LiveCanvasParameterDataType.startDateTime,
           LiveCanvasParameterDataType.endDateTime,
