@@ -1,7 +1,8 @@
 export interface SanitizedConfig {
   publicUrl: string;
   allowedOrigins: string[];
-  port: number;
+  strapiPort: number;
+  apiPort: number;
   host: string;
   version: string;
   encryptionKeysPath: string;

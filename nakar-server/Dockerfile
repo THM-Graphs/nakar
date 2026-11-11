@@ -38,7 +38,7 @@ HEALTHCHECK \
     --timeout=5s \
     --start-period=120s \
     --start-interval=5s \
-    CMD wget -O - -S http://127.0.0.1:80/_health
+    CMD wget -O - -S "http://127.0.0.1:${STRAPI_PORT:-80}/_health"
 
 ENV NODE_ENV=production
 

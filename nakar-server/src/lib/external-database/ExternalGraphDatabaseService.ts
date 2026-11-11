@@ -1,3 +1,4 @@
+import type { LiveCanvasArgument } from '../live-canvas/graph/LiveCanvasArgument';
 import { Injectable, OnModuleDestroy } from '@nestjs/common';
 import type { Modules } from '@strapi/types';
 import { SMap } from '../../packages/map/Map';
@@ -86,7 +87,7 @@ export class ExternalGraphDatabaseService implements OnModuleDestroy {
   public async executeQuery(
     database: Modules.Documents.Result<'api::database-connection.database-connection'>,
     query: string,
-    queryArguments: Record<string, unknown>,
+    queryArguments: LiveCanvasArgument[],
     limitConfig: ExternalGraphDatabaseQueryLimitConfig,
   ): Promise<ExternalGraphDatabaseQueryResult> {
     const credentials: ExternalGraphDatabaseCredentials =

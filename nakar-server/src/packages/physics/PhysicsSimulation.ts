@@ -11,7 +11,7 @@ import type { PhysicsSimulationEventSlowTick } from './PhysicsSimulationEventSlo
 export class PhysicsSimulation {
   public static readonly maximumVelocity: number = 2000;
   public static readonly maximumForce: number = 300;
-  public static readonly FPS: number = 16;
+  public static readonly fps: number = 16;
   public static readonly cooldownTime: number = 1000;
   public static readonly frictionFactor: number = 0.4;
   public static readonly targetPhysicsTickDuration: number = 15;
@@ -45,7 +45,7 @@ export class PhysicsSimulation {
   }
 
   private get _targetSlowTickDuration(): number {
-    return (1 / PhysicsSimulation.FPS) * 1000;
+    return (1 / PhysicsSimulation.fps) * 1000;
   }
 
   public static jiggle(node: PhysicalNode): void {

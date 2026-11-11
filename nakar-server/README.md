@@ -67,7 +67,8 @@ To allow login and access to the current user endpoint, update the Users & Permi
 
 #### 7. API documentation
 
-The OpenAPI documentation is served by the Nest application on the port after the Strapi port. With the default local setup, it is available at:
+The OpenAPI documentation is served by the Nest application on `API_PORT`.
+With the local `.env.example` setup, it is available at:
 
 http://localhost:1338/api/docs
 

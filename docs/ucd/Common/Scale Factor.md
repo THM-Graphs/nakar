@@ -1,0 +1,4 @@
+- linear  
+- log10  
+- logn  
+- log2

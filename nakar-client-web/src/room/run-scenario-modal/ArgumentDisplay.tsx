@@ -33,8 +33,24 @@ export function ArgumentDisplay(props: {
 
   const argumentValueIsValid: boolean = (() => {
     return match(parameter.dataType)
-      .with("string", () => {
+      .with("string", "urlPathSegment", () => {
         return true;
+      })
+      .with("sparqlUri", () => {
+        const uri =
+          argumentValue.startsWith("<") && argumentValue.endsWith(">")
+            ? argumentValue.slice(1, -1)
+            : argumentValue;
+        // eslint-disable-next-line no-control-regex -- SPARQL IRIREF forbids control characters.
+        if (/[\u0000-\u0020<>"{}|^`\\]/u.test(uri)) {
+          return false;
+        }
+        try {
+          new URL(uri);
+          return true;
+        } catch {
+          return false;
+        }
       })
       .with("number", () => {
         return !isNaN(Number(argumentValue));

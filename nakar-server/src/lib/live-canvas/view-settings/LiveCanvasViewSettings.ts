@@ -15,6 +15,9 @@ import { LiveCanvasViewSettingsResolver } from './LiveCanvasViewSettingsResolver
 import { LiveCanvasViewSettingsValidator } from './LiveCanvasViewSettingsValidator';
 import { liveCanvasViewSettingsSchema } from './liveCanvasViewSettingsSchema';
 import type { LiveCanvasViewSettingsState } from './LiveCanvasViewSettingsState';
+import { LiveCanvasLabelViewSettingsColorIndexDto } from '../../schema/dtos/LiveCanvasLabelViewSettingsColorIndexDto';
+import { LiveCanvasEdgeViewSettingsColorIndexDto } from '../../schema/dtos/LiveCanvasEdgeViewSettingsColorIndexDto';
+import { match } from 'ts-pattern';
 
 /**
  * Helper object that keeps the composed view settings collaborators together.
@@ -345,7 +348,38 @@ export class LiveCanvasViewSettings {
             this.getLabelSettings(label);
           return {
             label: label,
-            colorIndex: viewSetting.colorIndex,
+            colorIndex: match(viewSetting.colorIndex)
+              .with(
+                0,
+                (): LiveCanvasLabelViewSettingsColorIndexDto =>
+                  LiveCanvasLabelViewSettingsColorIndexDto._0,
+              )
+              .with(
+                1,
+                (): LiveCanvasLabelViewSettingsColorIndexDto =>
+                  LiveCanvasLabelViewSettingsColorIndexDto._1,
+              )
+              .with(
+                2,
+                (): LiveCanvasLabelViewSettingsColorIndexDto =>
+                  LiveCanvasLabelViewSettingsColorIndexDto._2,
+              )
+              .with(
+                3,
+                (): LiveCanvasLabelViewSettingsColorIndexDto =>
+                  LiveCanvasLabelViewSettingsColorIndexDto._3,
+              )
+              .with(
+                4,
+                (): LiveCanvasLabelViewSettingsColorIndexDto =>
+                  LiveCanvasLabelViewSettingsColorIndexDto._4,
+              )
+              .with(
+                5,
+                (): LiveCanvasLabelViewSettingsColorIndexDto =>
+                  LiveCanvasLabelViewSettingsColorIndexDto._5,
+              )
+              .exhaustive(),
             customRadius: viewSetting.customRadius,
             radius: viewSetting.radius,
             titleProperty: viewSetting.titleProperty,
@@ -361,7 +395,38 @@ export class LiveCanvasViewSettings {
             edgeType: edgeType,
             width: viewSetting.width,
             customWidth: viewSetting.customWidth,
-            colorIndex: viewSetting.colorIndex,
+            colorIndex: match(viewSetting.colorIndex)
+              .with(
+                0,
+                (): LiveCanvasEdgeViewSettingsColorIndexDto =>
+                  LiveCanvasEdgeViewSettingsColorIndexDto._0,
+              )
+              .with(
+                1,
+                (): LiveCanvasEdgeViewSettingsColorIndexDto =>
+                  LiveCanvasEdgeViewSettingsColorIndexDto._1,
+              )
+              .with(
+                2,
+                (): LiveCanvasEdgeViewSettingsColorIndexDto =>
+                  LiveCanvasEdgeViewSettingsColorIndexDto._2,
+              )
+              .with(
+                3,
+                (): LiveCanvasEdgeViewSettingsColorIndexDto =>
+                  LiveCanvasEdgeViewSettingsColorIndexDto._3,
+              )
+              .with(
+                4,
+                (): LiveCanvasEdgeViewSettingsColorIndexDto =>
+                  LiveCanvasEdgeViewSettingsColorIndexDto._4,
+              )
+              .with(
+                5,
+                (): LiveCanvasEdgeViewSettingsColorIndexDto =>
+                  LiveCanvasEdgeViewSettingsColorIndexDto._5,
+              )
+              .exhaustive(),
             customColor: viewSetting.customColor,
           } satisfies LiveCanvasEdgeViewSettingsDto;
         },
