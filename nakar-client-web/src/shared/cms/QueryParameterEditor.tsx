@@ -143,7 +143,9 @@ export function QueryParameterEditor(props: {
                     overlay={
                       <Tooltip>
                         Control how the system interprets a value and how it is
-                        provided in the query. Use JSON to provide arrays.
+                        provided in the query. Use JSON to provide arrays. Use
+                        SPARQL URI for a full URI, with optional angle brackets,
+                        or URL Path Segment for text that should be URL-encoded.
                       </Tooltip>
                     }
                   >
@@ -181,6 +183,20 @@ export function QueryParameterEditor(props: {
                     }
                   >
                     JSON
+                  </option>
+                  <option
+                    value={
+                      "sparqlUri" satisfies UpdateScenarioQueryParameterEntryDto["dataType"]
+                    }
+                  >
+                    SPARQL URI
+                  </option>
+                  <option
+                    value={
+                      "urlPathSegment" satisfies UpdateScenarioQueryParameterEntryDto["dataType"]
+                    }
+                  >
+                    URL Path Segment
                   </option>
                   <option
                     value={

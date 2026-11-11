@@ -96,6 +96,16 @@ export class LiveCanvasParameter {
           (): LiveCanvasParameterDataType => LiveCanvasParameterDataType.json,
         )
         .with(
+          'sparqlUri',
+          (): LiveCanvasParameterDataType =>
+            LiveCanvasParameterDataType.sparqlUri,
+        )
+        .with(
+          'urlPathSegment',
+          (): LiveCanvasParameterDataType =>
+            LiveCanvasParameterDataType.urlPathSegment,
+        )
+        .with(
           'startDateTime',
           (): LiveCanvasParameterDataType =>
             LiveCanvasParameterDataType.startDateTime,
