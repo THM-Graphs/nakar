@@ -1,3 +1,4 @@
+import type { LiveCanvasArgument } from '../live-canvas/graph/LiveCanvasArgument';
 import type { SSet } from '../../packages/set/Set';
 import type { ExternalGraphDatabaseCredentials } from './data/ExternalGraphDatabaseCredentials';
 import type { ExternalGraphDatabaseQueryResult } from './data/ExternalGraphDatabaseQueryResult';
@@ -13,7 +14,7 @@ export interface ExternalGraphDatabase {
   executeQuery(
     credentials: ExternalGraphDatabaseCredentials,
     query: string,
-    queryArguments: Record<string, unknown>,
+    queryArguments: LiveCanvasArgument[],
     limitConfig: ExternalGraphDatabaseQueryLimitConfig,
   ): Promise<ExternalGraphDatabaseQueryResult>;
 

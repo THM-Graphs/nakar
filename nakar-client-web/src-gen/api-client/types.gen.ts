@@ -80,7 +80,7 @@ export type ScenarioParameterDto = {
     identifier: string;
     title: string;
     defaultValue: string | null;
-    dataType: 'string' | 'number' | 'json' | 'startDateTime' | 'endDateTime';
+    dataType: 'string' | 'number' | 'json' | 'sparqlUri' | 'urlPathSegment' | 'startDateTime' | 'endDateTime';
     allowedLabels: Array<string>;
 };
 
@@ -180,7 +180,7 @@ export type UpdateScenarioQueryParameterEntryDto = {
     identifier: string;
     title: string;
     defaultValue: string;
-    dataType: 'string' | 'number' | 'json' | 'startDateTime' | 'endDateTime';
+    dataType: 'string' | 'number' | 'json' | 'sparqlUri' | 'urlPathSegment' | 'startDateTime' | 'endDateTime';
     allowedLabels: Array<string>;
 };
 

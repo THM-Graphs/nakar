@@ -1,3 +1,6 @@
+import { LiveCanvasArgument } from '../../../live-canvas/graph/LiveCanvasArgument';
+import { LiveCanvasParameterDataType } from '../../../live-canvas/graph/LiveCanvasParameterDataType';
+import { match } from 'ts-pattern';
 import type {
   Driver,
   Record as Neo4jRecord,
@@ -52,9 +55,12 @@ export class Neo4jExternalDatabase implements ExternalGraphDatabase {
   public async executeQuery(
     credentials: ExternalGraphDatabaseCredentials,
     query: string,
-    queryArguments: Record<string, unknown>,
+    queryArguments: LiveCanvasArgument[],
     limitConfig: ExternalGraphDatabaseQueryLimitConfig,
   ): Promise<ExternalGraphDatabaseQueryResult> {
+    const argsForQuery: Record<string, unknown> =
+      this._createQueryArguments(queryArguments);
+
     const driver: Driver = this._getDriver(credentials);
 
     const sessionConfig: SessionConfig = {
@@ -65,7 +71,7 @@ export class Neo4jExternalDatabase implements ExternalGraphDatabase {
 
     try {
       this._logger.debug(
-        `Will run query: ${query} with data: ${JSON.stringify(queryArguments).length.toString()} bytes`,
+        `Will run query: ${query} with data: ${JSON.stringify(argsForQuery).length.toString()} bytes`,
       );
 
       const factory: Neo4jGraphElementsFactory = new Neo4jGraphElementsFactory(
@@ -74,7 +80,7 @@ export class Neo4jExternalDatabase implements ExternalGraphDatabase {
       await new Promise<void>(
         (resolve: () => void, reject: (error: Error) => void): void => {
           session
-            .run<RecordShape<string, unknown>>(query, queryArguments, {
+            .run<RecordShape<string, unknown>>(query, argsForQuery, {
               timeout: 2 * 60000,
             })
             .subscribe({
@@ -135,9 +141,13 @@ export class Neo4jExternalDatabase implements ExternalGraphDatabase {
     return await this.executeQuery(
       credentials,
       `MATCH (a)-[additionalRelationship]->(b) WHERE elementId(a) IN $existingNodeIds AND elementId(b) IN $existingNodeIds RETURN DISTINCT additionalRelationship LIMIT ${ExternalGraphDatabaseQueryLimitConfig.maximalElements.toString()};`,
-      {
-        existingNodeIds: nodeIds.toArray(),
-      },
+      [
+        new LiveCanvasArgument({
+          identifier: 'existingNodeIds',
+          value: nodeIds.toArray(),
+          dataType: LiveCanvasParameterDataType.json,
+        }),
+      ],
       new ExternalGraphDatabaseQueryLimitConfig(
         ExternalGraphDatabaseQueryLimitConfigType.default,
         ExternalGraphDatabaseQueryLimitConfigCollectionType.graphElements,
@@ -161,11 +171,23 @@ export class Neo4jExternalDatabase implements ExternalGraphDatabase {
         AND (type(additionalRelationship) in $relationships OR ANY(label IN labels(b) WHERE label IN $labels))
         RETURN additionalRelationship, b
         LIMIT ${ExternalGraphDatabaseQueryLimitConfig.maximalElements.toString()};`,
-        {
-          nodeIds: nodeIds.toArray(),
-          relationships: limit.relationships.toArray(),
-          labels: limit.labels.toArray(),
-        },
+        [
+          new LiveCanvasArgument({
+            identifier: 'nodeIds',
+            value: nodeIds.toArray(),
+            dataType: LiveCanvasParameterDataType.json,
+          }),
+          new LiveCanvasArgument({
+            identifier: 'relationships',
+            value: limit.relationships.toArray(),
+            dataType: LiveCanvasParameterDataType.json,
+          }),
+          new LiveCanvasArgument({
+            identifier: 'labels',
+            value: limit.labels.toArray(),
+            dataType: LiveCanvasParameterDataType.json,
+          }),
+        ],
         new ExternalGraphDatabaseQueryLimitConfig(
           ExternalGraphDatabaseQueryLimitConfigType.default,
           ExternalGraphDatabaseQueryLimitConfigCollectionType.graphElements,
@@ -175,9 +197,13 @@ export class Neo4jExternalDatabase implements ExternalGraphDatabase {
       return await this.executeQuery(
         credentials,
         `MATCH (a)-[additionalRelationship]-(b) WHERE elementId(a) IN $nodeIds RETURN additionalRelationship, b LIMIT ${ExternalGraphDatabaseQueryLimitConfig.maximalPreviewElements.toString()};`,
-        {
-          nodeIds: nodeIds.toArray(),
-        },
+        [
+          new LiveCanvasArgument({
+            identifier: 'nodeIds',
+            value: nodeIds.toArray(),
+            dataType: LiveCanvasParameterDataType.json,
+          }),
+        ],
         new ExternalGraphDatabaseQueryLimitConfig(
           ExternalGraphDatabaseQueryLimitConfigType.preview,
           ExternalGraphDatabaseQueryLimitConfigCollectionType.graphElements,
@@ -200,9 +226,13 @@ export class Neo4jExternalDatabase implements ExternalGraphDatabase {
 WHERE elementId(a) IN $nodeIds AND a <> b
 RETURN type(neighbor) AS rtype, count(*) AS rcount
 ORDER BY rcount DESC, rtype ASC`,
-        {
-          nodeIds: nodeIds.toArray(),
-        },
+        [
+          new LiveCanvasArgument({
+            identifier: 'nodeIds',
+            value: nodeIds.toArray(),
+            dataType: LiveCanvasParameterDataType.json,
+          }),
+        ],
         new ExternalGraphDatabaseQueryLimitConfig(
           ExternalGraphDatabaseQueryLimitConfigType.default,
           ExternalGraphDatabaseQueryLimitConfigCollectionType.tableData,
@@ -215,9 +245,13 @@ WHERE elementId(a) IN $nodeIds AND a <> b
 UNWIND labels(b) as label
 RETURN label, count(*) AS lcount
 ORDER BY lcount DESC, label ASC`,
-        {
-          nodeIds: nodeIds.toArray(),
-        },
+        [
+          new LiveCanvasArgument({
+            identifier: 'nodeIds',
+            value: nodeIds.toArray(),
+            dataType: LiveCanvasParameterDataType.json,
+          }),
+        ],
         new ExternalGraphDatabaseQueryLimitConfig(
           ExternalGraphDatabaseQueryLimitConfigType.default,
           ExternalGraphDatabaseQueryLimitConfigCollectionType.tableData,
@@ -259,7 +293,7 @@ ORDER BY lcount DESC, label ASC`,
     await this.executeQuery(
       credentials,
       'MATCH (n) RETURN elementId(n) LIMIT 1;',
-      {},
+      [],
       new ExternalGraphDatabaseQueryLimitConfig(
         ExternalGraphDatabaseQueryLimitConfigType.preview,
         ExternalGraphDatabaseQueryLimitConfigCollectionType.tableData,
@@ -279,7 +313,7 @@ ORDER BY lcount DESC, label ASC`,
     const result: ExternalGraphDatabaseQueryResult = await this.executeQuery(
       credentials,
       'SHOW INDEXES',
-      {},
+      [],
       new ExternalGraphDatabaseQueryLimitConfig(
         ExternalGraphDatabaseQueryLimitConfigType.default,
         ExternalGraphDatabaseQueryLimitConfigCollectionType.tableData,
@@ -348,9 +382,13 @@ ORDER BY lcount DESC, label ASC`,
       await this.getSearchCapabilities(credentials);
 
     const queries: string[] = [];
-    const data: Record<string, unknown> = {
-      searchTerm: searchTerm,
-    };
+    const data: LiveCanvasArgument[] = [
+      new LiveCanvasArgument({
+        identifier: 'searchTerm',
+        value: searchTerm,
+        dataType: LiveCanvasParameterDataType.string,
+      }),
+    ];
     const limit: ExternalGraphDatabaseQueryLimitConfig =
       new ExternalGraphDatabaseQueryLimitConfig(
         ExternalGraphDatabaseQueryLimitConfigType.preview,
@@ -398,7 +436,13 @@ ORDER BY lcount DESC, label ASC`,
     return await this.executeQuery(
       credentials,
       'MATCH (n) WHERE elementId(n) = $id RETURN n LIMIT 1;',
-      { id: nativeNodeId },
+      [
+        new LiveCanvasArgument({
+          identifier: 'id',
+          value: nativeNodeId,
+          dataType: LiveCanvasParameterDataType.string,
+        }),
+      ],
       new ExternalGraphDatabaseQueryLimitConfig(
         ExternalGraphDatabaseQueryLimitConfigType.default,
         ExternalGraphDatabaseQueryLimitConfigCollectionType.graphElements,
@@ -414,10 +458,18 @@ ORDER BY lcount DESC, label ASC`,
     return await this.executeQuery(
       credentials,
       'MATCH (n) WHERE elementId(n) IN $nodeIds OPTIONAL MATCH (n)-[r]-(neighbor) WHERE elementId(neighbor) in $neighbors RETURN n, r',
-      {
-        nodeIds: nodeIds.toArray(),
-        neighbors: neighbors.toArray(),
-      },
+      [
+        new LiveCanvasArgument({
+          identifier: 'nodeIds',
+          value: nodeIds.toArray(),
+          dataType: LiveCanvasParameterDataType.json,
+        }),
+        new LiveCanvasArgument({
+          identifier: 'neighbors',
+          value: neighbors.toArray(),
+          dataType: LiveCanvasParameterDataType.json,
+        }),
+      ],
       new ExternalGraphDatabaseQueryLimitConfig(
         ExternalGraphDatabaseQueryLimitConfigType.default,
         ExternalGraphDatabaseQueryLimitConfigCollectionType.graphElements,
@@ -432,9 +484,13 @@ ORDER BY lcount DESC, label ASC`,
     return await this.executeQuery(
       credentials,
       'MATCH (a)-[r]-(b) WHERE elementId(r) IN $relationshipIds RETURN r',
-      {
-        relationshipIds: relationshipIds,
-      },
+      [
+        new LiveCanvasArgument({
+          identifier: 'relationshipIds',
+          value: relationshipIds,
+          dataType: LiveCanvasParameterDataType.json,
+        }),
+      ],
       new ExternalGraphDatabaseQueryLimitConfig(
         ExternalGraphDatabaseQueryLimitConfigType.default,
         ExternalGraphDatabaseQueryLimitConfigCollectionType.graphElements,
@@ -449,14 +505,43 @@ ORDER BY lcount DESC, label ASC`,
     return await this.executeQuery(
       credentials,
       'MATCH (a), (b) WHERE elementId(a) IN $nodeIds AND elementId(b) IN $nodeIds AND a <> b MATCH p = allShortestPaths((a)-[*]-(b)) RETURN p',
-      {
-        nodeIds: nodeIds.toArray(),
-      },
+      [
+        new LiveCanvasArgument({
+          identifier: 'nodeIds',
+          value: nodeIds.toArray(),
+          dataType: LiveCanvasParameterDataType.json,
+        }),
+      ],
       new ExternalGraphDatabaseQueryLimitConfig(
         ExternalGraphDatabaseQueryLimitConfigType.default,
         ExternalGraphDatabaseQueryLimitConfigCollectionType.graphElements,
       ),
     );
+  }
+
+  private _createQueryArguments(
+    queryArguments: LiveCanvasArgument[],
+  ): Record<string, unknown> {
+    const result: Record<string, unknown> = {};
+    for (const argument of queryArguments) {
+      const identifier: string = argument.identifier;
+      const value: unknown = argument.value;
+      result[identifier] = match(argument.dataType)
+        .with(LiveCanvasParameterDataType.number, (): number => Number(value))
+        .with(LiveCanvasParameterDataType.json, (): unknown =>
+          typeof value === 'string' ? JSON.parse(value) : value,
+        )
+        .with(
+          LiveCanvasParameterDataType.string,
+          LiveCanvasParameterDataType.sparqlUri,
+          LiveCanvasParameterDataType.urlPathSegment,
+          LiveCanvasParameterDataType.startDateTime,
+          LiveCanvasParameterDataType.endDateTime,
+          (): unknown => value,
+        )
+        .exhaustive();
+    }
+    return result;
   }
 
   private _hashPassword(password: string | null): string {
@@ -487,7 +572,7 @@ ORDER BY lcount DESC, label ASC`,
       await this.executeQuery(
         credentials,
         'CALL db.labels() YIELD label RETURN label ORDER BY label ASC',
-        {},
+        [],
         new ExternalGraphDatabaseQueryLimitConfig(
           ExternalGraphDatabaseQueryLimitConfigType.default,
           ExternalGraphDatabaseQueryLimitConfigCollectionType.tableData,
@@ -508,7 +593,7 @@ ORDER BY lcount DESC, label ASC`,
       await this.executeQuery(
         credentials,
         'CALL db.relationshipTypes() YIELD relationshipType RETURN relationshipType ORDER BY relationshipType ASC',
-        {},
+        [],
         new ExternalGraphDatabaseQueryLimitConfig(
           ExternalGraphDatabaseQueryLimitConfigType.default,
           ExternalGraphDatabaseQueryLimitConfigCollectionType.tableData,
@@ -564,7 +649,7 @@ ORDER BY lcount DESC, label ASC`,
     const result: ExternalGraphDatabaseQueryResult = await this.executeQuery(
       credentials,
       'MATCH (n) RETURN count(n) AS nodeCount',
-      {},
+      [],
       new ExternalGraphDatabaseQueryLimitConfig(
         ExternalGraphDatabaseQueryLimitConfigType.default,
         ExternalGraphDatabaseQueryLimitConfigCollectionType.tableData,
@@ -583,7 +668,7 @@ ORDER BY lcount DESC, label ASC`,
     const result: ExternalGraphDatabaseQueryResult = await this.executeQuery(
       credentials,
       'MATCH ()-[r]->() RETURN count(r) AS relationshipCount',
-      {},
+      [],
       new ExternalGraphDatabaseQueryLimitConfig(
         ExternalGraphDatabaseQueryLimitConfigType.default,
         ExternalGraphDatabaseQueryLimitConfigCollectionType.tableData,

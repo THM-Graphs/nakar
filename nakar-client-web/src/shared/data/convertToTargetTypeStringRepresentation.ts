@@ -17,5 +17,26 @@ export function convertToTargetTypeStringRepresentation(
         .with(P.boolean, (s) => (s ? "1" : "0"))
         .otherwise((s) => JSON.stringify(s)),
     )
-    .otherwise(() => JSON.stringify(argumentValue));
+    .with("json", () => JSON.stringify(argumentValue))
+    .with("sparqlUri", () =>
+      match(argumentValue)
+        .with(P.string, (s) => s)
+        .otherwise((s) => JSON.stringify(s)),
+    )
+    .with("urlPathSegment", () =>
+      match(argumentValue)
+        .with(P.string, (s) => s)
+        .otherwise((s) => JSON.stringify(s)),
+    )
+    .with("startDateTime", () =>
+      match(argumentValue)
+        .with(P.string, (s) => s)
+        .otherwise((s) => JSON.stringify(s)),
+    )
+    .with("endDateTime", () =>
+      match(argumentValue)
+        .with(P.string, (s) => s)
+        .otherwise((s) => JSON.stringify(s)),
+    )
+    .exhaustive();
 }
