@@ -42,7 +42,11 @@ export class SparqlExternalDatabase implements ExternalGraphDatabase {
   private readonly _logger: Logger;
   private readonly _queryEngine: QueryEngine = new QueryEngine();
 
-  public constructor() {
+  public constructor(
+    private readonly _postProcessNode?: (
+      node: ExternalGraphDatabaseNode,
+    ) => void,
+  ) {
     this._logger = createChildLogger(this);
   }
 
@@ -837,6 +841,7 @@ WHERE {
       properties: this._collectProperties(quadElement),
       source: credentials,
     };
+    this._postProcessNode?.(existingSubjectNode);
     nodes.set(nativeId, existingSubjectNode);
     if (key != null) {
       existingSubjectNode.keys.add(key);

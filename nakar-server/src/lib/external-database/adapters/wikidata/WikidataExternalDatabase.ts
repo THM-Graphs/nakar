@@ -23,7 +23,9 @@ export class WikidataExternalDatabase implements ExternalGraphDatabase {
   private readonly _logger: Logger = createChildLogger(this);
 
   public constructor() {
-    this._sparqlAdapter = new SparqlExternalDatabase();
+    this._sparqlAdapter = new SparqlExternalDatabase(
+      this._postProcessNode.bind(this),
+    );
   }
 
   public equalityHashKey(
@@ -388,5 +390,14 @@ ORDER BY DESC (
         }
       }
     }
+  }
+
+  private _postProcessNode(node: ExternalGraphDatabaseNode): void {
+    const url: URL | null = URL.parse(node.nativeId.slice(1, -1));
+    const qid: string | undefined = url?.pathname.split('/').at(-1);
+    if (qid == null || qid.length === 0) {
+      return;
+    }
+    node.properties['qid'] = qid;
   }
 }
