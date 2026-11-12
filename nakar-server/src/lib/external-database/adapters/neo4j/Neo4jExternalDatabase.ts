@@ -5,7 +5,6 @@ import type {
   Driver,
   Record as Neo4jRecord,
   RecordShape,
-  ResultSummary,
   Session,
 } from 'neo4j-driver';
 import neo4j, { auth, driver as createDriver } from 'neo4j-driver';
@@ -44,6 +43,169 @@ export class Neo4jExternalDatabase implements ExternalGraphDatabase {
   public equalityHashKey(
     credentials: ExternalGraphDatabaseCredentials,
   ): string {
+    try {
+      return this._equalityHashKey(credentials);
+    } catch (error) {
+      return this._logAndRethrow(error);
+    }
+  }
+
+  public async executeQuery(
+    credentials: ExternalGraphDatabaseCredentials,
+    query: string,
+    queryArguments: LiveCanvasArgument[],
+    limitConfig: ExternalGraphDatabaseQueryLimitConfig,
+  ): Promise<ExternalGraphDatabaseQueryResult> {
+    try {
+      return await this._executeQuery(
+        credentials,
+        query,
+        queryArguments,
+        limitConfig,
+      );
+    } catch (error) {
+      return this._logAndRethrow(error);
+    }
+  }
+
+  public async shutdown(): Promise<void> {
+    try {
+      const errors: unknown[] = await this._shutdown();
+      for (const error of errors) {
+        this._logger.error(error);
+      }
+      this._logger.info('Did close all neo4j drivers.');
+    } catch (error) {
+      this._logAndRethrow(error);
+    }
+  }
+
+  public async loadConnectingRelationships(
+    credentials: ExternalGraphDatabaseCredentials,
+    nodeIds: SSet<string>,
+  ): Promise<ExternalGraphDatabaseQueryResult> {
+    try {
+      return await this._loadConnectingRelationships(credentials, nodeIds);
+    } catch (error) {
+      return this._logAndRethrow(error);
+    }
+  }
+
+  public async expandNode(
+    credentials: ExternalGraphDatabaseCredentials,
+    nodeIds: SSet<string>,
+    limit: {
+      relationships: SSet<string>;
+      labels: SSet<string>;
+    } | null,
+  ): Promise<ExternalGraphDatabaseQueryResult> {
+    try {
+      return await this._expandNode(credentials, nodeIds, limit);
+    } catch (error) {
+      return this._logAndRethrow(error);
+    }
+  }
+
+  public async expandNodePreview(
+    credentials: ExternalGraphDatabaseCredentials,
+    nodeIds: SSet<string>,
+  ): Promise<ExternalGraphDatabaseExpandNodePreview> {
+    try {
+      return await this._expandNodePreview(credentials, nodeIds);
+    } catch (error) {
+      return this._logAndRethrow(error);
+    }
+  }
+
+  public async testConnection(
+    credentials: ExternalGraphDatabaseCredentials,
+  ): Promise<void> {
+    try {
+      await this._testConnection(credentials);
+    } catch (error) {
+      this._logAndRethrow(error);
+    }
+  }
+
+  public async getStats(
+    credentials: ExternalGraphDatabaseCredentials,
+  ): Promise<ExternalGraphDatabaseStats> {
+    try {
+      return await this._getStats(credentials);
+    } catch (error) {
+      return this._logAndRethrow(error);
+    }
+  }
+
+  public async getSearchCapabilities(
+    credentials: ExternalGraphDatabaseCredentials,
+  ): Promise<ExternalGraphDatabaseSearchCapabilities> {
+    try {
+      return await this._getSearchCapabilities(credentials);
+    } catch (error) {
+      return this._logAndRethrow(error);
+    }
+  }
+
+  public async search(
+    credentials: ExternalGraphDatabaseCredentials,
+    searchTerm: string,
+  ): Promise<ExternalGraphDatabaseNode[]> {
+    try {
+      return await this._search(credentials, searchTerm);
+    } catch (error) {
+      return this._logAndRethrow(error);
+    }
+  }
+
+  public async findNodeByNativeId(
+    credentials: ExternalGraphDatabaseCredentials,
+    nativeNodeId: string,
+  ): Promise<ExternalGraphDatabaseQueryResult> {
+    try {
+      return await this._findNodeByNativeId(credentials, nativeNodeId);
+    } catch (error) {
+      return this._logAndRethrow(error);
+    }
+  }
+
+  public async expandClusterNode(
+    credentials: ExternalGraphDatabaseCredentials,
+    nodeIds: SSet<string>,
+    neighbors: SSet<string>,
+  ): Promise<ExternalGraphDatabaseQueryResult> {
+    try {
+      return await this._expandClusterNode(credentials, nodeIds, neighbors);
+    } catch (error) {
+      return this._logAndRethrow(error);
+    }
+  }
+
+  public async findRelationshipsByIds(
+    credentials: ExternalGraphDatabaseCredentials,
+    relationshipIds: string[],
+  ): Promise<ExternalGraphDatabaseQueryResult> {
+    try {
+      return await this._findRelationshipsByIds(credentials, relationshipIds);
+    } catch (error) {
+      return this._logAndRethrow(error);
+    }
+  }
+
+  public async findShortestPath(
+    credentials: ExternalGraphDatabaseCredentials,
+    nodeIds: SSet<string>,
+  ): Promise<ExternalGraphDatabaseQueryResult> {
+    try {
+      return await this._findShortestPath(credentials, nodeIds);
+    } catch (error) {
+      return this._logAndRethrow(error);
+    }
+  }
+
+  protected _equalityHashKey(
+    credentials: ExternalGraphDatabaseCredentials,
+  ): string {
     return JSON.stringify([
       credentials.databaseType,
       credentials.connectionUrl,
@@ -52,7 +214,7 @@ export class Neo4jExternalDatabase implements ExternalGraphDatabase {
     ]);
   }
 
-  public async executeQuery(
+  protected async _executeQuery(
     credentials: ExternalGraphDatabaseCredentials,
     query: string,
     queryArguments: LiveCanvasArgument[],
@@ -70,10 +232,6 @@ export class Neo4jExternalDatabase implements ExternalGraphDatabase {
     const session: Session = driver.session(sessionConfig);
 
     try {
-      this._logger.debug(
-        `Will run query: ${query} with data: ${JSON.stringify(argsForQuery).length.toString()} bytes`,
-      );
-
       const factory: Neo4jGraphElementsFactory = new Neo4jGraphElementsFactory(
         limitConfig,
       );
@@ -93,52 +251,40 @@ export class Neo4jExternalDatabase implements ExternalGraphDatabase {
                   factory.collectRecord(record, credentials);
                 }
               },
-              onCompleted: (result: ResultSummary): void => {
-                this._logger.debug(JSON.stringify(result));
-                resolve();
-              },
-              onError: (error: Error): void => {
-                reject(error);
-              },
+              onCompleted: resolve,
+              onError: reject,
             });
         },
       );
 
-      const result: ExternalGraphDatabaseQueryResult = factory.getResult();
-      this._logger.debug(
-        `Did receive ${result.size.toString()} graph elements.`,
-      );
-
-      return result;
-    } catch (error) {
-      this._logger.error(error);
-      throw error;
+      return factory.getResult();
     } finally {
-      await session.close().catch((err: unknown): void => {
-        this._logger.error(err);
-      });
+      try {
+        await session.close();
+      } catch {
+        // Preserve the query outcome if session cleanup fails.
+      }
     }
   }
 
-  public async shutdown(): Promise<void> {
-    for (const [id, driver] of this._driverPool.toArray()) {
-      this._logger.info(`Closing neo4j driver: ${id}`);
-      await driver.close().catch((error: unknown): void => {
-        this._logger.error(error);
-      });
+  protected async _shutdown(): Promise<unknown[]> {
+    const errors: unknown[] = [];
+    for (const driver of this._driverPool.toValueArray()) {
+      try {
+        await driver.close();
+      } catch (error) {
+        errors.push(error);
+      }
     }
     this._driverPool.clear();
-    this._logger.info(`Did close all neo4j drivers.`);
+    return errors;
   }
 
-  public async loadConnectingRelationships(
+  protected async _loadConnectingRelationships(
     credentials: ExternalGraphDatabaseCredentials,
     nodeIds: SSet<string>,
   ): Promise<ExternalGraphDatabaseQueryResult> {
-    this._logger.info(
-      `Will load connecting relationships of ${nodeIds.size.toString()} nodes`,
-    );
-    return await this.executeQuery(
+    return await this._executeQuery(
       credentials,
       `MATCH (a)-[additionalRelationship]->(b) WHERE elementId(a) IN $existingNodeIds AND elementId(b) IN $existingNodeIds RETURN DISTINCT additionalRelationship LIMIT ${ExternalGraphDatabaseQueryLimitConfig.maximalElements.toString()};`,
       [
@@ -155,7 +301,7 @@ export class Neo4jExternalDatabase implements ExternalGraphDatabase {
     );
   }
 
-  public async expandNode(
+  protected async _expandNode(
     credentials: ExternalGraphDatabaseCredentials,
     nodeIds: SSet<string>,
     limit: {
@@ -164,7 +310,7 @@ export class Neo4jExternalDatabase implements ExternalGraphDatabase {
     } | null,
   ): Promise<ExternalGraphDatabaseQueryResult> {
     if (limit) {
-      return await this.executeQuery(
+      return await this._executeQuery(
         credentials,
         `MATCH (a)-[additionalRelationship]-(b)
         WHERE elementId(a) IN $nodeIds
@@ -194,7 +340,7 @@ export class Neo4jExternalDatabase implements ExternalGraphDatabase {
         ),
       );
     } else {
-      return await this.executeQuery(
+      return await this._executeQuery(
         credentials,
         `MATCH (a)-[additionalRelationship]-(b) WHERE elementId(a) IN $nodeIds RETURN additionalRelationship, b LIMIT ${ExternalGraphDatabaseQueryLimitConfig.maximalPreviewElements.toString()};`,
         [
@@ -212,7 +358,7 @@ export class Neo4jExternalDatabase implements ExternalGraphDatabase {
     }
   }
 
-  public async expandNodePreview(
+  protected async _expandNodePreview(
     credentials: ExternalGraphDatabaseCredentials,
     nodeIds: SSet<string>,
   ): Promise<ExternalGraphDatabaseExpandNodePreview> {
@@ -220,7 +366,7 @@ export class Neo4jExternalDatabase implements ExternalGraphDatabase {
       ExternalGraphDatabaseQueryResult,
       ExternalGraphDatabaseQueryResult,
     ] = await Promise.all([
-      this.executeQuery(
+      this._executeQuery(
         credentials,
         `MATCH (a)-[neighbor]-(b)
 WHERE elementId(a) IN $nodeIds AND a <> b
@@ -238,7 +384,7 @@ ORDER BY rcount DESC, rtype ASC`,
           ExternalGraphDatabaseQueryLimitConfigCollectionType.tableData,
         ),
       ),
-      this.executeQuery(
+      this._executeQuery(
         credentials,
         `MATCH (a)-[]-(b)
 WHERE elementId(a) IN $nodeIds AND a <> b
@@ -287,10 +433,10 @@ ORDER BY lcount DESC, label ASC`,
     );
   }
 
-  public async testConnection(
+  protected async _testConnection(
     credentials: ExternalGraphDatabaseCredentials,
   ): Promise<void> {
-    await this.executeQuery(
+    await this._executeQuery(
       credentials,
       'MATCH (n) RETURN elementId(n) LIMIT 1;',
       [],
@@ -301,16 +447,16 @@ ORDER BY lcount DESC, label ASC`,
     );
   }
 
-  public async getStats(
+  protected async _getStats(
     credentials: ExternalGraphDatabaseCredentials,
   ): Promise<ExternalGraphDatabaseStats> {
     return await this._fetchDbStats(credentials);
   }
 
-  public async getSearchCapabilities(
+  protected async _getSearchCapabilities(
     credentials: ExternalGraphDatabaseCredentials,
   ): Promise<ExternalGraphDatabaseSearchCapabilities> {
-    const result: ExternalGraphDatabaseQueryResult = await this.executeQuery(
+    const result: ExternalGraphDatabaseQueryResult = await this._executeQuery(
       credentials,
       'SHOW INDEXES',
       [],
@@ -374,12 +520,12 @@ ORDER BY lcount DESC, label ASC`,
     };
   }
 
-  public async search(
+  protected async _search(
     credentials: ExternalGraphDatabaseCredentials,
     searchTerm: string,
   ): Promise<ExternalGraphDatabaseNode[]> {
     const searchCapabilities: ExternalGraphDatabaseSearchCapabilities =
-      await this.getSearchCapabilities(credentials);
+      await this._getSearchCapabilities(credentials);
 
     const queries: string[] = [];
     const data: LiveCanvasArgument[] = [
@@ -419,7 +565,7 @@ ORDER BY lcount DESC, label ASC`,
 
     const query: string = queries.join('\nUNION ALL\n');
 
-    const result: ExternalGraphDatabaseQueryResult = await this.executeQuery(
+    const result: ExternalGraphDatabaseQueryResult = await this._executeQuery(
       credentials,
       query,
       data,
@@ -429,11 +575,11 @@ ORDER BY lcount DESC, label ASC`,
     return result.nodes.toValueArray();
   }
 
-  public async findNodeByNativeId(
+  protected async _findNodeByNativeId(
     credentials: ExternalGraphDatabaseCredentials,
     nativeNodeId: string,
   ): Promise<ExternalGraphDatabaseQueryResult> {
-    return await this.executeQuery(
+    return await this._executeQuery(
       credentials,
       'MATCH (n) WHERE elementId(n) = $id RETURN n LIMIT 1;',
       [
@@ -450,12 +596,12 @@ ORDER BY lcount DESC, label ASC`,
     );
   }
 
-  public async expandClusterNode(
+  protected async _expandClusterNode(
     credentials: ExternalGraphDatabaseCredentials,
     nodeIds: SSet<string>,
     neighbors: SSet<string>,
   ): Promise<ExternalGraphDatabaseQueryResult> {
-    return await this.executeQuery(
+    return await this._executeQuery(
       credentials,
       'MATCH (n) WHERE elementId(n) IN $nodeIds OPTIONAL MATCH (n)-[r]-(neighbor) WHERE elementId(neighbor) in $neighbors RETURN n, r',
       [
@@ -477,11 +623,11 @@ ORDER BY lcount DESC, label ASC`,
     );
   }
 
-  public async findRelationshipsByIds(
+  protected async _findRelationshipsByIds(
     credentials: ExternalGraphDatabaseCredentials,
     relationshipIds: string[],
   ): Promise<ExternalGraphDatabaseQueryResult> {
-    return await this.executeQuery(
+    return await this._executeQuery(
       credentials,
       'MATCH (a)-[r]-(b) WHERE elementId(r) IN $relationshipIds RETURN r',
       [
@@ -498,11 +644,11 @@ ORDER BY lcount DESC, label ASC`,
     );
   }
 
-  public async findShortestPath(
+  protected async _findShortestPath(
     credentials: ExternalGraphDatabaseCredentials,
     nodeIds: SSet<string>,
   ): Promise<ExternalGraphDatabaseQueryResult> {
-    return await this.executeQuery(
+    return await this._executeQuery(
       credentials,
       'MATCH (a), (b) WHERE elementId(a) IN $nodeIds AND elementId(b) IN $nodeIds AND a <> b MATCH p = allShortestPaths((a)-[*]-(b)) RETURN p',
       [
@@ -517,6 +663,11 @@ ORDER BY lcount DESC, label ASC`,
         ExternalGraphDatabaseQueryLimitConfigCollectionType.graphElements,
       ),
     );
+  }
+
+  private _logAndRethrow(error: unknown): never {
+    this._logger.error(error);
+    throw error;
   }
 
   private _createQueryArguments(
@@ -560,7 +711,6 @@ ORDER BY lcount DESC, label ASC`,
         auth.basic(credentials.username ?? '', credentials.password ?? ''),
       );
       this._driverPool.set(key, driver);
-      this._logger.debug(`Created new driver: ${key}`);
     }
     return driver;
   }
@@ -569,7 +719,7 @@ ORDER BY lcount DESC, label ASC`,
     credentials: ExternalGraphDatabaseCredentials,
   ): Promise<SSet<string>> {
     const labelsResult: ExternalGraphDatabaseQueryResult =
-      await this.executeQuery(
+      await this._executeQuery(
         credentials,
         'CALL db.labels() YIELD label RETURN label ORDER BY label ASC',
         [],
@@ -590,7 +740,7 @@ ORDER BY lcount DESC, label ASC`,
     credentials: ExternalGraphDatabaseCredentials,
   ): Promise<SSet<string>> {
     const relTypesResult: ExternalGraphDatabaseQueryResult =
-      await this.executeQuery(
+      await this._executeQuery(
         credentials,
         'CALL db.relationshipTypes() YIELD relationshipType RETURN relationshipType ORDER BY relationshipType ASC',
         [],
@@ -645,8 +795,7 @@ ORDER BY lcount DESC, label ASC`,
   private async _getNodesCount(
     credentials: ExternalGraphDatabaseCredentials,
   ): Promise<number> {
-    this._logger.debug(`Will query nodes count.`);
-    const result: ExternalGraphDatabaseQueryResult = await this.executeQuery(
+    const result: ExternalGraphDatabaseQueryResult = await this._executeQuery(
       credentials,
       'MATCH (n) RETURN count(n) AS nodeCount',
       [],
@@ -664,8 +813,7 @@ ORDER BY lcount DESC, label ASC`,
   private async _getRelationshipsCount(
     credentials: ExternalGraphDatabaseCredentials,
   ): Promise<number> {
-    this._logger.debug(`Will query rels count.`);
-    const result: ExternalGraphDatabaseQueryResult = await this.executeQuery(
+    const result: ExternalGraphDatabaseQueryResult = await this._executeQuery(
       credentials,
       'MATCH ()-[r]->() RETURN count(r) AS relationshipCount',
       [],
