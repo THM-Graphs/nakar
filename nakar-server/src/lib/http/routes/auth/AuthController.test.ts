@@ -26,55 +26,35 @@ describe('/auth', (suiteContext: SuiteContext): void => {
 
   describe('POST', (): void => {
     describe('200', (): void => {
-      test('logs in the primary user', async (testContext: TestContext): Promise<void> => {
-        // given
-        const primaryUser: E2ETestApplicationUser =
-          await manager.registerUser(testContext);
-        await manager.registerUser(testContext);
+      test('logs in each registered user', async (testContext: TestContext): Promise<void> => {
+        const userIndices: number[] = [0, 1];
+        for (const userIndex of userIndices) {
+          // given
+          const users: E2ETestApplicationUser[] = [
+            await manager.registerUser(testContext),
+            await manager.registerUser(testContext),
+          ];
+          const user: E2ETestApplicationUser = users[userIndex];
 
-        // when
-        const authUrl: string = `${manager.apiUrl}/auth`;
-        const response: Response = await fetch(authUrl, {
-          method: 'POST',
-          headers: new Headers([['Content-Type', 'application/json']]),
-          body: JSON.stringify({
-            username: primaryUser.username,
-            password: primaryUser.password,
-          } satisfies PostAuthRequestBodyDto),
-          signal: testContext.signal,
-        });
+          // when
+          const authUrl: string = `${manager.apiUrl}/auth`;
+          const response: Response = await fetch(authUrl, {
+            method: 'POST',
+            headers: new Headers([['Content-Type', 'application/json']]),
+            body: JSON.stringify({
+              username: user.username,
+              password: user.password,
+            } satisfies PostAuthRequestBodyDto),
+            signal: testContext.signal,
+          });
 
-        // then
-        assert.equal(response.status, 200);
-        z.strictObject({
-          username: z.literal(primaryUser.username),
-          jwt: z.string().min(1),
-        }).parse(await response.json());
-      });
-      test('logs in the secondary user', async (testContext: TestContext): Promise<void> => {
-        // given
-        await manager.registerUser(testContext);
-        const secondaryUser: E2ETestApplicationUser =
-          await manager.registerUser(testContext);
-
-        // when
-        const authUrl: string = `${manager.apiUrl}/auth`;
-        const response: Response = await fetch(authUrl, {
-          method: 'POST',
-          headers: new Headers([['Content-Type', 'application/json']]),
-          body: JSON.stringify({
-            username: secondaryUser.username,
-            password: secondaryUser.password,
-          } satisfies PostAuthRequestBodyDto),
-          signal: testContext.signal,
-        });
-
-        // then
-        assert.equal(response.status, 200);
-        z.strictObject({
-          username: z.literal(secondaryUser.username),
-          jwt: z.string().min(1),
-        }).parse(await response.json());
+          // then
+          assert.equal(response.status, 200);
+          z.strictObject({
+            username: z.literal(user.username),
+            jwt: z.string().min(1),
+          }).parse(await response.json());
+        }
       });
     });
 
@@ -160,209 +140,96 @@ describe('/auth', (suiteContext: SuiteContext): void => {
     });
 
     describe('400', (): void => {
-      test('rejects a missing username', async (testContext: TestContext): Promise<void> => {
-        // when
-        const response: Response = await fetch(`${manager.apiUrl}/auth`, {
-          method: 'POST',
-          headers: new Headers([['Content-Type', 'application/json']]),
-          body: JSON.stringify({
-            password: randomUUID(),
-          } satisfies Omit<PostAuthRequestBodyDto, 'username'>),
-          signal: testContext.signal,
-        });
+      test('rejects malformed login request bodies', async (testContext: TestContext): Promise<void> => {
+        const variants: {
+          payload: Record<string, unknown>;
+          expectedMessages: string[];
+        }[] = [
+          {
+            payload: { username: undefined, password: randomUUID() },
+            expectedMessages: ['username should not be empty'],
+          },
+          {
+            payload: { password: undefined, username: `e2e-${randomUUID()}` },
+            expectedMessages: ['password should not be empty'],
+          },
+          {
+            payload: { username: 123, password: randomUUID() },
+            expectedMessages: ['username must be a string'],
+          },
+          {
+            payload: { password: 123, username: `e2e-${randomUUID()}` },
+            expectedMessages: ['password must be a string'],
+          },
+          {
+            payload: {
+              unexpected: true,
+              password: randomUUID(),
+              username: `e2e-${randomUUID()}`,
+            },
+            expectedMessages: ['property unexpected should not exist'],
+          },
+          {
+            payload: { username: '', password: randomUUID() },
+            expectedMessages: ['username should not be empty'],
+          },
+          {
+            payload: { password: '', username: `e2e-${randomUUID()}` },
+            expectedMessages: ['password should not be empty'],
+          },
+        ];
+        for (const variant of variants) {
+          // when
+          const response: Response = await fetch(`${manager.apiUrl}/auth`, {
+            method: 'POST',
+            headers: new Headers([['Content-Type', 'application/json']]),
+            body: JSON.stringify(variant.payload),
+            signal: testContext.signal,
+          });
 
-        // then
-        assert.equal(response.status, 400);
-        assert.deepEqual(await response.json(), {
-          statusCode: 400,
-          error: 'Bad Request',
-          message: ['username should not be empty'],
-        });
-      });
-
-      test('rejects a missing password', async (testContext: TestContext): Promise<void> => {
-        // when
-        const response: Response = await fetch(`${manager.apiUrl}/auth`, {
-          method: 'POST',
-          headers: new Headers([['Content-Type', 'application/json']]),
-          body: JSON.stringify({
-            username: `e2e-${randomUUID()}`,
-          } satisfies Omit<PostAuthRequestBodyDto, 'password'>),
-          signal: testContext.signal,
-        });
-
-        // then
-        assert.equal(response.status, 400);
-        assert.deepEqual(await response.json(), {
-          statusCode: 400,
-          error: 'Bad Request',
-          message: ['password should not be empty'],
-        });
-      });
-
-      test('username must be a string', async (testContext: TestContext): Promise<void> => {
-        // when
-        const response: Response = await fetch(`${manager.apiUrl}/auth`, {
-          method: 'POST',
-          headers: new Headers([['Content-Type', 'application/json']]),
-          body: JSON.stringify({
-            username: 123,
-            password: randomUUID(),
-          } satisfies Omit<PostAuthRequestBodyDto, 'username'> & {
-            username: number;
-          }),
-          signal: testContext.signal,
-        });
-
-        // then
-        assert.equal(response.status, 400);
-        assert.deepEqual(await response.json(), {
-          statusCode: 400,
-          error: 'Bad Request',
-          message: ['username must be a string'],
-        });
-      });
-
-      test('password must be a string', async (testContext: TestContext): Promise<void> => {
-        // when
-        const response: Response = await fetch(`${manager.apiUrl}/auth`, {
-          method: 'POST',
-          headers: new Headers([['Content-Type', 'application/json']]),
-          body: JSON.stringify({
-            username: `e2e-${randomUUID()}`,
-            password: 123,
-          } satisfies Omit<PostAuthRequestBodyDto, 'password'> & {
-            password: number;
-          }),
-          signal: testContext.signal,
-        });
-
-        // then
-        assert.equal(response.status, 400);
-        assert.deepEqual(await response.json(), {
-          statusCode: 400,
-          error: 'Bad Request',
-          message: ['password must be a string'],
-        });
-      });
-
-      test('property unexpected should not exist', async (testContext: TestContext): Promise<void> => {
-        // when
-        const response: Response = await fetch(`${manager.apiUrl}/auth`, {
-          method: 'POST',
-          headers: new Headers([['Content-Type', 'application/json']]),
-          body: JSON.stringify({
-            username: `e2e-${randomUUID()}`,
-            password: randomUUID(),
-            unexpected: true,
-          } satisfies PostAuthRequestBodyDto & { unexpected: boolean }),
-          signal: testContext.signal,
-        });
-
-        // then
-        assert.equal(response.status, 400);
-        assert.deepEqual(await response.json(), {
-          statusCode: 400,
-          error: 'Bad Request',
-          message: ['property unexpected should not exist'],
-        });
-      });
-
-      test('rejects an empty username', async (testContext: TestContext): Promise<void> => {
-        // when
-        const response: Response = await fetch(`${manager.apiUrl}/auth`, {
-          method: 'POST',
-          headers: new Headers([['Content-Type', 'application/json']]),
-          body: JSON.stringify({
-            username: '',
-            password: randomUUID(),
-          } satisfies PostAuthRequestBodyDto),
-          signal: testContext.signal,
-        });
-
-        // then
-        assert.equal(response.status, 400);
-        assert.deepEqual(await response.json(), {
-          statusCode: 400,
-          error: 'Bad Request',
-          message: ['username should not be empty'],
-        });
-      });
-
-      test('rejects an empty password', async (testContext: TestContext): Promise<void> => {
-        // when
-        const response: Response = await fetch(`${manager.apiUrl}/auth`, {
-          method: 'POST',
-          headers: new Headers([['Content-Type', 'application/json']]),
-          body: JSON.stringify({
-            username: `e2e-${randomUUID()}`,
-            password: '',
-          } satisfies PostAuthRequestBodyDto),
-          signal: testContext.signal,
-        });
-
-        // then
-        assert.equal(response.status, 400);
-        assert.deepEqual(await response.json(), {
-          statusCode: 400,
-          error: 'Bad Request',
-          message: ['password should not be empty'],
-        });
+          // then
+          assert.equal(response.status, 400);
+          assert.deepEqual(await response.json(), {
+            statusCode: 400,
+            error: 'Bad Request',
+            message: variant.expectedMessages,
+          });
+        }
       });
     });
   });
 
   describe('GET', (): void => {
     describe('200', (): void => {
-      test('identifies the primary user', async (testContext: TestContext): Promise<void> => {
-        // given
-        const primaryUser: E2ETestApplicationUser =
-          await manager.registerUser(testContext);
-        await manager.registerUser(testContext);
-        const authUrl: string = `${manager.apiUrl}/auth`;
+      test('identifies each registered user', async (testContext: TestContext): Promise<void> => {
+        const userIndices: number[] = [0, 1];
+        for (const userIndex of userIndices) {
+          // given
+          const users: E2ETestApplicationUser[] = [
+            await manager.registerUser(testContext),
+            await manager.registerUser(testContext),
+          ];
+          const user: E2ETestApplicationUser = users[userIndex];
+          const authUrl: string = `${manager.apiUrl}/auth`;
 
-        const body: PostAuthResponseBodyDto = await manager.loginUser(
-          primaryUser.username,
-          primaryUser.password,
-          testContext,
-        );
+          const body: PostAuthResponseBodyDto = await manager.loginUser(
+            user.username,
+            user.password,
+            testContext,
+          );
 
-        // when
-        const authenticated: Response = await fetch(authUrl, {
-          headers: new Headers([['Authorization', `Bearer ${body.jwt}`]]),
-          signal: testContext.signal,
-        });
+          // when
+          const authenticated: Response = await fetch(authUrl, {
+            headers: new Headers([['Authorization', `Bearer ${body.jwt}`]]),
+            signal: testContext.signal,
+          });
 
-        // then
-        assert.equal(authenticated.status, 200);
-        assert.deepEqual(await authenticated.json(), {
-          username: primaryUser.username,
-        });
-      });
-      test('identifies the secondary user', async (testContext: TestContext): Promise<void> => {
-        // given
-        await manager.registerUser(testContext);
-        const secondaryUser: E2ETestApplicationUser =
-          await manager.registerUser(testContext);
-        const authUrl: string = `${manager.apiUrl}/auth`;
-
-        const body: PostAuthResponseBodyDto = await manager.loginUser(
-          secondaryUser.username,
-          secondaryUser.password,
-          testContext,
-        );
-
-        // when
-        const authenticated: Response = await fetch(authUrl, {
-          headers: new Headers([['Authorization', `Bearer ${body.jwt}`]]),
-          signal: testContext.signal,
-        });
-
-        // then
-        assert.equal(authenticated.status, 200);
-        assert.deepEqual(await authenticated.json(), {
-          username: secondaryUser.username,
-        });
+          // then
+          assert.equal(authenticated.status, 200);
+          assert.deepEqual(await authenticated.json(), {
+            username: user.username,
+          });
+        }
       });
 
       test('accepts a correctly signed unexpired jwt', async (testContext: TestContext): Promise<void> => {
@@ -493,37 +360,29 @@ describe('/auth', (suiteContext: SuiteContext): void => {
         });
       });
 
-      test('incorrect jwt', async (testContext: TestContext): Promise<void> => {
-        // when
-        const authUrl: string = `${manager.apiUrl}/auth`;
-        const authenticated: Response = await fetch(authUrl, {
-          headers: new Headers([['Authorization', `Bearer wrong_jwt`]]),
-          signal: testContext.signal,
-        });
+      test('rejects requests without valid authentication', async (testContext: TestContext): Promise<void> => {
+        const variants: { headers: [string, string][] }[] = [
+          {
+            headers: [['Authorization', `Bearer wrong_jwt`]],
+          },
+          { headers: [] },
+        ];
+        for (const variant of variants) {
+          // when
+          const authUrl: string = `${manager.apiUrl}/auth`;
+          const authenticated: Response = await fetch(authUrl, {
+            signal: testContext.signal,
+            headers: new Headers(variant.headers),
+          });
 
-        // then
-        assert.equal(authenticated.status, 401);
-        assert.equal(authenticated.headers.get('www-authenticate'), 'Bearer');
-        assert.deepEqual(await authenticated.json(), {
-          message: 'Unauthorized',
-          statusCode: 401,
-        });
-      });
-
-      test('missing jwt', async (testContext: TestContext): Promise<void> => {
-        // when
-        const authUrl: string = `${manager.apiUrl}/auth`;
-        const authenticated: Response = await fetch(authUrl, {
-          signal: testContext.signal,
-        });
-
-        // then
-        assert.equal(authenticated.status, 401);
-        assert.equal(authenticated.headers.get('www-authenticate'), 'Bearer');
-        assert.deepEqual(await authenticated.json(), {
-          message: 'Unauthorized',
-          statusCode: 401,
-        });
+          // then
+          assert.equal(authenticated.status, 401);
+          assert.equal(authenticated.headers.get('www-authenticate'), 'Bearer');
+          assert.deepEqual(await authenticated.json(), {
+            message: 'Unauthorized',
+            statusCode: 401,
+          });
+        }
       });
 
       test('expired jwt', async (testContext: TestContext): Promise<void> => {

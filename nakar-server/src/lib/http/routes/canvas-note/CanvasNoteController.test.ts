@@ -387,563 +387,158 @@ describe('/room/:roomId/canvas/:canvasId/note', (suiteContext: SuiteContext): vo
       });
     });
     describe('400', (): void => {
-      test('rejects missing content', async (testContext: TestContext): Promise<void> => {
-        // given
-        const owner: E2ETestApplicationUser =
-          await manager.registerUser(testContext);
-        const canvas: E2ETestCanvas = await manager.createCanvas(
-          owner,
-          testContext,
-          RoomVisibilityDto.private,
-        );
-        const login: PostAuthResponseBodyDto = await manager.loginUser(
-          owner.username,
-          owner.password,
-          testContext,
-        );
-        const existing: Response = await manager.readDocuments(
-          'api::note.note',
-          { [`filters[project][documentId][$eq]`]: canvas.projectId },
-          testContext,
-        );
-        assert.equal(existing.status, 200);
-        const original: unknown = await existing.json();
-
-        // when
-        const response: Response = await fetch(
-          `${manager.apiUrl}/room/${canvas.roomId}/canvas/${canvas.canvasId}/note`,
+      test('rejects invalid note creation bodies', async (testContext: TestContext): Promise<void> => {
+        const variants: {
+          payload: Record<string, unknown>;
+          expectedMessages: string[];
+        }[] = [
           {
-            method: 'POST',
-            headers: new Headers([
-              ['Content-Type', 'application/json'],
-              ['Authorization', `Bearer ${login.jwt}`],
-            ]),
-            body: JSON.stringify({ nodeIds: [] } satisfies Omit<
-              PostNoteRequestBody,
-              'content'
-            >),
-            signal: testContext.signal,
+            payload: { content: undefined },
+            expectedMessages: ['content must be a string'],
           },
-        );
-
-        // then
-        assert.equal(response.status, 400);
-        const body: { statusCode: number; error: string; message: string[] } =
-          validationErrorSchema.parse(await response.json());
-        assert.equal(body.statusCode, 400);
-        assert.equal(body.error, 'Bad Request');
-        assert.deepEqual(
-          body.message.toSorted(),
-          ['content must be a string'].toSorted(),
-        );
-        const stored: Response = await manager.readDocuments(
-          'api::note.note',
-          { [`filters[project][documentId][$eq]`]: canvas.projectId },
-          testContext,
-        );
-        assert.equal(stored.status, 200);
-        assert.deepEqual(await stored.json(), original);
-      });
-      test('rejects null content', async (testContext: TestContext): Promise<void> => {
-        // given
-        const owner: E2ETestApplicationUser =
-          await manager.registerUser(testContext);
-        const canvas: E2ETestCanvas = await manager.createCanvas(
-          owner,
-          testContext,
-          RoomVisibilityDto.private,
-        );
-        const login: PostAuthResponseBodyDto = await manager.loginUser(
-          owner.username,
-          owner.password,
-          testContext,
-        );
-        const existing: Response = await manager.readDocuments(
-          'api::note.note',
-          { [`filters[project][documentId][$eq]`]: canvas.projectId },
-          testContext,
-        );
-        assert.equal(existing.status, 200);
-        const original: unknown = await existing.json();
-
-        // when
-        const response: Response = await fetch(
-          `${manager.apiUrl}/room/${canvas.roomId}/canvas/${canvas.canvasId}/note`,
           {
-            method: 'POST',
-            headers: new Headers([
-              ['Content-Type', 'application/json'],
-              ['Authorization', `Bearer ${login.jwt}`],
-            ]),
-            body: JSON.stringify({ content: null, nodeIds: [] } satisfies Omit<
-              PostNoteRequestBody,
-              'content'
-            > & { content: null }),
-            signal: testContext.signal,
+            payload: { content: null },
+            expectedMessages: ['content must be a string'],
           },
-        );
-
-        // then
-        assert.equal(response.status, 400);
-        const body: { statusCode: number; error: string; message: string[] } =
-          validationErrorSchema.parse(await response.json());
-        assert.equal(body.statusCode, 400);
-        assert.equal(body.error, 'Bad Request');
-        assert.deepEqual(
-          body.message.toSorted(),
-          ['content must be a string'].toSorted(),
-        );
-        const stored: Response = await manager.readDocuments(
-          'api::note.note',
-          { [`filters[project][documentId][$eq]`]: canvas.projectId },
-          testContext,
-        );
-        assert.equal(stored.status, 200);
-        assert.deepEqual(await stored.json(), original);
-      });
-      test('rejects non-string content', async (testContext: TestContext): Promise<void> => {
-        // given
-        const owner: E2ETestApplicationUser =
-          await manager.registerUser(testContext);
-        const canvas: E2ETestCanvas = await manager.createCanvas(
-          owner,
-          testContext,
-          RoomVisibilityDto.private,
-        );
-        const login: PostAuthResponseBodyDto = await manager.loginUser(
-          owner.username,
-          owner.password,
-          testContext,
-        );
-        const existing: Response = await manager.readDocuments(
-          'api::note.note',
-          { [`filters[project][documentId][$eq]`]: canvas.projectId },
-          testContext,
-        );
-        assert.equal(existing.status, 200);
-        const original: unknown = await existing.json();
-
-        // when
-        const response: Response = await fetch(
-          `${manager.apiUrl}/room/${canvas.roomId}/canvas/${canvas.canvasId}/note`,
           {
-            method: 'POST',
-            headers: new Headers([
-              ['Content-Type', 'application/json'],
-              ['Authorization', `Bearer ${login.jwt}`],
-            ]),
-            body: JSON.stringify({ content: 42, nodeIds: [] } satisfies Omit<
-              PostNoteRequestBody,
-              'content'
-            > & { content: number }),
-            signal: testContext.signal,
+            payload: { content: 42 },
+            expectedMessages: ['content must be a string'],
           },
-        );
-
-        // then
-        assert.equal(response.status, 400);
-        const body: { statusCode: number; error: string; message: string[] } =
-          validationErrorSchema.parse(await response.json());
-        assert.equal(body.statusCode, 400);
-        assert.equal(body.error, 'Bad Request');
-        assert.deepEqual(
-          body.message.toSorted(),
-          ['content must be a string'].toSorted(),
-        );
-        const stored: Response = await manager.readDocuments(
-          'api::note.note',
-          { [`filters[project][documentId][$eq]`]: canvas.projectId },
-          testContext,
-        );
-        assert.equal(stored.status, 200);
-        assert.deepEqual(await stored.json(), original);
-      });
-      test('rejects missing node identifiers', async (testContext: TestContext): Promise<void> => {
-        // given
-        const owner: E2ETestApplicationUser =
-          await manager.registerUser(testContext);
-        const canvas: E2ETestCanvas = await manager.createCanvas(
-          owner,
-          testContext,
-          RoomVisibilityDto.private,
-        );
-        const login: PostAuthResponseBodyDto = await manager.loginUser(
-          owner.username,
-          owner.password,
-          testContext,
-        );
-        const existing: Response = await manager.readDocuments(
-          'api::note.note',
-          { [`filters[project][documentId][$eq]`]: canvas.projectId },
-          testContext,
-        );
-        assert.equal(existing.status, 200);
-        const original: unknown = await existing.json();
-
-        // when
-        const response: Response = await fetch(
-          `${manager.apiUrl}/room/${canvas.roomId}/canvas/${canvas.canvasId}/note`,
           {
-            method: 'POST',
-            headers: new Headers([
-              ['Content-Type', 'application/json'],
-              ['Authorization', `Bearer ${login.jwt}`],
-            ]),
-            body: JSON.stringify({ content: 'A note' } satisfies Omit<
-              PostNoteRequestBody,
-              'nodeIds'
-            >),
-            signal: testContext.signal,
+            payload: { nodeIds: undefined },
+            expectedMessages: ['nodeIds must be an array'],
           },
-        );
-
-        // then
-        assert.equal(response.status, 400);
-        const body: { statusCode: number; error: string; message: string[] } =
-          validationErrorSchema.parse(await response.json());
-        assert.equal(body.statusCode, 400);
-        assert.equal(body.error, 'Bad Request');
-        assert.deepEqual(body.message.toSorted(), ['nodeIds must be an array']);
-        const stored: Response = await manager.readDocuments(
-          'api::note.note',
-          { [`filters[project][documentId][$eq]`]: canvas.projectId },
-          testContext,
-        );
-        assert.equal(stored.status, 200);
-        assert.deepEqual(await stored.json(), original);
-      });
-      test('rejects null node identifiers', async (testContext: TestContext): Promise<void> => {
-        // given
-        const owner: E2ETestApplicationUser =
-          await manager.registerUser(testContext);
-        const canvas: E2ETestCanvas = await manager.createCanvas(
-          owner,
-          testContext,
-          RoomVisibilityDto.private,
-        );
-        const login: PostAuthResponseBodyDto = await manager.loginUser(
-          owner.username,
-          owner.password,
-          testContext,
-        );
-        const existing: Response = await manager.readDocuments(
-          'api::note.note',
-          { [`filters[project][documentId][$eq]`]: canvas.projectId },
-          testContext,
-        );
-        assert.equal(existing.status, 200);
-        const original: unknown = await existing.json();
-
-        // when
-        const response: Response = await fetch(
-          `${manager.apiUrl}/room/${canvas.roomId}/canvas/${canvas.canvasId}/note`,
           {
-            method: 'POST',
-            headers: new Headers([
-              ['Content-Type', 'application/json'],
-              ['Authorization', `Bearer ${login.jwt}`],
-            ]),
-            body: JSON.stringify({
-              content: 'A note',
-              nodeIds: null,
-            } satisfies Omit<PostNoteRequestBody, 'nodeIds'> & {
-              nodeIds: null;
-            }),
-            signal: testContext.signal,
+            payload: { nodeIds: null },
+            expectedMessages: ['nodeIds must be an array'],
           },
-        );
-
-        // then
-        assert.equal(response.status, 400);
-        const body: { statusCode: number; error: string; message: string[] } =
-          validationErrorSchema.parse(await response.json());
-        assert.equal(body.statusCode, 400);
-        assert.equal(body.error, 'Bad Request');
-        assert.deepEqual(body.message.toSorted(), ['nodeIds must be an array']);
-        const stored: Response = await manager.readDocuments(
-          'api::note.note',
-          { [`filters[project][documentId][$eq]`]: canvas.projectId },
-          testContext,
-        );
-        assert.equal(stored.status, 200);
-        assert.deepEqual(await stored.json(), original);
-      });
-      test('rejects non-array node identifiers', async (testContext: TestContext): Promise<void> => {
-        // given
-        const owner: E2ETestApplicationUser =
-          await manager.registerUser(testContext);
-        const canvas: E2ETestCanvas = await manager.createCanvas(
-          owner,
-          testContext,
-          RoomVisibilityDto.private,
-        );
-        const login: PostAuthResponseBodyDto = await manager.loginUser(
-          owner.username,
-          owner.password,
-          testContext,
-        );
-        const existing: Response = await manager.readDocuments(
-          'api::note.note',
-          { [`filters[project][documentId][$eq]`]: canvas.projectId },
-          testContext,
-        );
-        assert.equal(existing.status, 200);
-        const original: unknown = await existing.json();
-
-        // when
-        const response: Response = await fetch(
-          `${manager.apiUrl}/room/${canvas.roomId}/canvas/${canvas.canvasId}/note`,
           {
-            method: 'POST',
-            headers: new Headers([
-              ['Content-Type', 'application/json'],
-              ['Authorization', `Bearer ${login.jwt}`],
-            ]),
-            body: JSON.stringify({
-              content: 'A note',
-              nodeIds: 'node',
-            } satisfies Omit<PostNoteRequestBody, 'nodeIds'> & {
-              nodeIds: string;
-            }),
-            signal: testContext.signal,
+            payload: { nodeIds: 'node' },
+            expectedMessages: ['nodeIds must be an array'],
           },
-        );
-
-        // then
-        assert.equal(response.status, 400);
-        const body: { statusCode: number; error: string; message: string[] } =
-          validationErrorSchema.parse(await response.json());
-        assert.equal(body.statusCode, 400);
-        assert.equal(body.error, 'Bad Request');
-        assert.deepEqual(
-          body.message.toSorted(),
-          ['nodeIds must be an array'].toSorted(),
-        );
-        const stored: Response = await manager.readDocuments(
-          'api::note.note',
-          { [`filters[project][documentId][$eq]`]: canvas.projectId },
-          testContext,
-        );
-        assert.equal(stored.status, 200);
-        assert.deepEqual(await stored.json(), original);
-      });
-      test('rejects non-string node identifiers', async (testContext: TestContext): Promise<void> => {
-        // given
-        const owner: E2ETestApplicationUser =
-          await manager.registerUser(testContext);
-        const canvas: E2ETestCanvas = await manager.createCanvas(
-          owner,
-          testContext,
-          RoomVisibilityDto.private,
-        );
-        const login: PostAuthResponseBodyDto = await manager.loginUser(
-          owner.username,
-          owner.password,
-          testContext,
-        );
-        const existing: Response = await manager.readDocuments(
-          'api::note.note',
-          { [`filters[project][documentId][$eq]`]: canvas.projectId },
-          testContext,
-        );
-        assert.equal(existing.status, 200);
-        const original: unknown = await existing.json();
-
-        // when
-        const response: Response = await fetch(
-          `${manager.apiUrl}/room/${canvas.roomId}/canvas/${canvas.canvasId}/note`,
           {
-            method: 'POST',
-            headers: new Headers([
-              ['Content-Type', 'application/json'],
-              ['Authorization', `Bearer ${login.jwt}`],
-            ]),
-            body: JSON.stringify({
-              content: 'A note',
-              nodeIds: [42],
-            } satisfies Omit<PostNoteRequestBody, 'nodeIds'> & {
-              nodeIds: number[];
-            }),
-            signal: testContext.signal,
+            payload: { nodeIds: [42] },
+            expectedMessages: ['each value in nodeIds must be a string'],
           },
-        );
-
-        // then
-        assert.equal(response.status, 400);
-        const body: { statusCode: number; error: string; message: string[] } =
-          validationErrorSchema.parse(await response.json());
-        assert.equal(body.statusCode, 400);
-        assert.equal(body.error, 'Bad Request');
-        assert.deepEqual(
-          body.message.toSorted(),
-          ['each value in nodeIds must be a string'].toSorted(),
-        );
-        const stored: Response = await manager.readDocuments(
-          'api::note.note',
-          { [`filters[project][documentId][$eq]`]: canvas.projectId },
-          testContext,
-        );
-        assert.equal(stored.status, 200);
-        assert.deepEqual(await stored.json(), original);
-      });
-      test('rejects unexpected properties', async (testContext: TestContext): Promise<void> => {
-        // given
-        const owner: E2ETestApplicationUser =
-          await manager.registerUser(testContext);
-        const canvas: E2ETestCanvas = await manager.createCanvas(
-          owner,
-          testContext,
-          RoomVisibilityDto.private,
-        );
-        const login: PostAuthResponseBodyDto = await manager.loginUser(
-          owner.username,
-          owner.password,
-          testContext,
-        );
-        const existing: Response = await manager.readDocuments(
-          'api::note.note',
-          { [`filters[project][documentId][$eq]`]: canvas.projectId },
-          testContext,
-        );
-        assert.equal(existing.status, 200);
-        const original: unknown = await existing.json();
-
-        // when
-        const response: Response = await fetch(
-          `${manager.apiUrl}/room/${canvas.roomId}/canvas/${canvas.canvasId}/note`,
           {
-            method: 'POST',
-            headers: new Headers([
-              ['Content-Type', 'application/json'],
-              ['Authorization', `Bearer ${login.jwt}`],
-            ]),
-            body: JSON.stringify({
-              content: 'A note',
-              nodeIds: [],
-              unexpected: true,
-            } satisfies PostNoteRequestBody & { unexpected: boolean }),
-            signal: testContext.signal,
+            payload: { unexpected: true },
+            expectedMessages: ['property unexpected should not exist'],
           },
-        );
+        ];
+        for (const variant of variants) {
+          // given
+          const owner: E2ETestApplicationUser =
+            await manager.registerUser(testContext);
+          const canvas: E2ETestCanvas = await manager.createCanvas(
+            owner,
+            testContext,
+            RoomVisibilityDto.private,
+          );
+          const login: PostAuthResponseBodyDto = await manager.loginUser(
+            owner.username,
+            owner.password,
+            testContext,
+          );
+          const existing: Response = await manager.readDocuments(
+            'api::note.note',
+            { [`filters[project][documentId][$eq]`]: canvas.projectId },
+            testContext,
+          );
+          assert.equal(existing.status, 200);
+          const original: unknown = await existing.json();
 
-        // then
-        assert.equal(response.status, 400);
-        const body: { statusCode: number; error: string; message: string[] } =
-          validationErrorSchema.parse(await response.json());
-        assert.equal(body.statusCode, 400);
-        assert.equal(body.error, 'Bad Request');
-        assert.deepEqual(
-          body.message.toSorted(),
-          ['property unexpected should not exist'].toSorted(),
-        );
-        const stored: Response = await manager.readDocuments(
-          'api::note.note',
-          { [`filters[project][documentId][$eq]`]: canvas.projectId },
-          testContext,
-        );
-        assert.equal(stored.status, 200);
-        assert.deepEqual(await stored.json(), original);
+          // when
+          const response: Response = await fetch(
+            `${manager.apiUrl}/room/${canvas.roomId}/canvas/${canvas.canvasId}/note`,
+            {
+              method: 'POST',
+              headers: new Headers([
+                ['Content-Type', 'application/json'],
+                ['Authorization', `Bearer ${login.jwt}`],
+              ]),
+              body: JSON.stringify({
+                nodeIds: [],
+                content: 'A note',
+                ...variant.payload,
+              }),
+              signal: testContext.signal,
+            },
+          );
+
+          // then
+          assert.equal(response.status, 400);
+          const body: {
+            statusCode: number;
+            error: string;
+            message: string[];
+          } = validationErrorSchema.parse(await response.json());
+          assert.equal(body.statusCode, 400);
+          assert.equal(body.error, 'Bad Request');
+          assert.deepEqual(body.message.toSorted(), variant.expectedMessages);
+          const stored: Response = await manager.readDocuments(
+            'api::note.note',
+            { [`filters[project][documentId][$eq]`]: canvas.projectId },
+            testContext,
+          );
+          assert.equal(stored.status, 200);
+          assert.deepEqual(await stored.json(), original);
+        }
       });
     });
     describe('401', (): void => {
-      test('rejects anonymous access to a private room', async (testContext: TestContext): Promise<void> => {
-        // given
-        const owner: E2ETestApplicationUser =
-          await manager.registerUser(testContext);
-        const canvas: E2ETestCanvas = await manager.createCanvas(
-          owner,
-          testContext,
-          RoomVisibilityDto.private,
-        );
-
-        // when
-        const response: Response = await fetch(
-          `${manager.apiUrl}/room/${canvas.roomId}/canvas/${canvas.canvasId}/note`,
+      test('rejects requests without valid authentication', async (testContext: TestContext): Promise<void> => {
+        const variants: {
+          visibility: RoomVisibilityDto;
+          headers: [string, string][];
+        }[] = [
           {
-            method: 'POST',
-            headers: new Headers([['Content-Type', 'application/json']]),
-            body: JSON.stringify({
-              content: 'A note',
-              nodeIds: [],
-            } satisfies PostNoteRequestBody),
-            signal: testContext.signal,
+            visibility: RoomVisibilityDto.private,
+            headers: [['Content-Type', 'application/json']],
           },
-        );
-
-        // then
-        assert.equal(response.status, 401);
-        assert.equal(response.headers.get('www-authenticate'), 'Bearer');
-        assert.deepEqual(await response.json(), {
-          statusCode: 401,
-          message: 'Unauthorized',
-        });
-      });
-      test('requires authentication in a public room', async (testContext: TestContext): Promise<void> => {
-        // given
-        const owner: E2ETestApplicationUser =
-          await manager.registerUser(testContext);
-        const canvas: E2ETestCanvas = await manager.createCanvas(
-          owner,
-          testContext,
-          RoomVisibilityDto.public,
-        );
-
-        // when
-        const response: Response = await fetch(
-          `${manager.apiUrl}/room/${canvas.roomId}/canvas/${canvas.canvasId}/note`,
           {
-            method: 'POST',
-            headers: new Headers([['Content-Type', 'application/json']]),
-            body: JSON.stringify({
-              content: 'A note',
-              nodeIds: [],
-            } satisfies PostNoteRequestBody),
-            signal: testContext.signal,
+            visibility: RoomVisibilityDto.public,
+            headers: [['Content-Type', 'application/json']],
           },
-        );
-
-        // then
-        assert.equal(response.status, 401);
-        assert.equal(response.headers.get('www-authenticate'), 'Bearer');
-        assert.deepEqual(await response.json(), {
-          statusCode: 401,
-          message: 'Unauthorized',
-        });
-      });
-      test('rejects an invalid jwt in an unlisted room', async (testContext: TestContext): Promise<void> => {
-        // given
-        const owner: E2ETestApplicationUser =
-          await manager.registerUser(testContext);
-        const canvas: E2ETestCanvas = await manager.createCanvas(
-          owner,
-          testContext,
-          RoomVisibilityDto.unlisted,
-        );
-
-        // when
-        const response: Response = await fetch(
-          `${manager.apiUrl}/room/${canvas.roomId}/canvas/${canvas.canvasId}/note`,
           {
-            method: 'POST',
-            headers: new Headers([
+            visibility: RoomVisibilityDto.unlisted,
+            headers: [
               ['Content-Type', 'application/json'],
               ['Authorization', `Bearer invalid-jwt`],
-            ]),
-            body: JSON.stringify({
-              content: 'A note',
-              nodeIds: [],
-            } satisfies PostNoteRequestBody),
-            signal: testContext.signal,
+            ],
           },
-        );
+        ];
+        for (const variant of variants) {
+          // given
+          const owner: E2ETestApplicationUser =
+            await manager.registerUser(testContext);
+          const canvas: E2ETestCanvas = await manager.createCanvas(
+            owner,
+            testContext,
+            variant.visibility,
+          );
 
-        // then
-        assert.equal(response.status, 401);
-        assert.equal(response.headers.get('www-authenticate'), 'Bearer');
-        assert.deepEqual(await response.json(), {
-          statusCode: 401,
-          message: 'Unauthorized',
-        });
+          // when
+          const response: Response = await fetch(
+            `${manager.apiUrl}/room/${canvas.roomId}/canvas/${canvas.canvasId}/note`,
+            {
+              method: 'POST',
+              body: JSON.stringify({
+                content: 'A note',
+                nodeIds: [],
+              } satisfies PostNoteRequestBody),
+              signal: testContext.signal,
+              headers: new Headers(variant.headers),
+            },
+          );
+
+          // then
+          assert.equal(response.status, 401);
+          assert.equal(response.headers.get('www-authenticate'), 'Bearer');
+          assert.deepEqual(await response.json(), {
+            statusCode: 401,
+            message: 'Unauthorized',
+          });
+        }
       });
     });
     describe('403', (): void => {
@@ -1472,427 +1067,167 @@ describe('/room/:roomId/canvas/:canvasId/note', (suiteContext: SuiteContext): vo
         });
       });
       describe('400', (): void => {
-        test('rejects missing content', async (testContext: TestContext): Promise<void> => {
-          // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const canvas: E2ETestCanvas = await manager.createCanvas(
-            owner,
-            testContext,
-            RoomVisibilityDto.private,
-          );
-          const login: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
-            testContext,
-          );
-          const note: string = await manager.createPublishedDocument(
-            'api::note.note',
+        test('rejects invalid note update bodies', async (testContext: TestContext): Promise<void> => {
+          const variants: {
+            payload: Record<string, unknown>;
+            expectedMessages: string[];
+          }[] = [
             {
-              project: canvas.projectId,
-              content: 'Original note',
-              author: owner.documentId,
+              payload: {},
+              expectedMessages: ['content must be a string'],
             },
-            testContext,
-          );
-          const originalResponse: Response = await manager.readDocument(
-            'api::note.note',
-            note,
-            testContext,
-          );
-          assert.equal(originalResponse.status, 200);
-          const original: unknown = await originalResponse.json();
-
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/room/${canvas.roomId}/canvas/${canvas.canvasId}/note/${note}`,
             {
-              method: 'PUT',
-              headers: new Headers([
-                ['Content-Type', 'application/json'],
-                ['Authorization', `Bearer ${login.jwt}`],
-              ]),
-              body: JSON.stringify(
-                // eslint-disable-next-line @typescript-eslint/no-generated-empty-object-type -- The missing required field is intentional.
-                {} satisfies Omit<UpdateNoteRequestBodyDto, 'content'>,
-              ),
-              signal: testContext.signal,
+              payload: { content: null },
+              expectedMessages: ['content must be a string'],
             },
-          );
-
-          // then
-          assert.equal(response.status, 400);
-          assert.deepEqual(await response.json(), {
-            statusCode: 400,
-            error: 'Bad Request',
-            message: ['content must be a string'],
-          });
-          const stored: Response = await manager.readDocument(
-            'api::note.note',
-            note,
-            testContext,
-          );
-          assert.equal(stored.status, 200);
-          assert.deepEqual(await stored.json(), original);
-        });
-        test('rejects null content', async (testContext: TestContext): Promise<void> => {
-          // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const canvas: E2ETestCanvas = await manager.createCanvas(
-            owner,
-            testContext,
-            RoomVisibilityDto.private,
-          );
-          const login: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
-            testContext,
-          );
-          const note: string = await manager.createPublishedDocument(
-            'api::note.note',
             {
-              project: canvas.projectId,
-              content: 'Original note',
-              author: owner.documentId,
+              payload: { content: false },
+              expectedMessages: ['content must be a string'],
             },
-            testContext,
-          );
-          const originalResponse: Response = await manager.readDocument(
-            'api::note.note',
-            note,
-            testContext,
-          );
-          assert.equal(originalResponse.status, 200);
-          const original: unknown = await originalResponse.json();
-
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/room/${canvas.roomId}/canvas/${canvas.canvasId}/note/${note}`,
             {
-              method: 'PUT',
-              headers: new Headers([
-                ['Content-Type', 'application/json'],
-                ['Authorization', `Bearer ${login.jwt}`],
-              ]),
-              body: JSON.stringify({ content: null } satisfies Omit<
-                UpdateNoteRequestBodyDto,
-                'content'
-              > & { content: null }),
-              signal: testContext.signal,
+              payload: { content: 'Updated', unexpected: true },
+              expectedMessages: ['property unexpected should not exist'],
             },
-          );
+          ];
+          for (const variant of variants) {
+            // given
+            const owner: E2ETestApplicationUser =
+              await manager.registerUser(testContext);
+            const canvas: E2ETestCanvas = await manager.createCanvas(
+              owner,
+              testContext,
+              RoomVisibilityDto.private,
+            );
+            const login: PostAuthResponseBodyDto = await manager.loginUser(
+              owner.username,
+              owner.password,
+              testContext,
+            );
+            const note: string = await manager.createPublishedDocument(
+              'api::note.note',
+              {
+                project: canvas.projectId,
+                content: 'Original note',
+                author: owner.documentId,
+              },
+              testContext,
+            );
+            const originalResponse: Response = await manager.readDocument(
+              'api::note.note',
+              note,
+              testContext,
+            );
+            assert.equal(originalResponse.status, 200);
+            const original: unknown = await originalResponse.json();
 
-          // then
-          assert.equal(response.status, 400);
-          assert.deepEqual(await response.json(), {
-            statusCode: 400,
-            error: 'Bad Request',
-            message: ['content must be a string'],
-          });
-          const stored: Response = await manager.readDocument(
-            'api::note.note',
-            note,
-            testContext,
-          );
-          assert.equal(stored.status, 200);
-          assert.deepEqual(await stored.json(), original);
-        });
-        test('rejects non-string content', async (testContext: TestContext): Promise<void> => {
-          // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const canvas: E2ETestCanvas = await manager.createCanvas(
-            owner,
-            testContext,
-            RoomVisibilityDto.private,
-          );
-          const login: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
-            testContext,
-          );
-          const note: string = await manager.createPublishedDocument(
-            'api::note.note',
-            {
-              project: canvas.projectId,
-              content: 'Original note',
-              author: owner.documentId,
-            },
-            testContext,
-          );
-          const originalResponse: Response = await manager.readDocument(
-            'api::note.note',
-            note,
-            testContext,
-          );
-          assert.equal(originalResponse.status, 200);
-          const original: unknown = await originalResponse.json();
+            // when
+            const response: Response = await fetch(
+              `${manager.apiUrl}/room/${canvas.roomId}/canvas/${canvas.canvasId}/note/${note}`,
+              {
+                method: 'PUT',
+                headers: new Headers([
+                  ['Content-Type', 'application/json'],
+                  ['Authorization', `Bearer ${login.jwt}`],
+                ]),
+                body: JSON.stringify(variant.payload),
+                signal: testContext.signal,
+              },
+            );
 
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/room/${canvas.roomId}/canvas/${canvas.canvasId}/note/${note}`,
-            {
-              method: 'PUT',
-              headers: new Headers([
-                ['Content-Type', 'application/json'],
-                ['Authorization', `Bearer ${login.jwt}`],
-              ]),
-              body: JSON.stringify({ content: false } satisfies Omit<
-                UpdateNoteRequestBodyDto,
-                'content'
-              > & { content: boolean }),
-              signal: testContext.signal,
-            },
-          );
-
-          // then
-          assert.equal(response.status, 400);
-          assert.deepEqual(await response.json(), {
-            statusCode: 400,
-            error: 'Bad Request',
-            message: ['content must be a string'],
-          });
-          const stored: Response = await manager.readDocument(
-            'api::note.note',
-            note,
-            testContext,
-          );
-          assert.equal(stored.status, 200);
-          assert.deepEqual(await stored.json(), original);
-        });
-        test('rejects unexpected properties', async (testContext: TestContext): Promise<void> => {
-          // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const canvas: E2ETestCanvas = await manager.createCanvas(
-            owner,
-            testContext,
-            RoomVisibilityDto.private,
-          );
-          const login: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
-            testContext,
-          );
-          const note: string = await manager.createPublishedDocument(
-            'api::note.note',
-            {
-              project: canvas.projectId,
-              content: 'Original note',
-              author: owner.documentId,
-            },
-            testContext,
-          );
-          const originalResponse: Response = await manager.readDocument(
-            'api::note.note',
-            note,
-            testContext,
-          );
-          assert.equal(originalResponse.status, 200);
-          const original: unknown = await originalResponse.json();
-
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/room/${canvas.roomId}/canvas/${canvas.canvasId}/note/${note}`,
-            {
-              method: 'PUT',
-              headers: new Headers([
-                ['Content-Type', 'application/json'],
-                ['Authorization', `Bearer ${login.jwt}`],
-              ]),
-              body: JSON.stringify({
-                content: 'Updated',
-                unexpected: true,
-              } satisfies UpdateNoteRequestBodyDto & { unexpected: boolean }),
-              signal: testContext.signal,
-            },
-          );
-
-          // then
-          assert.equal(response.status, 400);
-          assert.deepEqual(await response.json(), {
-            statusCode: 400,
-            error: 'Bad Request',
-            message: ['property unexpected should not exist'],
-          });
-          const stored: Response = await manager.readDocument(
-            'api::note.note',
-            note,
-            testContext,
-          );
-          assert.equal(stored.status, 200);
-          assert.deepEqual(await stored.json(), original);
+            // then
+            assert.equal(response.status, 400);
+            assert.deepEqual(await response.json(), {
+              statusCode: 400,
+              error: 'Bad Request',
+              message: variant.expectedMessages,
+            });
+            const stored: Response = await manager.readDocument(
+              'api::note.note',
+              note,
+              testContext,
+            );
+            assert.equal(stored.status, 200);
+            assert.deepEqual(await stored.json(), original);
+          }
         });
       });
       describe('401', (): void => {
-        test('rejects anonymous access to a private room', async (testContext: TestContext): Promise<void> => {
-          // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const canvas: E2ETestCanvas = await manager.createCanvas(
-            owner,
-            testContext,
-            RoomVisibilityDto.private,
-          );
-
-          const note: string = await manager.createPublishedDocument(
-            'api::note.note',
+        test('rejects requests without valid authentication', async (testContext: TestContext): Promise<void> => {
+          const variants: {
+            visibility: RoomVisibilityDto;
+            headers: [string, string][];
+          }[] = [
             {
-              project: canvas.projectId,
-              content: 'Original note',
-              author: owner.documentId,
+              visibility: RoomVisibilityDto.private,
+              headers: [['Content-Type', 'application/json']],
             },
-            testContext,
-          );
-          const originalResponse: Response = await manager.readDocument(
-            'api::note.note',
-            note,
-            testContext,
-          );
-          assert.equal(originalResponse.status, 200);
-          const original: unknown = await originalResponse.json();
-
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/room/${canvas.roomId}/canvas/${canvas.canvasId}/note/${note}`,
             {
-              method: 'PUT',
-              headers: new Headers([['Content-Type', 'application/json']]),
-              body: JSON.stringify({
-                content: 'Updated note',
-              } satisfies UpdateNoteRequestBodyDto),
-              signal: testContext.signal,
+              visibility: RoomVisibilityDto.public,
+              headers: [['Content-Type', 'application/json']],
             },
-          );
-
-          // then
-          assert.equal(response.status, 401);
-          assert.equal(response.headers.get('www-authenticate'), 'Bearer');
-          assert.deepEqual(await response.json(), {
-            statusCode: 401,
-            message: 'Unauthorized',
-          });
-          const stored: Response = await manager.readDocument(
-            'api::note.note',
-            note,
-            testContext,
-          );
-          assert.equal(stored.status, 200);
-          assert.deepEqual(await stored.json(), original);
-        });
-        test('requires authentication in a public room', async (testContext: TestContext): Promise<void> => {
-          // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const canvas: E2ETestCanvas = await manager.createCanvas(
-            owner,
-            testContext,
-            RoomVisibilityDto.public,
-          );
-
-          const note: string = await manager.createPublishedDocument(
-            'api::note.note',
             {
-              project: canvas.projectId,
-              content: 'Original note',
-              author: owner.documentId,
-            },
-            testContext,
-          );
-          const originalResponse: Response = await manager.readDocument(
-            'api::note.note',
-            note,
-            testContext,
-          );
-          assert.equal(originalResponse.status, 200);
-          const original: unknown = await originalResponse.json();
-
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/room/${canvas.roomId}/canvas/${canvas.canvasId}/note/${note}`,
-            {
-              method: 'PUT',
-              headers: new Headers([['Content-Type', 'application/json']]),
-              body: JSON.stringify({
-                content: 'Updated note',
-              } satisfies UpdateNoteRequestBodyDto),
-              signal: testContext.signal,
-            },
-          );
-
-          // then
-          assert.equal(response.status, 401);
-          assert.equal(response.headers.get('www-authenticate'), 'Bearer');
-          assert.deepEqual(await response.json(), {
-            statusCode: 401,
-            message: 'Unauthorized',
-          });
-          const stored: Response = await manager.readDocument(
-            'api::note.note',
-            note,
-            testContext,
-          );
-          assert.equal(stored.status, 200);
-          assert.deepEqual(await stored.json(), original);
-        });
-        test('rejects an invalid jwt in an unlisted room', async (testContext: TestContext): Promise<void> => {
-          // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const canvas: E2ETestCanvas = await manager.createCanvas(
-            owner,
-            testContext,
-            RoomVisibilityDto.unlisted,
-          );
-
-          const note: string = await manager.createPublishedDocument(
-            'api::note.note',
-            {
-              project: canvas.projectId,
-              content: 'Original note',
-              author: owner.documentId,
-            },
-            testContext,
-          );
-          const originalResponse: Response = await manager.readDocument(
-            'api::note.note',
-            note,
-            testContext,
-          );
-          assert.equal(originalResponse.status, 200);
-          const original: unknown = await originalResponse.json();
-
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/room/${canvas.roomId}/canvas/${canvas.canvasId}/note/${note}`,
-            {
-              method: 'PUT',
-              headers: new Headers([
+              visibility: RoomVisibilityDto.unlisted,
+              headers: [
                 ['Content-Type', 'application/json'],
                 ['Authorization', `Bearer invalid-jwt`],
-              ]),
-              body: JSON.stringify({
-                content: 'Updated note',
-              } satisfies UpdateNoteRequestBodyDto),
-              signal: testContext.signal,
+              ],
             },
-          );
+          ];
+          for (const variant of variants) {
+            // given
+            const owner: E2ETestApplicationUser =
+              await manager.registerUser(testContext);
+            const canvas: E2ETestCanvas = await manager.createCanvas(
+              owner,
+              testContext,
+              variant.visibility,
+            );
 
-          // then
-          assert.equal(response.status, 401);
-          assert.equal(response.headers.get('www-authenticate'), 'Bearer');
-          assert.deepEqual(await response.json(), {
-            statusCode: 401,
-            message: 'Unauthorized',
-          });
-          const stored: Response = await manager.readDocument(
-            'api::note.note',
-            note,
-            testContext,
-          );
-          assert.equal(stored.status, 200);
-          assert.deepEqual(await stored.json(), original);
+            const note: string = await manager.createPublishedDocument(
+              'api::note.note',
+              {
+                project: canvas.projectId,
+                content: 'Original note',
+                author: owner.documentId,
+              },
+              testContext,
+            );
+            const originalResponse: Response = await manager.readDocument(
+              'api::note.note',
+              note,
+              testContext,
+            );
+            assert.equal(originalResponse.status, 200);
+            const original: unknown = await originalResponse.json();
+
+            // when
+            const response: Response = await fetch(
+              `${manager.apiUrl}/room/${canvas.roomId}/canvas/${canvas.canvasId}/note/${note}`,
+              {
+                method: 'PUT',
+                body: JSON.stringify({
+                  content: 'Updated note',
+                } satisfies UpdateNoteRequestBodyDto),
+                signal: testContext.signal,
+                headers: new Headers(variant.headers),
+              },
+            );
+
+            // then
+            assert.equal(response.status, 401);
+            assert.equal(response.headers.get('www-authenticate'), 'Bearer');
+            assert.deepEqual(await response.json(), {
+              statusCode: 401,
+              message: 'Unauthorized',
+            });
+            const stored: Response = await manager.readDocument(
+              'api::note.note',
+              note,
+              testContext,
+            );
+            assert.equal(stored.status, 200);
+            assert.deepEqual(await stored.json(), original);
+          }
         });
       });
       describe('403', (): void => {
@@ -2497,164 +1832,79 @@ describe('/room/:roomId/canvas/:canvasId/note', (suiteContext: SuiteContext): vo
         });
       });
       describe('401', (): void => {
-        test('rejects anonymous access to a private room', async (testContext: TestContext): Promise<void> => {
-          // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const canvas: E2ETestCanvas = await manager.createCanvas(
-            owner,
-            testContext,
-            RoomVisibilityDto.private,
-          );
-
-          const note: string = await manager.createPublishedDocument(
-            'api::note.note',
+        test('rejects requests without valid authentication', async (testContext: TestContext): Promise<void> => {
+          const variants: {
+            visibility: RoomVisibilityDto;
+            headers: [string, string][];
+          }[] = [
             {
-              project: canvas.projectId,
-              content: 'Original note',
-              author: owner.documentId,
+              visibility: RoomVisibilityDto.private,
+              headers: [['Content-Type', 'application/json']],
             },
-            testContext,
-          );
-          const originalResponse: Response = await manager.readDocument(
-            'api::note.note',
-            note,
-            testContext,
-          );
-          assert.equal(originalResponse.status, 200);
-          const original: unknown = await originalResponse.json();
-
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/room/${canvas.roomId}/canvas/${canvas.canvasId}/note/${note}`,
             {
-              method: 'DELETE',
-              headers: new Headers([['Content-Type', 'application/json']]),
-              signal: testContext.signal,
+              visibility: RoomVisibilityDto.public,
+              headers: [['Content-Type', 'application/json']],
             },
-          );
-
-          // then
-          assert.equal(response.status, 401);
-          assert.equal(response.headers.get('www-authenticate'), 'Bearer');
-          assert.deepEqual(await response.json(), {
-            statusCode: 401,
-            message: 'Unauthorized',
-          });
-          const stored: Response = await manager.readDocument(
-            'api::note.note',
-            note,
-            testContext,
-          );
-          assert.equal(stored.status, 200);
-          assert.deepEqual(await stored.json(), original);
-        });
-        test('requires authentication in a public room', async (testContext: TestContext): Promise<void> => {
-          // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const canvas: E2ETestCanvas = await manager.createCanvas(
-            owner,
-            testContext,
-            RoomVisibilityDto.public,
-          );
-
-          const note: string = await manager.createPublishedDocument(
-            'api::note.note',
             {
-              project: canvas.projectId,
-              content: 'Original note',
-              author: owner.documentId,
-            },
-            testContext,
-          );
-          const originalResponse: Response = await manager.readDocument(
-            'api::note.note',
-            note,
-            testContext,
-          );
-          assert.equal(originalResponse.status, 200);
-          const original: unknown = await originalResponse.json();
-
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/room/${canvas.roomId}/canvas/${canvas.canvasId}/note/${note}`,
-            {
-              method: 'DELETE',
-              headers: new Headers([['Content-Type', 'application/json']]),
-              signal: testContext.signal,
-            },
-          );
-
-          // then
-          assert.equal(response.status, 401);
-          assert.equal(response.headers.get('www-authenticate'), 'Bearer');
-          assert.deepEqual(await response.json(), {
-            statusCode: 401,
-            message: 'Unauthorized',
-          });
-          const stored: Response = await manager.readDocument(
-            'api::note.note',
-            note,
-            testContext,
-          );
-          assert.equal(stored.status, 200);
-          assert.deepEqual(await stored.json(), original);
-        });
-        test('rejects an invalid jwt in an unlisted room', async (testContext: TestContext): Promise<void> => {
-          // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const canvas: E2ETestCanvas = await manager.createCanvas(
-            owner,
-            testContext,
-            RoomVisibilityDto.unlisted,
-          );
-
-          const note: string = await manager.createPublishedDocument(
-            'api::note.note',
-            {
-              project: canvas.projectId,
-              content: 'Original note',
-              author: owner.documentId,
-            },
-            testContext,
-          );
-          const originalResponse: Response = await manager.readDocument(
-            'api::note.note',
-            note,
-            testContext,
-          );
-          assert.equal(originalResponse.status, 200);
-          const original: unknown = await originalResponse.json();
-
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/room/${canvas.roomId}/canvas/${canvas.canvasId}/note/${note}`,
-            {
-              method: 'DELETE',
-              headers: new Headers([
+              visibility: RoomVisibilityDto.unlisted,
+              headers: [
                 ['Content-Type', 'application/json'],
                 ['Authorization', `Bearer invalid-jwt`],
-              ]),
-              signal: testContext.signal,
+              ],
             },
-          );
+          ];
+          for (const variant of variants) {
+            // given
+            const owner: E2ETestApplicationUser =
+              await manager.registerUser(testContext);
+            const canvas: E2ETestCanvas = await manager.createCanvas(
+              owner,
+              testContext,
+              variant.visibility,
+            );
 
-          // then
-          assert.equal(response.status, 401);
-          assert.equal(response.headers.get('www-authenticate'), 'Bearer');
-          assert.deepEqual(await response.json(), {
-            statusCode: 401,
-            message: 'Unauthorized',
-          });
-          const stored: Response = await manager.readDocument(
-            'api::note.note',
-            note,
-            testContext,
-          );
-          assert.equal(stored.status, 200);
-          assert.deepEqual(await stored.json(), original);
+            const note: string = await manager.createPublishedDocument(
+              'api::note.note',
+              {
+                project: canvas.projectId,
+                content: 'Original note',
+                author: owner.documentId,
+              },
+              testContext,
+            );
+            const originalResponse: Response = await manager.readDocument(
+              'api::note.note',
+              note,
+              testContext,
+            );
+            assert.equal(originalResponse.status, 200);
+            const original: unknown = await originalResponse.json();
+
+            // when
+            const response: Response = await fetch(
+              `${manager.apiUrl}/room/${canvas.roomId}/canvas/${canvas.canvasId}/note/${note}`,
+              {
+                method: 'DELETE',
+                signal: testContext.signal,
+                headers: new Headers(variant.headers),
+              },
+            );
+
+            // then
+            assert.equal(response.status, 401);
+            assert.equal(response.headers.get('www-authenticate'), 'Bearer');
+            assert.deepEqual(await response.json(), {
+              statusCode: 401,
+              message: 'Unauthorized',
+            });
+            const stored: Response = await manager.readDocument(
+              'api::note.note',
+              note,
+              testContext,
+            );
+            assert.equal(stored.status, 200);
+            assert.deepEqual(await stored.json(), original);
+          }
         });
       });
       describe('403', (): void => {

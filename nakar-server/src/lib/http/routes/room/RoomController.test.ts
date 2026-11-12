@@ -60,89 +60,53 @@ describe('/project/:projectId/room', (suiteContext: SuiteContext): void => {
   });
   describe('POST', (): void => {
     describe('201', (): void => {
-      test('owner can create a private room', async (testContext: TestContext): Promise<void> => {
-        // given
-        const owner: E2ETestApplicationUser =
-          await manager.registerUser(testContext);
+      test('allows the owner and collaborator to create a private room', async (testContext: TestContext): Promise<void> => {
+        const roles: ('owner' | 'collaborator')[] = ['owner', 'collaborator'];
+        for (const role of roles) {
+          // given
+          const owner: E2ETestApplicationUser =
+            await manager.registerUser(testContext);
+          const actor: E2ETestApplicationUser =
+            role === 'owner' ? owner : await manager.registerUser(testContext);
 
-        const project: string = await manager.createPublishedDocument(
-          'api::project.project',
-          { title: 'Room Project', owner: owner.documentId, collaborators: [] },
-          testContext,
-        );
+          const project: string = await manager.createPublishedDocument(
+            'api::project.project',
+            {
+              title: 'Room Project',
+              owner: owner.documentId,
+              collaborators: role === 'collaborator' ? [actor.documentId] : [],
+            },
+            testContext,
+          );
 
-        const login: PostAuthResponseBodyDto = await manager.loginUser(
-          owner.username,
-          owner.password,
-          testContext,
-        );
-        const url: string = `${manager.apiUrl}/project/${project}/room`;
+          const login: PostAuthResponseBodyDto = await manager.loginUser(
+            actor.username,
+            actor.password,
+            testContext,
+          );
+          const url: string = `${manager.apiUrl}/project/${project}/room`;
 
-        // when
-        const response: Response = await fetch(url, {
-          method: 'POST',
-          headers: new Headers([['Authorization', `Bearer ${login.jwt}`]]),
-          signal: testContext.signal,
-        });
+          // when
+          const response: Response = await fetch(url, {
+            method: 'POST',
+            headers: new Headers([['Authorization', `Bearer ${login.jwt}`]]),
+            signal: testContext.signal,
+          });
 
-        // then
-        assert.equal(response.status, 201);
-        const body: RoomDto = roomSchema.parse(await response.json());
-        assert.deepEqual(body, {
-          id: body.id,
-          title: 'Untitled Room',
-          visibility: RoomVisibilityDto.private,
-          projectId: project,
-          canvases: [{ id: body.joinCanvasId, title: 'New Canvas' }],
-          joinCanvasId: body.joinCanvasId,
-          databases: [],
-          activeUsers: [],
-        });
-      });
-      test('collaborator can create a private room', async (testContext: TestContext): Promise<void> => {
-        // given
-        const owner: E2ETestApplicationUser =
-          await manager.registerUser(testContext);
-
-        const collaborator: E2ETestApplicationUser =
-          await manager.registerUser(testContext);
-        const project: string = await manager.createPublishedDocument(
-          'api::project.project',
-          {
-            title: 'Room Project',
-            owner: owner.documentId,
-            collaborators: [collaborator.documentId],
-          },
-          testContext,
-        );
-
-        const login: PostAuthResponseBodyDto = await manager.loginUser(
-          collaborator.username,
-          collaborator.password,
-          testContext,
-        );
-        const url: string = `${manager.apiUrl}/project/${project}/room`;
-
-        // when
-        const response: Response = await fetch(url, {
-          method: 'POST',
-          headers: new Headers([['Authorization', `Bearer ${login.jwt}`]]),
-          signal: testContext.signal,
-        });
-
-        // then
-        assert.equal(response.status, 201);
-        const body: RoomDto = roomSchema.parse(await response.json());
-        assert.deepEqual(body, {
-          id: body.id,
-          title: 'Untitled Room',
-          visibility: RoomVisibilityDto.private,
-          projectId: project,
-          canvases: [{ id: body.joinCanvasId, title: 'New Canvas' }],
-          joinCanvasId: body.joinCanvasId,
-          databases: [],
-          activeUsers: [],
-        });
+          // then
+          assert.equal(response.status, 201);
+          const body: RoomDto = roomSchema.parse(await response.json());
+          assert.deepEqual(body, {
+            id: body.id,
+            title: 'Untitled Room',
+            visibility: RoomVisibilityDto.private,
+            projectId: project,
+            canvases: [{ id: body.joinCanvasId, title: 'New Canvas' }],
+            joinCanvasId: body.joinCanvasId,
+            databases: [],
+            activeUsers: [],
+          });
+        }
       });
     });
     describe('401', (): void => {
@@ -529,111 +493,65 @@ describe('/project/:projectId/room', (suiteContext: SuiteContext): void => {
           );
         });
 
-        test('owner can read the room', async (testContext: TestContext): Promise<void> => {
-          // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
+        test('allows the owner and collaborator to read the room', async (testContext: TestContext): Promise<void> => {
+          const roles: ('owner' | 'collaborator')[] = ['owner', 'collaborator'];
+          for (const role of roles) {
+            // given
+            const owner: E2ETestApplicationUser =
+              await manager.registerUser(testContext);
+            const actor: E2ETestApplicationUser =
+              role === 'owner'
+                ? owner
+                : await manager.registerUser(testContext);
 
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Room Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
+            const project: string = await manager.createPublishedDocument(
+              'api::project.project',
+              {
+                title: 'Room Project',
+                owner: owner.documentId,
+                collaborators:
+                  role === 'collaborator' ? [actor.documentId] : [],
+              },
+              testContext,
+            );
 
-          const room: string = await manager.createPublishedDocument(
-            'api::room.room',
-            {
+            const room: string = await manager.createPublishedDocument(
+              'api::room.room',
+              {
+                title: 'Original Room',
+                visibility: RoomVisibilityDto.private,
+                project: project,
+              },
+              testContext,
+            );
+            const login: PostAuthResponseBodyDto = await manager.loginUser(
+              actor.username,
+              actor.password,
+              testContext,
+            );
+            const url: string = `${manager.apiUrl}/project/${project}/room/${room}`;
+
+            // when
+            const response: Response = await fetch(url, {
+              method: 'GET',
+              headers: new Headers([['Authorization', `Bearer ${login.jwt}`]]),
+              signal: testContext.signal,
+            });
+
+            // then
+            assert.equal(response.status, 200);
+            const body: RoomDto = roomSchema.parse(await response.json());
+            assert.deepEqual(body, {
+              id: room,
               title: 'Original Room',
               visibility: RoomVisibilityDto.private,
-              project: project,
-            },
-            testContext,
-          );
-          const login: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
-            testContext,
-          );
-          const url: string = `${manager.apiUrl}/project/${project}/room/${room}`;
-
-          // when
-          const response: Response = await fetch(url, {
-            method: 'GET',
-            headers: new Headers([['Authorization', `Bearer ${login.jwt}`]]),
-            signal: testContext.signal,
-          });
-
-          // then
-          assert.equal(response.status, 200);
-          const body: RoomDto = roomSchema.parse(await response.json());
-          assert.deepEqual(body, {
-            id: room,
-            title: 'Original Room',
-            visibility: RoomVisibilityDto.private,
-            projectId: project,
-            canvases: [{ id: body.joinCanvasId, title: 'New Canvas' }],
-            joinCanvasId: body.joinCanvasId,
-            databases: [],
-            activeUsers: [],
-          });
-        });
-        test('collaborator can read the room', async (testContext: TestContext): Promise<void> => {
-          // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-
-          const collaborator: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Room Project',
-              owner: owner.documentId,
-              collaborators: [collaborator.documentId],
-            },
-            testContext,
-          );
-
-          const room: string = await manager.createPublishedDocument(
-            'api::room.room',
-            {
-              title: 'Original Room',
-              visibility: RoomVisibilityDto.private,
-              project: project,
-            },
-            testContext,
-          );
-          const login: PostAuthResponseBodyDto = await manager.loginUser(
-            collaborator.username,
-            collaborator.password,
-            testContext,
-          );
-          const url: string = `${manager.apiUrl}/project/${project}/room/${room}`;
-
-          // when
-          const response: Response = await fetch(url, {
-            method: 'GET',
-            headers: new Headers([['Authorization', `Bearer ${login.jwt}`]]),
-            signal: testContext.signal,
-          });
-
-          // then
-          assert.equal(response.status, 200);
-          const body: RoomDto = roomSchema.parse(await response.json());
-          assert.deepEqual(body, {
-            id: room,
-            title: 'Original Room',
-            visibility: RoomVisibilityDto.private,
-            projectId: project,
-            canvases: [{ id: body.joinCanvasId, title: 'New Canvas' }],
-            joinCanvasId: body.joinCanvasId,
-            databases: [],
-            activeUsers: [],
-          });
+              projectId: project,
+              canvases: [{ id: body.joinCanvasId, title: 'New Canvas' }],
+              joinCanvasId: body.joinCanvasId,
+              databases: [],
+              activeUsers: [],
+            });
+          }
         });
       });
       describe('401', (): void => {
@@ -1182,139 +1100,79 @@ describe('/project/:projectId/room', (suiteContext: SuiteContext): void => {
           );
         });
 
-        test('owner can update the room', async (testContext: TestContext): Promise<void> => {
-          // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
+        test('allows the owner and collaborator to update the room', async (testContext: TestContext): Promise<void> => {
+          const roles: ('owner' | 'collaborator')[] = ['owner', 'collaborator'];
+          for (const role of roles) {
+            // given
+            const owner: E2ETestApplicationUser =
+              await manager.registerUser(testContext);
+            const actor: E2ETestApplicationUser =
+              role === 'owner'
+                ? owner
+                : await manager.registerUser(testContext);
 
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Room Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
+            const project: string = await manager.createPublishedDocument(
+              'api::project.project',
+              {
+                title: 'Room Project',
+                owner: owner.documentId,
+                collaborators:
+                  role === 'collaborator' ? [actor.documentId] : [],
+              },
+              testContext,
+            );
 
-          const room: string = await manager.createPublishedDocument(
-            'api::room.room',
-            {
-              title: 'Original Room',
-              visibility: RoomVisibilityDto.private,
-              project: project,
-            },
-            testContext,
-          );
-          const login: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
-            testContext,
-          );
-          const url: string = `${manager.apiUrl}/project/${project}/room/${room}`;
+            const room: string = await manager.createPublishedDocument(
+              'api::room.room',
+              {
+                title: 'Original Room',
+                visibility: RoomVisibilityDto.private,
+                project: project,
+              },
+              testContext,
+            );
+            const login: PostAuthResponseBodyDto = await manager.loginUser(
+              actor.username,
+              actor.password,
+              testContext,
+            );
+            const url: string = `${manager.apiUrl}/project/${project}/room/${room}`;
 
-          // when
-          const response: Response = await fetch(url, {
-            method: 'PUT',
-            headers: new Headers([
-              ['Authorization', `Bearer ${login.jwt}`],
-              ['Content-Type', 'application/json'],
-            ]),
-            body: JSON.stringify({
+            // when
+            const response: Response = await fetch(url, {
+              method: 'PUT',
+              headers: new Headers([
+                ['Authorization', `Bearer ${login.jwt}`],
+                ['Content-Type', 'application/json'],
+              ]),
+              body: JSON.stringify({
+                title: 'Updated Room',
+                visibility: RoomVisibilityDto.public,
+              } satisfies UpdateRoomRequestBodyDto),
+              signal: testContext.signal,
+            });
+
+            // then
+            const persisted: Response = await fetch(url, {
+              headers: new Headers([['Authorization', `Bearer ${login.jwt}`]]),
+              signal: testContext.signal,
+            });
+
+            assert.equal(response.status, 200);
+            const body: RoomDto = roomSchema.parse(await response.json());
+            assert.deepEqual(body, {
+              id: room,
               title: 'Updated Room',
               visibility: RoomVisibilityDto.public,
-            } satisfies UpdateRoomRequestBodyDto),
-            signal: testContext.signal,
-          });
-
-          // then
-          const persisted: Response = await fetch(url, {
-            headers: new Headers([['Authorization', `Bearer ${login.jwt}`]]),
-            signal: testContext.signal,
-          });
-
-          assert.equal(response.status, 200);
-          const body: RoomDto = roomSchema.parse(await response.json());
-          assert.deepEqual(body, {
-            id: room,
-            title: 'Updated Room',
-            visibility: RoomVisibilityDto.public,
-            projectId: project,
-            canvases: [{ id: body.joinCanvasId, title: 'New Canvas' }],
-            joinCanvasId: body.joinCanvasId,
-            databases: [],
-            activeUsers: [],
-          });
-          assert.equal(persisted.status, 200);
-          assert.deepEqual(await persisted.json(), body);
-        });
-        test('collaborator can update the room', async (testContext: TestContext): Promise<void> => {
-          // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-
-          const collaborator: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Room Project',
-              owner: owner.documentId,
-              collaborators: [collaborator.documentId],
-            },
-            testContext,
-          );
-
-          const room: string = await manager.createPublishedDocument(
-            'api::room.room',
-            {
-              title: 'Original Room',
-              visibility: RoomVisibilityDto.private,
-              project: project,
-            },
-            testContext,
-          );
-          const login: PostAuthResponseBodyDto = await manager.loginUser(
-            collaborator.username,
-            collaborator.password,
-            testContext,
-          );
-          const url: string = `${manager.apiUrl}/project/${project}/room/${room}`;
-
-          // when
-          const response: Response = await fetch(url, {
-            method: 'PUT',
-            headers: new Headers([
-              ['Authorization', `Bearer ${login.jwt}`],
-              ['Content-Type', 'application/json'],
-            ]),
-            body: JSON.stringify({
-              title: 'Updated Room',
-              visibility: RoomVisibilityDto.public,
-            } satisfies UpdateRoomRequestBodyDto),
-            signal: testContext.signal,
-          });
-
-          // then
-          const persisted: Response = await fetch(url, {
-            headers: new Headers([['Authorization', `Bearer ${login.jwt}`]]),
-            signal: testContext.signal,
-          });
-
-          assert.equal(response.status, 200);
-          const body: RoomDto = roomSchema.parse(await response.json());
-          assert.deepEqual(body, {
-            id: room,
-            title: 'Updated Room',
-            visibility: RoomVisibilityDto.public,
-            projectId: project,
-            canvases: [{ id: body.joinCanvasId, title: 'New Canvas' }],
-            joinCanvasId: body.joinCanvasId,
-            databases: [],
-            activeUsers: [],
-          });
-          assert.equal(persisted.status, 200);
-          assert.deepEqual(await persisted.json(), body);
+              projectId: project,
+              canvases: [{ id: body.joinCanvasId, title: 'New Canvas' }],
+              joinCanvasId: body.joinCanvasId,
+              databases: [],
+              activeUsers: [],
+            });
+            assert.equal(persisted.status, 200);
+            assert.deepEqual(await persisted.json(), body);
+          }
         });
         test('can change visibility to private', async (testContext: TestContext): Promise<void> => {
           // given
@@ -2080,519 +1938,115 @@ describe('/project/:projectId/room', (suiteContext: SuiteContext): void => {
         });
       });
       describe('400', (): void => {
-        test('rejects a missing title', async (testContext: TestContext): Promise<void> => {
-          // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
+        test('rejects invalid room update bodies', async (testContext: TestContext): Promise<void> => {
+          const variants: {
+            payload: Record<string, unknown>;
+            expectedMessages: string[];
+          }[] = [
             {
-              title: 'Room Project',
-              owner: owner.documentId,
-              collaborators: [],
+              payload: { title: undefined },
+              expectedMessages: ['title must be a string'],
             },
-            testContext,
-          );
-
-          const room: string = await manager.createPublishedDocument(
-            'api::room.room',
             {
-              title: 'Original Room',
-              visibility: RoomVisibilityDto.private,
-              project: project,
+              payload: { title: null },
+              expectedMessages: ['title must be a string'],
             },
-            testContext,
-          );
-          const login: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
-            testContext,
-          );
-          const url: string = `${manager.apiUrl}/project/${project}/room/${room}`;
-
-          // when
-          const response: Response = await fetch(url, {
-            method: 'PUT',
-            headers: new Headers([
-              ['Authorization', `Bearer ${login.jwt}`],
-              ['Content-Type', 'application/json'],
-            ]),
-            body: JSON.stringify({
-              visibility: RoomVisibilityDto.private,
-            } satisfies Omit<UpdateRoomRequestBodyDto, 'title'>),
-            signal: testContext.signal,
-          });
-
-          // then
-          const persisted: Response = await fetch(url, {
-            headers: new Headers([['Authorization', `Bearer ${login.jwt}`]]),
-            signal: testContext.signal,
-          });
-
-          assert.equal(response.status, 400);
-          assert.deepEqual(await response.json(), {
-            statusCode: 400,
-            error: 'Bad Request',
-            message: ['title must be a string'],
-          });
-          assert.equal(persisted.status, 200);
-          const unchanged: RoomDto = roomSchema.parse(await persisted.json());
-          assert.equal(unchanged.title, 'Original Room');
-          assert.equal(unchanged.visibility, RoomVisibilityDto.private);
-        });
-        test('rejects a null title', async (testContext: TestContext): Promise<void> => {
-          // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
             {
-              title: 'Room Project',
-              owner: owner.documentId,
-              collaborators: [],
+              payload: { title: 42 },
+              expectedMessages: ['title must be a string'],
             },
-            testContext,
-          );
-
-          const room: string = await manager.createPublishedDocument(
-            'api::room.room',
             {
-              title: 'Original Room',
-              visibility: RoomVisibilityDto.private,
-              project: project,
+              payload: { visibility: undefined },
+              expectedMessages: [
+                'visibility must be one of the following values: private, public, unlisted',
+              ],
             },
-            testContext,
-          );
-          const login: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
-            testContext,
-          );
-          const url: string = `${manager.apiUrl}/project/${project}/room/${room}`;
-
-          // when
-          const response: Response = await fetch(url, {
-            method: 'PUT',
-            headers: new Headers([
-              ['Authorization', `Bearer ${login.jwt}`],
-              ['Content-Type', 'application/json'],
-            ]),
-            body: JSON.stringify({
-              title: null,
-              visibility: RoomVisibilityDto.private,
-            } satisfies Omit<UpdateRoomRequestBodyDto, 'title'> & {
-              title: null;
-            }),
-            signal: testContext.signal,
-          });
-
-          // then
-          const persisted: Response = await fetch(url, {
-            headers: new Headers([['Authorization', `Bearer ${login.jwt}`]]),
-            signal: testContext.signal,
-          });
-
-          assert.equal(response.status, 400);
-          assert.deepEqual(await response.json(), {
-            statusCode: 400,
-            error: 'Bad Request',
-            message: ['title must be a string'],
-          });
-          assert.equal(persisted.status, 200);
-          const unchanged: RoomDto = roomSchema.parse(await persisted.json());
-          assert.equal(unchanged.title, 'Original Room');
-          assert.equal(unchanged.visibility, RoomVisibilityDto.private);
-        });
-        test('rejects a non-string title', async (testContext: TestContext): Promise<void> => {
-          // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
             {
-              title: 'Room Project',
-              owner: owner.documentId,
-              collaborators: [],
+              payload: { visibility: null },
+              expectedMessages: [
+                'visibility must be one of the following values: private, public, unlisted',
+              ],
             },
-            testContext,
-          );
-
-          const room: string = await manager.createPublishedDocument(
-            'api::room.room',
             {
-              title: 'Original Room',
-              visibility: RoomVisibilityDto.private,
-              project: project,
+              payload: { visibility: 'unknown' },
+              expectedMessages: [
+                'visibility must be one of the following values: private, public, unlisted',
+              ],
             },
-            testContext,
-          );
-          const login: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
-            testContext,
-          );
-          const url: string = `${manager.apiUrl}/project/${project}/room/${room}`;
-
-          // when
-          const response: Response = await fetch(url, {
-            method: 'PUT',
-            headers: new Headers([
-              ['Authorization', `Bearer ${login.jwt}`],
-              ['Content-Type', 'application/json'],
-            ]),
-            body: JSON.stringify({
-              title: 42,
-              visibility: RoomVisibilityDto.private,
-            } satisfies Omit<UpdateRoomRequestBodyDto, 'title'> & {
-              title: number;
-            }),
-            signal: testContext.signal,
-          });
-
-          // then
-          const persisted: Response = await fetch(url, {
-            headers: new Headers([['Authorization', `Bearer ${login.jwt}`]]),
-            signal: testContext.signal,
-          });
-
-          assert.equal(response.status, 400);
-          assert.deepEqual(await response.json(), {
-            statusCode: 400,
-            error: 'Bad Request',
-            message: ['title must be a string'],
-          });
-          assert.equal(persisted.status, 200);
-          const unchanged: RoomDto = roomSchema.parse(await persisted.json());
-          assert.equal(unchanged.title, 'Original Room');
-          assert.equal(unchanged.visibility, RoomVisibilityDto.private);
-        });
-        test('rejects a missing visibility', async (testContext: TestContext): Promise<void> => {
-          // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
             {
-              title: 'Room Project',
-              owner: owner.documentId,
-              collaborators: [],
+              payload: { visibility: 42 },
+              expectedMessages: [
+                'visibility must be one of the following values: private, public, unlisted',
+              ],
             },
-            testContext,
-          );
-
-          const room: string = await manager.createPublishedDocument(
-            'api::room.room',
             {
-              title: 'Original Room',
-              visibility: RoomVisibilityDto.private,
-              project: project,
+              payload: { unexpected: true },
+              expectedMessages: ['property unexpected should not exist'],
             },
-            testContext,
-          );
-          const login: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
-            testContext,
-          );
-          const url: string = `${manager.apiUrl}/project/${project}/room/${room}`;
+          ];
+          for (const variant of variants) {
+            // given
+            const owner: E2ETestApplicationUser =
+              await manager.registerUser(testContext);
 
-          // when
-          const response: Response = await fetch(url, {
-            method: 'PUT',
-            headers: new Headers([
-              ['Authorization', `Bearer ${login.jwt}`],
-              ['Content-Type', 'application/json'],
-            ]),
-            body: JSON.stringify({ title: 'Changed' } satisfies Omit<
-              UpdateRoomRequestBodyDto,
-              'visibility'
-            >),
-            signal: testContext.signal,
-          });
+            const project: string = await manager.createPublishedDocument(
+              'api::project.project',
+              {
+                title: 'Room Project',
+                owner: owner.documentId,
+                collaborators: [],
+              },
+              testContext,
+            );
 
-          // then
-          const persisted: Response = await fetch(url, {
-            headers: new Headers([['Authorization', `Bearer ${login.jwt}`]]),
-            signal: testContext.signal,
-          });
+            const room: string = await manager.createPublishedDocument(
+              'api::room.room',
+              {
+                title: 'Original Room',
+                visibility: RoomVisibilityDto.private,
+                project: project,
+              },
+              testContext,
+            );
+            const login: PostAuthResponseBodyDto = await manager.loginUser(
+              owner.username,
+              owner.password,
+              testContext,
+            );
+            const url: string = `${manager.apiUrl}/project/${project}/room/${room}`;
 
-          assert.equal(response.status, 400);
-          assert.deepEqual(await response.json(), {
-            statusCode: 400,
-            error: 'Bad Request',
-            message: [
-              'visibility must be one of the following values: private, public, unlisted',
-            ],
-          });
-          assert.equal(persisted.status, 200);
-          const unchanged: RoomDto = roomSchema.parse(await persisted.json());
-          assert.equal(unchanged.title, 'Original Room');
-          assert.equal(unchanged.visibility, RoomVisibilityDto.private);
-        });
-        test('rejects a null visibility', async (testContext: TestContext): Promise<void> => {
-          // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
+            // when
+            const response: Response = await fetch(url, {
+              method: 'PUT',
+              headers: new Headers([
+                ['Authorization', `Bearer ${login.jwt}`],
+                ['Content-Type', 'application/json'],
+              ]),
+              body: JSON.stringify({
+                visibility: RoomVisibilityDto.private,
+                title: 'Changed',
+                ...variant.payload,
+              }),
+              signal: testContext.signal,
+            });
 
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Room Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
+            // then
+            const persisted: Response = await fetch(url, {
+              headers: new Headers([['Authorization', `Bearer ${login.jwt}`]]),
+              signal: testContext.signal,
+            });
 
-          const room: string = await manager.createPublishedDocument(
-            'api::room.room',
-            {
-              title: 'Original Room',
-              visibility: RoomVisibilityDto.private,
-              project: project,
-            },
-            testContext,
-          );
-          const login: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
-            testContext,
-          );
-          const url: string = `${manager.apiUrl}/project/${project}/room/${room}`;
-
-          // when
-          const response: Response = await fetch(url, {
-            method: 'PUT',
-            headers: new Headers([
-              ['Authorization', `Bearer ${login.jwt}`],
-              ['Content-Type', 'application/json'],
-            ]),
-            body: JSON.stringify({
-              title: 'Changed',
-              visibility: null,
-            } satisfies Omit<UpdateRoomRequestBodyDto, 'visibility'> & {
-              visibility: null;
-            }),
-            signal: testContext.signal,
-          });
-
-          // then
-          const persisted: Response = await fetch(url, {
-            headers: new Headers([['Authorization', `Bearer ${login.jwt}`]]),
-            signal: testContext.signal,
-          });
-
-          assert.equal(response.status, 400);
-          assert.deepEqual(await response.json(), {
-            statusCode: 400,
-            error: 'Bad Request',
-            message: [
-              'visibility must be one of the following values: private, public, unlisted',
-            ],
-          });
-          assert.equal(persisted.status, 200);
-          const unchanged: RoomDto = roomSchema.parse(await persisted.json());
-          assert.equal(unchanged.title, 'Original Room');
-          assert.equal(unchanged.visibility, RoomVisibilityDto.private);
-        });
-        test('rejects an unknown visibility', async (testContext: TestContext): Promise<void> => {
-          // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Room Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
-
-          const room: string = await manager.createPublishedDocument(
-            'api::room.room',
-            {
-              title: 'Original Room',
-              visibility: RoomVisibilityDto.private,
-              project: project,
-            },
-            testContext,
-          );
-          const login: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
-            testContext,
-          );
-          const url: string = `${manager.apiUrl}/project/${project}/room/${room}`;
-
-          // when
-          const response: Response = await fetch(url, {
-            method: 'PUT',
-            headers: new Headers([
-              ['Authorization', `Bearer ${login.jwt}`],
-              ['Content-Type', 'application/json'],
-            ]),
-            body: JSON.stringify({
-              title: 'Changed',
-              visibility: 'unknown',
-            } satisfies Omit<UpdateRoomRequestBodyDto, 'visibility'> & {
-              visibility: 'unknown';
-            }),
-            signal: testContext.signal,
-          });
-
-          // then
-          const persisted: Response = await fetch(url, {
-            headers: new Headers([['Authorization', `Bearer ${login.jwt}`]]),
-            signal: testContext.signal,
-          });
-
-          assert.equal(response.status, 400);
-          assert.deepEqual(await response.json(), {
-            statusCode: 400,
-            error: 'Bad Request',
-            message: [
-              'visibility must be one of the following values: private, public, unlisted',
-            ],
-          });
-          assert.equal(persisted.status, 200);
-          const unchanged: RoomDto = roomSchema.parse(await persisted.json());
-          assert.equal(unchanged.title, 'Original Room');
-          assert.equal(unchanged.visibility, RoomVisibilityDto.private);
-        });
-        test('rejects a non-string visibility', async (testContext: TestContext): Promise<void> => {
-          // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Room Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
-
-          const room: string = await manager.createPublishedDocument(
-            'api::room.room',
-            {
-              title: 'Original Room',
-              visibility: RoomVisibilityDto.private,
-              project: project,
-            },
-            testContext,
-          );
-          const login: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
-            testContext,
-          );
-          const url: string = `${manager.apiUrl}/project/${project}/room/${room}`;
-
-          // when
-          const response: Response = await fetch(url, {
-            method: 'PUT',
-            headers: new Headers([
-              ['Authorization', `Bearer ${login.jwt}`],
-              ['Content-Type', 'application/json'],
-            ]),
-            body: JSON.stringify({
-              title: 'Changed',
-              visibility: 42,
-            } satisfies Omit<UpdateRoomRequestBodyDto, 'visibility'> & {
-              visibility: number;
-            }),
-            signal: testContext.signal,
-          });
-
-          // then
-          const persisted: Response = await fetch(url, {
-            headers: new Headers([['Authorization', `Bearer ${login.jwt}`]]),
-            signal: testContext.signal,
-          });
-
-          assert.equal(response.status, 400);
-          assert.deepEqual(await response.json(), {
-            statusCode: 400,
-            error: 'Bad Request',
-            message: [
-              'visibility must be one of the following values: private, public, unlisted',
-            ],
-          });
-          assert.equal(persisted.status, 200);
-          const unchanged: RoomDto = roomSchema.parse(await persisted.json());
-          assert.equal(unchanged.title, 'Original Room');
-          assert.equal(unchanged.visibility, RoomVisibilityDto.private);
-        });
-        test('rejects unexpected properties', async (testContext: TestContext): Promise<void> => {
-          // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Room Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
-
-          const room: string = await manager.createPublishedDocument(
-            'api::room.room',
-            {
-              title: 'Original Room',
-              visibility: RoomVisibilityDto.private,
-              project: project,
-            },
-            testContext,
-          );
-          const login: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
-            testContext,
-          );
-          const url: string = `${manager.apiUrl}/project/${project}/room/${room}`;
-
-          // when
-          const response: Response = await fetch(url, {
-            method: 'PUT',
-            headers: new Headers([
-              ['Authorization', `Bearer ${login.jwt}`],
-              ['Content-Type', 'application/json'],
-            ]),
-            body: JSON.stringify({
-              title: 'Changed',
-              visibility: RoomVisibilityDto.private,
-              unexpected: true,
-            } satisfies UpdateRoomRequestBodyDto & { unexpected: boolean }),
-            signal: testContext.signal,
-          });
-
-          // then
-          const persisted: Response = await fetch(url, {
-            headers: new Headers([['Authorization', `Bearer ${login.jwt}`]]),
-            signal: testContext.signal,
-          });
-
-          assert.equal(response.status, 400);
-          assert.deepEqual(await response.json(), {
-            statusCode: 400,
-            error: 'Bad Request',
-            message: ['property unexpected should not exist'],
-          });
-          assert.equal(persisted.status, 200);
-          const unchanged: RoomDto = roomSchema.parse(await persisted.json());
-          assert.equal(unchanged.title, 'Original Room');
-          assert.equal(unchanged.visibility, RoomVisibilityDto.private);
+            assert.equal(response.status, 400);
+            assert.deepEqual(await response.json(), {
+              statusCode: 400,
+              error: 'Bad Request',
+              message: variant.expectedMessages,
+            });
+            assert.equal(persisted.status, 200);
+            const unchanged: RoomDto = roomSchema.parse(await persisted.json());
+            assert.equal(unchanged.title, 'Original Room');
+            assert.equal(unchanged.visibility, RoomVisibilityDto.private);
+          }
         });
       });
     });
@@ -2702,103 +2156,61 @@ describe('/project/:projectId/room', (suiteContext: SuiteContext): void => {
           );
         });
 
-        test('owner can delete the room', async (testContext: TestContext): Promise<void> => {
-          // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
+        test('allows the owner and collaborator to delete the room', async (testContext: TestContext): Promise<void> => {
+          const roles: ('owner' | 'collaborator')[] = ['owner', 'collaborator'];
+          for (const role of roles) {
+            // given
+            const owner: E2ETestApplicationUser =
+              await manager.registerUser(testContext);
+            const actor: E2ETestApplicationUser =
+              role === 'owner'
+                ? owner
+                : await manager.registerUser(testContext);
 
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Room Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
+            const project: string = await manager.createPublishedDocument(
+              'api::project.project',
+              {
+                title: 'Room Project',
+                owner: owner.documentId,
+                collaborators:
+                  role === 'collaborator' ? [actor.documentId] : [],
+              },
+              testContext,
+            );
 
-          const room: string = await manager.createPublishedDocument(
-            'api::room.room',
-            {
-              title: 'Original Room',
-              visibility: RoomVisibilityDto.private,
-              project: project,
-            },
-            testContext,
-          );
-          const login: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
-            testContext,
-          );
-          const url: string = `${manager.apiUrl}/project/${project}/room/${room}`;
+            const room: string = await manager.createPublishedDocument(
+              'api::room.room',
+              {
+                title: 'Original Room',
+                visibility: RoomVisibilityDto.private,
+                project: project,
+              },
+              testContext,
+            );
+            const login: PostAuthResponseBodyDto = await manager.loginUser(
+              actor.username,
+              actor.password,
+              testContext,
+            );
+            const url: string = `${manager.apiUrl}/project/${project}/room/${room}`;
 
-          // when
-          const response: Response = await fetch(url, {
-            method: 'DELETE',
-            headers: new Headers([['Authorization', `Bearer ${login.jwt}`]]),
-            signal: testContext.signal,
-          });
+            // when
+            const response: Response = await fetch(url, {
+              method: 'DELETE',
+              headers: new Headers([['Authorization', `Bearer ${login.jwt}`]]),
+              signal: testContext.signal,
+            });
 
-          // then
-          const persisted: Response = await manager.readDocument(
-            'api::room.room',
-            room,
-            testContext,
-          );
-          assert.equal(response.status, 204);
-          assert.equal(await response.text(), '');
-          assert.equal(persisted.status, 404);
-        });
-        test('collaborator can delete the room', async (testContext: TestContext): Promise<void> => {
-          // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-
-          const collaborator: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Room Project',
-              owner: owner.documentId,
-              collaborators: [collaborator.documentId],
-            },
-            testContext,
-          );
-
-          const room: string = await manager.createPublishedDocument(
-            'api::room.room',
-            {
-              title: 'Original Room',
-              visibility: RoomVisibilityDto.private,
-              project: project,
-            },
-            testContext,
-          );
-          const login: PostAuthResponseBodyDto = await manager.loginUser(
-            collaborator.username,
-            collaborator.password,
-            testContext,
-          );
-          const url: string = `${manager.apiUrl}/project/${project}/room/${room}`;
-
-          // when
-          const response: Response = await fetch(url, {
-            method: 'DELETE',
-            headers: new Headers([['Authorization', `Bearer ${login.jwt}`]]),
-            signal: testContext.signal,
-          });
-
-          // then
-          const persisted: Response = await manager.readDocument(
-            'api::room.room',
-            room,
-            testContext,
-          );
-          assert.equal(response.status, 204);
-          assert.equal(await response.text(), '');
-          assert.equal(persisted.status, 404);
+            // then
+            const persisted: Response = await manager.readDocument(
+              'api::room.room',
+              room,
+              testContext,
+            );
+            assert.equal(response.status, 204);
+            assert.equal(await response.text(), '');
+            assert.equal(persisted.status, 404);
+          }
         });
       });
       describe('401', (): void => {

@@ -318,179 +318,105 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
       });
     });
     describe('401', (): void => {
-      test('rejects anonymous access', async (testContext: TestContext): Promise<void> => {
-        // given
-        const owner: E2ETestApplicationUser =
-          await manager.registerUser(testContext);
-        const project: string = await manager.createPublishedDocument(
-          'api::project.project',
-          { title: 'Test Project', owner: owner.documentId, collaborators: [] },
-          testContext,
-        );
-        const resource: string = await manager.createPublishedDocument(
-          'api::common-property.common-property',
+      test('rejects requests without valid authentication', async (testContext: TestContext): Promise<void> => {
+        const variants: { headers: [string, string][] }[] = [
+          { headers: [] },
           {
-            project,
-            leftLabel: 'Original Label',
-            leftProperty: 'original',
-            rightLabel: 'Other Label',
-            rightProperty: 'other',
+            headers: [['Authorization', 'Bearer invalid-jwt']],
           },
-          testContext,
-        );
-        await manager.loginUser(owner.username, owner.password, testContext);
-        const filters: Record<string, string> = {
-          [`filters[project][documentId][$eq]`]: project,
-          pageSize: '100',
-          sort: 'documentId:asc',
-        };
-        const originalDraftResponse: Response = await manager.readDocuments(
-          'api::common-property.common-property',
-          { ...filters, status: 'draft' },
-          testContext,
-        );
-        assert.equal(originalDraftResponse.status, 200);
-        const originalDraft: z.infer<typeof listStateSchema> =
-          listStateSchema.parse(await originalDraftResponse.json());
-        assert.ok(
-          originalDraft.results.some(
-            (item: { documentId: string }): boolean =>
-              item.documentId === resource,
-          ),
-        );
-        const originalPublishedResponse: Response = await manager.readDocuments(
-          'api::common-property.common-property',
-          { ...filters, status: 'published' },
-          testContext,
-        );
-        assert.equal(originalPublishedResponse.status, 200);
-        const originalPublished: z.infer<typeof listStateSchema> =
-          listStateSchema.parse(await originalPublishedResponse.json());
+        ];
+        for (const variant of variants) {
+          // given
+          const owner: E2ETestApplicationUser =
+            await manager.registerUser(testContext);
+          const project: string = await manager.createPublishedDocument(
+            'api::project.project',
+            {
+              title: 'Test Project',
+              owner: owner.documentId,
+              collaborators: [],
+            },
+            testContext,
+          );
+          const resource: string = await manager.createPublishedDocument(
+            'api::common-property.common-property',
+            {
+              project,
+              leftLabel: 'Original Label',
+              leftProperty: 'original',
+              rightLabel: 'Other Label',
+              rightProperty: 'other',
+            },
+            testContext,
+          );
+          await manager.loginUser(owner.username, owner.password, testContext);
+          const filters: Record<string, string> = {
+            [`filters[project][documentId][$eq]`]: project,
+            pageSize: '100',
+            sort: 'documentId:asc',
+          };
+          const originalDraftResponse: Response = await manager.readDocuments(
+            'api::common-property.common-property',
+            { ...filters, status: 'draft' },
+            testContext,
+          );
+          assert.equal(originalDraftResponse.status, 200);
+          const originalDraft: z.infer<typeof listStateSchema> =
+            listStateSchema.parse(await originalDraftResponse.json());
+          assert.ok(
+            originalDraft.results.some(
+              (item: { documentId: string }): boolean =>
+                item.documentId === resource,
+            ),
+          );
+          const originalPublishedResponse: Response =
+            await manager.readDocuments(
+              'api::common-property.common-property',
+              { ...filters, status: 'published' },
+              testContext,
+            );
+          assert.equal(originalPublishedResponse.status, 200);
+          const originalPublished: z.infer<typeof listStateSchema> =
+            listStateSchema.parse(await originalPublishedResponse.json());
 
-        // when
-        const response: Response = await fetch(
-          `${manager.apiUrl}/project/${project}/common-property`,
-          {
-            method: 'POST',
-            headers: new Headers([]),
-            signal: testContext.signal,
-          },
-        );
+          // when
+          const response: Response = await fetch(
+            `${manager.apiUrl}/project/${project}/common-property`,
+            {
+              method: 'POST',
+              signal: testContext.signal,
+              headers: new Headers(variant.headers),
+            },
+          );
 
-        // then
-        assert.equal(response.status, 401);
-        assert.equal(response.headers.get('www-authenticate'), 'Bearer');
-        assert.deepEqual(await response.json(), {
-          statusCode: 401,
-          message: 'Unauthorized',
-        });
-        const draftResponse: Response = await manager.readDocuments(
-          'api::common-property.common-property',
-          { ...filters, status: 'draft' },
-          testContext,
-        );
-        assert.equal(draftResponse.status, 200);
-        assert.deepEqual(
-          listStateSchema.parse(await draftResponse.json()),
-          originalDraft,
-        );
-        const publishedResponse: Response = await manager.readDocuments(
-          'api::common-property.common-property',
-          { ...filters, status: 'published' },
-          testContext,
-        );
-        assert.equal(publishedResponse.status, 200);
-        assert.deepEqual(
-          listStateSchema.parse(await publishedResponse.json()),
-          originalPublished,
-        );
-      });
-      test('rejects invalid jwt access', async (testContext: TestContext): Promise<void> => {
-        // given
-        const owner: E2ETestApplicationUser =
-          await manager.registerUser(testContext);
-        const project: string = await manager.createPublishedDocument(
-          'api::project.project',
-          { title: 'Test Project', owner: owner.documentId, collaborators: [] },
-          testContext,
-        );
-        const resource: string = await manager.createPublishedDocument(
-          'api::common-property.common-property',
-          {
-            project,
-            leftLabel: 'Original Label',
-            leftProperty: 'original',
-            rightLabel: 'Other Label',
-            rightProperty: 'other',
-          },
-          testContext,
-        );
-        await manager.loginUser(owner.username, owner.password, testContext);
-        const filters: Record<string, string> = {
-          [`filters[project][documentId][$eq]`]: project,
-          pageSize: '100',
-          sort: 'documentId:asc',
-        };
-        const originalDraftResponse: Response = await manager.readDocuments(
-          'api::common-property.common-property',
-          { ...filters, status: 'draft' },
-          testContext,
-        );
-        assert.equal(originalDraftResponse.status, 200);
-        const originalDraft: z.infer<typeof listStateSchema> =
-          listStateSchema.parse(await originalDraftResponse.json());
-        assert.ok(
-          originalDraft.results.some(
-            (item: { documentId: string }): boolean =>
-              item.documentId === resource,
-          ),
-        );
-        const originalPublishedResponse: Response = await manager.readDocuments(
-          'api::common-property.common-property',
-          { ...filters, status: 'published' },
-          testContext,
-        );
-        assert.equal(originalPublishedResponse.status, 200);
-        const originalPublished: z.infer<typeof listStateSchema> =
-          listStateSchema.parse(await originalPublishedResponse.json());
-
-        // when
-        const response: Response = await fetch(
-          `${manager.apiUrl}/project/${project}/common-property`,
-          {
-            method: 'POST',
-            headers: new Headers([['Authorization', 'Bearer invalid-jwt']]),
-            signal: testContext.signal,
-          },
-        );
-
-        // then
-        assert.equal(response.status, 401);
-        assert.equal(response.headers.get('www-authenticate'), 'Bearer');
-        assert.deepEqual(await response.json(), {
-          statusCode: 401,
-          message: 'Unauthorized',
-        });
-        const draftResponse: Response = await manager.readDocuments(
-          'api::common-property.common-property',
-          { ...filters, status: 'draft' },
-          testContext,
-        );
-        assert.equal(draftResponse.status, 200);
-        assert.deepEqual(
-          listStateSchema.parse(await draftResponse.json()),
-          originalDraft,
-        );
-        const publishedResponse: Response = await manager.readDocuments(
-          'api::common-property.common-property',
-          { ...filters, status: 'published' },
-          testContext,
-        );
-        assert.equal(publishedResponse.status, 200);
-        assert.deepEqual(
-          listStateSchema.parse(await publishedResponse.json()),
-          originalPublished,
-        );
+          // then
+          assert.equal(response.status, 401);
+          assert.equal(response.headers.get('www-authenticate'), 'Bearer');
+          assert.deepEqual(await response.json(), {
+            statusCode: 401,
+            message: 'Unauthorized',
+          });
+          const draftResponse: Response = await manager.readDocuments(
+            'api::common-property.common-property',
+            { ...filters, status: 'draft' },
+            testContext,
+          );
+          assert.equal(draftResponse.status, 200);
+          assert.deepEqual(
+            listStateSchema.parse(await draftResponse.json()),
+            originalDraft,
+          );
+          const publishedResponse: Response = await manager.readDocuments(
+            'api::common-property.common-property',
+            { ...filters, status: 'published' },
+            testContext,
+          );
+          assert.equal(publishedResponse.status, 200);
+          assert.deepEqual(
+            listStateSchema.parse(await publishedResponse.json()),
+            originalPublished,
+          );
+        }
       });
     });
 
@@ -1624,2529 +1550,332 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
         });
       });
       describe('400', (): void => {
-        test('rejects a missing leftLabel', async (testContext: TestContext): Promise<void> => {
-          // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
-          const resource: string = await manager.createPublishedDocument(
-            'api::common-property.common-property',
-            {
-              project,
-              leftLabel: 'Original Label',
-              leftProperty: 'original',
-              rightLabel: 'Other Label',
-              rightProperty: 'other',
-            },
-            testContext,
-          );
-          const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
-            testContext,
-          );
-          const filters: Record<string, string> = {
-            [`filters[project][documentId][$eq]`]: project,
-            pageSize: '100',
-            sort: 'documentId:asc',
-          };
-          const originalDraftResponse: Response = await manager.readDocuments(
-            'api::common-property.common-property',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(originalDraftResponse.status, 200);
-          const originalDraft: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalDraftResponse.json());
-          assert.ok(
-            originalDraft.results.some(
-              (item: { documentId: string }): boolean =>
-                item.documentId === resource,
-            ),
-          );
-          const originalPublishedResponse: Response =
-            await manager.readDocuments(
-              'api::common-property.common-property',
-              { ...filters, status: 'published' },
-              testContext,
-            );
-          assert.equal(originalPublishedResponse.status, 200);
-          const originalPublished: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalPublishedResponse.json());
+        test(
+          'rejects invalid common property request bodies',
+          { timeout: 180_000 },
+          async (testContext: TestContext): Promise<void> => {
+            const variants: {
+              payload: Record<string, unknown>;
+              expectedMessage: string;
+            }[] = [
+              {
+                payload: { leftLabel: undefined },
+                expectedMessage: 'leftLabel',
+              },
+              {
+                payload: { leftLabel: null },
+                expectedMessage: 'leftLabel',
+              },
+              {
+                payload: { leftLabel: 123 },
+                expectedMessage: 'leftLabel',
+              },
+              {
+                payload: { leftProperty: undefined },
+                expectedMessage: 'leftProperty',
+              },
+              {
+                payload: { leftProperty: null },
+                expectedMessage: 'leftProperty',
+              },
+              {
+                payload: { leftProperty: 123 },
+                expectedMessage: 'leftProperty',
+              },
+              {
+                payload: { rightLabel: undefined },
+                expectedMessage: 'rightLabel',
+              },
+              {
+                payload: { rightLabel: null },
+                expectedMessage: 'rightLabel',
+              },
+              {
+                payload: { rightLabel: 123 },
+                expectedMessage: 'rightLabel',
+              },
+              {
+                payload: { rightProperty: undefined },
+                expectedMessage: 'rightProperty',
+              },
+              {
+                payload: { rightProperty: null },
+                expectedMessage: 'rightProperty',
+              },
+              {
+                payload: { rightProperty: 123 },
+                expectedMessage: 'rightProperty',
+              },
+              {
+                payload: { leftDatabaseId: undefined },
+                expectedMessage: 'leftDatabaseId',
+              },
+              {
+                payload: { leftDatabaseId: null },
+                expectedMessage: 'leftDatabaseId',
+              },
+              {
+                payload: { leftDatabaseId: 123 },
+                expectedMessage: 'leftDatabaseId',
+              },
+              {
+                payload: { rightDatabaseId: undefined },
+                expectedMessage: 'rightDatabaseId',
+              },
+              {
+                payload: { rightDatabaseId: null },
+                expectedMessage: 'rightDatabaseId',
+              },
+              {
+                payload: { rightDatabaseId: 123 },
+                expectedMessage: 'rightDatabaseId',
+              },
+              {
+                payload: { unexpected: true },
+                expectedMessage: 'unexpected',
+              },
+            ];
+            for (const variant of variants) {
+              // given
+              const owner: E2ETestApplicationUser =
+                await manager.registerUser(testContext);
+              const project: string = await manager.createPublishedDocument(
+                'api::project.project',
+                {
+                  title: 'Test Project',
+                  owner: owner.documentId,
+                  collaborators: [],
+                },
+                testContext,
+              );
+              const resource: string = await manager.createPublishedDocument(
+                'api::common-property.common-property',
+                {
+                  project,
+                  leftLabel: 'Original Label',
+                  leftProperty: 'original',
+                  rightLabel: 'Other Label',
+                  rightProperty: 'other',
+                },
+                testContext,
+              );
+              const ownerLogin: PostAuthResponseBodyDto =
+                await manager.loginUser(
+                  owner.username,
+                  owner.password,
+                  testContext,
+                );
+              const filters: Record<string, string> = {
+                [`filters[project][documentId][$eq]`]: project,
+                pageSize: '100',
+                sort: 'documentId:asc',
+              };
+              const originalDraftResponse: Response =
+                await manager.readDocuments(
+                  'api::common-property.common-property',
+                  { ...filters, status: 'draft' },
+                  testContext,
+                );
+              assert.equal(originalDraftResponse.status, 200);
+              const originalDraft: z.infer<typeof listStateSchema> =
+                listStateSchema.parse(await originalDraftResponse.json());
+              assert.ok(
+                originalDraft.results.some(
+                  (item: { documentId: string }): boolean =>
+                    item.documentId === resource,
+                ),
+              );
+              const originalPublishedResponse: Response =
+                await manager.readDocuments(
+                  'api::common-property.common-property',
+                  { ...filters, status: 'published' },
+                  testContext,
+                );
+              assert.equal(originalPublishedResponse.status, 200);
+              const originalPublished: z.infer<typeof listStateSchema> =
+                listStateSchema.parse(await originalPublishedResponse.json());
 
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/common-property/${resource}`,
-            {
-              method: 'PUT',
-              headers: new Headers([
-                ['Authorization', `Bearer ${ownerLogin.jwt}`],
-                ['Content-Type', 'application/json'],
-              ]),
-              body: JSON.stringify({
-                leftProperty: 'name',
-                rightLabel: 'Human',
-                rightProperty: 'label',
-                leftDatabaseId: '',
-                rightDatabaseId: '',
-              } satisfies Omit<
-                UpdateCommonPropertyRequestBodyDto,
-                'leftLabel'
-              >),
-              signal: testContext.signal,
-            },
-          );
+              // when
+              const response: Response = await fetch(
+                `${manager.apiUrl}/project/${project}/common-property/${resource}`,
+                {
+                  method: 'PUT',
+                  headers: new Headers([
+                    ['Authorization', `Bearer ${ownerLogin.jwt}`],
+                    ['Content-Type', 'application/json'],
+                  ]),
+                  body: JSON.stringify({
+                    leftProperty: 'name',
+                    rightLabel: 'Human',
+                    rightProperty: 'label',
+                    leftDatabaseId: '',
+                    rightDatabaseId: '',
+                    leftLabel: 'Person',
+                    ...variant.payload,
+                  }),
+                  signal: testContext.signal,
+                },
+              );
 
-          // then
-          assert.equal(response.status, 400);
-          const error: {
-            statusCode: number;
-            message: string[];
-            error: string;
-          } = z
-            .object({
-              statusCode: z.literal(400),
-              message: z.array(z.string()),
-              error: z.literal('Bad Request'),
-            })
-            .parse(await response.json());
-          assert.ok(
-            error.message.some((message: string): boolean =>
-              message.includes('leftLabel'),
-            ),
-          );
-          const draftResponse: Response = await manager.readDocuments(
-            'api::common-property.common-property',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(draftResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await draftResponse.json()),
-            originalDraft,
-          );
-          const publishedResponse: Response = await manager.readDocuments(
-            'api::common-property.common-property',
-            { ...filters, status: 'published' },
-            testContext,
-          );
-          assert.equal(publishedResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await publishedResponse.json()),
-            originalPublished,
-          );
-        });
-
-        test('rejects a null leftLabel', async (testContext: TestContext): Promise<void> => {
-          // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
-          const resource: string = await manager.createPublishedDocument(
-            'api::common-property.common-property',
-            {
-              project,
-              leftLabel: 'Original Label',
-              leftProperty: 'original',
-              rightLabel: 'Other Label',
-              rightProperty: 'other',
-            },
-            testContext,
-          );
-          const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
-            testContext,
-          );
-          const filters: Record<string, string> = {
-            [`filters[project][documentId][$eq]`]: project,
-            pageSize: '100',
-            sort: 'documentId:asc',
-          };
-          const originalDraftResponse: Response = await manager.readDocuments(
-            'api::common-property.common-property',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(originalDraftResponse.status, 200);
-          const originalDraft: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalDraftResponse.json());
-          assert.ok(
-            originalDraft.results.some(
-              (item: { documentId: string }): boolean =>
-                item.documentId === resource,
-            ),
-          );
-          const originalPublishedResponse: Response =
-            await manager.readDocuments(
-              'api::common-property.common-property',
-              { ...filters, status: 'published' },
-              testContext,
-            );
-          assert.equal(originalPublishedResponse.status, 200);
-          const originalPublished: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalPublishedResponse.json());
-
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/common-property/${resource}`,
-            {
-              method: 'PUT',
-              headers: new Headers([
-                ['Authorization', `Bearer ${ownerLogin.jwt}`],
-                ['Content-Type', 'application/json'],
-              ]),
-              body: JSON.stringify({
-                leftLabel: null,
-                leftProperty: 'name',
-                rightLabel: 'Human',
-                rightProperty: 'label',
-                leftDatabaseId: '',
-                rightDatabaseId: '',
-              } satisfies Omit<
-                UpdateCommonPropertyRequestBodyDto,
-                'leftLabel'
-              > & {
-                leftLabel: null;
-              }),
-              signal: testContext.signal,
-            },
-          );
-
-          // then
-          assert.equal(response.status, 400);
-          const error: {
-            statusCode: number;
-            message: string[];
-            error: string;
-          } = z
-            .object({
-              statusCode: z.literal(400),
-              message: z.array(z.string()),
-              error: z.literal('Bad Request'),
-            })
-            .parse(await response.json());
-          assert.ok(
-            error.message.some((message: string): boolean =>
-              message.includes('leftLabel'),
-            ),
-          );
-          const draftResponse: Response = await manager.readDocuments(
-            'api::common-property.common-property',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(draftResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await draftResponse.json()),
-            originalDraft,
-          );
-          const publishedResponse: Response = await manager.readDocuments(
-            'api::common-property.common-property',
-            { ...filters, status: 'published' },
-            testContext,
-          );
-          assert.equal(publishedResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await publishedResponse.json()),
-            originalPublished,
-          );
-        });
-
-        test('rejects an invalid leftLabel type', async (testContext: TestContext): Promise<void> => {
-          // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
-          const resource: string = await manager.createPublishedDocument(
-            'api::common-property.common-property',
-            {
-              project,
-              leftLabel: 'Original Label',
-              leftProperty: 'original',
-              rightLabel: 'Other Label',
-              rightProperty: 'other',
-            },
-            testContext,
-          );
-          const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
-            testContext,
-          );
-          const filters: Record<string, string> = {
-            [`filters[project][documentId][$eq]`]: project,
-            pageSize: '100',
-            sort: 'documentId:asc',
-          };
-          const originalDraftResponse: Response = await manager.readDocuments(
-            'api::common-property.common-property',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(originalDraftResponse.status, 200);
-          const originalDraft: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalDraftResponse.json());
-          assert.ok(
-            originalDraft.results.some(
-              (item: { documentId: string }): boolean =>
-                item.documentId === resource,
-            ),
-          );
-          const originalPublishedResponse: Response =
-            await manager.readDocuments(
-              'api::common-property.common-property',
-              { ...filters, status: 'published' },
-              testContext,
-            );
-          assert.equal(originalPublishedResponse.status, 200);
-          const originalPublished: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalPublishedResponse.json());
-
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/common-property/${resource}`,
-            {
-              method: 'PUT',
-              headers: new Headers([
-                ['Authorization', `Bearer ${ownerLogin.jwt}`],
-                ['Content-Type', 'application/json'],
-              ]),
-              body: JSON.stringify({
-                leftLabel: 123,
-                leftProperty: 'name',
-                rightLabel: 'Human',
-                rightProperty: 'label',
-                leftDatabaseId: '',
-                rightDatabaseId: '',
-              } satisfies Omit<
-                UpdateCommonPropertyRequestBodyDto,
-                'leftLabel'
-              > & {
-                leftLabel: number;
-              }),
-              signal: testContext.signal,
-            },
-          );
-
-          // then
-          assert.equal(response.status, 400);
-          const error: {
-            statusCode: number;
-            message: string[];
-            error: string;
-          } = z
-            .object({
-              statusCode: z.literal(400),
-              message: z.array(z.string()),
-              error: z.literal('Bad Request'),
-            })
-            .parse(await response.json());
-          assert.ok(
-            error.message.some((message: string): boolean =>
-              message.includes('leftLabel'),
-            ),
-          );
-          const draftResponse: Response = await manager.readDocuments(
-            'api::common-property.common-property',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(draftResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await draftResponse.json()),
-            originalDraft,
-          );
-          const publishedResponse: Response = await manager.readDocuments(
-            'api::common-property.common-property',
-            { ...filters, status: 'published' },
-            testContext,
-          );
-          assert.equal(publishedResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await publishedResponse.json()),
-            originalPublished,
-          );
-        });
-
-        test('rejects a missing leftProperty', async (testContext: TestContext): Promise<void> => {
-          // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
-          const resource: string = await manager.createPublishedDocument(
-            'api::common-property.common-property',
-            {
-              project,
-              leftLabel: 'Original Label',
-              leftProperty: 'original',
-              rightLabel: 'Other Label',
-              rightProperty: 'other',
-            },
-            testContext,
-          );
-          const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
-            testContext,
-          );
-          const filters: Record<string, string> = {
-            [`filters[project][documentId][$eq]`]: project,
-            pageSize: '100',
-            sort: 'documentId:asc',
-          };
-          const originalDraftResponse: Response = await manager.readDocuments(
-            'api::common-property.common-property',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(originalDraftResponse.status, 200);
-          const originalDraft: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalDraftResponse.json());
-          assert.ok(
-            originalDraft.results.some(
-              (item: { documentId: string }): boolean =>
-                item.documentId === resource,
-            ),
-          );
-          const originalPublishedResponse: Response =
-            await manager.readDocuments(
-              'api::common-property.common-property',
-              { ...filters, status: 'published' },
-              testContext,
-            );
-          assert.equal(originalPublishedResponse.status, 200);
-          const originalPublished: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalPublishedResponse.json());
-
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/common-property/${resource}`,
-            {
-              method: 'PUT',
-              headers: new Headers([
-                ['Authorization', `Bearer ${ownerLogin.jwt}`],
-                ['Content-Type', 'application/json'],
-              ]),
-              body: JSON.stringify({
-                leftLabel: 'Person',
-                rightLabel: 'Human',
-                rightProperty: 'label',
-                leftDatabaseId: '',
-                rightDatabaseId: '',
-              } satisfies Omit<
-                UpdateCommonPropertyRequestBodyDto,
-                'leftProperty'
-              >),
-              signal: testContext.signal,
-            },
-          );
-
-          // then
-          assert.equal(response.status, 400);
-          const error: {
-            statusCode: number;
-            message: string[];
-            error: string;
-          } = z
-            .object({
-              statusCode: z.literal(400),
-              message: z.array(z.string()),
-              error: z.literal('Bad Request'),
-            })
-            .parse(await response.json());
-          assert.ok(
-            error.message.some((message: string): boolean =>
-              message.includes('leftProperty'),
-            ),
-          );
-          const draftResponse: Response = await manager.readDocuments(
-            'api::common-property.common-property',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(draftResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await draftResponse.json()),
-            originalDraft,
-          );
-          const publishedResponse: Response = await manager.readDocuments(
-            'api::common-property.common-property',
-            { ...filters, status: 'published' },
-            testContext,
-          );
-          assert.equal(publishedResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await publishedResponse.json()),
-            originalPublished,
-          );
-        });
-
-        test('rejects a null leftProperty', async (testContext: TestContext): Promise<void> => {
-          // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
-          const resource: string = await manager.createPublishedDocument(
-            'api::common-property.common-property',
-            {
-              project,
-              leftLabel: 'Original Label',
-              leftProperty: 'original',
-              rightLabel: 'Other Label',
-              rightProperty: 'other',
-            },
-            testContext,
-          );
-          const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
-            testContext,
-          );
-          const filters: Record<string, string> = {
-            [`filters[project][documentId][$eq]`]: project,
-            pageSize: '100',
-            sort: 'documentId:asc',
-          };
-          const originalDraftResponse: Response = await manager.readDocuments(
-            'api::common-property.common-property',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(originalDraftResponse.status, 200);
-          const originalDraft: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalDraftResponse.json());
-          assert.ok(
-            originalDraft.results.some(
-              (item: { documentId: string }): boolean =>
-                item.documentId === resource,
-            ),
-          );
-          const originalPublishedResponse: Response =
-            await manager.readDocuments(
-              'api::common-property.common-property',
-              { ...filters, status: 'published' },
-              testContext,
-            );
-          assert.equal(originalPublishedResponse.status, 200);
-          const originalPublished: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalPublishedResponse.json());
-
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/common-property/${resource}`,
-            {
-              method: 'PUT',
-              headers: new Headers([
-                ['Authorization', `Bearer ${ownerLogin.jwt}`],
-                ['Content-Type', 'application/json'],
-              ]),
-              body: JSON.stringify({
-                leftLabel: 'Person',
-                leftProperty: null,
-                rightLabel: 'Human',
-                rightProperty: 'label',
-                leftDatabaseId: '',
-                rightDatabaseId: '',
-              } satisfies Omit<
-                UpdateCommonPropertyRequestBodyDto,
-                'leftProperty'
-              > & { leftProperty: null }),
-              signal: testContext.signal,
-            },
-          );
-
-          // then
-          assert.equal(response.status, 400);
-          const error: {
-            statusCode: number;
-            message: string[];
-            error: string;
-          } = z
-            .object({
-              statusCode: z.literal(400),
-              message: z.array(z.string()),
-              error: z.literal('Bad Request'),
-            })
-            .parse(await response.json());
-          assert.ok(
-            error.message.some((message: string): boolean =>
-              message.includes('leftProperty'),
-            ),
-          );
-          const draftResponse: Response = await manager.readDocuments(
-            'api::common-property.common-property',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(draftResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await draftResponse.json()),
-            originalDraft,
-          );
-          const publishedResponse: Response = await manager.readDocuments(
-            'api::common-property.common-property',
-            { ...filters, status: 'published' },
-            testContext,
-          );
-          assert.equal(publishedResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await publishedResponse.json()),
-            originalPublished,
-          );
-        });
-
-        test('rejects an invalid leftProperty type', async (testContext: TestContext): Promise<void> => {
-          // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
-          const resource: string = await manager.createPublishedDocument(
-            'api::common-property.common-property',
-            {
-              project,
-              leftLabel: 'Original Label',
-              leftProperty: 'original',
-              rightLabel: 'Other Label',
-              rightProperty: 'other',
-            },
-            testContext,
-          );
-          const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
-            testContext,
-          );
-          const filters: Record<string, string> = {
-            [`filters[project][documentId][$eq]`]: project,
-            pageSize: '100',
-            sort: 'documentId:asc',
-          };
-          const originalDraftResponse: Response = await manager.readDocuments(
-            'api::common-property.common-property',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(originalDraftResponse.status, 200);
-          const originalDraft: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalDraftResponse.json());
-          assert.ok(
-            originalDraft.results.some(
-              (item: { documentId: string }): boolean =>
-                item.documentId === resource,
-            ),
-          );
-          const originalPublishedResponse: Response =
-            await manager.readDocuments(
-              'api::common-property.common-property',
-              { ...filters, status: 'published' },
-              testContext,
-            );
-          assert.equal(originalPublishedResponse.status, 200);
-          const originalPublished: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalPublishedResponse.json());
-
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/common-property/${resource}`,
-            {
-              method: 'PUT',
-              headers: new Headers([
-                ['Authorization', `Bearer ${ownerLogin.jwt}`],
-                ['Content-Type', 'application/json'],
-              ]),
-              body: JSON.stringify({
-                leftLabel: 'Person',
-                leftProperty: 123,
-                rightLabel: 'Human',
-                rightProperty: 'label',
-                leftDatabaseId: '',
-                rightDatabaseId: '',
-              } satisfies Omit<
-                UpdateCommonPropertyRequestBodyDto,
-                'leftProperty'
-              > & { leftProperty: number }),
-              signal: testContext.signal,
-            },
-          );
-
-          // then
-          assert.equal(response.status, 400);
-          const error: {
-            statusCode: number;
-            message: string[];
-            error: string;
-          } = z
-            .object({
-              statusCode: z.literal(400),
-              message: z.array(z.string()),
-              error: z.literal('Bad Request'),
-            })
-            .parse(await response.json());
-          assert.ok(
-            error.message.some((message: string): boolean =>
-              message.includes('leftProperty'),
-            ),
-          );
-          const draftResponse: Response = await manager.readDocuments(
-            'api::common-property.common-property',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(draftResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await draftResponse.json()),
-            originalDraft,
-          );
-          const publishedResponse: Response = await manager.readDocuments(
-            'api::common-property.common-property',
-            { ...filters, status: 'published' },
-            testContext,
-          );
-          assert.equal(publishedResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await publishedResponse.json()),
-            originalPublished,
-          );
-        });
-
-        test('rejects a missing rightLabel', async (testContext: TestContext): Promise<void> => {
-          // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
-          const resource: string = await manager.createPublishedDocument(
-            'api::common-property.common-property',
-            {
-              project,
-              leftLabel: 'Original Label',
-              leftProperty: 'original',
-              rightLabel: 'Other Label',
-              rightProperty: 'other',
-            },
-            testContext,
-          );
-          const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
-            testContext,
-          );
-          const filters: Record<string, string> = {
-            [`filters[project][documentId][$eq]`]: project,
-            pageSize: '100',
-            sort: 'documentId:asc',
-          };
-          const originalDraftResponse: Response = await manager.readDocuments(
-            'api::common-property.common-property',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(originalDraftResponse.status, 200);
-          const originalDraft: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalDraftResponse.json());
-          assert.ok(
-            originalDraft.results.some(
-              (item: { documentId: string }): boolean =>
-                item.documentId === resource,
-            ),
-          );
-          const originalPublishedResponse: Response =
-            await manager.readDocuments(
-              'api::common-property.common-property',
-              { ...filters, status: 'published' },
-              testContext,
-            );
-          assert.equal(originalPublishedResponse.status, 200);
-          const originalPublished: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalPublishedResponse.json());
-
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/common-property/${resource}`,
-            {
-              method: 'PUT',
-              headers: new Headers([
-                ['Authorization', `Bearer ${ownerLogin.jwt}`],
-                ['Content-Type', 'application/json'],
-              ]),
-              body: JSON.stringify({
-                leftLabel: 'Person',
-                leftProperty: 'name',
-                rightProperty: 'label',
-                leftDatabaseId: '',
-                rightDatabaseId: '',
-              } satisfies Omit<
-                UpdateCommonPropertyRequestBodyDto,
-                'rightLabel'
-              >),
-              signal: testContext.signal,
-            },
-          );
-
-          // then
-          assert.equal(response.status, 400);
-          const error: {
-            statusCode: number;
-            message: string[];
-            error: string;
-          } = z
-            .object({
-              statusCode: z.literal(400),
-              message: z.array(z.string()),
-              error: z.literal('Bad Request'),
-            })
-            .parse(await response.json());
-          assert.ok(
-            error.message.some((message: string): boolean =>
-              message.includes('rightLabel'),
-            ),
-          );
-          const draftResponse: Response = await manager.readDocuments(
-            'api::common-property.common-property',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(draftResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await draftResponse.json()),
-            originalDraft,
-          );
-          const publishedResponse: Response = await manager.readDocuments(
-            'api::common-property.common-property',
-            { ...filters, status: 'published' },
-            testContext,
-          );
-          assert.equal(publishedResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await publishedResponse.json()),
-            originalPublished,
-          );
-        });
-
-        test('rejects a null rightLabel', async (testContext: TestContext): Promise<void> => {
-          // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
-          const resource: string = await manager.createPublishedDocument(
-            'api::common-property.common-property',
-            {
-              project,
-              leftLabel: 'Original Label',
-              leftProperty: 'original',
-              rightLabel: 'Other Label',
-              rightProperty: 'other',
-            },
-            testContext,
-          );
-          const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
-            testContext,
-          );
-          const filters: Record<string, string> = {
-            [`filters[project][documentId][$eq]`]: project,
-            pageSize: '100',
-            sort: 'documentId:asc',
-          };
-          const originalDraftResponse: Response = await manager.readDocuments(
-            'api::common-property.common-property',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(originalDraftResponse.status, 200);
-          const originalDraft: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalDraftResponse.json());
-          assert.ok(
-            originalDraft.results.some(
-              (item: { documentId: string }): boolean =>
-                item.documentId === resource,
-            ),
-          );
-          const originalPublishedResponse: Response =
-            await manager.readDocuments(
-              'api::common-property.common-property',
-              { ...filters, status: 'published' },
-              testContext,
-            );
-          assert.equal(originalPublishedResponse.status, 200);
-          const originalPublished: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalPublishedResponse.json());
-
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/common-property/${resource}`,
-            {
-              method: 'PUT',
-              headers: new Headers([
-                ['Authorization', `Bearer ${ownerLogin.jwt}`],
-                ['Content-Type', 'application/json'],
-              ]),
-              body: JSON.stringify({
-                leftLabel: 'Person',
-                leftProperty: 'name',
-                rightLabel: null,
-                rightProperty: 'label',
-                leftDatabaseId: '',
-                rightDatabaseId: '',
-              } satisfies Omit<
-                UpdateCommonPropertyRequestBodyDto,
-                'rightLabel'
-              > & {
-                rightLabel: null;
-              }),
-              signal: testContext.signal,
-            },
-          );
-
-          // then
-          assert.equal(response.status, 400);
-          const error: {
-            statusCode: number;
-            message: string[];
-            error: string;
-          } = z
-            .object({
-              statusCode: z.literal(400),
-              message: z.array(z.string()),
-              error: z.literal('Bad Request'),
-            })
-            .parse(await response.json());
-          assert.ok(
-            error.message.some((message: string): boolean =>
-              message.includes('rightLabel'),
-            ),
-          );
-          const draftResponse: Response = await manager.readDocuments(
-            'api::common-property.common-property',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(draftResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await draftResponse.json()),
-            originalDraft,
-          );
-          const publishedResponse: Response = await manager.readDocuments(
-            'api::common-property.common-property',
-            { ...filters, status: 'published' },
-            testContext,
-          );
-          assert.equal(publishedResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await publishedResponse.json()),
-            originalPublished,
-          );
-        });
-
-        test('rejects an invalid rightLabel type', async (testContext: TestContext): Promise<void> => {
-          // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
-          const resource: string = await manager.createPublishedDocument(
-            'api::common-property.common-property',
-            {
-              project,
-              leftLabel: 'Original Label',
-              leftProperty: 'original',
-              rightLabel: 'Other Label',
-              rightProperty: 'other',
-            },
-            testContext,
-          );
-          const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
-            testContext,
-          );
-          const filters: Record<string, string> = {
-            [`filters[project][documentId][$eq]`]: project,
-            pageSize: '100',
-            sort: 'documentId:asc',
-          };
-          const originalDraftResponse: Response = await manager.readDocuments(
-            'api::common-property.common-property',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(originalDraftResponse.status, 200);
-          const originalDraft: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalDraftResponse.json());
-          assert.ok(
-            originalDraft.results.some(
-              (item: { documentId: string }): boolean =>
-                item.documentId === resource,
-            ),
-          );
-          const originalPublishedResponse: Response =
-            await manager.readDocuments(
-              'api::common-property.common-property',
-              { ...filters, status: 'published' },
-              testContext,
-            );
-          assert.equal(originalPublishedResponse.status, 200);
-          const originalPublished: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalPublishedResponse.json());
-
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/common-property/${resource}`,
-            {
-              method: 'PUT',
-              headers: new Headers([
-                ['Authorization', `Bearer ${ownerLogin.jwt}`],
-                ['Content-Type', 'application/json'],
-              ]),
-              body: JSON.stringify({
-                leftLabel: 'Person',
-                leftProperty: 'name',
-                rightLabel: 123,
-                rightProperty: 'label',
-                leftDatabaseId: '',
-                rightDatabaseId: '',
-              } satisfies Omit<
-                UpdateCommonPropertyRequestBodyDto,
-                'rightLabel'
-              > & {
-                rightLabel: number;
-              }),
-              signal: testContext.signal,
-            },
-          );
-
-          // then
-          assert.equal(response.status, 400);
-          const error: {
-            statusCode: number;
-            message: string[];
-            error: string;
-          } = z
-            .object({
-              statusCode: z.literal(400),
-              message: z.array(z.string()),
-              error: z.literal('Bad Request'),
-            })
-            .parse(await response.json());
-          assert.ok(
-            error.message.some((message: string): boolean =>
-              message.includes('rightLabel'),
-            ),
-          );
-          const draftResponse: Response = await manager.readDocuments(
-            'api::common-property.common-property',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(draftResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await draftResponse.json()),
-            originalDraft,
-          );
-          const publishedResponse: Response = await manager.readDocuments(
-            'api::common-property.common-property',
-            { ...filters, status: 'published' },
-            testContext,
-          );
-          assert.equal(publishedResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await publishedResponse.json()),
-            originalPublished,
-          );
-        });
-
-        test('rejects a missing rightProperty', async (testContext: TestContext): Promise<void> => {
-          // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
-          const resource: string = await manager.createPublishedDocument(
-            'api::common-property.common-property',
-            {
-              project,
-              leftLabel: 'Original Label',
-              leftProperty: 'original',
-              rightLabel: 'Other Label',
-              rightProperty: 'other',
-            },
-            testContext,
-          );
-          const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
-            testContext,
-          );
-          const filters: Record<string, string> = {
-            [`filters[project][documentId][$eq]`]: project,
-            pageSize: '100',
-            sort: 'documentId:asc',
-          };
-          const originalDraftResponse: Response = await manager.readDocuments(
-            'api::common-property.common-property',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(originalDraftResponse.status, 200);
-          const originalDraft: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalDraftResponse.json());
-          assert.ok(
-            originalDraft.results.some(
-              (item: { documentId: string }): boolean =>
-                item.documentId === resource,
-            ),
-          );
-          const originalPublishedResponse: Response =
-            await manager.readDocuments(
-              'api::common-property.common-property',
-              { ...filters, status: 'published' },
-              testContext,
-            );
-          assert.equal(originalPublishedResponse.status, 200);
-          const originalPublished: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalPublishedResponse.json());
-
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/common-property/${resource}`,
-            {
-              method: 'PUT',
-              headers: new Headers([
-                ['Authorization', `Bearer ${ownerLogin.jwt}`],
-                ['Content-Type', 'application/json'],
-              ]),
-              body: JSON.stringify({
-                leftLabel: 'Person',
-                leftProperty: 'name',
-                rightLabel: 'Human',
-                leftDatabaseId: '',
-                rightDatabaseId: '',
-              } satisfies Omit<
-                UpdateCommonPropertyRequestBodyDto,
-                'rightProperty'
-              >),
-              signal: testContext.signal,
-            },
-          );
-
-          // then
-          assert.equal(response.status, 400);
-          const error: {
-            statusCode: number;
-            message: string[];
-            error: string;
-          } = z
-            .object({
-              statusCode: z.literal(400),
-              message: z.array(z.string()),
-              error: z.literal('Bad Request'),
-            })
-            .parse(await response.json());
-          assert.ok(
-            error.message.some((message: string): boolean =>
-              message.includes('rightProperty'),
-            ),
-          );
-          const draftResponse: Response = await manager.readDocuments(
-            'api::common-property.common-property',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(draftResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await draftResponse.json()),
-            originalDraft,
-          );
-          const publishedResponse: Response = await manager.readDocuments(
-            'api::common-property.common-property',
-            { ...filters, status: 'published' },
-            testContext,
-          );
-          assert.equal(publishedResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await publishedResponse.json()),
-            originalPublished,
-          );
-        });
-
-        test('rejects a null rightProperty', async (testContext: TestContext): Promise<void> => {
-          // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
-          const resource: string = await manager.createPublishedDocument(
-            'api::common-property.common-property',
-            {
-              project,
-              leftLabel: 'Original Label',
-              leftProperty: 'original',
-              rightLabel: 'Other Label',
-              rightProperty: 'other',
-            },
-            testContext,
-          );
-          const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
-            testContext,
-          );
-          const filters: Record<string, string> = {
-            [`filters[project][documentId][$eq]`]: project,
-            pageSize: '100',
-            sort: 'documentId:asc',
-          };
-          const originalDraftResponse: Response = await manager.readDocuments(
-            'api::common-property.common-property',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(originalDraftResponse.status, 200);
-          const originalDraft: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalDraftResponse.json());
-          assert.ok(
-            originalDraft.results.some(
-              (item: { documentId: string }): boolean =>
-                item.documentId === resource,
-            ),
-          );
-          const originalPublishedResponse: Response =
-            await manager.readDocuments(
-              'api::common-property.common-property',
-              { ...filters, status: 'published' },
-              testContext,
-            );
-          assert.equal(originalPublishedResponse.status, 200);
-          const originalPublished: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalPublishedResponse.json());
-
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/common-property/${resource}`,
-            {
-              method: 'PUT',
-              headers: new Headers([
-                ['Authorization', `Bearer ${ownerLogin.jwt}`],
-                ['Content-Type', 'application/json'],
-              ]),
-              body: JSON.stringify({
-                leftLabel: 'Person',
-                leftProperty: 'name',
-                rightLabel: 'Human',
-                rightProperty: null,
-                leftDatabaseId: '',
-                rightDatabaseId: '',
-              } satisfies Omit<
-                UpdateCommonPropertyRequestBodyDto,
-                'rightProperty'
-              > & { rightProperty: null }),
-              signal: testContext.signal,
-            },
-          );
-
-          // then
-          assert.equal(response.status, 400);
-          const error: {
-            statusCode: number;
-            message: string[];
-            error: string;
-          } = z
-            .object({
-              statusCode: z.literal(400),
-              message: z.array(z.string()),
-              error: z.literal('Bad Request'),
-            })
-            .parse(await response.json());
-          assert.ok(
-            error.message.some((message: string): boolean =>
-              message.includes('rightProperty'),
-            ),
-          );
-          const draftResponse: Response = await manager.readDocuments(
-            'api::common-property.common-property',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(draftResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await draftResponse.json()),
-            originalDraft,
-          );
-          const publishedResponse: Response = await manager.readDocuments(
-            'api::common-property.common-property',
-            { ...filters, status: 'published' },
-            testContext,
-          );
-          assert.equal(publishedResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await publishedResponse.json()),
-            originalPublished,
-          );
-        });
-
-        test('rejects an invalid rightProperty type', async (testContext: TestContext): Promise<void> => {
-          // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
-          const resource: string = await manager.createPublishedDocument(
-            'api::common-property.common-property',
-            {
-              project,
-              leftLabel: 'Original Label',
-              leftProperty: 'original',
-              rightLabel: 'Other Label',
-              rightProperty: 'other',
-            },
-            testContext,
-          );
-          const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
-            testContext,
-          );
-          const filters: Record<string, string> = {
-            [`filters[project][documentId][$eq]`]: project,
-            pageSize: '100',
-            sort: 'documentId:asc',
-          };
-          const originalDraftResponse: Response = await manager.readDocuments(
-            'api::common-property.common-property',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(originalDraftResponse.status, 200);
-          const originalDraft: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalDraftResponse.json());
-          assert.ok(
-            originalDraft.results.some(
-              (item: { documentId: string }): boolean =>
-                item.documentId === resource,
-            ),
-          );
-          const originalPublishedResponse: Response =
-            await manager.readDocuments(
-              'api::common-property.common-property',
-              { ...filters, status: 'published' },
-              testContext,
-            );
-          assert.equal(originalPublishedResponse.status, 200);
-          const originalPublished: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalPublishedResponse.json());
-
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/common-property/${resource}`,
-            {
-              method: 'PUT',
-              headers: new Headers([
-                ['Authorization', `Bearer ${ownerLogin.jwt}`],
-                ['Content-Type', 'application/json'],
-              ]),
-              body: JSON.stringify({
-                leftLabel: 'Person',
-                leftProperty: 'name',
-                rightLabel: 'Human',
-                rightProperty: 123,
-                leftDatabaseId: '',
-                rightDatabaseId: '',
-              } satisfies Omit<
-                UpdateCommonPropertyRequestBodyDto,
-                'rightProperty'
-              > & { rightProperty: number }),
-              signal: testContext.signal,
-            },
-          );
-
-          // then
-          assert.equal(response.status, 400);
-          const error: {
-            statusCode: number;
-            message: string[];
-            error: string;
-          } = z
-            .object({
-              statusCode: z.literal(400),
-              message: z.array(z.string()),
-              error: z.literal('Bad Request'),
-            })
-            .parse(await response.json());
-          assert.ok(
-            error.message.some((message: string): boolean =>
-              message.includes('rightProperty'),
-            ),
-          );
-          const draftResponse: Response = await manager.readDocuments(
-            'api::common-property.common-property',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(draftResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await draftResponse.json()),
-            originalDraft,
-          );
-          const publishedResponse: Response = await manager.readDocuments(
-            'api::common-property.common-property',
-            { ...filters, status: 'published' },
-            testContext,
-          );
-          assert.equal(publishedResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await publishedResponse.json()),
-            originalPublished,
-          );
-        });
-
-        test('rejects a missing leftDatabaseId', async (testContext: TestContext): Promise<void> => {
-          // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
-          const resource: string = await manager.createPublishedDocument(
-            'api::common-property.common-property',
-            {
-              project,
-              leftLabel: 'Original Label',
-              leftProperty: 'original',
-              rightLabel: 'Other Label',
-              rightProperty: 'other',
-            },
-            testContext,
-          );
-          const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
-            testContext,
-          );
-          const filters: Record<string, string> = {
-            [`filters[project][documentId][$eq]`]: project,
-            pageSize: '100',
-            sort: 'documentId:asc',
-          };
-          const originalDraftResponse: Response = await manager.readDocuments(
-            'api::common-property.common-property',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(originalDraftResponse.status, 200);
-          const originalDraft: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalDraftResponse.json());
-          assert.ok(
-            originalDraft.results.some(
-              (item: { documentId: string }): boolean =>
-                item.documentId === resource,
-            ),
-          );
-          const originalPublishedResponse: Response =
-            await manager.readDocuments(
-              'api::common-property.common-property',
-              { ...filters, status: 'published' },
-              testContext,
-            );
-          assert.equal(originalPublishedResponse.status, 200);
-          const originalPublished: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalPublishedResponse.json());
-
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/common-property/${resource}`,
-            {
-              method: 'PUT',
-              headers: new Headers([
-                ['Authorization', `Bearer ${ownerLogin.jwt}`],
-                ['Content-Type', 'application/json'],
-              ]),
-              body: JSON.stringify({
-                leftLabel: 'Person',
-                leftProperty: 'name',
-                rightLabel: 'Human',
-                rightProperty: 'label',
-                rightDatabaseId: '',
-              } satisfies Omit<
-                UpdateCommonPropertyRequestBodyDto,
-                'leftDatabaseId'
-              >),
-              signal: testContext.signal,
-            },
-          );
-
-          // then
-          assert.equal(response.status, 400);
-          const error: {
-            statusCode: number;
-            message: string[];
-            error: string;
-          } = z
-            .object({
-              statusCode: z.literal(400),
-              message: z.array(z.string()),
-              error: z.literal('Bad Request'),
-            })
-            .parse(await response.json());
-          assert.ok(
-            error.message.some((message: string): boolean =>
-              message.includes('leftDatabaseId'),
-            ),
-          );
-          const draftResponse: Response = await manager.readDocuments(
-            'api::common-property.common-property',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(draftResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await draftResponse.json()),
-            originalDraft,
-          );
-          const publishedResponse: Response = await manager.readDocuments(
-            'api::common-property.common-property',
-            { ...filters, status: 'published' },
-            testContext,
-          );
-          assert.equal(publishedResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await publishedResponse.json()),
-            originalPublished,
-          );
-        });
-
-        test('rejects a null leftDatabaseId', async (testContext: TestContext): Promise<void> => {
-          // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
-          const resource: string = await manager.createPublishedDocument(
-            'api::common-property.common-property',
-            {
-              project,
-              leftLabel: 'Original Label',
-              leftProperty: 'original',
-              rightLabel: 'Other Label',
-              rightProperty: 'other',
-            },
-            testContext,
-          );
-          const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
-            testContext,
-          );
-          const filters: Record<string, string> = {
-            [`filters[project][documentId][$eq]`]: project,
-            pageSize: '100',
-            sort: 'documentId:asc',
-          };
-          const originalDraftResponse: Response = await manager.readDocuments(
-            'api::common-property.common-property',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(originalDraftResponse.status, 200);
-          const originalDraft: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalDraftResponse.json());
-          assert.ok(
-            originalDraft.results.some(
-              (item: { documentId: string }): boolean =>
-                item.documentId === resource,
-            ),
-          );
-          const originalPublishedResponse: Response =
-            await manager.readDocuments(
-              'api::common-property.common-property',
-              { ...filters, status: 'published' },
-              testContext,
-            );
-          assert.equal(originalPublishedResponse.status, 200);
-          const originalPublished: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalPublishedResponse.json());
-
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/common-property/${resource}`,
-            {
-              method: 'PUT',
-              headers: new Headers([
-                ['Authorization', `Bearer ${ownerLogin.jwt}`],
-                ['Content-Type', 'application/json'],
-              ]),
-              body: JSON.stringify({
-                leftLabel: 'Person',
-                leftProperty: 'name',
-                rightLabel: 'Human',
-                rightProperty: 'label',
-                leftDatabaseId: null,
-                rightDatabaseId: '',
-              } satisfies Omit<
-                UpdateCommonPropertyRequestBodyDto,
-                'leftDatabaseId'
-              > & { leftDatabaseId: null }),
-              signal: testContext.signal,
-            },
-          );
-
-          // then
-          assert.equal(response.status, 400);
-          const error: {
-            statusCode: number;
-            message: string[];
-            error: string;
-          } = z
-            .object({
-              statusCode: z.literal(400),
-              message: z.array(z.string()),
-              error: z.literal('Bad Request'),
-            })
-            .parse(await response.json());
-          assert.ok(
-            error.message.some((message: string): boolean =>
-              message.includes('leftDatabaseId'),
-            ),
-          );
-          const draftResponse: Response = await manager.readDocuments(
-            'api::common-property.common-property',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(draftResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await draftResponse.json()),
-            originalDraft,
-          );
-          const publishedResponse: Response = await manager.readDocuments(
-            'api::common-property.common-property',
-            { ...filters, status: 'published' },
-            testContext,
-          );
-          assert.equal(publishedResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await publishedResponse.json()),
-            originalPublished,
-          );
-        });
-
-        test('rejects an invalid leftDatabaseId type', async (testContext: TestContext): Promise<void> => {
-          // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
-          const resource: string = await manager.createPublishedDocument(
-            'api::common-property.common-property',
-            {
-              project,
-              leftLabel: 'Original Label',
-              leftProperty: 'original',
-              rightLabel: 'Other Label',
-              rightProperty: 'other',
-            },
-            testContext,
-          );
-          const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
-            testContext,
-          );
-          const filters: Record<string, string> = {
-            [`filters[project][documentId][$eq]`]: project,
-            pageSize: '100',
-            sort: 'documentId:asc',
-          };
-          const originalDraftResponse: Response = await manager.readDocuments(
-            'api::common-property.common-property',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(originalDraftResponse.status, 200);
-          const originalDraft: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalDraftResponse.json());
-          assert.ok(
-            originalDraft.results.some(
-              (item: { documentId: string }): boolean =>
-                item.documentId === resource,
-            ),
-          );
-          const originalPublishedResponse: Response =
-            await manager.readDocuments(
-              'api::common-property.common-property',
-              { ...filters, status: 'published' },
-              testContext,
-            );
-          assert.equal(originalPublishedResponse.status, 200);
-          const originalPublished: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalPublishedResponse.json());
-
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/common-property/${resource}`,
-            {
-              method: 'PUT',
-              headers: new Headers([
-                ['Authorization', `Bearer ${ownerLogin.jwt}`],
-                ['Content-Type', 'application/json'],
-              ]),
-              body: JSON.stringify({
-                leftLabel: 'Person',
-                leftProperty: 'name',
-                rightLabel: 'Human',
-                rightProperty: 'label',
-                leftDatabaseId: 123,
-                rightDatabaseId: '',
-              } satisfies Omit<
-                UpdateCommonPropertyRequestBodyDto,
-                'leftDatabaseId'
-              > & { leftDatabaseId: number }),
-              signal: testContext.signal,
-            },
-          );
-
-          // then
-          assert.equal(response.status, 400);
-          const error: {
-            statusCode: number;
-            message: string[];
-            error: string;
-          } = z
-            .object({
-              statusCode: z.literal(400),
-              message: z.array(z.string()),
-              error: z.literal('Bad Request'),
-            })
-            .parse(await response.json());
-          assert.ok(
-            error.message.some((message: string): boolean =>
-              message.includes('leftDatabaseId'),
-            ),
-          );
-          const draftResponse: Response = await manager.readDocuments(
-            'api::common-property.common-property',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(draftResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await draftResponse.json()),
-            originalDraft,
-          );
-          const publishedResponse: Response = await manager.readDocuments(
-            'api::common-property.common-property',
-            { ...filters, status: 'published' },
-            testContext,
-          );
-          assert.equal(publishedResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await publishedResponse.json()),
-            originalPublished,
-          );
-        });
-
-        test('rejects a missing rightDatabaseId', async (testContext: TestContext): Promise<void> => {
-          // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
-          const resource: string = await manager.createPublishedDocument(
-            'api::common-property.common-property',
-            {
-              project,
-              leftLabel: 'Original Label',
-              leftProperty: 'original',
-              rightLabel: 'Other Label',
-              rightProperty: 'other',
-            },
-            testContext,
-          );
-          const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
-            testContext,
-          );
-          const filters: Record<string, string> = {
-            [`filters[project][documentId][$eq]`]: project,
-            pageSize: '100',
-            sort: 'documentId:asc',
-          };
-          const originalDraftResponse: Response = await manager.readDocuments(
-            'api::common-property.common-property',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(originalDraftResponse.status, 200);
-          const originalDraft: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalDraftResponse.json());
-          assert.ok(
-            originalDraft.results.some(
-              (item: { documentId: string }): boolean =>
-                item.documentId === resource,
-            ),
-          );
-          const originalPublishedResponse: Response =
-            await manager.readDocuments(
-              'api::common-property.common-property',
-              { ...filters, status: 'published' },
-              testContext,
-            );
-          assert.equal(originalPublishedResponse.status, 200);
-          const originalPublished: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalPublishedResponse.json());
-
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/common-property/${resource}`,
-            {
-              method: 'PUT',
-              headers: new Headers([
-                ['Authorization', `Bearer ${ownerLogin.jwt}`],
-                ['Content-Type', 'application/json'],
-              ]),
-              body: JSON.stringify({
-                leftLabel: 'Person',
-                leftProperty: 'name',
-                rightLabel: 'Human',
-                rightProperty: 'label',
-                leftDatabaseId: '',
-              } satisfies Omit<
-                UpdateCommonPropertyRequestBodyDto,
-                'rightDatabaseId'
-              >),
-              signal: testContext.signal,
-            },
-          );
-
-          // then
-          assert.equal(response.status, 400);
-          const error: {
-            statusCode: number;
-            message: string[];
-            error: string;
-          } = z
-            .object({
-              statusCode: z.literal(400),
-              message: z.array(z.string()),
-              error: z.literal('Bad Request'),
-            })
-            .parse(await response.json());
-          assert.ok(
-            error.message.some((message: string): boolean =>
-              message.includes('rightDatabaseId'),
-            ),
-          );
-          const draftResponse: Response = await manager.readDocuments(
-            'api::common-property.common-property',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(draftResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await draftResponse.json()),
-            originalDraft,
-          );
-          const publishedResponse: Response = await manager.readDocuments(
-            'api::common-property.common-property',
-            { ...filters, status: 'published' },
-            testContext,
-          );
-          assert.equal(publishedResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await publishedResponse.json()),
-            originalPublished,
-          );
-        });
-
-        test('rejects a null rightDatabaseId', async (testContext: TestContext): Promise<void> => {
-          // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
-          const resource: string = await manager.createPublishedDocument(
-            'api::common-property.common-property',
-            {
-              project,
-              leftLabel: 'Original Label',
-              leftProperty: 'original',
-              rightLabel: 'Other Label',
-              rightProperty: 'other',
-            },
-            testContext,
-          );
-          const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
-            testContext,
-          );
-          const filters: Record<string, string> = {
-            [`filters[project][documentId][$eq]`]: project,
-            pageSize: '100',
-            sort: 'documentId:asc',
-          };
-          const originalDraftResponse: Response = await manager.readDocuments(
-            'api::common-property.common-property',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(originalDraftResponse.status, 200);
-          const originalDraft: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalDraftResponse.json());
-          assert.ok(
-            originalDraft.results.some(
-              (item: { documentId: string }): boolean =>
-                item.documentId === resource,
-            ),
-          );
-          const originalPublishedResponse: Response =
-            await manager.readDocuments(
-              'api::common-property.common-property',
-              { ...filters, status: 'published' },
-              testContext,
-            );
-          assert.equal(originalPublishedResponse.status, 200);
-          const originalPublished: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalPublishedResponse.json());
-
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/common-property/${resource}`,
-            {
-              method: 'PUT',
-              headers: new Headers([
-                ['Authorization', `Bearer ${ownerLogin.jwt}`],
-                ['Content-Type', 'application/json'],
-              ]),
-              body: JSON.stringify({
-                leftLabel: 'Person',
-                leftProperty: 'name',
-                rightLabel: 'Human',
-                rightProperty: 'label',
-                leftDatabaseId: '',
-                rightDatabaseId: null,
-              } satisfies Omit<
-                UpdateCommonPropertyRequestBodyDto,
-                'rightDatabaseId'
-              > & { rightDatabaseId: null }),
-              signal: testContext.signal,
-            },
-          );
-
-          // then
-          assert.equal(response.status, 400);
-          const error: {
-            statusCode: number;
-            message: string[];
-            error: string;
-          } = z
-            .object({
-              statusCode: z.literal(400),
-              message: z.array(z.string()),
-              error: z.literal('Bad Request'),
-            })
-            .parse(await response.json());
-          assert.ok(
-            error.message.some((message: string): boolean =>
-              message.includes('rightDatabaseId'),
-            ),
-          );
-          const draftResponse: Response = await manager.readDocuments(
-            'api::common-property.common-property',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(draftResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await draftResponse.json()),
-            originalDraft,
-          );
-          const publishedResponse: Response = await manager.readDocuments(
-            'api::common-property.common-property',
-            { ...filters, status: 'published' },
-            testContext,
-          );
-          assert.equal(publishedResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await publishedResponse.json()),
-            originalPublished,
-          );
-        });
-
-        test('rejects an invalid rightDatabaseId type', async (testContext: TestContext): Promise<void> => {
-          // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
-          const resource: string = await manager.createPublishedDocument(
-            'api::common-property.common-property',
-            {
-              project,
-              leftLabel: 'Original Label',
-              leftProperty: 'original',
-              rightLabel: 'Other Label',
-              rightProperty: 'other',
-            },
-            testContext,
-          );
-          const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
-            testContext,
-          );
-          const filters: Record<string, string> = {
-            [`filters[project][documentId][$eq]`]: project,
-            pageSize: '100',
-            sort: 'documentId:asc',
-          };
-          const originalDraftResponse: Response = await manager.readDocuments(
-            'api::common-property.common-property',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(originalDraftResponse.status, 200);
-          const originalDraft: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalDraftResponse.json());
-          assert.ok(
-            originalDraft.results.some(
-              (item: { documentId: string }): boolean =>
-                item.documentId === resource,
-            ),
-          );
-          const originalPublishedResponse: Response =
-            await manager.readDocuments(
-              'api::common-property.common-property',
-              { ...filters, status: 'published' },
-              testContext,
-            );
-          assert.equal(originalPublishedResponse.status, 200);
-          const originalPublished: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalPublishedResponse.json());
-
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/common-property/${resource}`,
-            {
-              method: 'PUT',
-              headers: new Headers([
-                ['Authorization', `Bearer ${ownerLogin.jwt}`],
-                ['Content-Type', 'application/json'],
-              ]),
-              body: JSON.stringify({
-                leftLabel: 'Person',
-                leftProperty: 'name',
-                rightLabel: 'Human',
-                rightProperty: 'label',
-                leftDatabaseId: '',
-                rightDatabaseId: 123,
-              } satisfies Omit<
-                UpdateCommonPropertyRequestBodyDto,
-                'rightDatabaseId'
-              > & { rightDatabaseId: number }),
-              signal: testContext.signal,
-            },
-          );
-
-          // then
-          assert.equal(response.status, 400);
-          const error: {
-            statusCode: number;
-            message: string[];
-            error: string;
-          } = z
-            .object({
-              statusCode: z.literal(400),
-              message: z.array(z.string()),
-              error: z.literal('Bad Request'),
-            })
-            .parse(await response.json());
-          assert.ok(
-            error.message.some((message: string): boolean =>
-              message.includes('rightDatabaseId'),
-            ),
-          );
-          const draftResponse: Response = await manager.readDocuments(
-            'api::common-property.common-property',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(draftResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await draftResponse.json()),
-            originalDraft,
-          );
-          const publishedResponse: Response = await manager.readDocuments(
-            'api::common-property.common-property',
-            { ...filters, status: 'published' },
-            testContext,
-          );
-          assert.equal(publishedResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await publishedResponse.json()),
-            originalPublished,
-          );
-        });
-
-        test('rejects unexpected properties', async (testContext: TestContext): Promise<void> => {
-          // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
-          const resource: string = await manager.createPublishedDocument(
-            'api::common-property.common-property',
-            {
-              project,
-              leftLabel: 'Original Label',
-              leftProperty: 'original',
-              rightLabel: 'Other Label',
-              rightProperty: 'other',
-            },
-            testContext,
-          );
-          const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
-            testContext,
-          );
-          const filters: Record<string, string> = {
-            [`filters[project][documentId][$eq]`]: project,
-            pageSize: '100',
-            sort: 'documentId:asc',
-          };
-          const originalDraftResponse: Response = await manager.readDocuments(
-            'api::common-property.common-property',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(originalDraftResponse.status, 200);
-          const originalDraft: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalDraftResponse.json());
-          assert.ok(
-            originalDraft.results.some(
-              (item: { documentId: string }): boolean =>
-                item.documentId === resource,
-            ),
-          );
-          const originalPublishedResponse: Response =
-            await manager.readDocuments(
-              'api::common-property.common-property',
-              { ...filters, status: 'published' },
-              testContext,
-            );
-          assert.equal(originalPublishedResponse.status, 200);
-          const originalPublished: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalPublishedResponse.json());
-
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/common-property/${resource}`,
-            {
-              method: 'PUT',
-              headers: new Headers([
-                ['Authorization', `Bearer ${ownerLogin.jwt}`],
-                ['Content-Type', 'application/json'],
-              ]),
-              body: JSON.stringify({
-                leftLabel: 'Person',
-                leftProperty: 'name',
-                rightLabel: 'Human',
-                rightProperty: 'label',
-                leftDatabaseId: '',
-                rightDatabaseId: '',
-                unexpected: true,
-              } satisfies UpdateCommonPropertyRequestBodyDto & {
-                unexpected: boolean;
-              }),
-              signal: testContext.signal,
-            },
-          );
-
-          // then
-          assert.equal(response.status, 400);
-          const error: {
-            statusCode: number;
-            message: string[];
-            error: string;
-          } = z
-            .object({
-              statusCode: z.literal(400),
-              message: z.array(z.string()),
-              error: z.literal('Bad Request'),
-            })
-            .parse(await response.json());
-          assert.ok(
-            error.message.some((message: string): boolean =>
-              message.includes('unexpected'),
-            ),
-          );
-          const draftResponse: Response = await manager.readDocuments(
-            'api::common-property.common-property',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(draftResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await draftResponse.json()),
-            originalDraft,
-          );
-          const publishedResponse: Response = await manager.readDocuments(
-            'api::common-property.common-property',
-            { ...filters, status: 'published' },
-            testContext,
-          );
-          assert.equal(publishedResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await publishedResponse.json()),
-            originalPublished,
-          );
-        });
+              // then
+              assert.equal(response.status, 400);
+              const error: {
+                statusCode: number;
+                message: string[];
+                error: string;
+              } = z
+                .object({
+                  statusCode: z.literal(400),
+                  message: z.array(z.string()),
+                  error: z.literal('Bad Request'),
+                })
+                .parse(await response.json());
+              assert.ok(
+                error.message.some((message: string): boolean =>
+                  message.includes(variant.expectedMessage),
+                ),
+              );
+              const draftResponse: Response = await manager.readDocuments(
+                'api::common-property.common-property',
+                { ...filters, status: 'draft' },
+                testContext,
+              );
+              assert.equal(draftResponse.status, 200);
+              assert.deepEqual(
+                listStateSchema.parse(await draftResponse.json()),
+                originalDraft,
+              );
+              const publishedResponse: Response = await manager.readDocuments(
+                'api::common-property.common-property',
+                { ...filters, status: 'published' },
+                testContext,
+              );
+              assert.equal(publishedResponse.status, 200);
+              assert.deepEqual(
+                listStateSchema.parse(await publishedResponse.json()),
+                originalPublished,
+              );
+            }
+          },
+        );
       });
       describe('401', (): void => {
-        test('rejects anonymous access', async (testContext: TestContext): Promise<void> => {
-          // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
+        test('rejects requests without valid authentication', async (testContext: TestContext): Promise<void> => {
+          const variants: { headers: [string, string][] }[] = [
             {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [],
+              headers: [['Content-Type', 'application/json']],
             },
-            testContext,
-          );
-          const resource: string = await manager.createPublishedDocument(
-            'api::common-property.common-property',
             {
-              project,
-              leftLabel: 'Original Label',
-              leftProperty: 'original',
-              rightLabel: 'Other Label',
-              rightProperty: 'other',
-            },
-            testContext,
-          );
-          await manager.loginUser(owner.username, owner.password, testContext);
-          const filters: Record<string, string> = {
-            [`filters[project][documentId][$eq]`]: project,
-            pageSize: '100',
-            sort: 'documentId:asc',
-          };
-          const originalDraftResponse: Response = await manager.readDocuments(
-            'api::common-property.common-property',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(originalDraftResponse.status, 200);
-          const originalDraft: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalDraftResponse.json());
-          assert.ok(
-            originalDraft.results.some(
-              (item: { documentId: string }): boolean =>
-                item.documentId === resource,
-            ),
-          );
-          const originalPublishedResponse: Response =
-            await manager.readDocuments(
-              'api::common-property.common-property',
-              { ...filters, status: 'published' },
-              testContext,
-            );
-          assert.equal(originalPublishedResponse.status, 200);
-          const originalPublished: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalPublishedResponse.json());
-
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/common-property/${resource}`,
-            {
-              method: 'PUT',
-              headers: new Headers([['Content-Type', 'application/json']]),
-              body: JSON.stringify({
-                leftLabel: 'Person',
-                leftProperty: 'name',
-                rightLabel: 'Human',
-                rightProperty: 'label',
-                leftDatabaseId: '',
-                rightDatabaseId: '',
-              } satisfies UpdateCommonPropertyRequestBodyDto),
-              signal: testContext.signal,
-            },
-          );
-
-          // then
-          assert.equal(response.status, 401);
-          assert.equal(response.headers.get('www-authenticate'), 'Bearer');
-          assert.deepEqual(await response.json(), {
-            statusCode: 401,
-            message: 'Unauthorized',
-          });
-          const draftResponse: Response = await manager.readDocuments(
-            'api::common-property.common-property',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(draftResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await draftResponse.json()),
-            originalDraft,
-          );
-          const publishedResponse: Response = await manager.readDocuments(
-            'api::common-property.common-property',
-            { ...filters, status: 'published' },
-            testContext,
-          );
-          assert.equal(publishedResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await publishedResponse.json()),
-            originalPublished,
-          );
-        });
-        test('rejects invalid jwt access', async (testContext: TestContext): Promise<void> => {
-          // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
-          const resource: string = await manager.createPublishedDocument(
-            'api::common-property.common-property',
-            {
-              project,
-              leftLabel: 'Original Label',
-              leftProperty: 'original',
-              rightLabel: 'Other Label',
-              rightProperty: 'other',
-            },
-            testContext,
-          );
-          await manager.loginUser(owner.username, owner.password, testContext);
-          const filters: Record<string, string> = {
-            [`filters[project][documentId][$eq]`]: project,
-            pageSize: '100',
-            sort: 'documentId:asc',
-          };
-          const originalDraftResponse: Response = await manager.readDocuments(
-            'api::common-property.common-property',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(originalDraftResponse.status, 200);
-          const originalDraft: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalDraftResponse.json());
-          assert.ok(
-            originalDraft.results.some(
-              (item: { documentId: string }): boolean =>
-                item.documentId === resource,
-            ),
-          );
-          const originalPublishedResponse: Response =
-            await manager.readDocuments(
-              'api::common-property.common-property',
-              { ...filters, status: 'published' },
-              testContext,
-            );
-          assert.equal(originalPublishedResponse.status, 200);
-          const originalPublished: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalPublishedResponse.json());
-
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/common-property/${resource}`,
-            {
-              method: 'PUT',
-              headers: new Headers([
+              headers: [
                 ['Authorization', 'Bearer invalid-jwt'],
                 ['Content-Type', 'application/json'],
-              ]),
-              body: JSON.stringify({
-                leftLabel: 'Person',
-                leftProperty: 'name',
-                rightLabel: 'Human',
-                rightProperty: 'label',
-                leftDatabaseId: '',
-                rightDatabaseId: '',
-              } satisfies UpdateCommonPropertyRequestBodyDto),
-              signal: testContext.signal,
+              ],
             },
-          );
+          ];
+          for (const variant of variants) {
+            // given
+            const owner: E2ETestApplicationUser =
+              await manager.registerUser(testContext);
+            const project: string = await manager.createPublishedDocument(
+              'api::project.project',
+              {
+                title: 'Test Project',
+                owner: owner.documentId,
+                collaborators: [],
+              },
+              testContext,
+            );
+            const resource: string = await manager.createPublishedDocument(
+              'api::common-property.common-property',
+              {
+                project,
+                leftLabel: 'Original Label',
+                leftProperty: 'original',
+                rightLabel: 'Other Label',
+                rightProperty: 'other',
+              },
+              testContext,
+            );
+            await manager.loginUser(
+              owner.username,
+              owner.password,
+              testContext,
+            );
+            const filters: Record<string, string> = {
+              [`filters[project][documentId][$eq]`]: project,
+              pageSize: '100',
+              sort: 'documentId:asc',
+            };
+            const originalDraftResponse: Response = await manager.readDocuments(
+              'api::common-property.common-property',
+              { ...filters, status: 'draft' },
+              testContext,
+            );
+            assert.equal(originalDraftResponse.status, 200);
+            const originalDraft: z.infer<typeof listStateSchema> =
+              listStateSchema.parse(await originalDraftResponse.json());
+            assert.ok(
+              originalDraft.results.some(
+                (item: { documentId: string }): boolean =>
+                  item.documentId === resource,
+              ),
+            );
+            const originalPublishedResponse: Response =
+              await manager.readDocuments(
+                'api::common-property.common-property',
+                { ...filters, status: 'published' },
+                testContext,
+              );
+            assert.equal(originalPublishedResponse.status, 200);
+            const originalPublished: z.infer<typeof listStateSchema> =
+              listStateSchema.parse(await originalPublishedResponse.json());
 
-          // then
-          assert.equal(response.status, 401);
-          assert.equal(response.headers.get('www-authenticate'), 'Bearer');
-          assert.deepEqual(await response.json(), {
-            statusCode: 401,
-            message: 'Unauthorized',
-          });
-          const draftResponse: Response = await manager.readDocuments(
-            'api::common-property.common-property',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(draftResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await draftResponse.json()),
-            originalDraft,
-          );
-          const publishedResponse: Response = await manager.readDocuments(
-            'api::common-property.common-property',
-            { ...filters, status: 'published' },
-            testContext,
-          );
-          assert.equal(publishedResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await publishedResponse.json()),
-            originalPublished,
-          );
+            // when
+            const response: Response = await fetch(
+              `${manager.apiUrl}/project/${project}/common-property/${resource}`,
+              {
+                method: 'PUT',
+                body: JSON.stringify({
+                  leftLabel: 'Person',
+                  leftProperty: 'name',
+                  rightLabel: 'Human',
+                  rightProperty: 'label',
+                  leftDatabaseId: '',
+                  rightDatabaseId: '',
+                } satisfies UpdateCommonPropertyRequestBodyDto),
+                signal: testContext.signal,
+                headers: new Headers(variant.headers),
+              },
+            );
+
+            // then
+            assert.equal(response.status, 401);
+            assert.equal(response.headers.get('www-authenticate'), 'Bearer');
+            assert.deepEqual(await response.json(), {
+              statusCode: 401,
+              message: 'Unauthorized',
+            });
+            const draftResponse: Response = await manager.readDocuments(
+              'api::common-property.common-property',
+              { ...filters, status: 'draft' },
+              testContext,
+            );
+            assert.equal(draftResponse.status, 200);
+            assert.deepEqual(
+              listStateSchema.parse(await draftResponse.json()),
+              originalDraft,
+            );
+            const publishedResponse: Response = await manager.readDocuments(
+              'api::common-property.common-property',
+              { ...filters, status: 'published' },
+              testContext,
+            );
+            assert.equal(publishedResponse.status, 200);
+            assert.deepEqual(
+              listStateSchema.parse(await publishedResponse.json()),
+              originalPublished,
+            );
+          }
         });
       });
 
@@ -4499,718 +2228,370 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
         });
       });
       describe('404', (): void => {
-        test('rejects an unknown left database', async (testContext: TestContext): Promise<void> => {
-          // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
-          const resource: string = await manager.createPublishedDocument(
-            'api::common-property.common-property',
-            {
-              project,
-              leftLabel: 'Original Label',
-              leftProperty: 'original',
-              rightLabel: 'Other Label',
-              rightProperty: 'other',
-            },
-            testContext,
-          );
-          const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
-            testContext,
-          );
-          const database: string = randomUUID();
-          const filters: Record<string, string> = {
-            [`filters[project][documentId][$eq]`]: project,
-            pageSize: '100',
-            sort: 'documentId:asc',
-          };
-          const originalDraftResponse: Response = await manager.readDocuments(
-            'api::common-property.common-property',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(originalDraftResponse.status, 200);
-          const originalDraft: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalDraftResponse.json());
-          assert.ok(
-            originalDraft.results.some(
-              (item: { documentId: string }): boolean =>
-                item.documentId === resource,
-            ),
-          );
-          const originalPublishedResponse: Response =
-            await manager.readDocuments(
+        test('rejects an unknown database on either side', async (testContext: TestContext): Promise<void> => {
+          const sides: ('left' | 'right')[] = ['left', 'right'];
+          for (const side of sides) {
+            // given
+            const owner: E2ETestApplicationUser =
+              await manager.registerUser(testContext);
+            const project: string = await manager.createPublishedDocument(
+              'api::project.project',
+              {
+                title: 'Test Project',
+                owner: owner.documentId,
+                collaborators: [],
+              },
+              testContext,
+            );
+            const resource: string = await manager.createPublishedDocument(
+              'api::common-property.common-property',
+              {
+                project,
+                leftLabel: 'Original Label',
+                leftProperty: 'original',
+                rightLabel: 'Other Label',
+                rightProperty: 'other',
+              },
+              testContext,
+            );
+            const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
+              owner.username,
+              owner.password,
+              testContext,
+            );
+            const database: string = randomUUID();
+            const filters: Record<string, string> = {
+              [`filters[project][documentId][$eq]`]: project,
+              pageSize: '100',
+              sort: 'documentId:asc',
+            };
+            const originalDraftResponse: Response = await manager.readDocuments(
+              'api::common-property.common-property',
+              { ...filters, status: 'draft' },
+              testContext,
+            );
+            assert.equal(originalDraftResponse.status, 200);
+            const originalDraft: z.infer<typeof listStateSchema> =
+              listStateSchema.parse(await originalDraftResponse.json());
+            assert.ok(
+              originalDraft.results.some(
+                (item: { documentId: string }): boolean =>
+                  item.documentId === resource,
+              ),
+            );
+            const originalPublishedResponse: Response =
+              await manager.readDocuments(
+                'api::common-property.common-property',
+                { ...filters, status: 'published' },
+                testContext,
+              );
+            assert.equal(originalPublishedResponse.status, 200);
+            const originalPublished: z.infer<typeof listStateSchema> =
+              listStateSchema.parse(await originalPublishedResponse.json());
+
+            // when
+            const response: Response = await fetch(
+              `${manager.apiUrl}/project/${project}/common-property/${resource}`,
+              {
+                method: 'PUT',
+                headers: new Headers([
+                  ['Authorization', `Bearer ${ownerLogin.jwt}`],
+                  ['Content-Type', 'application/json'],
+                ]),
+                body: JSON.stringify({
+                  leftLabel: 'Person',
+                  leftProperty: 'name',
+                  rightLabel: 'Human',
+                  rightProperty: 'label',
+                  leftDatabaseId: side === 'left' ? database : '',
+                  rightDatabaseId: side === 'right' ? database : '',
+                } satisfies UpdateCommonPropertyRequestBodyDto),
+                signal: testContext.signal,
+              },
+            );
+
+            // then
+            assert.equal(response.status, 404);
+            assert.deepEqual(await response.json(), {
+              statusCode: 404,
+              message: 'Not Found',
+            });
+            const draftResponse: Response = await manager.readDocuments(
+              'api::common-property.common-property',
+              { ...filters, status: 'draft' },
+              testContext,
+            );
+            assert.equal(draftResponse.status, 200);
+            assert.deepEqual(
+              listStateSchema.parse(await draftResponse.json()),
+              originalDraft,
+            );
+            const publishedResponse: Response = await manager.readDocuments(
               'api::common-property.common-property',
               { ...filters, status: 'published' },
               testContext,
             );
-          assert.equal(originalPublishedResponse.status, 200);
-          const originalPublished: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalPublishedResponse.json());
-
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/common-property/${resource}`,
-            {
-              method: 'PUT',
-              headers: new Headers([
-                ['Authorization', `Bearer ${ownerLogin.jwt}`],
-                ['Content-Type', 'application/json'],
-              ]),
-              body: JSON.stringify({
-                leftLabel: 'Person',
-                leftProperty: 'name',
-                rightLabel: 'Human',
-                rightProperty: 'label',
-                leftDatabaseId: database,
-                rightDatabaseId: '',
-              } satisfies UpdateCommonPropertyRequestBodyDto),
-              signal: testContext.signal,
-            },
-          );
-
-          // then
-          assert.equal(response.status, 404);
-          assert.deepEqual(await response.json(), {
-            statusCode: 404,
-            message: 'Not Found',
-          });
-          const draftResponse: Response = await manager.readDocuments(
-            'api::common-property.common-property',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(draftResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await draftResponse.json()),
-            originalDraft,
-          );
-          const publishedResponse: Response = await manager.readDocuments(
-            'api::common-property.common-property',
-            { ...filters, status: 'published' },
-            testContext,
-          );
-          assert.equal(publishedResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await publishedResponse.json()),
-            originalPublished,
-          );
+            assert.equal(publishedResponse.status, 200);
+            assert.deepEqual(
+              listStateSchema.parse(await publishedResponse.json()),
+              originalPublished,
+            );
+          }
         });
 
-        test('rejects an unpublished left database', async (testContext: TestContext): Promise<void> => {
-          // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
-          const resource: string = await manager.createPublishedDocument(
-            'api::common-property.common-property',
-            {
-              project,
-              leftLabel: 'Original Label',
-              leftProperty: 'original',
-              rightLabel: 'Other Label',
-              rightProperty: 'other',
-            },
-            testContext,
-          );
-          const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
-            testContext,
-          );
-          const database: string = await manager.createPublishedDocument(
-            'api::database-connection.database-connection',
-            {
-              title: 'Referenced Database',
-              project: project,
-              databaseType: 'neo4j',
-            },
-            testContext,
-          );
-          const unpublish: Response = await manager.unpublishDocument(
-            'api::database-connection.database-connection',
-            database,
-            {},
-            testContext,
-          );
-          assert.equal(unpublish.status, 200);
-          const filters: Record<string, string> = {
-            [`filters[project][documentId][$eq]`]: project,
-            pageSize: '100',
-            sort: 'documentId:asc',
-          };
-          const originalDraftResponse: Response = await manager.readDocuments(
-            'api::common-property.common-property',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(originalDraftResponse.status, 200);
-          const originalDraft: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalDraftResponse.json());
-          assert.ok(
-            originalDraft.results.some(
-              (item: { documentId: string }): boolean =>
-                item.documentId === resource,
-            ),
-          );
-          const originalPublishedResponse: Response =
-            await manager.readDocuments(
+        test('rejects an unpublished database on either side', async (testContext: TestContext): Promise<void> => {
+          const sides: ('left' | 'right')[] = ['left', 'right'];
+          for (const side of sides) {
+            // given
+            const owner: E2ETestApplicationUser =
+              await manager.registerUser(testContext);
+            const project: string = await manager.createPublishedDocument(
+              'api::project.project',
+              {
+                title: 'Test Project',
+                owner: owner.documentId,
+                collaborators: [],
+              },
+              testContext,
+            );
+            const resource: string = await manager.createPublishedDocument(
+              'api::common-property.common-property',
+              {
+                project,
+                leftLabel: 'Original Label',
+                leftProperty: 'original',
+                rightLabel: 'Other Label',
+                rightProperty: 'other',
+              },
+              testContext,
+            );
+            const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
+              owner.username,
+              owner.password,
+              testContext,
+            );
+            const database: string = await manager.createPublishedDocument(
+              'api::database-connection.database-connection',
+              {
+                title: 'Referenced Database',
+                project: project,
+                databaseType: 'neo4j',
+              },
+              testContext,
+            );
+            const unpublish: Response = await manager.unpublishDocument(
+              'api::database-connection.database-connection',
+              database,
+              {},
+              testContext,
+            );
+            assert.equal(unpublish.status, 200);
+            const filters: Record<string, string> = {
+              [`filters[project][documentId][$eq]`]: project,
+              pageSize: '100',
+              sort: 'documentId:asc',
+            };
+            const originalDraftResponse: Response = await manager.readDocuments(
+              'api::common-property.common-property',
+              { ...filters, status: 'draft' },
+              testContext,
+            );
+            assert.equal(originalDraftResponse.status, 200);
+            const originalDraft: z.infer<typeof listStateSchema> =
+              listStateSchema.parse(await originalDraftResponse.json());
+            assert.ok(
+              originalDraft.results.some(
+                (item: { documentId: string }): boolean =>
+                  item.documentId === resource,
+              ),
+            );
+            const originalPublishedResponse: Response =
+              await manager.readDocuments(
+                'api::common-property.common-property',
+                { ...filters, status: 'published' },
+                testContext,
+              );
+            assert.equal(originalPublishedResponse.status, 200);
+            const originalPublished: z.infer<typeof listStateSchema> =
+              listStateSchema.parse(await originalPublishedResponse.json());
+
+            // when
+            const response: Response = await fetch(
+              `${manager.apiUrl}/project/${project}/common-property/${resource}`,
+              {
+                method: 'PUT',
+                headers: new Headers([
+                  ['Authorization', `Bearer ${ownerLogin.jwt}`],
+                  ['Content-Type', 'application/json'],
+                ]),
+                body: JSON.stringify({
+                  leftLabel: 'Person',
+                  leftProperty: 'name',
+                  rightLabel: 'Human',
+                  rightProperty: 'label',
+                  leftDatabaseId: side === 'left' ? database : '',
+                  rightDatabaseId: side === 'right' ? database : '',
+                } satisfies UpdateCommonPropertyRequestBodyDto),
+                signal: testContext.signal,
+              },
+            );
+
+            // then
+            assert.equal(response.status, 404);
+            assert.deepEqual(await response.json(), {
+              statusCode: 404,
+              message: 'Not Found',
+            });
+            const draftResponse: Response = await manager.readDocuments(
+              'api::common-property.common-property',
+              { ...filters, status: 'draft' },
+              testContext,
+            );
+            assert.equal(draftResponse.status, 200);
+            assert.deepEqual(
+              listStateSchema.parse(await draftResponse.json()),
+              originalDraft,
+            );
+            const publishedResponse: Response = await manager.readDocuments(
               'api::common-property.common-property',
               { ...filters, status: 'published' },
               testContext,
             );
-          assert.equal(originalPublishedResponse.status, 200);
-          const originalPublished: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalPublishedResponse.json());
-
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/common-property/${resource}`,
-            {
-              method: 'PUT',
-              headers: new Headers([
-                ['Authorization', `Bearer ${ownerLogin.jwt}`],
-                ['Content-Type', 'application/json'],
-              ]),
-              body: JSON.stringify({
-                leftLabel: 'Person',
-                leftProperty: 'name',
-                rightLabel: 'Human',
-                rightProperty: 'label',
-                leftDatabaseId: database,
-                rightDatabaseId: '',
-              } satisfies UpdateCommonPropertyRequestBodyDto),
-              signal: testContext.signal,
-            },
-          );
-
-          // then
-          assert.equal(response.status, 404);
-          assert.deepEqual(await response.json(), {
-            statusCode: 404,
-            message: 'Not Found',
-          });
-          const draftResponse: Response = await manager.readDocuments(
-            'api::common-property.common-property',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(draftResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await draftResponse.json()),
-            originalDraft,
-          );
-          const publishedResponse: Response = await manager.readDocuments(
-            'api::common-property.common-property',
-            { ...filters, status: 'published' },
-            testContext,
-          );
-          assert.equal(publishedResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await publishedResponse.json()),
-            originalPublished,
-          );
+            assert.equal(publishedResponse.status, 200);
+            assert.deepEqual(
+              listStateSchema.parse(await publishedResponse.json()),
+              originalPublished,
+            );
+          }
         });
 
-        test('rejects an foreign left database', async (testContext: TestContext): Promise<void> => {
-          // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
-          const resource: string = await manager.createPublishedDocument(
-            'api::common-property.common-property',
-            {
-              project,
-              leftLabel: 'Original Label',
-              leftProperty: 'original',
-              rightLabel: 'Other Label',
-              rightProperty: 'other',
-            },
-            testContext,
-          );
-          const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
-            testContext,
-          );
-          const otherProject: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Other Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
-          const database: string = await manager.createPublishedDocument(
-            'api::database-connection.database-connection',
-            {
-              title: 'Referenced Database',
-              project: otherProject,
-              databaseType: 'neo4j',
-            },
-            testContext,
-          );
-          const filters: Record<string, string> = {
-            [`filters[project][documentId][$eq]`]: project,
-            pageSize: '100',
-            sort: 'documentId:asc',
-          };
-          const originalDraftResponse: Response = await manager.readDocuments(
-            'api::common-property.common-property',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(originalDraftResponse.status, 200);
-          const originalDraft: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalDraftResponse.json());
-          assert.ok(
-            originalDraft.results.some(
-              (item: { documentId: string }): boolean =>
-                item.documentId === resource,
-            ),
-          );
-          const originalPublishedResponse: Response =
-            await manager.readDocuments(
+        test('rejects a foreign database on either side', async (testContext: TestContext): Promise<void> => {
+          const sides: ('left' | 'right')[] = ['left', 'right'];
+          for (const side of sides) {
+            // given
+            const owner: E2ETestApplicationUser =
+              await manager.registerUser(testContext);
+            const project: string = await manager.createPublishedDocument(
+              'api::project.project',
+              {
+                title: 'Test Project',
+                owner: owner.documentId,
+                collaborators: [],
+              },
+              testContext,
+            );
+            const resource: string = await manager.createPublishedDocument(
+              'api::common-property.common-property',
+              {
+                project,
+                leftLabel: 'Original Label',
+                leftProperty: 'original',
+                rightLabel: 'Other Label',
+                rightProperty: 'other',
+              },
+              testContext,
+            );
+            const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
+              owner.username,
+              owner.password,
+              testContext,
+            );
+            const otherProject: string = await manager.createPublishedDocument(
+              'api::project.project',
+              {
+                title: 'Other Project',
+                owner: owner.documentId,
+                collaborators: [],
+              },
+              testContext,
+            );
+            const database: string = await manager.createPublishedDocument(
+              'api::database-connection.database-connection',
+              {
+                title: 'Referenced Database',
+                project: otherProject,
+                databaseType: 'neo4j',
+              },
+              testContext,
+            );
+            const filters: Record<string, string> = {
+              [`filters[project][documentId][$eq]`]: project,
+              pageSize: '100',
+              sort: 'documentId:asc',
+            };
+            const originalDraftResponse: Response = await manager.readDocuments(
+              'api::common-property.common-property',
+              { ...filters, status: 'draft' },
+              testContext,
+            );
+            assert.equal(originalDraftResponse.status, 200);
+            const originalDraft: z.infer<typeof listStateSchema> =
+              listStateSchema.parse(await originalDraftResponse.json());
+            assert.ok(
+              originalDraft.results.some(
+                (item: { documentId: string }): boolean =>
+                  item.documentId === resource,
+              ),
+            );
+            const originalPublishedResponse: Response =
+              await manager.readDocuments(
+                'api::common-property.common-property',
+                { ...filters, status: 'published' },
+                testContext,
+              );
+            assert.equal(originalPublishedResponse.status, 200);
+            const originalPublished: z.infer<typeof listStateSchema> =
+              listStateSchema.parse(await originalPublishedResponse.json());
+
+            // when
+            const response: Response = await fetch(
+              `${manager.apiUrl}/project/${project}/common-property/${resource}`,
+              {
+                method: 'PUT',
+                headers: new Headers([
+                  ['Authorization', `Bearer ${ownerLogin.jwt}`],
+                  ['Content-Type', 'application/json'],
+                ]),
+                body: JSON.stringify({
+                  leftLabel: 'Person',
+                  leftProperty: 'name',
+                  rightLabel: 'Human',
+                  rightProperty: 'label',
+                  leftDatabaseId: side === 'left' ? database : '',
+                  rightDatabaseId: side === 'right' ? database : '',
+                } satisfies UpdateCommonPropertyRequestBodyDto),
+                signal: testContext.signal,
+              },
+            );
+
+            // then
+            assert.equal(response.status, 404);
+            assert.deepEqual(await response.json(), {
+              statusCode: 404,
+              message: `Database ${database} not found.`,
+              error: 'Not Found',
+            });
+            const draftResponse: Response = await manager.readDocuments(
+              'api::common-property.common-property',
+              { ...filters, status: 'draft' },
+              testContext,
+            );
+            assert.equal(draftResponse.status, 200);
+            assert.deepEqual(
+              listStateSchema.parse(await draftResponse.json()),
+              originalDraft,
+            );
+            const publishedResponse: Response = await manager.readDocuments(
               'api::common-property.common-property',
               { ...filters, status: 'published' },
               testContext,
             );
-          assert.equal(originalPublishedResponse.status, 200);
-          const originalPublished: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalPublishedResponse.json());
-
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/common-property/${resource}`,
-            {
-              method: 'PUT',
-              headers: new Headers([
-                ['Authorization', `Bearer ${ownerLogin.jwt}`],
-                ['Content-Type', 'application/json'],
-              ]),
-              body: JSON.stringify({
-                leftLabel: 'Person',
-                leftProperty: 'name',
-                rightLabel: 'Human',
-                rightProperty: 'label',
-                leftDatabaseId: database,
-                rightDatabaseId: '',
-              } satisfies UpdateCommonPropertyRequestBodyDto),
-              signal: testContext.signal,
-            },
-          );
-
-          // then
-          assert.equal(response.status, 404);
-          assert.deepEqual(await response.json(), {
-            statusCode: 404,
-            message: `Database ${database} not found.`,
-            error: 'Not Found',
-          });
-          const draftResponse: Response = await manager.readDocuments(
-            'api::common-property.common-property',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(draftResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await draftResponse.json()),
-            originalDraft,
-          );
-          const publishedResponse: Response = await manager.readDocuments(
-            'api::common-property.common-property',
-            { ...filters, status: 'published' },
-            testContext,
-          );
-          assert.equal(publishedResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await publishedResponse.json()),
-            originalPublished,
-          );
-        });
-
-        test('rejects an unknown right database', async (testContext: TestContext): Promise<void> => {
-          // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
-          const resource: string = await manager.createPublishedDocument(
-            'api::common-property.common-property',
-            {
-              project,
-              leftLabel: 'Original Label',
-              leftProperty: 'original',
-              rightLabel: 'Other Label',
-              rightProperty: 'other',
-            },
-            testContext,
-          );
-          const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
-            testContext,
-          );
-          const database: string = randomUUID();
-          const filters: Record<string, string> = {
-            [`filters[project][documentId][$eq]`]: project,
-            pageSize: '100',
-            sort: 'documentId:asc',
-          };
-          const originalDraftResponse: Response = await manager.readDocuments(
-            'api::common-property.common-property',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(originalDraftResponse.status, 200);
-          const originalDraft: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalDraftResponse.json());
-          assert.ok(
-            originalDraft.results.some(
-              (item: { documentId: string }): boolean =>
-                item.documentId === resource,
-            ),
-          );
-          const originalPublishedResponse: Response =
-            await manager.readDocuments(
-              'api::common-property.common-property',
-              { ...filters, status: 'published' },
-              testContext,
+            assert.equal(publishedResponse.status, 200);
+            assert.deepEqual(
+              listStateSchema.parse(await publishedResponse.json()),
+              originalPublished,
             );
-          assert.equal(originalPublishedResponse.status, 200);
-          const originalPublished: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalPublishedResponse.json());
-
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/common-property/${resource}`,
-            {
-              method: 'PUT',
-              headers: new Headers([
-                ['Authorization', `Bearer ${ownerLogin.jwt}`],
-                ['Content-Type', 'application/json'],
-              ]),
-              body: JSON.stringify({
-                leftLabel: 'Person',
-                leftProperty: 'name',
-                rightLabel: 'Human',
-                rightProperty: 'label',
-                leftDatabaseId: '',
-                rightDatabaseId: database,
-              } satisfies UpdateCommonPropertyRequestBodyDto),
-              signal: testContext.signal,
-            },
-          );
-
-          // then
-          assert.equal(response.status, 404);
-          assert.deepEqual(await response.json(), {
-            statusCode: 404,
-            message: 'Not Found',
-          });
-          const draftResponse: Response = await manager.readDocuments(
-            'api::common-property.common-property',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(draftResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await draftResponse.json()),
-            originalDraft,
-          );
-          const publishedResponse: Response = await manager.readDocuments(
-            'api::common-property.common-property',
-            { ...filters, status: 'published' },
-            testContext,
-          );
-          assert.equal(publishedResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await publishedResponse.json()),
-            originalPublished,
-          );
-        });
-
-        test('rejects an unpublished right database', async (testContext: TestContext): Promise<void> => {
-          // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
-          const resource: string = await manager.createPublishedDocument(
-            'api::common-property.common-property',
-            {
-              project,
-              leftLabel: 'Original Label',
-              leftProperty: 'original',
-              rightLabel: 'Other Label',
-              rightProperty: 'other',
-            },
-            testContext,
-          );
-          const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
-            testContext,
-          );
-          const database: string = await manager.createPublishedDocument(
-            'api::database-connection.database-connection',
-            {
-              title: 'Referenced Database',
-              project: project,
-              databaseType: 'neo4j',
-            },
-            testContext,
-          );
-          const unpublish: Response = await manager.unpublishDocument(
-            'api::database-connection.database-connection',
-            database,
-            {},
-            testContext,
-          );
-          assert.equal(unpublish.status, 200);
-          const filters: Record<string, string> = {
-            [`filters[project][documentId][$eq]`]: project,
-            pageSize: '100',
-            sort: 'documentId:asc',
-          };
-          const originalDraftResponse: Response = await manager.readDocuments(
-            'api::common-property.common-property',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(originalDraftResponse.status, 200);
-          const originalDraft: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalDraftResponse.json());
-          assert.ok(
-            originalDraft.results.some(
-              (item: { documentId: string }): boolean =>
-                item.documentId === resource,
-            ),
-          );
-          const originalPublishedResponse: Response =
-            await manager.readDocuments(
-              'api::common-property.common-property',
-              { ...filters, status: 'published' },
-              testContext,
-            );
-          assert.equal(originalPublishedResponse.status, 200);
-          const originalPublished: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalPublishedResponse.json());
-
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/common-property/${resource}`,
-            {
-              method: 'PUT',
-              headers: new Headers([
-                ['Authorization', `Bearer ${ownerLogin.jwt}`],
-                ['Content-Type', 'application/json'],
-              ]),
-              body: JSON.stringify({
-                leftLabel: 'Person',
-                leftProperty: 'name',
-                rightLabel: 'Human',
-                rightProperty: 'label',
-                leftDatabaseId: '',
-                rightDatabaseId: database,
-              } satisfies UpdateCommonPropertyRequestBodyDto),
-              signal: testContext.signal,
-            },
-          );
-
-          // then
-          assert.equal(response.status, 404);
-          assert.deepEqual(await response.json(), {
-            statusCode: 404,
-            message: 'Not Found',
-          });
-          const draftResponse: Response = await manager.readDocuments(
-            'api::common-property.common-property',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(draftResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await draftResponse.json()),
-            originalDraft,
-          );
-          const publishedResponse: Response = await manager.readDocuments(
-            'api::common-property.common-property',
-            { ...filters, status: 'published' },
-            testContext,
-          );
-          assert.equal(publishedResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await publishedResponse.json()),
-            originalPublished,
-          );
-        });
-
-        test('rejects an foreign right database', async (testContext: TestContext): Promise<void> => {
-          // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
-          const resource: string = await manager.createPublishedDocument(
-            'api::common-property.common-property',
-            {
-              project,
-              leftLabel: 'Original Label',
-              leftProperty: 'original',
-              rightLabel: 'Other Label',
-              rightProperty: 'other',
-            },
-            testContext,
-          );
-          const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
-            testContext,
-          );
-          const otherProject: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Other Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
-          const database: string = await manager.createPublishedDocument(
-            'api::database-connection.database-connection',
-            {
-              title: 'Referenced Database',
-              project: otherProject,
-              databaseType: 'neo4j',
-            },
-            testContext,
-          );
-          const filters: Record<string, string> = {
-            [`filters[project][documentId][$eq]`]: project,
-            pageSize: '100',
-            sort: 'documentId:asc',
-          };
-          const originalDraftResponse: Response = await manager.readDocuments(
-            'api::common-property.common-property',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(originalDraftResponse.status, 200);
-          const originalDraft: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalDraftResponse.json());
-          assert.ok(
-            originalDraft.results.some(
-              (item: { documentId: string }): boolean =>
-                item.documentId === resource,
-            ),
-          );
-          const originalPublishedResponse: Response =
-            await manager.readDocuments(
-              'api::common-property.common-property',
-              { ...filters, status: 'published' },
-              testContext,
-            );
-          assert.equal(originalPublishedResponse.status, 200);
-          const originalPublished: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalPublishedResponse.json());
-
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/common-property/${resource}`,
-            {
-              method: 'PUT',
-              headers: new Headers([
-                ['Authorization', `Bearer ${ownerLogin.jwt}`],
-                ['Content-Type', 'application/json'],
-              ]),
-              body: JSON.stringify({
-                leftLabel: 'Person',
-                leftProperty: 'name',
-                rightLabel: 'Human',
-                rightProperty: 'label',
-                leftDatabaseId: '',
-                rightDatabaseId: database,
-              } satisfies UpdateCommonPropertyRequestBodyDto),
-              signal: testContext.signal,
-            },
-          );
-
-          // then
-          assert.equal(response.status, 404);
-          assert.deepEqual(await response.json(), {
-            statusCode: 404,
-            message: `Database ${database} not found.`,
-            error: 'Not Found',
-          });
-          const draftResponse: Response = await manager.readDocuments(
-            'api::common-property.common-property',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(draftResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await draftResponse.json()),
-            originalDraft,
-          );
-          const publishedResponse: Response = await manager.readDocuments(
-            'api::common-property.common-property',
-            { ...filters, status: 'published' },
-            testContext,
-          );
-          assert.equal(publishedResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await publishedResponse.json()),
-            originalPublished,
-          );
+          }
         });
 
         test('rejects an unknown project', async (testContext: TestContext): Promise<void> => {
@@ -6225,189 +3606,109 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
         });
       });
       describe('401', (): void => {
-        test('rejects anonymous access', async (testContext: TestContext): Promise<void> => {
-          // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
+        test('rejects requests without valid authentication', async (testContext: TestContext): Promise<void> => {
+          const variants: { headers: [string, string][] }[] = [
+            { headers: [] },
             {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [],
+              headers: [['Authorization', 'Bearer invalid-jwt']],
             },
-            testContext,
-          );
-          const resource: string = await manager.createPublishedDocument(
-            'api::common-property.common-property',
-            {
-              project,
-              leftLabel: 'Original Label',
-              leftProperty: 'original',
-              rightLabel: 'Other Label',
-              rightProperty: 'other',
-            },
-            testContext,
-          );
-          await manager.loginUser(owner.username, owner.password, testContext);
-          const filters: Record<string, string> = {
-            [`filters[project][documentId][$eq]`]: project,
-            pageSize: '100',
-            sort: 'documentId:asc',
-          };
-          const originalDraftResponse: Response = await manager.readDocuments(
-            'api::common-property.common-property',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(originalDraftResponse.status, 200);
-          const originalDraft: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalDraftResponse.json());
-          assert.ok(
-            originalDraft.results.some(
-              (item: { documentId: string }): boolean =>
-                item.documentId === resource,
-            ),
-          );
-          const originalPublishedResponse: Response =
-            await manager.readDocuments(
+          ];
+          for (const variant of variants) {
+            // given
+            const owner: E2ETestApplicationUser =
+              await manager.registerUser(testContext);
+            const project: string = await manager.createPublishedDocument(
+              'api::project.project',
+              {
+                title: 'Test Project',
+                owner: owner.documentId,
+                collaborators: [],
+              },
+              testContext,
+            );
+            const resource: string = await manager.createPublishedDocument(
+              'api::common-property.common-property',
+              {
+                project,
+                leftLabel: 'Original Label',
+                leftProperty: 'original',
+                rightLabel: 'Other Label',
+                rightProperty: 'other',
+              },
+              testContext,
+            );
+            await manager.loginUser(
+              owner.username,
+              owner.password,
+              testContext,
+            );
+            const filters: Record<string, string> = {
+              [`filters[project][documentId][$eq]`]: project,
+              pageSize: '100',
+              sort: 'documentId:asc',
+            };
+            const originalDraftResponse: Response = await manager.readDocuments(
+              'api::common-property.common-property',
+              { ...filters, status: 'draft' },
+              testContext,
+            );
+            assert.equal(originalDraftResponse.status, 200);
+            const originalDraft: z.infer<typeof listStateSchema> =
+              listStateSchema.parse(await originalDraftResponse.json());
+            assert.ok(
+              originalDraft.results.some(
+                (item: { documentId: string }): boolean =>
+                  item.documentId === resource,
+              ),
+            );
+            const originalPublishedResponse: Response =
+              await manager.readDocuments(
+                'api::common-property.common-property',
+                { ...filters, status: 'published' },
+                testContext,
+              );
+            assert.equal(originalPublishedResponse.status, 200);
+            const originalPublished: z.infer<typeof listStateSchema> =
+              listStateSchema.parse(await originalPublishedResponse.json());
+
+            // when
+            const response: Response = await fetch(
+              `${manager.apiUrl}/project/${project}/common-property/${resource}`,
+              {
+                method: 'DELETE',
+                signal: testContext.signal,
+                headers: new Headers(variant.headers),
+              },
+            );
+
+            // then
+            assert.equal(response.status, 401);
+            assert.equal(response.headers.get('www-authenticate'), 'Bearer');
+            assert.deepEqual(await response.json(), {
+              statusCode: 401,
+              message: 'Unauthorized',
+            });
+            const draftResponse: Response = await manager.readDocuments(
+              'api::common-property.common-property',
+              { ...filters, status: 'draft' },
+              testContext,
+            );
+            assert.equal(draftResponse.status, 200);
+            assert.deepEqual(
+              listStateSchema.parse(await draftResponse.json()),
+              originalDraft,
+            );
+            const publishedResponse: Response = await manager.readDocuments(
               'api::common-property.common-property',
               { ...filters, status: 'published' },
               testContext,
             );
-          assert.equal(originalPublishedResponse.status, 200);
-          const originalPublished: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalPublishedResponse.json());
-
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/common-property/${resource}`,
-            {
-              method: 'DELETE',
-              headers: new Headers([]),
-              signal: testContext.signal,
-            },
-          );
-
-          // then
-          assert.equal(response.status, 401);
-          assert.equal(response.headers.get('www-authenticate'), 'Bearer');
-          assert.deepEqual(await response.json(), {
-            statusCode: 401,
-            message: 'Unauthorized',
-          });
-          const draftResponse: Response = await manager.readDocuments(
-            'api::common-property.common-property',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(draftResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await draftResponse.json()),
-            originalDraft,
-          );
-          const publishedResponse: Response = await manager.readDocuments(
-            'api::common-property.common-property',
-            { ...filters, status: 'published' },
-            testContext,
-          );
-          assert.equal(publishedResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await publishedResponse.json()),
-            originalPublished,
-          );
-        });
-        test('rejects invalid jwt access', async (testContext: TestContext): Promise<void> => {
-          // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
-          const resource: string = await manager.createPublishedDocument(
-            'api::common-property.common-property',
-            {
-              project,
-              leftLabel: 'Original Label',
-              leftProperty: 'original',
-              rightLabel: 'Other Label',
-              rightProperty: 'other',
-            },
-            testContext,
-          );
-          await manager.loginUser(owner.username, owner.password, testContext);
-          const filters: Record<string, string> = {
-            [`filters[project][documentId][$eq]`]: project,
-            pageSize: '100',
-            sort: 'documentId:asc',
-          };
-          const originalDraftResponse: Response = await manager.readDocuments(
-            'api::common-property.common-property',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(originalDraftResponse.status, 200);
-          const originalDraft: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalDraftResponse.json());
-          assert.ok(
-            originalDraft.results.some(
-              (item: { documentId: string }): boolean =>
-                item.documentId === resource,
-            ),
-          );
-          const originalPublishedResponse: Response =
-            await manager.readDocuments(
-              'api::common-property.common-property',
-              { ...filters, status: 'published' },
-              testContext,
+            assert.equal(publishedResponse.status, 200);
+            assert.deepEqual(
+              listStateSchema.parse(await publishedResponse.json()),
+              originalPublished,
             );
-          assert.equal(originalPublishedResponse.status, 200);
-          const originalPublished: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalPublishedResponse.json());
-
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/common-property/${resource}`,
-            {
-              method: 'DELETE',
-              headers: new Headers([['Authorization', 'Bearer invalid-jwt']]),
-              signal: testContext.signal,
-            },
-          );
-
-          // then
-          assert.equal(response.status, 401);
-          assert.equal(response.headers.get('www-authenticate'), 'Bearer');
-          assert.deepEqual(await response.json(), {
-            statusCode: 401,
-            message: 'Unauthorized',
-          });
-          const draftResponse: Response = await manager.readDocuments(
-            'api::common-property.common-property',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(draftResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await draftResponse.json()),
-            originalDraft,
-          );
-          const publishedResponse: Response = await manager.readDocuments(
-            'api::common-property.common-property',
-            { ...filters, status: 'published' },
-            testContext,
-          );
-          assert.equal(publishedResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await publishedResponse.json()),
-            originalPublished,
-          );
+          }
         });
       });
 

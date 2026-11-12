@@ -124,52 +124,36 @@ describe('/redirect', (suiteContext: SuiteContext): void => {
           assert.deepEqual(await response.json(), { url: targetUrl });
         });
 
-        test('returns null when the target is missing', async (testContext: TestContext): Promise<void> => {
-          // given
-          const sourceUrl: string = `https://source.example/${randomUUID()}`;
-          const creation: Response = await manager.publishDocument(
-            'api::redirect.redirect',
-            null,
-            { sourceUrl: sourceUrl, targetUrl: null },
-            testContext,
-          );
-          assert.equal(creation.status, 200, await creation.text());
-
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/redirect/url?url=${encodeURIComponent(sourceUrl)}`,
+        test('returns null for missing or empty redirect targets', async (testContext: TestContext): Promise<void> => {
+          const variants: { targetUrl: string | null }[] = [
             {
-              signal: testContext.signal,
+              targetUrl: null,
             },
-          );
+            { targetUrl: '' },
+          ];
+          for (const variant of variants) {
+            // given
+            const sourceUrl: string = `https://source.example/${randomUUID()}`;
+            const creation: Response = await manager.publishDocument(
+              'api::redirect.redirect',
+              null,
+              { sourceUrl: sourceUrl, targetUrl: variant.targetUrl },
+              testContext,
+            );
+            assert.equal(creation.status, 200, await creation.text());
 
-          // then
-          assert.equal(response.status, 200);
-          assert.deepEqual(await response.json(), { url: null });
-        });
+            // when
+            const response: Response = await fetch(
+              `${manager.apiUrl}/redirect/url?url=${encodeURIComponent(sourceUrl)}`,
+              {
+                signal: testContext.signal,
+              },
+            );
 
-        test('returns null when the target is empty', async (testContext: TestContext): Promise<void> => {
-          // given
-          const sourceUrl: string = `https://source.example/${randomUUID()}`;
-          const creation: Response = await manager.publishDocument(
-            'api::redirect.redirect',
-            null,
-            { sourceUrl: sourceUrl, targetUrl: '' },
-            testContext,
-          );
-          assert.equal(creation.status, 200, await creation.text());
-
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/redirect/url?url=${encodeURIComponent(sourceUrl)}`,
-            {
-              signal: testContext.signal,
-            },
-          );
-
-          // then
-          assert.equal(response.status, 200);
-          assert.deepEqual(await response.json(), { url: null });
+            // then
+            assert.equal(response.status, 200);
+            assert.deepEqual(await response.json(), { url: null });
+          }
         });
 
         test('ignores unpublished redirects', async (testContext: TestContext): Promise<void> => {
@@ -365,51 +349,39 @@ describe('/redirect', (suiteContext: SuiteContext): void => {
         });
       });
       describe('400', (): void => {
-        test('rejects a missing URL', async (testContext: TestContext): Promise<void> => {
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/redirect/url`,
-            { signal: testContext.signal },
-          );
+        test('rejects invalid redirect query parameters', async (testContext: TestContext): Promise<void> => {
+          const variants: {
+            expectedMessages: string[];
+            query: string;
+          }[] = [
+            {
+              expectedMessages: ['url must be a string'],
+              query: '',
+            },
+            {
+              expectedMessages: ['url must be a string'],
+              query: `?url=first&url=second`,
+            },
+            {
+              expectedMessages: ['property unexpected should not exist'],
+              query: `?url=${encodeURIComponent(`https://source.example/${randomUUID()}`)}&unexpected=true`,
+            },
+          ];
+          for (const variant of variants) {
+            // when
+            const response: Response = await fetch(
+              `${manager.apiUrl}/redirect/url${variant.query}`,
+              { signal: testContext.signal },
+            );
 
-          // then
-          assert.equal(response.status, 400);
-          assert.deepEqual(await response.json(), {
-            statusCode: 400,
-            error: 'Bad Request',
-            message: ['url must be a string'],
-          });
-        });
-        test('rejects repeated URL parameters', async (testContext: TestContext): Promise<void> => {
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/redirect/url?url=first&url=second`,
-            { signal: testContext.signal },
-          );
-
-          // then
-          assert.equal(response.status, 400);
-          assert.deepEqual(await response.json(), {
-            statusCode: 400,
-            error: 'Bad Request',
-            message: ['url must be a string'],
-          });
-        });
-        test('rejects unknown query parameters', async (testContext: TestContext): Promise<void> => {
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/redirect/url` +
-              `?url=${encodeURIComponent(`https://source.example/${randomUUID()}`)}&unexpected=true`,
-            { signal: testContext.signal },
-          );
-
-          // then
-          assert.equal(response.status, 400);
-          assert.deepEqual(await response.json(), {
-            statusCode: 400,
-            error: 'Bad Request',
-            message: ['property unexpected should not exist'],
-          });
+            // then
+            assert.equal(response.status, 400);
+            assert.deepEqual(await response.json(), {
+              statusCode: 400,
+              error: 'Bad Request',
+              message: variant.expectedMessages,
+            });
+          }
         });
       });
     });

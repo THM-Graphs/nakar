@@ -1827,31 +1827,20 @@ describe('/', (suiteContext: SuiteContext): void => {
         );
       });
 
-      test('omitted recent room list returns no recent rooms', async (testContext: TestContext): Promise<void> => {
-        // when
-        const response: Response = await fetch(manager.apiUrl, {
-          signal: testContext.signal,
-        });
-
-        // then
-        assert.equal(response.status, 200);
-        const body: StartPageDto = startSchema.parse(await response.json());
-        assert.deepEqual(body.recentRooms, []);
-      });
-
-      test('empty recent room list returns no recent rooms', async (testContext: TestContext): Promise<void> => {
-        // when
-        const response: Response = await fetch(
-          `${manager.apiUrl}?recentRoomIds=`,
-          {
+      test('returns no recent rooms for an omitted or empty list', async (testContext: TestContext): Promise<void> => {
+        const queries: string[] = ['', '?recentRoomIds='];
+        for (const query of queries) {
+          // when
+          const response: Response = await fetch(`${manager.apiUrl}${query}`, {
             signal: testContext.signal,
-          },
-        );
+          });
 
-        // then
-        assert.equal(response.status, 200);
-        const body: StartPageDto = startSchema.parse(await response.json());
-        assert.deepEqual(body.recentRooms, []);
+          // then
+          const variant: string = query || 'omitted recentRoomIds';
+          assert.equal(response.status, 200, variant);
+          const body: StartPageDto = startSchema.parse(await response.json());
+          assert.deepEqual(body.recentRooms, [], variant);
+        }
       });
 
       test('invalid jwt does not reveal owned projects', async (testContext: TestContext): Promise<void> => {
@@ -2067,36 +2056,36 @@ describe('/', (suiteContext: SuiteContext): void => {
     });
 
     describe('400', (): void => {
-      test('unknown query parameter', async (testContext: TestContext): Promise<void> => {
-        // when
-        const response: Response = await fetch(
-          `${manager.apiUrl}?unexpected=true`,
-          { signal: testContext.signal },
-        );
+      test('rejects invalid start page query parameters', async (testContext: TestContext): Promise<void> => {
+        const variants: { query: string; expectedMessage: string }[] = [
+          {
+            query: '?unexpected=true',
+            expectedMessage: 'property unexpected should not exist',
+          },
+          {
+            query: '?recentRoomIds=a&recentRoomIds=b',
+            expectedMessage: 'recentRoomIds must be a string',
+          },
+        ];
+        for (const variant of variants) {
+          // when
+          const response: Response = await fetch(
+            `${manager.apiUrl}${variant.query}`,
+            { signal: testContext.signal },
+          );
 
-        // then
-        assert.equal(response.status, 400);
-        assert.deepEqual(await response.json(), {
-          statusCode: 400,
-          error: 'Bad Request',
-          message: ['property unexpected should not exist'],
-        });
-      });
-
-      test('non-string recent room ids', async (testContext: TestContext): Promise<void> => {
-        // when
-        const response: Response = await fetch(
-          `${manager.apiUrl}?recentRoomIds=a&recentRoomIds=b`,
-          { signal: testContext.signal },
-        );
-
-        // then
-        assert.equal(response.status, 400);
-        assert.deepEqual(await response.json(), {
-          statusCode: 400,
-          error: 'Bad Request',
-          message: ['recentRoomIds must be a string'],
-        });
+          // then
+          assert.equal(response.status, 400, variant.query);
+          assert.deepEqual(
+            await response.json(),
+            {
+              statusCode: 400,
+              error: 'Bad Request',
+              message: [variant.expectedMessage],
+            },
+            variant.query,
+          );
+        }
       });
     });
   });

@@ -1,10 +1,6 @@
 import type { UpdateScenarioRequestBodyDto } from './dto/UpdateScenarioRequestBodyDto';
-import type { UpdateScenarioQueryEntryDto } from './dto/UpdateScenarioQueryEntryDto';
-import type { UpdateScenarioQueryParameterEntryDto } from './dto/UpdateScenarioQueryParameterEntryDto';
-import type { UpdateScenarioPostActionEntryDto } from './dto/UpdateScenarioPostActionEntryDto';
 import { UpdateScenarioPostActionTypeDto } from './dto/UpdateScenarioPostActionTypeDto';
 import { UpdateScenarioPostActionLayoutAlgorithmDto } from './dto/UpdateScenarioPostActionLayoutAlgorithmDto';
-import type { UpdateScenarioPostActionColorPresetDto } from './dto/UpdateScenarioPostActionColorPresetDto';
 import { ColorPresetIndexDto } from '../../../schema/dtos/ColorPresetIndexDto';
 import type { E2ETestApplicationUser } from '../../../../e2e/E2ETestApplicationUser';
 import assert from 'node:assert/strict';
@@ -472,185 +468,108 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
       });
     });
     describe('401', (): void => {
-      test('rejects anonymous access', async (testContext: TestContext): Promise<void> => {
-        // given
-        const owner: E2ETestApplicationUser =
-          await manager.registerUser(testContext);
-        const project: string = await manager.createPublishedDocument(
-          'api::project.project',
-          { title: 'Test Project', owner: owner.documentId, collaborators: [] },
-          testContext,
-        );
-        const group: string = await manager.createPublishedDocument(
-          'api::scenario-group.scenario-group',
-          { title: 'Scenario Group', project },
-          testContext,
-        );
-        const resource: string = await manager.createPublishedDocument(
-          'api::scenario.scenario',
+      test('rejects requests without valid authentication', async (testContext: TestContext): Promise<void> => {
+        const variants: { headers: [string, string][] }[] = [
+          { headers: [] },
           {
-            title: 'Original Scenario',
-            description: 'Original description',
-            group,
+            headers: [['Authorization', 'Bearer invalid-jwt']],
           },
-          testContext,
-        );
-        await manager.loginUser(owner.username, owner.password, testContext);
-        const filters: Record<string, string> = {
-          [`filters[group][documentId][$eq]`]: group,
-          pageSize: '100',
-          sort: 'documentId:asc',
-        };
-        const originalDraftResponse: Response = await manager.readDocuments(
-          'api::scenario.scenario',
-          { ...filters, status: 'draft' },
-          testContext,
-        );
-        assert.equal(originalDraftResponse.status, 200);
-        const originalDraft: z.infer<typeof listStateSchema> =
-          listStateSchema.parse(await originalDraftResponse.json());
-        assert.ok(
-          originalDraft.results.some(
-            (item: { documentId: string }): boolean =>
-              item.documentId === resource,
-          ),
-        );
-        const originalPublishedResponse: Response = await manager.readDocuments(
-          'api::scenario.scenario',
-          { ...filters, status: 'published' },
-          testContext,
-        );
-        assert.equal(originalPublishedResponse.status, 200);
-        const originalPublished: z.infer<typeof listStateSchema> =
-          listStateSchema.parse(await originalPublishedResponse.json());
+        ];
+        for (const variant of variants) {
+          // given
+          const owner: E2ETestApplicationUser =
+            await manager.registerUser(testContext);
+          const project: string = await manager.createPublishedDocument(
+            'api::project.project',
+            {
+              title: 'Test Project',
+              owner: owner.documentId,
+              collaborators: [],
+            },
+            testContext,
+          );
+          const group: string = await manager.createPublishedDocument(
+            'api::scenario-group.scenario-group',
+            { title: 'Scenario Group', project },
+            testContext,
+          );
+          const resource: string = await manager.createPublishedDocument(
+            'api::scenario.scenario',
+            {
+              title: 'Original Scenario',
+              description: 'Original description',
+              group,
+            },
+            testContext,
+          );
+          await manager.loginUser(owner.username, owner.password, testContext);
+          const filters: Record<string, string> = {
+            [`filters[group][documentId][$eq]`]: group,
+            pageSize: '100',
+            sort: 'documentId:asc',
+          };
+          const originalDraftResponse: Response = await manager.readDocuments(
+            'api::scenario.scenario',
+            { ...filters, status: 'draft' },
+            testContext,
+          );
+          assert.equal(originalDraftResponse.status, 200);
+          const originalDraft: z.infer<typeof listStateSchema> =
+            listStateSchema.parse(await originalDraftResponse.json());
+          assert.ok(
+            originalDraft.results.some(
+              (item: { documentId: string }): boolean =>
+                item.documentId === resource,
+            ),
+          );
+          const originalPublishedResponse: Response =
+            await manager.readDocuments(
+              'api::scenario.scenario',
+              { ...filters, status: 'published' },
+              testContext,
+            );
+          assert.equal(originalPublishedResponse.status, 200);
+          const originalPublished: z.infer<typeof listStateSchema> =
+            listStateSchema.parse(await originalPublishedResponse.json());
 
-        // when
-        const response: Response = await fetch(
-          `${manager.apiUrl}/project/${project}/scenario-group/${group}/scenario`,
-          {
-            method: 'POST',
-            headers: new Headers([]),
-            signal: testContext.signal,
-          },
-        );
+          // when
+          const response: Response = await fetch(
+            `${manager.apiUrl}/project/${project}/scenario-group/${group}/scenario`,
+            {
+              method: 'POST',
+              signal: testContext.signal,
+              headers: new Headers(variant.headers),
+            },
+          );
 
-        // then
-        assert.equal(response.status, 401);
-        assert.equal(response.headers.get('www-authenticate'), 'Bearer');
-        assert.deepEqual(await response.json(), {
-          statusCode: 401,
-          message: 'Unauthorized',
-        });
-        const draftResponse: Response = await manager.readDocuments(
-          'api::scenario.scenario',
-          { ...filters, status: 'draft' },
-          testContext,
-        );
-        assert.equal(draftResponse.status, 200);
-        assert.deepEqual(
-          listStateSchema.parse(await draftResponse.json()),
-          originalDraft,
-        );
-        const publishedResponse: Response = await manager.readDocuments(
-          'api::scenario.scenario',
-          { ...filters, status: 'published' },
-          testContext,
-        );
-        assert.equal(publishedResponse.status, 200);
-        assert.deepEqual(
-          listStateSchema.parse(await publishedResponse.json()),
-          originalPublished,
-        );
-      });
-      test('rejects invalid jwt access', async (testContext: TestContext): Promise<void> => {
-        // given
-        const owner: E2ETestApplicationUser =
-          await manager.registerUser(testContext);
-        const project: string = await manager.createPublishedDocument(
-          'api::project.project',
-          { title: 'Test Project', owner: owner.documentId, collaborators: [] },
-          testContext,
-        );
-        const group: string = await manager.createPublishedDocument(
-          'api::scenario-group.scenario-group',
-          { title: 'Scenario Group', project },
-          testContext,
-        );
-        const resource: string = await manager.createPublishedDocument(
-          'api::scenario.scenario',
-          {
-            title: 'Original Scenario',
-            description: 'Original description',
-            group,
-          },
-          testContext,
-        );
-        await manager.loginUser(owner.username, owner.password, testContext);
-        const filters: Record<string, string> = {
-          [`filters[group][documentId][$eq]`]: group,
-          pageSize: '100',
-          sort: 'documentId:asc',
-        };
-        const originalDraftResponse: Response = await manager.readDocuments(
-          'api::scenario.scenario',
-          { ...filters, status: 'draft' },
-          testContext,
-        );
-        assert.equal(originalDraftResponse.status, 200);
-        const originalDraft: z.infer<typeof listStateSchema> =
-          listStateSchema.parse(await originalDraftResponse.json());
-        assert.ok(
-          originalDraft.results.some(
-            (item: { documentId: string }): boolean =>
-              item.documentId === resource,
-          ),
-        );
-        const originalPublishedResponse: Response = await manager.readDocuments(
-          'api::scenario.scenario',
-          { ...filters, status: 'published' },
-          testContext,
-        );
-        assert.equal(originalPublishedResponse.status, 200);
-        const originalPublished: z.infer<typeof listStateSchema> =
-          listStateSchema.parse(await originalPublishedResponse.json());
-
-        // when
-        const response: Response = await fetch(
-          `${manager.apiUrl}/project/${project}/scenario-group/${group}/scenario`,
-          {
-            method: 'POST',
-            headers: new Headers([['Authorization', 'Bearer invalid-jwt']]),
-            signal: testContext.signal,
-          },
-        );
-
-        // then
-        assert.equal(response.status, 401);
-        assert.equal(response.headers.get('www-authenticate'), 'Bearer');
-        assert.deepEqual(await response.json(), {
-          statusCode: 401,
-          message: 'Unauthorized',
-        });
-        const draftResponse: Response = await manager.readDocuments(
-          'api::scenario.scenario',
-          { ...filters, status: 'draft' },
-          testContext,
-        );
-        assert.equal(draftResponse.status, 200);
-        assert.deepEqual(
-          listStateSchema.parse(await draftResponse.json()),
-          originalDraft,
-        );
-        const publishedResponse: Response = await manager.readDocuments(
-          'api::scenario.scenario',
-          { ...filters, status: 'published' },
-          testContext,
-        );
-        assert.equal(publishedResponse.status, 200);
-        assert.deepEqual(
-          listStateSchema.parse(await publishedResponse.json()),
-          originalPublished,
-        );
+          // then
+          assert.equal(response.status, 401);
+          assert.equal(response.headers.get('www-authenticate'), 'Bearer');
+          assert.deepEqual(await response.json(), {
+            statusCode: 401,
+            message: 'Unauthorized',
+          });
+          const draftResponse: Response = await manager.readDocuments(
+            'api::scenario.scenario',
+            { ...filters, status: 'draft' },
+            testContext,
+          );
+          assert.equal(draftResponse.status, 200);
+          assert.deepEqual(
+            listStateSchema.parse(await draftResponse.json()),
+            originalDraft,
+          );
+          const publishedResponse: Response = await manager.readDocuments(
+            'api::scenario.scenario',
+            { ...filters, status: 'published' },
+            testContext,
+          );
+          assert.equal(publishedResponse.status, 200);
+          assert.deepEqual(
+            listStateSchema.parse(await publishedResponse.json()),
+            originalPublished,
+          );
+        }
       });
     });
 
@@ -2905,2038 +2824,209 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
         });
       });
       describe('400', (): void => {
-        test('rejects a missing title', async (testContext: TestContext): Promise<void> => {
-          // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
-          const group: string = await manager.createPublishedDocument(
-            'api::scenario-group.scenario-group',
-            { title: 'Scenario Group', project },
-            testContext,
-          );
-          const resource: string = await manager.createPublishedDocument(
-            'api::scenario.scenario',
-            {
-              title: 'Original Scenario',
-              description: 'Original description',
-              group,
-            },
-            testContext,
-          );
-          const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
-            testContext,
-          );
-          const filters: Record<string, string> = {
-            [`filters[group][documentId][$eq]`]: group,
-            pageSize: '100',
-            sort: 'documentId:asc',
-          };
-          const originalDraftResponse: Response = await manager.readDocuments(
-            'api::scenario.scenario',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(originalDraftResponse.status, 200);
-          const originalDraft: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalDraftResponse.json());
-          assert.ok(
-            originalDraft.results.some(
-              (item: { documentId: string }): boolean =>
-                item.documentId === resource,
-            ),
-          );
-          const originalPublishedResponse: Response =
-            await manager.readDocuments(
-              'api::scenario.scenario',
-              { ...filters, status: 'published' },
-              testContext,
-            );
-          assert.equal(originalPublishedResponse.status, 200);
-          const originalPublished: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalPublishedResponse.json());
+        test(
+          'rejects invalid scenario update fields',
+          { timeout: 180_000 },
+          async (testContext: TestContext): Promise<void> => {
+            const variants: {
+              payload: Record<string, unknown>;
+              expectedMessage: string;
+            }[] = [
+              {
+                payload: { title: undefined },
+                expectedMessage: 'title',
+              },
+              {
+                payload: { title: null },
+                expectedMessage: 'title',
+              },
+              {
+                payload: { title: 123 },
+                expectedMessage: 'title',
+              },
+              {
+                payload: { description: undefined },
+                expectedMessage: 'description',
+              },
+              {
+                payload: { description: null },
+                expectedMessage: 'description',
+              },
+              {
+                payload: { description: 123 },
+                expectedMessage: 'description',
+              },
+              {
+                payload: { queries: undefined },
+                expectedMessage: 'queries',
+              },
+              {
+                payload: { queries: null },
+                expectedMessage: 'queries',
+              },
+              {
+                payload: { queries: {} },
+                expectedMessage: 'queries',
+              },
+              {
+                payload: { parameters: undefined },
+                expectedMessage: 'parameters',
+              },
+              {
+                payload: { parameters: null },
+                expectedMessage: 'parameters',
+              },
+              {
+                payload: { parameters: {} },
+                expectedMessage: 'parameters',
+              },
+              {
+                payload: { postScenarioActions: undefined },
+                expectedMessage: 'postScenarioActions',
+              },
+              {
+                payload: { postScenarioActions: null },
+                expectedMessage: 'postScenarioActions',
+              },
+              {
+                payload: { postScenarioActions: {} },
+                expectedMessage: 'postScenarioActions',
+              },
+              {
+                payload: { unexpected: true },
+                expectedMessage: 'unexpected',
+              },
+            ];
+            for (const variant of variants) {
+              // given
+              const owner: E2ETestApplicationUser =
+                await manager.registerUser(testContext);
+              const project: string = await manager.createPublishedDocument(
+                'api::project.project',
+                {
+                  title: 'Test Project',
+                  owner: owner.documentId,
+                  collaborators: [],
+                },
+                testContext,
+              );
+              const group: string = await manager.createPublishedDocument(
+                'api::scenario-group.scenario-group',
+                { title: 'Scenario Group', project },
+                testContext,
+              );
+              const resource: string = await manager.createPublishedDocument(
+                'api::scenario.scenario',
+                {
+                  title: 'Original Scenario',
+                  description: 'Original description',
+                  group,
+                },
+                testContext,
+              );
+              const ownerLogin: PostAuthResponseBodyDto =
+                await manager.loginUser(
+                  owner.username,
+                  owner.password,
+                  testContext,
+                );
+              const filters: Record<string, string> = {
+                [`filters[group][documentId][$eq]`]: group,
+                pageSize: '100',
+                sort: 'documentId:asc',
+              };
+              const originalDraftResponse: Response =
+                await manager.readDocuments(
+                  'api::scenario.scenario',
+                  { ...filters, status: 'draft' },
+                  testContext,
+                );
+              assert.equal(originalDraftResponse.status, 200);
+              const originalDraft: z.infer<typeof listStateSchema> =
+                listStateSchema.parse(await originalDraftResponse.json());
+              assert.ok(
+                originalDraft.results.some(
+                  (item: { documentId: string }): boolean =>
+                    item.documentId === resource,
+                ),
+              );
+              const originalPublishedResponse: Response =
+                await manager.readDocuments(
+                  'api::scenario.scenario',
+                  { ...filters, status: 'published' },
+                  testContext,
+                );
+              assert.equal(originalPublishedResponse.status, 200);
+              const originalPublished: z.infer<typeof listStateSchema> =
+                listStateSchema.parse(await originalPublishedResponse.json());
 
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/scenario-group/${group}/scenario/${resource}`,
-            {
-              method: 'PUT',
-              headers: new Headers([
-                ['Authorization', `Bearer ${ownerLogin.jwt}`],
-                ['Content-Type', 'application/json'],
-              ]),
-              body: JSON.stringify({
-                description: 'Updated description',
-                queries: [],
-                parameters: [],
-                postScenarioActions: [],
-              } satisfies Omit<UpdateScenarioRequestBodyDto, 'title'>),
-              signal: testContext.signal,
-            },
-          );
+              // when
+              const response: Response = await fetch(
+                `${manager.apiUrl}/project/${project}/scenario-group/${group}/scenario/${resource}`,
+                {
+                  method: 'PUT',
+                  headers: new Headers([
+                    ['Authorization', `Bearer ${ownerLogin.jwt}`],
+                    ['Content-Type', 'application/json'],
+                  ]),
+                  body: JSON.stringify({
+                    description: 'Updated description',
+                    queries: [],
+                    parameters: [],
+                    postScenarioActions: [],
+                    title: 'Updated Scenario',
+                    ...variant.payload,
+                  }),
+                  signal: testContext.signal,
+                },
+              );
 
-          // then
-          assert.equal(response.status, 400);
-          const error: {
-            statusCode: number;
-            message: string[];
-            error: string;
-          } = z
-            .object({
-              statusCode: z.literal(400),
-              message: z.array(z.string()),
-              error: z.literal('Bad Request'),
-            })
-            .parse(await response.json());
-          assert.ok(
-            error.message.some((message: string): boolean =>
-              message.includes('title'),
-            ),
-          );
-          const draftResponse: Response = await manager.readDocuments(
-            'api::scenario.scenario',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(draftResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await draftResponse.json()),
-            originalDraft,
-          );
-          const publishedResponse: Response = await manager.readDocuments(
-            'api::scenario.scenario',
-            { ...filters, status: 'published' },
-            testContext,
-          );
-          assert.equal(publishedResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await publishedResponse.json()),
-            originalPublished,
-          );
-        });
+              // then
+              assert.equal(response.status, 400);
+              const error: {
+                statusCode: number;
+                message: string[];
+                error: string;
+              } = z
+                .object({
+                  statusCode: z.literal(400),
+                  message: z.array(z.string()),
+                  error: z.literal('Bad Request'),
+                })
+                .parse(await response.json());
+              assert.ok(
+                error.message.some((message: string): boolean =>
+                  message.includes(variant.expectedMessage),
+                ),
+              );
+              const draftResponse: Response = await manager.readDocuments(
+                'api::scenario.scenario',
+                { ...filters, status: 'draft' },
+                testContext,
+              );
+              assert.equal(draftResponse.status, 200);
+              assert.deepEqual(
+                listStateSchema.parse(await draftResponse.json()),
+                originalDraft,
+              );
+              const publishedResponse: Response = await manager.readDocuments(
+                'api::scenario.scenario',
+                { ...filters, status: 'published' },
+                testContext,
+              );
+              assert.equal(publishedResponse.status, 200);
+              assert.deepEqual(
+                listStateSchema.parse(await publishedResponse.json()),
+                originalPublished,
+              );
+            }
+          },
+        );
 
-        test('rejects a null title', async (testContext: TestContext): Promise<void> => {
-          // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
+        test('rejects invalid scenario queries', async (testContext: TestContext): Promise<void> => {
+          const variants: { payload: Record<string, unknown> }[] = [
             {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
-          const group: string = await manager.createPublishedDocument(
-            'api::scenario-group.scenario-group',
-            { title: 'Scenario Group', project },
-            testContext,
-          );
-          const resource: string = await manager.createPublishedDocument(
-            'api::scenario.scenario',
-            {
-              title: 'Original Scenario',
-              description: 'Original description',
-              group,
-            },
-            testContext,
-          );
-          const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
-            testContext,
-          );
-          const filters: Record<string, string> = {
-            [`filters[group][documentId][$eq]`]: group,
-            pageSize: '100',
-            sort: 'documentId:asc',
-          };
-          const originalDraftResponse: Response = await manager.readDocuments(
-            'api::scenario.scenario',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(originalDraftResponse.status, 200);
-          const originalDraft: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalDraftResponse.json());
-          assert.ok(
-            originalDraft.results.some(
-              (item: { documentId: string }): boolean =>
-                item.documentId === resource,
-            ),
-          );
-          const originalPublishedResponse: Response =
-            await manager.readDocuments(
-              'api::scenario.scenario',
-              { ...filters, status: 'published' },
-              testContext,
-            );
-          assert.equal(originalPublishedResponse.status, 200);
-          const originalPublished: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalPublishedResponse.json());
-
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/scenario-group/${group}/scenario/${resource}`,
-            {
-              method: 'PUT',
-              headers: new Headers([
-                ['Authorization', `Bearer ${ownerLogin.jwt}`],
-                ['Content-Type', 'application/json'],
-              ]),
-              body: JSON.stringify({
-                title: null,
-                description: 'Updated description',
-                queries: [],
-                parameters: [],
-                postScenarioActions: [],
-              } satisfies Omit<UpdateScenarioRequestBodyDto, 'title'> & {
-                title: null;
-              }),
-              signal: testContext.signal,
-            },
-          );
-
-          // then
-          assert.equal(response.status, 400);
-          const error: {
-            statusCode: number;
-            message: string[];
-            error: string;
-          } = z
-            .object({
-              statusCode: z.literal(400),
-              message: z.array(z.string()),
-              error: z.literal('Bad Request'),
-            })
-            .parse(await response.json());
-          assert.ok(
-            error.message.some((message: string): boolean =>
-              message.includes('title'),
-            ),
-          );
-          const draftResponse: Response = await manager.readDocuments(
-            'api::scenario.scenario',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(draftResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await draftResponse.json()),
-            originalDraft,
-          );
-          const publishedResponse: Response = await manager.readDocuments(
-            'api::scenario.scenario',
-            { ...filters, status: 'published' },
-            testContext,
-          );
-          assert.equal(publishedResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await publishedResponse.json()),
-            originalPublished,
-          );
-        });
-
-        test('rejects an invalid title type', async (testContext: TestContext): Promise<void> => {
-          // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
-          const group: string = await manager.createPublishedDocument(
-            'api::scenario-group.scenario-group',
-            { title: 'Scenario Group', project },
-            testContext,
-          );
-          const resource: string = await manager.createPublishedDocument(
-            'api::scenario.scenario',
-            {
-              title: 'Original Scenario',
-              description: 'Original description',
-              group,
-            },
-            testContext,
-          );
-          const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
-            testContext,
-          );
-          const filters: Record<string, string> = {
-            [`filters[group][documentId][$eq]`]: group,
-            pageSize: '100',
-            sort: 'documentId:asc',
-          };
-          const originalDraftResponse: Response = await manager.readDocuments(
-            'api::scenario.scenario',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(originalDraftResponse.status, 200);
-          const originalDraft: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalDraftResponse.json());
-          assert.ok(
-            originalDraft.results.some(
-              (item: { documentId: string }): boolean =>
-                item.documentId === resource,
-            ),
-          );
-          const originalPublishedResponse: Response =
-            await manager.readDocuments(
-              'api::scenario.scenario',
-              { ...filters, status: 'published' },
-              testContext,
-            );
-          assert.equal(originalPublishedResponse.status, 200);
-          const originalPublished: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalPublishedResponse.json());
-
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/scenario-group/${group}/scenario/${resource}`,
-            {
-              method: 'PUT',
-              headers: new Headers([
-                ['Authorization', `Bearer ${ownerLogin.jwt}`],
-                ['Content-Type', 'application/json'],
-              ]),
-              body: JSON.stringify({
-                title: 123,
-                description: 'Updated description',
-                queries: [],
-                parameters: [],
-                postScenarioActions: [],
-              } satisfies Omit<UpdateScenarioRequestBodyDto, 'title'> & {
-                title: number;
-              }),
-              signal: testContext.signal,
-            },
-          );
-
-          // then
-          assert.equal(response.status, 400);
-          const error: {
-            statusCode: number;
-            message: string[];
-            error: string;
-          } = z
-            .object({
-              statusCode: z.literal(400),
-              message: z.array(z.string()),
-              error: z.literal('Bad Request'),
-            })
-            .parse(await response.json());
-          assert.ok(
-            error.message.some((message: string): boolean =>
-              message.includes('title'),
-            ),
-          );
-          const draftResponse: Response = await manager.readDocuments(
-            'api::scenario.scenario',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(draftResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await draftResponse.json()),
-            originalDraft,
-          );
-          const publishedResponse: Response = await manager.readDocuments(
-            'api::scenario.scenario',
-            { ...filters, status: 'published' },
-            testContext,
-          );
-          assert.equal(publishedResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await publishedResponse.json()),
-            originalPublished,
-          );
-        });
-
-        test('rejects a missing description', async (testContext: TestContext): Promise<void> => {
-          // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
-          const group: string = await manager.createPublishedDocument(
-            'api::scenario-group.scenario-group',
-            { title: 'Scenario Group', project },
-            testContext,
-          );
-          const resource: string = await manager.createPublishedDocument(
-            'api::scenario.scenario',
-            {
-              title: 'Original Scenario',
-              description: 'Original description',
-              group,
-            },
-            testContext,
-          );
-          const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
-            testContext,
-          );
-          const filters: Record<string, string> = {
-            [`filters[group][documentId][$eq]`]: group,
-            pageSize: '100',
-            sort: 'documentId:asc',
-          };
-          const originalDraftResponse: Response = await manager.readDocuments(
-            'api::scenario.scenario',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(originalDraftResponse.status, 200);
-          const originalDraft: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalDraftResponse.json());
-          assert.ok(
-            originalDraft.results.some(
-              (item: { documentId: string }): boolean =>
-                item.documentId === resource,
-            ),
-          );
-          const originalPublishedResponse: Response =
-            await manager.readDocuments(
-              'api::scenario.scenario',
-              { ...filters, status: 'published' },
-              testContext,
-            );
-          assert.equal(originalPublishedResponse.status, 200);
-          const originalPublished: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalPublishedResponse.json());
-
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/scenario-group/${group}/scenario/${resource}`,
-            {
-              method: 'PUT',
-              headers: new Headers([
-                ['Authorization', `Bearer ${ownerLogin.jwt}`],
-                ['Content-Type', 'application/json'],
-              ]),
-              body: JSON.stringify({
-                title: 'Updated Scenario',
-                queries: [],
-                parameters: [],
-                postScenarioActions: [],
-              } satisfies Omit<UpdateScenarioRequestBodyDto, 'description'>),
-              signal: testContext.signal,
-            },
-          );
-
-          // then
-          assert.equal(response.status, 400);
-          const error: {
-            statusCode: number;
-            message: string[];
-            error: string;
-          } = z
-            .object({
-              statusCode: z.literal(400),
-              message: z.array(z.string()),
-              error: z.literal('Bad Request'),
-            })
-            .parse(await response.json());
-          assert.ok(
-            error.message.some((message: string): boolean =>
-              message.includes('description'),
-            ),
-          );
-          const draftResponse: Response = await manager.readDocuments(
-            'api::scenario.scenario',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(draftResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await draftResponse.json()),
-            originalDraft,
-          );
-          const publishedResponse: Response = await manager.readDocuments(
-            'api::scenario.scenario',
-            { ...filters, status: 'published' },
-            testContext,
-          );
-          assert.equal(publishedResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await publishedResponse.json()),
-            originalPublished,
-          );
-        });
-
-        test('rejects a null description', async (testContext: TestContext): Promise<void> => {
-          // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
-          const group: string = await manager.createPublishedDocument(
-            'api::scenario-group.scenario-group',
-            { title: 'Scenario Group', project },
-            testContext,
-          );
-          const resource: string = await manager.createPublishedDocument(
-            'api::scenario.scenario',
-            {
-              title: 'Original Scenario',
-              description: 'Original description',
-              group,
-            },
-            testContext,
-          );
-          const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
-            testContext,
-          );
-          const filters: Record<string, string> = {
-            [`filters[group][documentId][$eq]`]: group,
-            pageSize: '100',
-            sort: 'documentId:asc',
-          };
-          const originalDraftResponse: Response = await manager.readDocuments(
-            'api::scenario.scenario',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(originalDraftResponse.status, 200);
-          const originalDraft: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalDraftResponse.json());
-          assert.ok(
-            originalDraft.results.some(
-              (item: { documentId: string }): boolean =>
-                item.documentId === resource,
-            ),
-          );
-          const originalPublishedResponse: Response =
-            await manager.readDocuments(
-              'api::scenario.scenario',
-              { ...filters, status: 'published' },
-              testContext,
-            );
-          assert.equal(originalPublishedResponse.status, 200);
-          const originalPublished: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalPublishedResponse.json());
-
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/scenario-group/${group}/scenario/${resource}`,
-            {
-              method: 'PUT',
-              headers: new Headers([
-                ['Authorization', `Bearer ${ownerLogin.jwt}`],
-                ['Content-Type', 'application/json'],
-              ]),
-              body: JSON.stringify({
-                title: 'Updated Scenario',
-                description: null,
-                queries: [],
-                parameters: [],
-                postScenarioActions: [],
-              } satisfies Omit<UpdateScenarioRequestBodyDto, 'description'> & {
-                description: null;
-              }),
-              signal: testContext.signal,
-            },
-          );
-
-          // then
-          assert.equal(response.status, 400);
-          const error: {
-            statusCode: number;
-            message: string[];
-            error: string;
-          } = z
-            .object({
-              statusCode: z.literal(400),
-              message: z.array(z.string()),
-              error: z.literal('Bad Request'),
-            })
-            .parse(await response.json());
-          assert.ok(
-            error.message.some((message: string): boolean =>
-              message.includes('description'),
-            ),
-          );
-          const draftResponse: Response = await manager.readDocuments(
-            'api::scenario.scenario',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(draftResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await draftResponse.json()),
-            originalDraft,
-          );
-          const publishedResponse: Response = await manager.readDocuments(
-            'api::scenario.scenario',
-            { ...filters, status: 'published' },
-            testContext,
-          );
-          assert.equal(publishedResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await publishedResponse.json()),
-            originalPublished,
-          );
-        });
-
-        test('rejects an invalid description type', async (testContext: TestContext): Promise<void> => {
-          // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
-          const group: string = await manager.createPublishedDocument(
-            'api::scenario-group.scenario-group',
-            { title: 'Scenario Group', project },
-            testContext,
-          );
-          const resource: string = await manager.createPublishedDocument(
-            'api::scenario.scenario',
-            {
-              title: 'Original Scenario',
-              description: 'Original description',
-              group,
-            },
-            testContext,
-          );
-          const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
-            testContext,
-          );
-          const filters: Record<string, string> = {
-            [`filters[group][documentId][$eq]`]: group,
-            pageSize: '100',
-            sort: 'documentId:asc',
-          };
-          const originalDraftResponse: Response = await manager.readDocuments(
-            'api::scenario.scenario',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(originalDraftResponse.status, 200);
-          const originalDraft: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalDraftResponse.json());
-          assert.ok(
-            originalDraft.results.some(
-              (item: { documentId: string }): boolean =>
-                item.documentId === resource,
-            ),
-          );
-          const originalPublishedResponse: Response =
-            await manager.readDocuments(
-              'api::scenario.scenario',
-              { ...filters, status: 'published' },
-              testContext,
-            );
-          assert.equal(originalPublishedResponse.status, 200);
-          const originalPublished: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalPublishedResponse.json());
-
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/scenario-group/${group}/scenario/${resource}`,
-            {
-              method: 'PUT',
-              headers: new Headers([
-                ['Authorization', `Bearer ${ownerLogin.jwt}`],
-                ['Content-Type', 'application/json'],
-              ]),
-              body: JSON.stringify({
-                title: 'Updated Scenario',
-                description: 123,
-                queries: [],
-                parameters: [],
-                postScenarioActions: [],
-              } satisfies Omit<UpdateScenarioRequestBodyDto, 'description'> & {
-                description: number;
-              }),
-              signal: testContext.signal,
-            },
-          );
-
-          // then
-          assert.equal(response.status, 400);
-          const error: {
-            statusCode: number;
-            message: string[];
-            error: string;
-          } = z
-            .object({
-              statusCode: z.literal(400),
-              message: z.array(z.string()),
-              error: z.literal('Bad Request'),
-            })
-            .parse(await response.json());
-          assert.ok(
-            error.message.some((message: string): boolean =>
-              message.includes('description'),
-            ),
-          );
-          const draftResponse: Response = await manager.readDocuments(
-            'api::scenario.scenario',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(draftResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await draftResponse.json()),
-            originalDraft,
-          );
-          const publishedResponse: Response = await manager.readDocuments(
-            'api::scenario.scenario',
-            { ...filters, status: 'published' },
-            testContext,
-          );
-          assert.equal(publishedResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await publishedResponse.json()),
-            originalPublished,
-          );
-        });
-
-        test('rejects a missing queries', async (testContext: TestContext): Promise<void> => {
-          // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
-          const group: string = await manager.createPublishedDocument(
-            'api::scenario-group.scenario-group',
-            { title: 'Scenario Group', project },
-            testContext,
-          );
-          const resource: string = await manager.createPublishedDocument(
-            'api::scenario.scenario',
-            {
-              title: 'Original Scenario',
-              description: 'Original description',
-              group,
-            },
-            testContext,
-          );
-          const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
-            testContext,
-          );
-          const filters: Record<string, string> = {
-            [`filters[group][documentId][$eq]`]: group,
-            pageSize: '100',
-            sort: 'documentId:asc',
-          };
-          const originalDraftResponse: Response = await manager.readDocuments(
-            'api::scenario.scenario',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(originalDraftResponse.status, 200);
-          const originalDraft: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalDraftResponse.json());
-          assert.ok(
-            originalDraft.results.some(
-              (item: { documentId: string }): boolean =>
-                item.documentId === resource,
-            ),
-          );
-          const originalPublishedResponse: Response =
-            await manager.readDocuments(
-              'api::scenario.scenario',
-              { ...filters, status: 'published' },
-              testContext,
-            );
-          assert.equal(originalPublishedResponse.status, 200);
-          const originalPublished: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalPublishedResponse.json());
-
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/scenario-group/${group}/scenario/${resource}`,
-            {
-              method: 'PUT',
-              headers: new Headers([
-                ['Authorization', `Bearer ${ownerLogin.jwt}`],
-                ['Content-Type', 'application/json'],
-              ]),
-              body: JSON.stringify({
-                title: 'Updated Scenario',
-                description: 'Updated description',
-                parameters: [],
-                postScenarioActions: [],
-              } satisfies Omit<UpdateScenarioRequestBodyDto, 'queries'>),
-              signal: testContext.signal,
-            },
-          );
-
-          // then
-          assert.equal(response.status, 400);
-          const error: {
-            statusCode: number;
-            message: string[];
-            error: string;
-          } = z
-            .object({
-              statusCode: z.literal(400),
-              message: z.array(z.string()),
-              error: z.literal('Bad Request'),
-            })
-            .parse(await response.json());
-          assert.ok(
-            error.message.some((message: string): boolean =>
-              message.includes('queries'),
-            ),
-          );
-          const draftResponse: Response = await manager.readDocuments(
-            'api::scenario.scenario',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(draftResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await draftResponse.json()),
-            originalDraft,
-          );
-          const publishedResponse: Response = await manager.readDocuments(
-            'api::scenario.scenario',
-            { ...filters, status: 'published' },
-            testContext,
-          );
-          assert.equal(publishedResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await publishedResponse.json()),
-            originalPublished,
-          );
-        });
-
-        test('rejects a null queries', async (testContext: TestContext): Promise<void> => {
-          // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
-          const group: string = await manager.createPublishedDocument(
-            'api::scenario-group.scenario-group',
-            { title: 'Scenario Group', project },
-            testContext,
-          );
-          const resource: string = await manager.createPublishedDocument(
-            'api::scenario.scenario',
-            {
-              title: 'Original Scenario',
-              description: 'Original description',
-              group,
-            },
-            testContext,
-          );
-          const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
-            testContext,
-          );
-          const filters: Record<string, string> = {
-            [`filters[group][documentId][$eq]`]: group,
-            pageSize: '100',
-            sort: 'documentId:asc',
-          };
-          const originalDraftResponse: Response = await manager.readDocuments(
-            'api::scenario.scenario',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(originalDraftResponse.status, 200);
-          const originalDraft: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalDraftResponse.json());
-          assert.ok(
-            originalDraft.results.some(
-              (item: { documentId: string }): boolean =>
-                item.documentId === resource,
-            ),
-          );
-          const originalPublishedResponse: Response =
-            await manager.readDocuments(
-              'api::scenario.scenario',
-              { ...filters, status: 'published' },
-              testContext,
-            );
-          assert.equal(originalPublishedResponse.status, 200);
-          const originalPublished: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalPublishedResponse.json());
-
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/scenario-group/${group}/scenario/${resource}`,
-            {
-              method: 'PUT',
-              headers: new Headers([
-                ['Authorization', `Bearer ${ownerLogin.jwt}`],
-                ['Content-Type', 'application/json'],
-              ]),
-              body: JSON.stringify({
-                title: 'Updated Scenario',
-                description: 'Updated description',
-                queries: null,
-                parameters: [],
-                postScenarioActions: [],
-              } satisfies Omit<UpdateScenarioRequestBodyDto, 'queries'> & {
-                queries: null;
-              }),
-              signal: testContext.signal,
-            },
-          );
-
-          // then
-          assert.equal(response.status, 400);
-          const error: {
-            statusCode: number;
-            message: string[];
-            error: string;
-          } = z
-            .object({
-              statusCode: z.literal(400),
-              message: z.array(z.string()),
-              error: z.literal('Bad Request'),
-            })
-            .parse(await response.json());
-          assert.ok(
-            error.message.some((message: string): boolean =>
-              message.includes('queries'),
-            ),
-          );
-          const draftResponse: Response = await manager.readDocuments(
-            'api::scenario.scenario',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(draftResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await draftResponse.json()),
-            originalDraft,
-          );
-          const publishedResponse: Response = await manager.readDocuments(
-            'api::scenario.scenario',
-            { ...filters, status: 'published' },
-            testContext,
-          );
-          assert.equal(publishedResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await publishedResponse.json()),
-            originalPublished,
-          );
-        });
-
-        test('rejects an invalid queries type', async (testContext: TestContext): Promise<void> => {
-          // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
-          const group: string = await manager.createPublishedDocument(
-            'api::scenario-group.scenario-group',
-            { title: 'Scenario Group', project },
-            testContext,
-          );
-          const resource: string = await manager.createPublishedDocument(
-            'api::scenario.scenario',
-            {
-              title: 'Original Scenario',
-              description: 'Original description',
-              group,
-            },
-            testContext,
-          );
-          const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
-            testContext,
-          );
-          const filters: Record<string, string> = {
-            [`filters[group][documentId][$eq]`]: group,
-            pageSize: '100',
-            sort: 'documentId:asc',
-          };
-          const originalDraftResponse: Response = await manager.readDocuments(
-            'api::scenario.scenario',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(originalDraftResponse.status, 200);
-          const originalDraft: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalDraftResponse.json());
-          assert.ok(
-            originalDraft.results.some(
-              (item: { documentId: string }): boolean =>
-                item.documentId === resource,
-            ),
-          );
-          const originalPublishedResponse: Response =
-            await manager.readDocuments(
-              'api::scenario.scenario',
-              { ...filters, status: 'published' },
-              testContext,
-            );
-          assert.equal(originalPublishedResponse.status, 200);
-          const originalPublished: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalPublishedResponse.json());
-
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/scenario-group/${group}/scenario/${resource}`,
-            {
-              method: 'PUT',
-              headers: new Headers([
-                ['Authorization', `Bearer ${ownerLogin.jwt}`],
-                ['Content-Type', 'application/json'],
-              ]),
-              body: JSON.stringify({
-                title: 'Updated Scenario',
-                description: 'Updated description',
-                queries: {},
-                parameters: [],
-                postScenarioActions: [],
-              } satisfies Omit<UpdateScenarioRequestBodyDto, 'queries'> & {
-                queries: Record<string, never>;
-              }),
-              signal: testContext.signal,
-            },
-          );
-
-          // then
-          assert.equal(response.status, 400);
-          const error: {
-            statusCode: number;
-            message: string[];
-            error: string;
-          } = z
-            .object({
-              statusCode: z.literal(400),
-              message: z.array(z.string()),
-              error: z.literal('Bad Request'),
-            })
-            .parse(await response.json());
-          assert.ok(
-            error.message.some((message: string): boolean =>
-              message.includes('queries'),
-            ),
-          );
-          const draftResponse: Response = await manager.readDocuments(
-            'api::scenario.scenario',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(draftResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await draftResponse.json()),
-            originalDraft,
-          );
-          const publishedResponse: Response = await manager.readDocuments(
-            'api::scenario.scenario',
-            { ...filters, status: 'published' },
-            testContext,
-          );
-          assert.equal(publishedResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await publishedResponse.json()),
-            originalPublished,
-          );
-        });
-
-        test('rejects a missing parameters', async (testContext: TestContext): Promise<void> => {
-          // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
-          const group: string = await manager.createPublishedDocument(
-            'api::scenario-group.scenario-group',
-            { title: 'Scenario Group', project },
-            testContext,
-          );
-          const resource: string = await manager.createPublishedDocument(
-            'api::scenario.scenario',
-            {
-              title: 'Original Scenario',
-              description: 'Original description',
-              group,
-            },
-            testContext,
-          );
-          const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
-            testContext,
-          );
-          const filters: Record<string, string> = {
-            [`filters[group][documentId][$eq]`]: group,
-            pageSize: '100',
-            sort: 'documentId:asc',
-          };
-          const originalDraftResponse: Response = await manager.readDocuments(
-            'api::scenario.scenario',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(originalDraftResponse.status, 200);
-          const originalDraft: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalDraftResponse.json());
-          assert.ok(
-            originalDraft.results.some(
-              (item: { documentId: string }): boolean =>
-                item.documentId === resource,
-            ),
-          );
-          const originalPublishedResponse: Response =
-            await manager.readDocuments(
-              'api::scenario.scenario',
-              { ...filters, status: 'published' },
-              testContext,
-            );
-          assert.equal(originalPublishedResponse.status, 200);
-          const originalPublished: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalPublishedResponse.json());
-
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/scenario-group/${group}/scenario/${resource}`,
-            {
-              method: 'PUT',
-              headers: new Headers([
-                ['Authorization', `Bearer ${ownerLogin.jwt}`],
-                ['Content-Type', 'application/json'],
-              ]),
-              body: JSON.stringify({
-                title: 'Updated Scenario',
-                description: 'Updated description',
-                queries: [],
-                postScenarioActions: [],
-              } satisfies Omit<UpdateScenarioRequestBodyDto, 'parameters'>),
-              signal: testContext.signal,
-            },
-          );
-
-          // then
-          assert.equal(response.status, 400);
-          const error: {
-            statusCode: number;
-            message: string[];
-            error: string;
-          } = z
-            .object({
-              statusCode: z.literal(400),
-              message: z.array(z.string()),
-              error: z.literal('Bad Request'),
-            })
-            .parse(await response.json());
-          assert.ok(
-            error.message.some((message: string): boolean =>
-              message.includes('parameters'),
-            ),
-          );
-          const draftResponse: Response = await manager.readDocuments(
-            'api::scenario.scenario',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(draftResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await draftResponse.json()),
-            originalDraft,
-          );
-          const publishedResponse: Response = await manager.readDocuments(
-            'api::scenario.scenario',
-            { ...filters, status: 'published' },
-            testContext,
-          );
-          assert.equal(publishedResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await publishedResponse.json()),
-            originalPublished,
-          );
-        });
-
-        test('rejects a null parameters', async (testContext: TestContext): Promise<void> => {
-          // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
-          const group: string = await manager.createPublishedDocument(
-            'api::scenario-group.scenario-group',
-            { title: 'Scenario Group', project },
-            testContext,
-          );
-          const resource: string = await manager.createPublishedDocument(
-            'api::scenario.scenario',
-            {
-              title: 'Original Scenario',
-              description: 'Original description',
-              group,
-            },
-            testContext,
-          );
-          const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
-            testContext,
-          );
-          const filters: Record<string, string> = {
-            [`filters[group][documentId][$eq]`]: group,
-            pageSize: '100',
-            sort: 'documentId:asc',
-          };
-          const originalDraftResponse: Response = await manager.readDocuments(
-            'api::scenario.scenario',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(originalDraftResponse.status, 200);
-          const originalDraft: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalDraftResponse.json());
-          assert.ok(
-            originalDraft.results.some(
-              (item: { documentId: string }): boolean =>
-                item.documentId === resource,
-            ),
-          );
-          const originalPublishedResponse: Response =
-            await manager.readDocuments(
-              'api::scenario.scenario',
-              { ...filters, status: 'published' },
-              testContext,
-            );
-          assert.equal(originalPublishedResponse.status, 200);
-          const originalPublished: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalPublishedResponse.json());
-
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/scenario-group/${group}/scenario/${resource}`,
-            {
-              method: 'PUT',
-              headers: new Headers([
-                ['Authorization', `Bearer ${ownerLogin.jwt}`],
-                ['Content-Type', 'application/json'],
-              ]),
-              body: JSON.stringify({
-                title: 'Updated Scenario',
-                description: 'Updated description',
-                queries: [],
-                parameters: null,
-                postScenarioActions: [],
-              } satisfies Omit<UpdateScenarioRequestBodyDto, 'parameters'> & {
-                parameters: null;
-              }),
-              signal: testContext.signal,
-            },
-          );
-
-          // then
-          assert.equal(response.status, 400);
-          const error: {
-            statusCode: number;
-            message: string[];
-            error: string;
-          } = z
-            .object({
-              statusCode: z.literal(400),
-              message: z.array(z.string()),
-              error: z.literal('Bad Request'),
-            })
-            .parse(await response.json());
-          assert.ok(
-            error.message.some((message: string): boolean =>
-              message.includes('parameters'),
-            ),
-          );
-          const draftResponse: Response = await manager.readDocuments(
-            'api::scenario.scenario',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(draftResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await draftResponse.json()),
-            originalDraft,
-          );
-          const publishedResponse: Response = await manager.readDocuments(
-            'api::scenario.scenario',
-            { ...filters, status: 'published' },
-            testContext,
-          );
-          assert.equal(publishedResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await publishedResponse.json()),
-            originalPublished,
-          );
-        });
-
-        test('rejects an invalid parameters type', async (testContext: TestContext): Promise<void> => {
-          // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
-          const group: string = await manager.createPublishedDocument(
-            'api::scenario-group.scenario-group',
-            { title: 'Scenario Group', project },
-            testContext,
-          );
-          const resource: string = await manager.createPublishedDocument(
-            'api::scenario.scenario',
-            {
-              title: 'Original Scenario',
-              description: 'Original description',
-              group,
-            },
-            testContext,
-          );
-          const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
-            testContext,
-          );
-          const filters: Record<string, string> = {
-            [`filters[group][documentId][$eq]`]: group,
-            pageSize: '100',
-            sort: 'documentId:asc',
-          };
-          const originalDraftResponse: Response = await manager.readDocuments(
-            'api::scenario.scenario',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(originalDraftResponse.status, 200);
-          const originalDraft: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalDraftResponse.json());
-          assert.ok(
-            originalDraft.results.some(
-              (item: { documentId: string }): boolean =>
-                item.documentId === resource,
-            ),
-          );
-          const originalPublishedResponse: Response =
-            await manager.readDocuments(
-              'api::scenario.scenario',
-              { ...filters, status: 'published' },
-              testContext,
-            );
-          assert.equal(originalPublishedResponse.status, 200);
-          const originalPublished: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalPublishedResponse.json());
-
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/scenario-group/${group}/scenario/${resource}`,
-            {
-              method: 'PUT',
-              headers: new Headers([
-                ['Authorization', `Bearer ${ownerLogin.jwt}`],
-                ['Content-Type', 'application/json'],
-              ]),
-              body: JSON.stringify({
-                title: 'Updated Scenario',
-                description: 'Updated description',
-                queries: [],
-                parameters: {},
-                postScenarioActions: [],
-              } satisfies Omit<UpdateScenarioRequestBodyDto, 'parameters'> & {
-                parameters: Record<string, never>;
-              }),
-              signal: testContext.signal,
-            },
-          );
-
-          // then
-          assert.equal(response.status, 400);
-          const error: {
-            statusCode: number;
-            message: string[];
-            error: string;
-          } = z
-            .object({
-              statusCode: z.literal(400),
-              message: z.array(z.string()),
-              error: z.literal('Bad Request'),
-            })
-            .parse(await response.json());
-          assert.ok(
-            error.message.some((message: string): boolean =>
-              message.includes('parameters'),
-            ),
-          );
-          const draftResponse: Response = await manager.readDocuments(
-            'api::scenario.scenario',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(draftResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await draftResponse.json()),
-            originalDraft,
-          );
-          const publishedResponse: Response = await manager.readDocuments(
-            'api::scenario.scenario',
-            { ...filters, status: 'published' },
-            testContext,
-          );
-          assert.equal(publishedResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await publishedResponse.json()),
-            originalPublished,
-          );
-        });
-
-        test('rejects a missing postScenarioActions', async (testContext: TestContext): Promise<void> => {
-          // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
-          const group: string = await manager.createPublishedDocument(
-            'api::scenario-group.scenario-group',
-            { title: 'Scenario Group', project },
-            testContext,
-          );
-          const resource: string = await manager.createPublishedDocument(
-            'api::scenario.scenario',
-            {
-              title: 'Original Scenario',
-              description: 'Original description',
-              group,
-            },
-            testContext,
-          );
-          const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
-            testContext,
-          );
-          const filters: Record<string, string> = {
-            [`filters[group][documentId][$eq]`]: group,
-            pageSize: '100',
-            sort: 'documentId:asc',
-          };
-          const originalDraftResponse: Response = await manager.readDocuments(
-            'api::scenario.scenario',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(originalDraftResponse.status, 200);
-          const originalDraft: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalDraftResponse.json());
-          assert.ok(
-            originalDraft.results.some(
-              (item: { documentId: string }): boolean =>
-                item.documentId === resource,
-            ),
-          );
-          const originalPublishedResponse: Response =
-            await manager.readDocuments(
-              'api::scenario.scenario',
-              { ...filters, status: 'published' },
-              testContext,
-            );
-          assert.equal(originalPublishedResponse.status, 200);
-          const originalPublished: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalPublishedResponse.json());
-
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/scenario-group/${group}/scenario/${resource}`,
-            {
-              method: 'PUT',
-              headers: new Headers([
-                ['Authorization', `Bearer ${ownerLogin.jwt}`],
-                ['Content-Type', 'application/json'],
-              ]),
-              body: JSON.stringify({
-                title: 'Updated Scenario',
-                description: 'Updated description',
-                queries: [],
-                parameters: [],
-              } satisfies Omit<
-                UpdateScenarioRequestBodyDto,
-                'postScenarioActions'
-              >),
-              signal: testContext.signal,
-            },
-          );
-
-          // then
-          assert.equal(response.status, 400);
-          const error: {
-            statusCode: number;
-            message: string[];
-            error: string;
-          } = z
-            .object({
-              statusCode: z.literal(400),
-              message: z.array(z.string()),
-              error: z.literal('Bad Request'),
-            })
-            .parse(await response.json());
-          assert.ok(
-            error.message.some((message: string): boolean =>
-              message.includes('postScenarioActions'),
-            ),
-          );
-          const draftResponse: Response = await manager.readDocuments(
-            'api::scenario.scenario',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(draftResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await draftResponse.json()),
-            originalDraft,
-          );
-          const publishedResponse: Response = await manager.readDocuments(
-            'api::scenario.scenario',
-            { ...filters, status: 'published' },
-            testContext,
-          );
-          assert.equal(publishedResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await publishedResponse.json()),
-            originalPublished,
-          );
-        });
-
-        test('rejects a null postScenarioActions', async (testContext: TestContext): Promise<void> => {
-          // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
-          const group: string = await manager.createPublishedDocument(
-            'api::scenario-group.scenario-group',
-            { title: 'Scenario Group', project },
-            testContext,
-          );
-          const resource: string = await manager.createPublishedDocument(
-            'api::scenario.scenario',
-            {
-              title: 'Original Scenario',
-              description: 'Original description',
-              group,
-            },
-            testContext,
-          );
-          const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
-            testContext,
-          );
-          const filters: Record<string, string> = {
-            [`filters[group][documentId][$eq]`]: group,
-            pageSize: '100',
-            sort: 'documentId:asc',
-          };
-          const originalDraftResponse: Response = await manager.readDocuments(
-            'api::scenario.scenario',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(originalDraftResponse.status, 200);
-          const originalDraft: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalDraftResponse.json());
-          assert.ok(
-            originalDraft.results.some(
-              (item: { documentId: string }): boolean =>
-                item.documentId === resource,
-            ),
-          );
-          const originalPublishedResponse: Response =
-            await manager.readDocuments(
-              'api::scenario.scenario',
-              { ...filters, status: 'published' },
-              testContext,
-            );
-          assert.equal(originalPublishedResponse.status, 200);
-          const originalPublished: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalPublishedResponse.json());
-
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/scenario-group/${group}/scenario/${resource}`,
-            {
-              method: 'PUT',
-              headers: new Headers([
-                ['Authorization', `Bearer ${ownerLogin.jwt}`],
-                ['Content-Type', 'application/json'],
-              ]),
-              body: JSON.stringify({
-                title: 'Updated Scenario',
-                description: 'Updated description',
-                queries: [],
-                parameters: [],
-                postScenarioActions: null,
-              } satisfies Omit<
-                UpdateScenarioRequestBodyDto,
-                'postScenarioActions'
-              > & { postScenarioActions: null }),
-              signal: testContext.signal,
-            },
-          );
-
-          // then
-          assert.equal(response.status, 400);
-          const error: {
-            statusCode: number;
-            message: string[];
-            error: string;
-          } = z
-            .object({
-              statusCode: z.literal(400),
-              message: z.array(z.string()),
-              error: z.literal('Bad Request'),
-            })
-            .parse(await response.json());
-          assert.ok(
-            error.message.some((message: string): boolean =>
-              message.includes('postScenarioActions'),
-            ),
-          );
-          const draftResponse: Response = await manager.readDocuments(
-            'api::scenario.scenario',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(draftResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await draftResponse.json()),
-            originalDraft,
-          );
-          const publishedResponse: Response = await manager.readDocuments(
-            'api::scenario.scenario',
-            { ...filters, status: 'published' },
-            testContext,
-          );
-          assert.equal(publishedResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await publishedResponse.json()),
-            originalPublished,
-          );
-        });
-
-        test('rejects an invalid postScenarioActions type', async (testContext: TestContext): Promise<void> => {
-          // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
-          const group: string = await manager.createPublishedDocument(
-            'api::scenario-group.scenario-group',
-            { title: 'Scenario Group', project },
-            testContext,
-          );
-          const resource: string = await manager.createPublishedDocument(
-            'api::scenario.scenario',
-            {
-              title: 'Original Scenario',
-              description: 'Original description',
-              group,
-            },
-            testContext,
-          );
-          const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
-            testContext,
-          );
-          const filters: Record<string, string> = {
-            [`filters[group][documentId][$eq]`]: group,
-            pageSize: '100',
-            sort: 'documentId:asc',
-          };
-          const originalDraftResponse: Response = await manager.readDocuments(
-            'api::scenario.scenario',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(originalDraftResponse.status, 200);
-          const originalDraft: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalDraftResponse.json());
-          assert.ok(
-            originalDraft.results.some(
-              (item: { documentId: string }): boolean =>
-                item.documentId === resource,
-            ),
-          );
-          const originalPublishedResponse: Response =
-            await manager.readDocuments(
-              'api::scenario.scenario',
-              { ...filters, status: 'published' },
-              testContext,
-            );
-          assert.equal(originalPublishedResponse.status, 200);
-          const originalPublished: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalPublishedResponse.json());
-
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/scenario-group/${group}/scenario/${resource}`,
-            {
-              method: 'PUT',
-              headers: new Headers([
-                ['Authorization', `Bearer ${ownerLogin.jwt}`],
-                ['Content-Type', 'application/json'],
-              ]),
-              body: JSON.stringify({
-                title: 'Updated Scenario',
-                description: 'Updated description',
-                queries: [],
-                parameters: [],
-                postScenarioActions: {},
-              } satisfies Omit<
-                UpdateScenarioRequestBodyDto,
-                'postScenarioActions'
-              > & { postScenarioActions: Record<string, never> }),
-              signal: testContext.signal,
-            },
-          );
-
-          // then
-          assert.equal(response.status, 400);
-          const error: {
-            statusCode: number;
-            message: string[];
-            error: string;
-          } = z
-            .object({
-              statusCode: z.literal(400),
-              message: z.array(z.string()),
-              error: z.literal('Bad Request'),
-            })
-            .parse(await response.json());
-          assert.ok(
-            error.message.some((message: string): boolean =>
-              message.includes('postScenarioActions'),
-            ),
-          );
-          const draftResponse: Response = await manager.readDocuments(
-            'api::scenario.scenario',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(draftResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await draftResponse.json()),
-            originalDraft,
-          );
-          const publishedResponse: Response = await manager.readDocuments(
-            'api::scenario.scenario',
-            { ...filters, status: 'published' },
-            testContext,
-          );
-          assert.equal(publishedResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await publishedResponse.json()),
-            originalPublished,
-          );
-        });
-
-        test('rejects unexpected properties', async (testContext: TestContext): Promise<void> => {
-          // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
-          const group: string = await manager.createPublishedDocument(
-            'api::scenario-group.scenario-group',
-            { title: 'Scenario Group', project },
-            testContext,
-          );
-          const resource: string = await manager.createPublishedDocument(
-            'api::scenario.scenario',
-            {
-              title: 'Original Scenario',
-              description: 'Original description',
-              group,
-            },
-            testContext,
-          );
-          const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
-            testContext,
-          );
-          const filters: Record<string, string> = {
-            [`filters[group][documentId][$eq]`]: group,
-            pageSize: '100',
-            sort: 'documentId:asc',
-          };
-          const originalDraftResponse: Response = await manager.readDocuments(
-            'api::scenario.scenario',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(originalDraftResponse.status, 200);
-          const originalDraft: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalDraftResponse.json());
-          assert.ok(
-            originalDraft.results.some(
-              (item: { documentId: string }): boolean =>
-                item.documentId === resource,
-            ),
-          );
-          const originalPublishedResponse: Response =
-            await manager.readDocuments(
-              'api::scenario.scenario',
-              { ...filters, status: 'published' },
-              testContext,
-            );
-          assert.equal(originalPublishedResponse.status, 200);
-          const originalPublished: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalPublishedResponse.json());
-
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/scenario-group/${group}/scenario/${resource}`,
-            {
-              method: 'PUT',
-              headers: new Headers([
-                ['Authorization', `Bearer ${ownerLogin.jwt}`],
-                ['Content-Type', 'application/json'],
-              ]),
-              body: JSON.stringify({
-                title: 'Updated Scenario',
-                description: 'Updated description',
-                queries: [],
-                parameters: [],
-                postScenarioActions: [],
-                unexpected: true,
-              } satisfies UpdateScenarioRequestBodyDto & {
-                unexpected: boolean;
-              }),
-              signal: testContext.signal,
-            },
-          );
-
-          // then
-          assert.equal(response.status, 400);
-          const error: {
-            statusCode: number;
-            message: string[];
-            error: string;
-          } = z
-            .object({
-              statusCode: z.literal(400),
-              message: z.array(z.string()),
-              error: z.literal('Bad Request'),
-            })
-            .parse(await response.json());
-          assert.ok(
-            error.message.some((message: string): boolean =>
-              message.includes('unexpected'),
-            ),
-          );
-          const draftResponse: Response = await manager.readDocuments(
-            'api::scenario.scenario',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(draftResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await draftResponse.json()),
-            originalDraft,
-          );
-          const publishedResponse: Response = await manager.readDocuments(
-            'api::scenario.scenario',
-            { ...filters, status: 'published' },
-            testContext,
-          );
-          assert.equal(publishedResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await publishedResponse.json()),
-            originalPublished,
-          );
-        });
-
-        test('rejects query boolean', async (testContext: TestContext): Promise<void> => {
-          // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
-          const group: string = await manager.createPublishedDocument(
-            'api::scenario-group.scenario-group',
-            { title: 'Scenario Group', project },
-            testContext,
-          );
-          const resource: string = await manager.createPublishedDocument(
-            'api::scenario.scenario',
-            {
-              title: 'Original Scenario',
-              description: 'Original description',
-              group,
-            },
-            testContext,
-          );
-          const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
-            testContext,
-          );
-          const filters: Record<string, string> = {
-            [`filters[group][documentId][$eq]`]: group,
-            pageSize: '100',
-            sort: 'documentId:asc',
-          };
-          const originalDraftResponse: Response = await manager.readDocuments(
-            'api::scenario.scenario',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(originalDraftResponse.status, 200);
-          const originalDraft: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalDraftResponse.json());
-          assert.ok(
-            originalDraft.results.some(
-              (item: { documentId: string }): boolean =>
-                item.documentId === resource,
-            ),
-          );
-          const originalPublishedResponse: Response =
-            await manager.readDocuments(
-              'api::scenario.scenario',
-              { ...filters, status: 'published' },
-              testContext,
-            );
-          assert.equal(originalPublishedResponse.status, 200);
-          const originalPublished: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalPublishedResponse.json());
-
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/scenario-group/${group}/scenario/${resource}`,
-            {
-              method: 'PUT',
-              headers: new Headers([
-                ['Authorization', `Bearer ${ownerLogin.jwt}`],
-                ['Content-Type', 'application/json'],
-              ]),
-              body: JSON.stringify({
-                title: 'Updated Scenario',
-                description: 'Updated description',
+              payload: {
                 queries: [
                   {
                     id: randomUUID(),
@@ -4945,130 +3035,10 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
                     isTableQuery: 'false',
                   },
                 ],
-                parameters: [],
-                postScenarioActions: [],
-              } satisfies Omit<UpdateScenarioRequestBodyDto, 'queries'> & {
-                queries: (Omit<UpdateScenarioQueryEntryDto, 'isTableQuery'> & {
-                  isTableQuery: string;
-                })[];
-              }),
-              signal: testContext.signal,
+              },
             },
-          );
-
-          // then
-          assert.equal(response.status, 400);
-          const error: {
-            statusCode: number;
-            message: string[];
-            error: string;
-          } = z
-            .object({
-              statusCode: z.literal(400),
-              message: z.array(z.string()),
-              error: z.literal('Bad Request'),
-            })
-            .parse(await response.json());
-          assert.ok(
-            error.message.some((message: string): boolean =>
-              message.includes('queries'),
-            ),
-          );
-          const draftResponse: Response = await manager.readDocuments(
-            'api::scenario.scenario',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(draftResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await draftResponse.json()),
-            originalDraft,
-          );
-          const publishedResponse: Response = await manager.readDocuments(
-            'api::scenario.scenario',
-            { ...filters, status: 'published' },
-            testContext,
-          );
-          assert.equal(publishedResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await publishedResponse.json()),
-            originalPublished,
-          );
-        });
-
-        test('rejects query text', async (testContext: TestContext): Promise<void> => {
-          // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
             {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
-          const group: string = await manager.createPublishedDocument(
-            'api::scenario-group.scenario-group',
-            { title: 'Scenario Group', project },
-            testContext,
-          );
-          const resource: string = await manager.createPublishedDocument(
-            'api::scenario.scenario',
-            {
-              title: 'Original Scenario',
-              description: 'Original description',
-              group,
-            },
-            testContext,
-          );
-          const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
-            testContext,
-          );
-          const filters: Record<string, string> = {
-            [`filters[group][documentId][$eq]`]: group,
-            pageSize: '100',
-            sort: 'documentId:asc',
-          };
-          const originalDraftResponse: Response = await manager.readDocuments(
-            'api::scenario.scenario',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(originalDraftResponse.status, 200);
-          const originalDraft: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalDraftResponse.json());
-          assert.ok(
-            originalDraft.results.some(
-              (item: { documentId: string }): boolean =>
-                item.documentId === resource,
-            ),
-          );
-          const originalPublishedResponse: Response =
-            await manager.readDocuments(
-              'api::scenario.scenario',
-              { ...filters, status: 'published' },
-              testContext,
-            );
-          assert.equal(originalPublishedResponse.status, 200);
-          const originalPublished: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalPublishedResponse.json());
-
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/scenario-group/${group}/scenario/${resource}`,
-            {
-              method: 'PUT',
-              headers: new Headers([
-                ['Authorization', `Bearer ${ownerLogin.jwt}`],
-                ['Content-Type', 'application/json'],
-              ]),
-              body: JSON.stringify({
-                title: 'Updated Scenario',
-                description: 'Updated description',
+              payload: {
                 queries: [
                   {
                     id: randomUUID(),
@@ -5077,130 +3047,10 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
                     isTableQuery: false,
                   },
                 ],
-                parameters: [],
-                postScenarioActions: [],
-              } satisfies Omit<UpdateScenarioRequestBodyDto, 'queries'> & {
-                queries: (Omit<UpdateScenarioQueryEntryDto, 'query'> & {
-                  query: number;
-                })[];
-              }),
-              signal: testContext.signal,
+              },
             },
-          );
-
-          // then
-          assert.equal(response.status, 400);
-          const error: {
-            statusCode: number;
-            message: string[];
-            error: string;
-          } = z
-            .object({
-              statusCode: z.literal(400),
-              message: z.array(z.string()),
-              error: z.literal('Bad Request'),
-            })
-            .parse(await response.json());
-          assert.ok(
-            error.message.some((message: string): boolean =>
-              message.includes('queries'),
-            ),
-          );
-          const draftResponse: Response = await manager.readDocuments(
-            'api::scenario.scenario',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(draftResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await draftResponse.json()),
-            originalDraft,
-          );
-          const publishedResponse: Response = await manager.readDocuments(
-            'api::scenario.scenario',
-            { ...filters, status: 'published' },
-            testContext,
-          );
-          assert.equal(publishedResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await publishedResponse.json()),
-            originalPublished,
-          );
-        });
-
-        test('rejects query database identifier', async (testContext: TestContext): Promise<void> => {
-          // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
             {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
-          const group: string = await manager.createPublishedDocument(
-            'api::scenario-group.scenario-group',
-            { title: 'Scenario Group', project },
-            testContext,
-          );
-          const resource: string = await manager.createPublishedDocument(
-            'api::scenario.scenario',
-            {
-              title: 'Original Scenario',
-              description: 'Original description',
-              group,
-            },
-            testContext,
-          );
-          const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
-            testContext,
-          );
-          const filters: Record<string, string> = {
-            [`filters[group][documentId][$eq]`]: group,
-            pageSize: '100',
-            sort: 'documentId:asc',
-          };
-          const originalDraftResponse: Response = await manager.readDocuments(
-            'api::scenario.scenario',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(originalDraftResponse.status, 200);
-          const originalDraft: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalDraftResponse.json());
-          assert.ok(
-            originalDraft.results.some(
-              (item: { documentId: string }): boolean =>
-                item.documentId === resource,
-            ),
-          );
-          const originalPublishedResponse: Response =
-            await manager.readDocuments(
-              'api::scenario.scenario',
-              { ...filters, status: 'published' },
-              testContext,
-            );
-          assert.equal(originalPublishedResponse.status, 200);
-          const originalPublished: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalPublishedResponse.json());
-
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/scenario-group/${group}/scenario/${resource}`,
-            {
-              method: 'PUT',
-              headers: new Headers([
-                ['Authorization', `Bearer ${ownerLogin.jwt}`],
-                ['Content-Type', 'application/json'],
-              ]),
-              body: JSON.stringify({
-                title: 'Updated Scenario',
-                description: 'Updated description',
+              payload: {
                 queries: [
                   {
                     id: randomUUID(),
@@ -5209,130 +3059,10 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
                     isTableQuery: false,
                   },
                 ],
-                parameters: [],
-                postScenarioActions: [],
-              } satisfies Omit<UpdateScenarioRequestBodyDto, 'queries'> & {
-                queries: (Omit<UpdateScenarioQueryEntryDto, 'databaseId'> & {
-                  databaseId: number;
-                })[];
-              }),
-              signal: testContext.signal,
+              },
             },
-          );
-
-          // then
-          assert.equal(response.status, 400);
-          const error: {
-            statusCode: number;
-            message: string[];
-            error: string;
-          } = z
-            .object({
-              statusCode: z.literal(400),
-              message: z.array(z.string()),
-              error: z.literal('Bad Request'),
-            })
-            .parse(await response.json());
-          assert.ok(
-            error.message.some((message: string): boolean =>
-              message.includes('queries'),
-            ),
-          );
-          const draftResponse: Response = await manager.readDocuments(
-            'api::scenario.scenario',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(draftResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await draftResponse.json()),
-            originalDraft,
-          );
-          const publishedResponse: Response = await manager.readDocuments(
-            'api::scenario.scenario',
-            { ...filters, status: 'published' },
-            testContext,
-          );
-          assert.equal(publishedResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await publishedResponse.json()),
-            originalPublished,
-          );
-        });
-
-        test('rejects unexpected query properties', async (testContext: TestContext): Promise<void> => {
-          // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
             {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
-          const group: string = await manager.createPublishedDocument(
-            'api::scenario-group.scenario-group',
-            { title: 'Scenario Group', project },
-            testContext,
-          );
-          const resource: string = await manager.createPublishedDocument(
-            'api::scenario.scenario',
-            {
-              title: 'Original Scenario',
-              description: 'Original description',
-              group,
-            },
-            testContext,
-          );
-          const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
-            testContext,
-          );
-          const filters: Record<string, string> = {
-            [`filters[group][documentId][$eq]`]: group,
-            pageSize: '100',
-            sort: 'documentId:asc',
-          };
-          const originalDraftResponse: Response = await manager.readDocuments(
-            'api::scenario.scenario',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(originalDraftResponse.status, 200);
-          const originalDraft: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalDraftResponse.json());
-          assert.ok(
-            originalDraft.results.some(
-              (item: { documentId: string }): boolean =>
-                item.documentId === resource,
-            ),
-          );
-          const originalPublishedResponse: Response =
-            await manager.readDocuments(
-              'api::scenario.scenario',
-              { ...filters, status: 'published' },
-              testContext,
-            );
-          assert.equal(originalPublishedResponse.status, 200);
-          const originalPublished: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalPublishedResponse.json());
-
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/scenario-group/${group}/scenario/${resource}`,
-            {
-              method: 'PUT',
-              headers: new Headers([
-                ['Authorization', `Bearer ${ownerLogin.jwt}`],
-                ['Content-Type', 'application/json'],
-              ]),
-              body: JSON.stringify({
-                title: 'Updated Scenario',
-                description: 'Updated description',
+              payload: {
                 queries: [
                   {
                     id: randomUUID(),
@@ -5342,131 +3072,135 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
                     unexpected: true,
                   },
                 ],
-                parameters: [],
-                postScenarioActions: [],
-              } satisfies Omit<UpdateScenarioRequestBodyDto, 'queries'> & {
-                queries: (UpdateScenarioQueryEntryDto & {
-                  unexpected: boolean;
-                })[];
-              }),
-              signal: testContext.signal,
+              },
             },
-          );
+          ];
+          for (const variant of variants) {
+            // given
+            const owner: E2ETestApplicationUser =
+              await manager.registerUser(testContext);
+            const project: string = await manager.createPublishedDocument(
+              'api::project.project',
+              {
+                title: 'Test Project',
+                owner: owner.documentId,
+                collaborators: [],
+              },
+              testContext,
+            );
+            const group: string = await manager.createPublishedDocument(
+              'api::scenario-group.scenario-group',
+              { title: 'Scenario Group', project },
+              testContext,
+            );
+            const resource: string = await manager.createPublishedDocument(
+              'api::scenario.scenario',
+              {
+                title: 'Original Scenario',
+                description: 'Original description',
+                group,
+              },
+              testContext,
+            );
+            const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
+              owner.username,
+              owner.password,
+              testContext,
+            );
+            const filters: Record<string, string> = {
+              [`filters[group][documentId][$eq]`]: group,
+              pageSize: '100',
+              sort: 'documentId:asc',
+            };
+            const originalDraftResponse: Response = await manager.readDocuments(
+              'api::scenario.scenario',
+              { ...filters, status: 'draft' },
+              testContext,
+            );
+            assert.equal(originalDraftResponse.status, 200);
+            const originalDraft: z.infer<typeof listStateSchema> =
+              listStateSchema.parse(await originalDraftResponse.json());
+            assert.ok(
+              originalDraft.results.some(
+                (item: { documentId: string }): boolean =>
+                  item.documentId === resource,
+              ),
+            );
+            const originalPublishedResponse: Response =
+              await manager.readDocuments(
+                'api::scenario.scenario',
+                { ...filters, status: 'published' },
+                testContext,
+              );
+            assert.equal(originalPublishedResponse.status, 200);
+            const originalPublished: z.infer<typeof listStateSchema> =
+              listStateSchema.parse(await originalPublishedResponse.json());
 
-          // then
-          assert.equal(response.status, 400);
-          const error: {
-            statusCode: number;
-            message: string[];
-            error: string;
-          } = z
-            .object({
-              statusCode: z.literal(400),
-              message: z.array(z.string()),
-              error: z.literal('Bad Request'),
-            })
-            .parse(await response.json());
-          assert.ok(
-            error.message.some((message: string): boolean =>
-              message.includes('queries'),
-            ),
-          );
-          const draftResponse: Response = await manager.readDocuments(
-            'api::scenario.scenario',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(draftResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await draftResponse.json()),
-            originalDraft,
-          );
-          const publishedResponse: Response = await manager.readDocuments(
-            'api::scenario.scenario',
-            { ...filters, status: 'published' },
-            testContext,
-          );
-          assert.equal(publishedResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await publishedResponse.json()),
-            originalPublished,
-          );
-        });
+            // when
+            const response: Response = await fetch(
+              `${manager.apiUrl}/project/${project}/scenario-group/${group}/scenario/${resource}`,
+              {
+                method: 'PUT',
+                headers: new Headers([
+                  ['Authorization', `Bearer ${ownerLogin.jwt}`],
+                  ['Content-Type', 'application/json'],
+                ]),
+                body: JSON.stringify({
+                  title: 'Updated Scenario',
+                  description: 'Updated description',
+                  parameters: [],
+                  postScenarioActions: [],
+                  ...variant.payload,
+                }),
+                signal: testContext.signal,
+              },
+            );
 
-        test('rejects empty parameter identifier', async (testContext: TestContext): Promise<void> => {
-          // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
-          const group: string = await manager.createPublishedDocument(
-            'api::scenario-group.scenario-group',
-            { title: 'Scenario Group', project },
-            testContext,
-          );
-          const resource: string = await manager.createPublishedDocument(
-            'api::scenario.scenario',
-            {
-              title: 'Original Scenario',
-              description: 'Original description',
-              group,
-            },
-            testContext,
-          );
-          const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
-            testContext,
-          );
-          const filters: Record<string, string> = {
-            [`filters[group][documentId][$eq]`]: group,
-            pageSize: '100',
-            sort: 'documentId:asc',
-          };
-          const originalDraftResponse: Response = await manager.readDocuments(
-            'api::scenario.scenario',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(originalDraftResponse.status, 200);
-          const originalDraft: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalDraftResponse.json());
-          assert.ok(
-            originalDraft.results.some(
-              (item: { documentId: string }): boolean =>
-                item.documentId === resource,
-            ),
-          );
-          const originalPublishedResponse: Response =
-            await manager.readDocuments(
+            // then
+            assert.equal(response.status, 400);
+            const error: {
+              statusCode: number;
+              message: string[];
+              error: string;
+            } = z
+              .object({
+                statusCode: z.literal(400),
+                message: z.array(z.string()),
+                error: z.literal('Bad Request'),
+              })
+              .parse(await response.json());
+            assert.ok(
+              error.message.some((message: string): boolean =>
+                message.includes('queries'),
+              ),
+            );
+            const draftResponse: Response = await manager.readDocuments(
+              'api::scenario.scenario',
+              { ...filters, status: 'draft' },
+              testContext,
+            );
+            assert.equal(draftResponse.status, 200);
+            assert.deepEqual(
+              listStateSchema.parse(await draftResponse.json()),
+              originalDraft,
+            );
+            const publishedResponse: Response = await manager.readDocuments(
               'api::scenario.scenario',
               { ...filters, status: 'published' },
               testContext,
             );
-          assert.equal(originalPublishedResponse.status, 200);
-          const originalPublished: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalPublishedResponse.json());
+            assert.equal(publishedResponse.status, 200);
+            assert.deepEqual(
+              listStateSchema.parse(await publishedResponse.json()),
+              originalPublished,
+            );
+          }
+        });
 
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/scenario-group/${group}/scenario/${resource}`,
+        test('rejects invalid scenario parameters', async (testContext: TestContext): Promise<void> => {
+          const variants: { payload: Record<string, unknown> }[] = [
             {
-              method: 'PUT',
-              headers: new Headers([
-                ['Authorization', `Bearer ${ownerLogin.jwt}`],
-                ['Content-Type', 'application/json'],
-              ]),
-              body: JSON.stringify({
-                title: 'Updated Scenario',
-                description: 'Updated description',
-                queries: [],
+              payload: {
                 parameters: [
                   {
                     id: randomUUID(),
@@ -5477,126 +3211,10 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
                     allowedLabels: ['Person'],
                   },
                 ],
-                postScenarioActions: [],
-              } satisfies UpdateScenarioRequestBodyDto),
-              signal: testContext.signal,
+              },
             },
-          );
-
-          // then
-          assert.equal(response.status, 400);
-          const error: {
-            statusCode: number;
-            message: string[];
-            error: string;
-          } = z
-            .object({
-              statusCode: z.literal(400),
-              message: z.array(z.string()),
-              error: z.literal('Bad Request'),
-            })
-            .parse(await response.json());
-          assert.ok(
-            error.message.some((message: string): boolean =>
-              message.includes('parameters'),
-            ),
-          );
-          const draftResponse: Response = await manager.readDocuments(
-            'api::scenario.scenario',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(draftResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await draftResponse.json()),
-            originalDraft,
-          );
-          const publishedResponse: Response = await manager.readDocuments(
-            'api::scenario.scenario',
-            { ...filters, status: 'published' },
-            testContext,
-          );
-          assert.equal(publishedResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await publishedResponse.json()),
-            originalPublished,
-          );
-        });
-
-        test('rejects empty parameter title', async (testContext: TestContext): Promise<void> => {
-          // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
             {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
-          const group: string = await manager.createPublishedDocument(
-            'api::scenario-group.scenario-group',
-            { title: 'Scenario Group', project },
-            testContext,
-          );
-          const resource: string = await manager.createPublishedDocument(
-            'api::scenario.scenario',
-            {
-              title: 'Original Scenario',
-              description: 'Original description',
-              group,
-            },
-            testContext,
-          );
-          const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
-            testContext,
-          );
-          const filters: Record<string, string> = {
-            [`filters[group][documentId][$eq]`]: group,
-            pageSize: '100',
-            sort: 'documentId:asc',
-          };
-          const originalDraftResponse: Response = await manager.readDocuments(
-            'api::scenario.scenario',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(originalDraftResponse.status, 200);
-          const originalDraft: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalDraftResponse.json());
-          assert.ok(
-            originalDraft.results.some(
-              (item: { documentId: string }): boolean =>
-                item.documentId === resource,
-            ),
-          );
-          const originalPublishedResponse: Response =
-            await manager.readDocuments(
-              'api::scenario.scenario',
-              { ...filters, status: 'published' },
-              testContext,
-            );
-          assert.equal(originalPublishedResponse.status, 200);
-          const originalPublished: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalPublishedResponse.json());
-
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/scenario-group/${group}/scenario/${resource}`,
-            {
-              method: 'PUT',
-              headers: new Headers([
-                ['Authorization', `Bearer ${ownerLogin.jwt}`],
-                ['Content-Type', 'application/json'],
-              ]),
-              body: JSON.stringify({
-                title: 'Updated Scenario',
-                description: 'Updated description',
-                queries: [],
+              payload: {
                 parameters: [
                   {
                     id: randomUUID(),
@@ -5607,126 +3225,10 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
                     allowedLabels: ['Person'],
                   },
                 ],
-                postScenarioActions: [],
-              } satisfies UpdateScenarioRequestBodyDto),
-              signal: testContext.signal,
+              },
             },
-          );
-
-          // then
-          assert.equal(response.status, 400);
-          const error: {
-            statusCode: number;
-            message: string[];
-            error: string;
-          } = z
-            .object({
-              statusCode: z.literal(400),
-              message: z.array(z.string()),
-              error: z.literal('Bad Request'),
-            })
-            .parse(await response.json());
-          assert.ok(
-            error.message.some((message: string): boolean =>
-              message.includes('parameters'),
-            ),
-          );
-          const draftResponse: Response = await manager.readDocuments(
-            'api::scenario.scenario',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(draftResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await draftResponse.json()),
-            originalDraft,
-          );
-          const publishedResponse: Response = await manager.readDocuments(
-            'api::scenario.scenario',
-            { ...filters, status: 'published' },
-            testContext,
-          );
-          assert.equal(publishedResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await publishedResponse.json()),
-            originalPublished,
-          );
-        });
-
-        test('rejects unknown parameter data type', async (testContext: TestContext): Promise<void> => {
-          // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
             {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
-          const group: string = await manager.createPublishedDocument(
-            'api::scenario-group.scenario-group',
-            { title: 'Scenario Group', project },
-            testContext,
-          );
-          const resource: string = await manager.createPublishedDocument(
-            'api::scenario.scenario',
-            {
-              title: 'Original Scenario',
-              description: 'Original description',
-              group,
-            },
-            testContext,
-          );
-          const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
-            testContext,
-          );
-          const filters: Record<string, string> = {
-            [`filters[group][documentId][$eq]`]: group,
-            pageSize: '100',
-            sort: 'documentId:asc',
-          };
-          const originalDraftResponse: Response = await manager.readDocuments(
-            'api::scenario.scenario',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(originalDraftResponse.status, 200);
-          const originalDraft: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalDraftResponse.json());
-          assert.ok(
-            originalDraft.results.some(
-              (item: { documentId: string }): boolean =>
-                item.documentId === resource,
-            ),
-          );
-          const originalPublishedResponse: Response =
-            await manager.readDocuments(
-              'api::scenario.scenario',
-              { ...filters, status: 'published' },
-              testContext,
-            );
-          assert.equal(originalPublishedResponse.status, 200);
-          const originalPublished: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalPublishedResponse.json());
-
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/scenario-group/${group}/scenario/${resource}`,
-            {
-              method: 'PUT',
-              headers: new Headers([
-                ['Authorization', `Bearer ${ownerLogin.jwt}`],
-                ['Content-Type', 'application/json'],
-              ]),
-              body: JSON.stringify({
-                title: 'Updated Scenario',
-                description: 'Updated description',
-                queries: [],
+              payload: {
                 parameters: [
                   {
                     id: randomUUID(),
@@ -5737,131 +3239,10 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
                     allowedLabels: ['Person'],
                   },
                 ],
-                postScenarioActions: [],
-              } satisfies Omit<UpdateScenarioRequestBodyDto, 'parameters'> & {
-                parameters: (Omit<
-                  UpdateScenarioQueryParameterEntryDto,
-                  'dataType'
-                > & { dataType: 'unknown' })[];
-              }),
-              signal: testContext.signal,
+              },
             },
-          );
-
-          // then
-          assert.equal(response.status, 400);
-          const error: {
-            statusCode: number;
-            message: string[];
-            error: string;
-          } = z
-            .object({
-              statusCode: z.literal(400),
-              message: z.array(z.string()),
-              error: z.literal('Bad Request'),
-            })
-            .parse(await response.json());
-          assert.ok(
-            error.message.some((message: string): boolean =>
-              message.includes('parameters'),
-            ),
-          );
-          const draftResponse: Response = await manager.readDocuments(
-            'api::scenario.scenario',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(draftResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await draftResponse.json()),
-            originalDraft,
-          );
-          const publishedResponse: Response = await manager.readDocuments(
-            'api::scenario.scenario',
-            { ...filters, status: 'published' },
-            testContext,
-          );
-          assert.equal(publishedResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await publishedResponse.json()),
-            originalPublished,
-          );
-        });
-
-        test('rejects non-array parameter labels', async (testContext: TestContext): Promise<void> => {
-          // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
             {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
-          const group: string = await manager.createPublishedDocument(
-            'api::scenario-group.scenario-group',
-            { title: 'Scenario Group', project },
-            testContext,
-          );
-          const resource: string = await manager.createPublishedDocument(
-            'api::scenario.scenario',
-            {
-              title: 'Original Scenario',
-              description: 'Original description',
-              group,
-            },
-            testContext,
-          );
-          const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
-            testContext,
-          );
-          const filters: Record<string, string> = {
-            [`filters[group][documentId][$eq]`]: group,
-            pageSize: '100',
-            sort: 'documentId:asc',
-          };
-          const originalDraftResponse: Response = await manager.readDocuments(
-            'api::scenario.scenario',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(originalDraftResponse.status, 200);
-          const originalDraft: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalDraftResponse.json());
-          assert.ok(
-            originalDraft.results.some(
-              (item: { documentId: string }): boolean =>
-                item.documentId === resource,
-            ),
-          );
-          const originalPublishedResponse: Response =
-            await manager.readDocuments(
-              'api::scenario.scenario',
-              { ...filters, status: 'published' },
-              testContext,
-            );
-          assert.equal(originalPublishedResponse.status, 200);
-          const originalPublished: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalPublishedResponse.json());
-
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/scenario-group/${group}/scenario/${resource}`,
-            {
-              method: 'PUT',
-              headers: new Headers([
-                ['Authorization', `Bearer ${ownerLogin.jwt}`],
-                ['Content-Type', 'application/json'],
-              ]),
-              body: JSON.stringify({
-                title: 'Updated Scenario',
-                description: 'Updated description',
-                queries: [],
+              payload: {
                 parameters: [
                   {
                     id: randomUUID(),
@@ -5872,131 +3253,10 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
                     allowedLabels: 'Person',
                   },
                 ],
-                postScenarioActions: [],
-              } satisfies Omit<UpdateScenarioRequestBodyDto, 'parameters'> & {
-                parameters: (Omit<
-                  UpdateScenarioQueryParameterEntryDto,
-                  'allowedLabels'
-                > & { allowedLabels: string })[];
-              }),
-              signal: testContext.signal,
+              },
             },
-          );
-
-          // then
-          assert.equal(response.status, 400);
-          const error: {
-            statusCode: number;
-            message: string[];
-            error: string;
-          } = z
-            .object({
-              statusCode: z.literal(400),
-              message: z.array(z.string()),
-              error: z.literal('Bad Request'),
-            })
-            .parse(await response.json());
-          assert.ok(
-            error.message.some((message: string): boolean =>
-              message.includes('parameters'),
-            ),
-          );
-          const draftResponse: Response = await manager.readDocuments(
-            'api::scenario.scenario',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(draftResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await draftResponse.json()),
-            originalDraft,
-          );
-          const publishedResponse: Response = await manager.readDocuments(
-            'api::scenario.scenario',
-            { ...filters, status: 'published' },
-            testContext,
-          );
-          assert.equal(publishedResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await publishedResponse.json()),
-            originalPublished,
-          );
-        });
-
-        test('rejects empty parameter labels', async (testContext: TestContext): Promise<void> => {
-          // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
             {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
-          const group: string = await manager.createPublishedDocument(
-            'api::scenario-group.scenario-group',
-            { title: 'Scenario Group', project },
-            testContext,
-          );
-          const resource: string = await manager.createPublishedDocument(
-            'api::scenario.scenario',
-            {
-              title: 'Original Scenario',
-              description: 'Original description',
-              group,
-            },
-            testContext,
-          );
-          const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
-            testContext,
-          );
-          const filters: Record<string, string> = {
-            [`filters[group][documentId][$eq]`]: group,
-            pageSize: '100',
-            sort: 'documentId:asc',
-          };
-          const originalDraftResponse: Response = await manager.readDocuments(
-            'api::scenario.scenario',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(originalDraftResponse.status, 200);
-          const originalDraft: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalDraftResponse.json());
-          assert.ok(
-            originalDraft.results.some(
-              (item: { documentId: string }): boolean =>
-                item.documentId === resource,
-            ),
-          );
-          const originalPublishedResponse: Response =
-            await manager.readDocuments(
-              'api::scenario.scenario',
-              { ...filters, status: 'published' },
-              testContext,
-            );
-          assert.equal(originalPublishedResponse.status, 200);
-          const originalPublished: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalPublishedResponse.json());
-
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/scenario-group/${group}/scenario/${resource}`,
-            {
-              method: 'PUT',
-              headers: new Headers([
-                ['Authorization', `Bearer ${ownerLogin.jwt}`],
-                ['Content-Type', 'application/json'],
-              ]),
-              body: JSON.stringify({
-                title: 'Updated Scenario',
-                description: 'Updated description',
-                queries: [],
+              payload: {
                 parameters: [
                   {
                     id: randomUUID(),
@@ -6007,126 +3267,10 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
                     allowedLabels: [''],
                   },
                 ],
-                postScenarioActions: [],
-              } satisfies UpdateScenarioRequestBodyDto),
-              signal: testContext.signal,
+              },
             },
-          );
-
-          // then
-          assert.equal(response.status, 400);
-          const error: {
-            statusCode: number;
-            message: string[];
-            error: string;
-          } = z
-            .object({
-              statusCode: z.literal(400),
-              message: z.array(z.string()),
-              error: z.literal('Bad Request'),
-            })
-            .parse(await response.json());
-          assert.ok(
-            error.message.some((message: string): boolean =>
-              message.includes('parameters'),
-            ),
-          );
-          const draftResponse: Response = await manager.readDocuments(
-            'api::scenario.scenario',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(draftResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await draftResponse.json()),
-            originalDraft,
-          );
-          const publishedResponse: Response = await manager.readDocuments(
-            'api::scenario.scenario',
-            { ...filters, status: 'published' },
-            testContext,
-          );
-          assert.equal(publishedResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await publishedResponse.json()),
-            originalPublished,
-          );
-        });
-
-        test('rejects unexpected parameter properties', async (testContext: TestContext): Promise<void> => {
-          // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
             {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
-          const group: string = await manager.createPublishedDocument(
-            'api::scenario-group.scenario-group',
-            { title: 'Scenario Group', project },
-            testContext,
-          );
-          const resource: string = await manager.createPublishedDocument(
-            'api::scenario.scenario',
-            {
-              title: 'Original Scenario',
-              description: 'Original description',
-              group,
-            },
-            testContext,
-          );
-          const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
-            testContext,
-          );
-          const filters: Record<string, string> = {
-            [`filters[group][documentId][$eq]`]: group,
-            pageSize: '100',
-            sort: 'documentId:asc',
-          };
-          const originalDraftResponse: Response = await manager.readDocuments(
-            'api::scenario.scenario',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(originalDraftResponse.status, 200);
-          const originalDraft: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalDraftResponse.json());
-          assert.ok(
-            originalDraft.results.some(
-              (item: { documentId: string }): boolean =>
-                item.documentId === resource,
-            ),
-          );
-          const originalPublishedResponse: Response =
-            await manager.readDocuments(
-              'api::scenario.scenario',
-              { ...filters, status: 'published' },
-              testContext,
-            );
-          assert.equal(originalPublishedResponse.status, 200);
-          const originalPublished: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalPublishedResponse.json());
-
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/scenario-group/${group}/scenario/${resource}`,
-            {
-              method: 'PUT',
-              headers: new Headers([
-                ['Authorization', `Bearer ${ownerLogin.jwt}`],
-                ['Content-Type', 'application/json'],
-              ]),
-              body: JSON.stringify({
-                title: 'Updated Scenario',
-                description: 'Updated description',
-                queries: [],
+              payload: {
                 parameters: [
                   {
                     id: randomUUID(),
@@ -6138,131 +3282,135 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
                     unexpected: true,
                   },
                 ],
-                postScenarioActions: [],
-              } satisfies Omit<UpdateScenarioRequestBodyDto, 'parameters'> & {
-                parameters: (UpdateScenarioQueryParameterEntryDto & {
-                  unexpected: boolean;
-                })[];
-              }),
-              signal: testContext.signal,
+              },
             },
-          );
+          ];
+          for (const variant of variants) {
+            // given
+            const owner: E2ETestApplicationUser =
+              await manager.registerUser(testContext);
+            const project: string = await manager.createPublishedDocument(
+              'api::project.project',
+              {
+                title: 'Test Project',
+                owner: owner.documentId,
+                collaborators: [],
+              },
+              testContext,
+            );
+            const group: string = await manager.createPublishedDocument(
+              'api::scenario-group.scenario-group',
+              { title: 'Scenario Group', project },
+              testContext,
+            );
+            const resource: string = await manager.createPublishedDocument(
+              'api::scenario.scenario',
+              {
+                title: 'Original Scenario',
+                description: 'Original description',
+                group,
+              },
+              testContext,
+            );
+            const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
+              owner.username,
+              owner.password,
+              testContext,
+            );
+            const filters: Record<string, string> = {
+              [`filters[group][documentId][$eq]`]: group,
+              pageSize: '100',
+              sort: 'documentId:asc',
+            };
+            const originalDraftResponse: Response = await manager.readDocuments(
+              'api::scenario.scenario',
+              { ...filters, status: 'draft' },
+              testContext,
+            );
+            assert.equal(originalDraftResponse.status, 200);
+            const originalDraft: z.infer<typeof listStateSchema> =
+              listStateSchema.parse(await originalDraftResponse.json());
+            assert.ok(
+              originalDraft.results.some(
+                (item: { documentId: string }): boolean =>
+                  item.documentId === resource,
+              ),
+            );
+            const originalPublishedResponse: Response =
+              await manager.readDocuments(
+                'api::scenario.scenario',
+                { ...filters, status: 'published' },
+                testContext,
+              );
+            assert.equal(originalPublishedResponse.status, 200);
+            const originalPublished: z.infer<typeof listStateSchema> =
+              listStateSchema.parse(await originalPublishedResponse.json());
 
-          // then
-          assert.equal(response.status, 400);
-          const error: {
-            statusCode: number;
-            message: string[];
-            error: string;
-          } = z
-            .object({
-              statusCode: z.literal(400),
-              message: z.array(z.string()),
-              error: z.literal('Bad Request'),
-            })
-            .parse(await response.json());
-          assert.ok(
-            error.message.some((message: string): boolean =>
-              message.includes('parameters'),
-            ),
-          );
-          const draftResponse: Response = await manager.readDocuments(
-            'api::scenario.scenario',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(draftResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await draftResponse.json()),
-            originalDraft,
-          );
-          const publishedResponse: Response = await manager.readDocuments(
-            'api::scenario.scenario',
-            { ...filters, status: 'published' },
-            testContext,
-          );
-          assert.equal(publishedResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await publishedResponse.json()),
-            originalPublished,
-          );
-        });
+            // when
+            const response: Response = await fetch(
+              `${manager.apiUrl}/project/${project}/scenario-group/${group}/scenario/${resource}`,
+              {
+                method: 'PUT',
+                headers: new Headers([
+                  ['Authorization', `Bearer ${ownerLogin.jwt}`],
+                  ['Content-Type', 'application/json'],
+                ]),
+                body: JSON.stringify({
+                  title: 'Updated Scenario',
+                  description: 'Updated description',
+                  queries: [],
+                  postScenarioActions: [],
+                  ...variant.payload,
+                }),
+                signal: testContext.signal,
+              },
+            );
 
-        test('rejects unknown post-action type', async (testContext: TestContext): Promise<void> => {
-          // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
-          const group: string = await manager.createPublishedDocument(
-            'api::scenario-group.scenario-group',
-            { title: 'Scenario Group', project },
-            testContext,
-          );
-          const resource: string = await manager.createPublishedDocument(
-            'api::scenario.scenario',
-            {
-              title: 'Original Scenario',
-              description: 'Original description',
-              group,
-            },
-            testContext,
-          );
-          const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
-            testContext,
-          );
-          const filters: Record<string, string> = {
-            [`filters[group][documentId][$eq]`]: group,
-            pageSize: '100',
-            sort: 'documentId:asc',
-          };
-          const originalDraftResponse: Response = await manager.readDocuments(
-            'api::scenario.scenario',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(originalDraftResponse.status, 200);
-          const originalDraft: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalDraftResponse.json());
-          assert.ok(
-            originalDraft.results.some(
-              (item: { documentId: string }): boolean =>
-                item.documentId === resource,
-            ),
-          );
-          const originalPublishedResponse: Response =
-            await manager.readDocuments(
+            // then
+            assert.equal(response.status, 400);
+            const error: {
+              statusCode: number;
+              message: string[];
+              error: string;
+            } = z
+              .object({
+                statusCode: z.literal(400),
+                message: z.array(z.string()),
+                error: z.literal('Bad Request'),
+              })
+              .parse(await response.json());
+            assert.ok(
+              error.message.some((message: string): boolean =>
+                message.includes('parameters'),
+              ),
+            );
+            const draftResponse: Response = await manager.readDocuments(
+              'api::scenario.scenario',
+              { ...filters, status: 'draft' },
+              testContext,
+            );
+            assert.equal(draftResponse.status, 200);
+            assert.deepEqual(
+              listStateSchema.parse(await draftResponse.json()),
+              originalDraft,
+            );
+            const publishedResponse: Response = await manager.readDocuments(
               'api::scenario.scenario',
               { ...filters, status: 'published' },
               testContext,
             );
-          assert.equal(originalPublishedResponse.status, 200);
-          const originalPublished: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalPublishedResponse.json());
+            assert.equal(publishedResponse.status, 200);
+            assert.deepEqual(
+              listStateSchema.parse(await publishedResponse.json()),
+              originalPublished,
+            );
+          }
+        });
 
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/scenario-group/${group}/scenario/${resource}`,
+        test('rejects invalid post-scenario actions', async (testContext: TestContext): Promise<void> => {
+          const variants: { payload: Record<string, unknown> }[] = [
             {
-              method: 'PUT',
-              headers: new Headers([
-                ['Authorization', `Bearer ${ownerLogin.jwt}`],
-                ['Content-Type', 'application/json'],
-              ]),
-              body: JSON.stringify({
-                title: 'Updated Scenario',
-                description: 'Updated description',
-                queries: [],
-                parameters: [],
+              payload: {
                 postScenarioActions: [
                   {
                     id: randomUUID(),
@@ -6282,134 +3430,10 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
                     property: '',
                   },
                 ],
-              } satisfies Omit<
-                UpdateScenarioRequestBodyDto,
-                'postScenarioActions'
-              > & {
-                postScenarioActions: (Omit<
-                  UpdateScenarioPostActionEntryDto,
-                  'type'
-                > & { type: 'unknown' })[];
-              }),
-              signal: testContext.signal,
+              },
             },
-          );
-
-          // then
-          assert.equal(response.status, 400);
-          const error: {
-            statusCode: number;
-            message: string[];
-            error: string;
-          } = z
-            .object({
-              statusCode: z.literal(400),
-              message: z.array(z.string()),
-              error: z.literal('Bad Request'),
-            })
-            .parse(await response.json());
-          assert.ok(
-            error.message.some((message: string): boolean =>
-              message.includes('postScenarioActions'),
-            ),
-          );
-          const draftResponse: Response = await manager.readDocuments(
-            'api::scenario.scenario',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(draftResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await draftResponse.json()),
-            originalDraft,
-          );
-          const publishedResponse: Response = await manager.readDocuments(
-            'api::scenario.scenario',
-            { ...filters, status: 'published' },
-            testContext,
-          );
-          assert.equal(publishedResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await publishedResponse.json()),
-            originalPublished,
-          );
-        });
-
-        test('rejects unknown layout algorithm', async (testContext: TestContext): Promise<void> => {
-          // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
             {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
-          const group: string = await manager.createPublishedDocument(
-            'api::scenario-group.scenario-group',
-            { title: 'Scenario Group', project },
-            testContext,
-          );
-          const resource: string = await manager.createPublishedDocument(
-            'api::scenario.scenario',
-            {
-              title: 'Original Scenario',
-              description: 'Original description',
-              group,
-            },
-            testContext,
-          );
-          const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
-            testContext,
-          );
-          const filters: Record<string, string> = {
-            [`filters[group][documentId][$eq]`]: group,
-            pageSize: '100',
-            sort: 'documentId:asc',
-          };
-          const originalDraftResponse: Response = await manager.readDocuments(
-            'api::scenario.scenario',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(originalDraftResponse.status, 200);
-          const originalDraft: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalDraftResponse.json());
-          assert.ok(
-            originalDraft.results.some(
-              (item: { documentId: string }): boolean =>
-                item.documentId === resource,
-            ),
-          );
-          const originalPublishedResponse: Response =
-            await manager.readDocuments(
-              'api::scenario.scenario',
-              { ...filters, status: 'published' },
-              testContext,
-            );
-          assert.equal(originalPublishedResponse.status, 200);
-          const originalPublished: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalPublishedResponse.json());
-
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/scenario-group/${group}/scenario/${resource}`,
-            {
-              method: 'PUT',
-              headers: new Headers([
-                ['Authorization', `Bearer ${ownerLogin.jwt}`],
-                ['Content-Type', 'application/json'],
-              ]),
-              body: JSON.stringify({
-                title: 'Updated Scenario',
-                description: 'Updated description',
-                queries: [],
-                parameters: [],
+              payload: {
                 postScenarioActions: [
                   {
                     id: randomUUID(),
@@ -6428,134 +3452,10 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
                     property: '',
                   },
                 ],
-              } satisfies Omit<
-                UpdateScenarioRequestBodyDto,
-                'postScenarioActions'
-              > & {
-                postScenarioActions: (Omit<
-                  UpdateScenarioPostActionEntryDto,
-                  'layoutAlgorithm'
-                > & { layoutAlgorithm: 'unknown' })[];
-              }),
-              signal: testContext.signal,
+              },
             },
-          );
-
-          // then
-          assert.equal(response.status, 400);
-          const error: {
-            statusCode: number;
-            message: string[];
-            error: string;
-          } = z
-            .object({
-              statusCode: z.literal(400),
-              message: z.array(z.string()),
-              error: z.literal('Bad Request'),
-            })
-            .parse(await response.json());
-          assert.ok(
-            error.message.some((message: string): boolean =>
-              message.includes('postScenarioActions'),
-            ),
-          );
-          const draftResponse: Response = await manager.readDocuments(
-            'api::scenario.scenario',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(draftResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await draftResponse.json()),
-            originalDraft,
-          );
-          const publishedResponse: Response = await manager.readDocuments(
-            'api::scenario.scenario',
-            { ...filters, status: 'published' },
-            testContext,
-          );
-          assert.equal(publishedResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await publishedResponse.json()),
-            originalPublished,
-          );
-        });
-
-        test('rejects non-numeric post-action radius', async (testContext: TestContext): Promise<void> => {
-          // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
             {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
-          const group: string = await manager.createPublishedDocument(
-            'api::scenario-group.scenario-group',
-            { title: 'Scenario Group', project },
-            testContext,
-          );
-          const resource: string = await manager.createPublishedDocument(
-            'api::scenario.scenario',
-            {
-              title: 'Original Scenario',
-              description: 'Original description',
-              group,
-            },
-            testContext,
-          );
-          const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
-            testContext,
-          );
-          const filters: Record<string, string> = {
-            [`filters[group][documentId][$eq]`]: group,
-            pageSize: '100',
-            sort: 'documentId:asc',
-          };
-          const originalDraftResponse: Response = await manager.readDocuments(
-            'api::scenario.scenario',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(originalDraftResponse.status, 200);
-          const originalDraft: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalDraftResponse.json());
-          assert.ok(
-            originalDraft.results.some(
-              (item: { documentId: string }): boolean =>
-                item.documentId === resource,
-            ),
-          );
-          const originalPublishedResponse: Response =
-            await manager.readDocuments(
-              'api::scenario.scenario',
-              { ...filters, status: 'published' },
-              testContext,
-            );
-          assert.equal(originalPublishedResponse.status, 200);
-          const originalPublished: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalPublishedResponse.json());
-
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/scenario-group/${group}/scenario/${resource}`,
-            {
-              method: 'PUT',
-              headers: new Headers([
-                ['Authorization', `Bearer ${ownerLogin.jwt}`],
-                ['Content-Type', 'application/json'],
-              ]),
-              body: JSON.stringify({
-                title: 'Updated Scenario',
-                description: 'Updated description',
-                queries: [],
-                parameters: [],
+              payload: {
                 postScenarioActions: [
                   {
                     id: randomUUID(),
@@ -6575,134 +3475,10 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
                     property: '',
                   },
                 ],
-              } satisfies Omit<
-                UpdateScenarioRequestBodyDto,
-                'postScenarioActions'
-              > & {
-                postScenarioActions: (Omit<
-                  UpdateScenarioPostActionEntryDto,
-                  'radius'
-                > & { radius: string })[];
-              }),
-              signal: testContext.signal,
+              },
             },
-          );
-
-          // then
-          assert.equal(response.status, 400);
-          const error: {
-            statusCode: number;
-            message: string[];
-            error: string;
-          } = z
-            .object({
-              statusCode: z.literal(400),
-              message: z.array(z.string()),
-              error: z.literal('Bad Request'),
-            })
-            .parse(await response.json());
-          assert.ok(
-            error.message.some((message: string): boolean =>
-              message.includes('postScenarioActions'),
-            ),
-          );
-          const draftResponse: Response = await manager.readDocuments(
-            'api::scenario.scenario',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(draftResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await draftResponse.json()),
-            originalDraft,
-          );
-          const publishedResponse: Response = await manager.readDocuments(
-            'api::scenario.scenario',
-            { ...filters, status: 'published' },
-            testContext,
-          );
-          assert.equal(publishedResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await publishedResponse.json()),
-            originalPublished,
-          );
-        });
-
-        test('rejects invalid color discriminator', async (testContext: TestContext): Promise<void> => {
-          // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
             {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
-          const group: string = await manager.createPublishedDocument(
-            'api::scenario-group.scenario-group',
-            { title: 'Scenario Group', project },
-            testContext,
-          );
-          const resource: string = await manager.createPublishedDocument(
-            'api::scenario.scenario',
-            {
-              title: 'Original Scenario',
-              description: 'Original description',
-              group,
-            },
-            testContext,
-          );
-          const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
-            testContext,
-          );
-          const filters: Record<string, string> = {
-            [`filters[group][documentId][$eq]`]: group,
-            pageSize: '100',
-            sort: 'documentId:asc',
-          };
-          const originalDraftResponse: Response = await manager.readDocuments(
-            'api::scenario.scenario',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(originalDraftResponse.status, 200);
-          const originalDraft: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalDraftResponse.json());
-          assert.ok(
-            originalDraft.results.some(
-              (item: { documentId: string }): boolean =>
-                item.documentId === resource,
-            ),
-          );
-          const originalPublishedResponse: Response =
-            await manager.readDocuments(
-              'api::scenario.scenario',
-              { ...filters, status: 'published' },
-              testContext,
-            );
-          assert.equal(originalPublishedResponse.status, 200);
-          const originalPublished: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalPublishedResponse.json());
-
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/scenario-group/${group}/scenario/${resource}`,
-            {
-              method: 'PUT',
-              headers: new Headers([
-                ['Authorization', `Bearer ${ownerLogin.jwt}`],
-                ['Content-Type', 'application/json'],
-              ]),
-              body: JSON.stringify({
-                title: 'Updated Scenario',
-                description: 'Updated description',
-                queries: [],
-                parameters: [],
+              payload: {
                 postScenarioActions: [
                   {
                     id: randomUUID(),
@@ -6722,141 +3498,10 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
                     property: '',
                   },
                 ],
-              } satisfies Omit<
-                UpdateScenarioRequestBodyDto,
-                'postScenarioActions'
-              > & {
-                postScenarioActions: (Omit<
-                  UpdateScenarioPostActionEntryDto,
-                  'color'
-                > & {
-                  color: Omit<
-                    UpdateScenarioPostActionColorPresetDto,
-                    'type'
-                  > & {
-                    type: string;
-                  };
-                })[];
-              }),
-              signal: testContext.signal,
+              },
             },
-          );
-
-          // then
-          assert.equal(response.status, 400);
-          const error: {
-            statusCode: number;
-            message: string[];
-            error: string;
-          } = z
-            .object({
-              statusCode: z.literal(400),
-              message: z.array(z.string()),
-              error: z.literal('Bad Request'),
-            })
-            .parse(await response.json());
-          assert.ok(
-            error.message.some((message: string): boolean =>
-              message.includes('postScenarioActions'),
-            ),
-          );
-          const draftResponse: Response = await manager.readDocuments(
-            'api::scenario.scenario',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(draftResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await draftResponse.json()),
-            originalDraft,
-          );
-          const publishedResponse: Response = await manager.readDocuments(
-            'api::scenario.scenario',
-            { ...filters, status: 'published' },
-            testContext,
-          );
-          assert.equal(publishedResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await publishedResponse.json()),
-            originalPublished,
-          );
-        });
-
-        test('rejects unknown color preset', async (testContext: TestContext): Promise<void> => {
-          // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
             {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
-          const group: string = await manager.createPublishedDocument(
-            'api::scenario-group.scenario-group',
-            { title: 'Scenario Group', project },
-            testContext,
-          );
-          const resource: string = await manager.createPublishedDocument(
-            'api::scenario.scenario',
-            {
-              title: 'Original Scenario',
-              description: 'Original description',
-              group,
-            },
-            testContext,
-          );
-          const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
-            testContext,
-          );
-          const filters: Record<string, string> = {
-            [`filters[group][documentId][$eq]`]: group,
-            pageSize: '100',
-            sort: 'documentId:asc',
-          };
-          const originalDraftResponse: Response = await manager.readDocuments(
-            'api::scenario.scenario',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(originalDraftResponse.status, 200);
-          const originalDraft: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalDraftResponse.json());
-          assert.ok(
-            originalDraft.results.some(
-              (item: { documentId: string }): boolean =>
-                item.documentId === resource,
-            ),
-          );
-          const originalPublishedResponse: Response =
-            await manager.readDocuments(
-              'api::scenario.scenario',
-              { ...filters, status: 'published' },
-              testContext,
-            );
-          assert.equal(originalPublishedResponse.status, 200);
-          const originalPublished: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalPublishedResponse.json());
-
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/scenario-group/${group}/scenario/${resource}`,
-            {
-              method: 'PUT',
-              headers: new Headers([
-                ['Authorization', `Bearer ${ownerLogin.jwt}`],
-                ['Content-Type', 'application/json'],
-              ]),
-              body: JSON.stringify({
-                title: 'Updated Scenario',
-                description: 'Updated description',
-                queries: [],
-                parameters: [],
+              payload: {
                 postScenarioActions: [
                   {
                     id: randomUUID(),
@@ -6873,141 +3518,10 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
                     property: '',
                   },
                 ],
-              } satisfies Omit<
-                UpdateScenarioRequestBodyDto,
-                'postScenarioActions'
-              > & {
-                postScenarioActions: (Omit<
-                  UpdateScenarioPostActionEntryDto,
-                  'color'
-                > & {
-                  color: Omit<
-                    UpdateScenarioPostActionColorPresetDto,
-                    'index'
-                  > & {
-                    index: number;
-                  };
-                })[];
-              }),
-              signal: testContext.signal,
+              },
             },
-          );
-
-          // then
-          assert.equal(response.status, 400);
-          const error: {
-            statusCode: number;
-            message: string[];
-            error: string;
-          } = z
-            .object({
-              statusCode: z.literal(400),
-              message: z.array(z.string()),
-              error: z.literal('Bad Request'),
-            })
-            .parse(await response.json());
-          assert.ok(
-            error.message.some((message: string): boolean =>
-              message.includes('postScenarioActions'),
-            ),
-          );
-          const draftResponse: Response = await manager.readDocuments(
-            'api::scenario.scenario',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(draftResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await draftResponse.json()),
-            originalDraft,
-          );
-          const publishedResponse: Response = await manager.readDocuments(
-            'api::scenario.scenario',
-            { ...filters, status: 'published' },
-            testContext,
-          );
-          assert.equal(publishedResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await publishedResponse.json()),
-            originalPublished,
-          );
-        });
-
-        test('rejects unexpected post-action properties', async (testContext: TestContext): Promise<void> => {
-          // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
             {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
-          const group: string = await manager.createPublishedDocument(
-            'api::scenario-group.scenario-group',
-            { title: 'Scenario Group', project },
-            testContext,
-          );
-          const resource: string = await manager.createPublishedDocument(
-            'api::scenario.scenario',
-            {
-              title: 'Original Scenario',
-              description: 'Original description',
-              group,
-            },
-            testContext,
-          );
-          const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
-            testContext,
-          );
-          const filters: Record<string, string> = {
-            [`filters[group][documentId][$eq]`]: group,
-            pageSize: '100',
-            sort: 'documentId:asc',
-          };
-          const originalDraftResponse: Response = await manager.readDocuments(
-            'api::scenario.scenario',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(originalDraftResponse.status, 200);
-          const originalDraft: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalDraftResponse.json());
-          assert.ok(
-            originalDraft.results.some(
-              (item: { documentId: string }): boolean =>
-                item.documentId === resource,
-            ),
-          );
-          const originalPublishedResponse: Response =
-            await manager.readDocuments(
-              'api::scenario.scenario',
-              { ...filters, status: 'published' },
-              testContext,
-            );
-          assert.equal(originalPublishedResponse.status, 200);
-          const originalPublished: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalPublishedResponse.json());
-
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/scenario-group/${group}/scenario/${resource}`,
-            {
-              method: 'PUT',
-              headers: new Headers([
-                ['Authorization', `Bearer ${ownerLogin.jwt}`],
-                ['Content-Type', 'application/json'],
-              ]),
-              body: JSON.stringify({
-                title: 'Updated Scenario',
-                description: 'Updated description',
-                queries: [],
-                parameters: [],
+              payload: {
                 postScenarioActions: [
                   {
                     id: randomUUID(),
@@ -7028,265 +3542,250 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
                     unexpected: true,
                   },
                 ],
-              } satisfies Omit<
-                UpdateScenarioRequestBodyDto,
-                'postScenarioActions'
-              > & {
-                postScenarioActions: (UpdateScenarioPostActionEntryDto & {
-                  unexpected: boolean;
-                })[];
-              }),
-              signal: testContext.signal,
+              },
             },
-          );
+          ];
+          for (const variant of variants) {
+            // given
+            const owner: E2ETestApplicationUser =
+              await manager.registerUser(testContext);
+            const project: string = await manager.createPublishedDocument(
+              'api::project.project',
+              {
+                title: 'Test Project',
+                owner: owner.documentId,
+                collaborators: [],
+              },
+              testContext,
+            );
+            const group: string = await manager.createPublishedDocument(
+              'api::scenario-group.scenario-group',
+              { title: 'Scenario Group', project },
+              testContext,
+            );
+            const resource: string = await manager.createPublishedDocument(
+              'api::scenario.scenario',
+              {
+                title: 'Original Scenario',
+                description: 'Original description',
+                group,
+              },
+              testContext,
+            );
+            const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
+              owner.username,
+              owner.password,
+              testContext,
+            );
+            const filters: Record<string, string> = {
+              [`filters[group][documentId][$eq]`]: group,
+              pageSize: '100',
+              sort: 'documentId:asc',
+            };
+            const originalDraftResponse: Response = await manager.readDocuments(
+              'api::scenario.scenario',
+              { ...filters, status: 'draft' },
+              testContext,
+            );
+            assert.equal(originalDraftResponse.status, 200);
+            const originalDraft: z.infer<typeof listStateSchema> =
+              listStateSchema.parse(await originalDraftResponse.json());
+            assert.ok(
+              originalDraft.results.some(
+                (item: { documentId: string }): boolean =>
+                  item.documentId === resource,
+              ),
+            );
+            const originalPublishedResponse: Response =
+              await manager.readDocuments(
+                'api::scenario.scenario',
+                { ...filters, status: 'published' },
+                testContext,
+              );
+            assert.equal(originalPublishedResponse.status, 200);
+            const originalPublished: z.infer<typeof listStateSchema> =
+              listStateSchema.parse(await originalPublishedResponse.json());
 
-          // then
-          assert.equal(response.status, 400);
-          const error: {
-            statusCode: number;
-            message: string[];
-            error: string;
-          } = z
-            .object({
-              statusCode: z.literal(400),
-              message: z.array(z.string()),
-              error: z.literal('Bad Request'),
-            })
-            .parse(await response.json());
-          assert.ok(
-            error.message.some((message: string): boolean =>
-              message.includes('postScenarioActions'),
-            ),
-          );
-          const draftResponse: Response = await manager.readDocuments(
-            'api::scenario.scenario',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(draftResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await draftResponse.json()),
-            originalDraft,
-          );
-          const publishedResponse: Response = await manager.readDocuments(
-            'api::scenario.scenario',
-            { ...filters, status: 'published' },
-            testContext,
-          );
-          assert.equal(publishedResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await publishedResponse.json()),
-            originalPublished,
-          );
+            // when
+            const response: Response = await fetch(
+              `${manager.apiUrl}/project/${project}/scenario-group/${group}/scenario/${resource}`,
+              {
+                method: 'PUT',
+                headers: new Headers([
+                  ['Authorization', `Bearer ${ownerLogin.jwt}`],
+                  ['Content-Type', 'application/json'],
+                ]),
+                body: JSON.stringify({
+                  title: 'Updated Scenario',
+                  description: 'Updated description',
+                  queries: [],
+                  parameters: [],
+                  ...variant.payload,
+                }),
+                signal: testContext.signal,
+              },
+            );
+
+            // then
+            assert.equal(response.status, 400);
+            const error: {
+              statusCode: number;
+              message: string[];
+              error: string;
+            } = z
+              .object({
+                statusCode: z.literal(400),
+                message: z.array(z.string()),
+                error: z.literal('Bad Request'),
+              })
+              .parse(await response.json());
+            assert.ok(
+              error.message.some((message: string): boolean =>
+                message.includes('postScenarioActions'),
+              ),
+            );
+            const draftResponse: Response = await manager.readDocuments(
+              'api::scenario.scenario',
+              { ...filters, status: 'draft' },
+              testContext,
+            );
+            assert.equal(draftResponse.status, 200);
+            assert.deepEqual(
+              listStateSchema.parse(await draftResponse.json()),
+              originalDraft,
+            );
+            const publishedResponse: Response = await manager.readDocuments(
+              'api::scenario.scenario',
+              { ...filters, status: 'published' },
+              testContext,
+            );
+            assert.equal(publishedResponse.status, 200);
+            assert.deepEqual(
+              listStateSchema.parse(await publishedResponse.json()),
+              originalPublished,
+            );
+          }
         });
       });
       describe('401', (): void => {
-        test('rejects anonymous access', async (testContext: TestContext): Promise<void> => {
-          // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
+        test('rejects requests without valid authentication', async (testContext: TestContext): Promise<void> => {
+          const variants: { headers: [string, string][] }[] = [
             {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [],
+              headers: [['Content-Type', 'application/json']],
             },
-            testContext,
-          );
-          const group: string = await manager.createPublishedDocument(
-            'api::scenario-group.scenario-group',
-            { title: 'Scenario Group', project },
-            testContext,
-          );
-          const resource: string = await manager.createPublishedDocument(
-            'api::scenario.scenario',
             {
-              title: 'Original Scenario',
-              description: 'Original description',
-              group,
-            },
-            testContext,
-          );
-          await manager.loginUser(owner.username, owner.password, testContext);
-          const filters: Record<string, string> = {
-            [`filters[group][documentId][$eq]`]: group,
-            pageSize: '100',
-            sort: 'documentId:asc',
-          };
-          const originalDraftResponse: Response = await manager.readDocuments(
-            'api::scenario.scenario',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(originalDraftResponse.status, 200);
-          const originalDraft: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalDraftResponse.json());
-          assert.ok(
-            originalDraft.results.some(
-              (item: { documentId: string }): boolean =>
-                item.documentId === resource,
-            ),
-          );
-          const originalPublishedResponse: Response =
-            await manager.readDocuments(
-              'api::scenario.scenario',
-              { ...filters, status: 'published' },
-              testContext,
-            );
-          assert.equal(originalPublishedResponse.status, 200);
-          const originalPublished: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalPublishedResponse.json());
-
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/scenario-group/${group}/scenario/${resource}`,
-            {
-              method: 'PUT',
-              headers: new Headers([['Content-Type', 'application/json']]),
-              body: JSON.stringify({
-                title: 'Updated Scenario',
-                description: 'Updated description',
-                queries: [],
-                parameters: [],
-                postScenarioActions: [],
-              } satisfies UpdateScenarioRequestBodyDto),
-              signal: testContext.signal,
-            },
-          );
-
-          // then
-          assert.equal(response.status, 401);
-          assert.equal(response.headers.get('www-authenticate'), 'Bearer');
-          assert.deepEqual(await response.json(), {
-            statusCode: 401,
-            message: 'Unauthorized',
-          });
-          const draftResponse: Response = await manager.readDocuments(
-            'api::scenario.scenario',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(draftResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await draftResponse.json()),
-            originalDraft,
-          );
-          const publishedResponse: Response = await manager.readDocuments(
-            'api::scenario.scenario',
-            { ...filters, status: 'published' },
-            testContext,
-          );
-          assert.equal(publishedResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await publishedResponse.json()),
-            originalPublished,
-          );
-        });
-        test('rejects invalid jwt access', async (testContext: TestContext): Promise<void> => {
-          // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
-          const group: string = await manager.createPublishedDocument(
-            'api::scenario-group.scenario-group',
-            { title: 'Scenario Group', project },
-            testContext,
-          );
-          const resource: string = await manager.createPublishedDocument(
-            'api::scenario.scenario',
-            {
-              title: 'Original Scenario',
-              description: 'Original description',
-              group,
-            },
-            testContext,
-          );
-          await manager.loginUser(owner.username, owner.password, testContext);
-          const filters: Record<string, string> = {
-            [`filters[group][documentId][$eq]`]: group,
-            pageSize: '100',
-            sort: 'documentId:asc',
-          };
-          const originalDraftResponse: Response = await manager.readDocuments(
-            'api::scenario.scenario',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(originalDraftResponse.status, 200);
-          const originalDraft: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalDraftResponse.json());
-          assert.ok(
-            originalDraft.results.some(
-              (item: { documentId: string }): boolean =>
-                item.documentId === resource,
-            ),
-          );
-          const originalPublishedResponse: Response =
-            await manager.readDocuments(
-              'api::scenario.scenario',
-              { ...filters, status: 'published' },
-              testContext,
-            );
-          assert.equal(originalPublishedResponse.status, 200);
-          const originalPublished: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalPublishedResponse.json());
-
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/scenario-group/${group}/scenario/${resource}`,
-            {
-              method: 'PUT',
-              headers: new Headers([
+              headers: [
                 ['Authorization', 'Bearer invalid-jwt'],
                 ['Content-Type', 'application/json'],
-              ]),
-              body: JSON.stringify({
-                title: 'Updated Scenario',
-                description: 'Updated description',
-                queries: [],
-                parameters: [],
-                postScenarioActions: [],
-              } satisfies UpdateScenarioRequestBodyDto),
-              signal: testContext.signal,
+              ],
             },
-          );
+          ];
+          for (const variant of variants) {
+            // given
+            const owner: E2ETestApplicationUser =
+              await manager.registerUser(testContext);
+            const project: string = await manager.createPublishedDocument(
+              'api::project.project',
+              {
+                title: 'Test Project',
+                owner: owner.documentId,
+                collaborators: [],
+              },
+              testContext,
+            );
+            const group: string = await manager.createPublishedDocument(
+              'api::scenario-group.scenario-group',
+              { title: 'Scenario Group', project },
+              testContext,
+            );
+            const resource: string = await manager.createPublishedDocument(
+              'api::scenario.scenario',
+              {
+                title: 'Original Scenario',
+                description: 'Original description',
+                group,
+              },
+              testContext,
+            );
+            await manager.loginUser(
+              owner.username,
+              owner.password,
+              testContext,
+            );
+            const filters: Record<string, string> = {
+              [`filters[group][documentId][$eq]`]: group,
+              pageSize: '100',
+              sort: 'documentId:asc',
+            };
+            const originalDraftResponse: Response = await manager.readDocuments(
+              'api::scenario.scenario',
+              { ...filters, status: 'draft' },
+              testContext,
+            );
+            assert.equal(originalDraftResponse.status, 200);
+            const originalDraft: z.infer<typeof listStateSchema> =
+              listStateSchema.parse(await originalDraftResponse.json());
+            assert.ok(
+              originalDraft.results.some(
+                (item: { documentId: string }): boolean =>
+                  item.documentId === resource,
+              ),
+            );
+            const originalPublishedResponse: Response =
+              await manager.readDocuments(
+                'api::scenario.scenario',
+                { ...filters, status: 'published' },
+                testContext,
+              );
+            assert.equal(originalPublishedResponse.status, 200);
+            const originalPublished: z.infer<typeof listStateSchema> =
+              listStateSchema.parse(await originalPublishedResponse.json());
 
-          // then
-          assert.equal(response.status, 401);
-          assert.equal(response.headers.get('www-authenticate'), 'Bearer');
-          assert.deepEqual(await response.json(), {
-            statusCode: 401,
-            message: 'Unauthorized',
-          });
-          const draftResponse: Response = await manager.readDocuments(
-            'api::scenario.scenario',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(draftResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await draftResponse.json()),
-            originalDraft,
-          );
-          const publishedResponse: Response = await manager.readDocuments(
-            'api::scenario.scenario',
-            { ...filters, status: 'published' },
-            testContext,
-          );
-          assert.equal(publishedResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await publishedResponse.json()),
-            originalPublished,
-          );
+            // when
+            const response: Response = await fetch(
+              `${manager.apiUrl}/project/${project}/scenario-group/${group}/scenario/${resource}`,
+              {
+                method: 'PUT',
+                body: JSON.stringify({
+                  title: 'Updated Scenario',
+                  description: 'Updated description',
+                  queries: [],
+                  parameters: [],
+                  postScenarioActions: [],
+                } satisfies UpdateScenarioRequestBodyDto),
+                signal: testContext.signal,
+                headers: new Headers(variant.headers),
+              },
+            );
+
+            // then
+            assert.equal(response.status, 401);
+            assert.equal(response.headers.get('www-authenticate'), 'Bearer');
+            assert.deepEqual(await response.json(), {
+              statusCode: 401,
+              message: 'Unauthorized',
+            });
+            const draftResponse: Response = await manager.readDocuments(
+              'api::scenario.scenario',
+              { ...filters, status: 'draft' },
+              testContext,
+            );
+            assert.equal(draftResponse.status, 200);
+            assert.deepEqual(
+              listStateSchema.parse(await draftResponse.json()),
+              originalDraft,
+            );
+            const publishedResponse: Response = await manager.readDocuments(
+              'api::scenario.scenario',
+              { ...filters, status: 'published' },
+              testContext,
+            );
+            assert.equal(publishedResponse.status, 200);
+            assert.deepEqual(
+              listStateSchema.parse(await publishedResponse.json()),
+              originalPublished,
+            );
+          }
         });
       });
 
@@ -9407,195 +5906,112 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
         });
       });
       describe('401', (): void => {
-        test('rejects anonymous access', async (testContext: TestContext): Promise<void> => {
-          // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
+        test('rejects requests without valid authentication', async (testContext: TestContext): Promise<void> => {
+          const variants: { headers: [string, string][] }[] = [
+            { headers: [] },
             {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [],
+              headers: [['Authorization', 'Bearer invalid-jwt']],
             },
-            testContext,
-          );
-          const group: string = await manager.createPublishedDocument(
-            'api::scenario-group.scenario-group',
-            { title: 'Scenario Group', project },
-            testContext,
-          );
-          const resource: string = await manager.createPublishedDocument(
-            'api::scenario.scenario',
-            {
-              title: 'Original Scenario',
-              description: 'Original description',
-              group,
-            },
-            testContext,
-          );
-          await manager.loginUser(owner.username, owner.password, testContext);
-          const filters: Record<string, string> = {
-            [`filters[group][documentId][$eq]`]: group,
-            pageSize: '100',
-            sort: 'documentId:asc',
-          };
-          const originalDraftResponse: Response = await manager.readDocuments(
-            'api::scenario.scenario',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(originalDraftResponse.status, 200);
-          const originalDraft: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalDraftResponse.json());
-          assert.ok(
-            originalDraft.results.some(
-              (item: { documentId: string }): boolean =>
-                item.documentId === resource,
-            ),
-          );
-          const originalPublishedResponse: Response =
-            await manager.readDocuments(
+          ];
+          for (const variant of variants) {
+            // given
+            const owner: E2ETestApplicationUser =
+              await manager.registerUser(testContext);
+            const project: string = await manager.createPublishedDocument(
+              'api::project.project',
+              {
+                title: 'Test Project',
+                owner: owner.documentId,
+                collaborators: [],
+              },
+              testContext,
+            );
+            const group: string = await manager.createPublishedDocument(
+              'api::scenario-group.scenario-group',
+              { title: 'Scenario Group', project },
+              testContext,
+            );
+            const resource: string = await manager.createPublishedDocument(
+              'api::scenario.scenario',
+              {
+                title: 'Original Scenario',
+                description: 'Original description',
+                group,
+              },
+              testContext,
+            );
+            await manager.loginUser(
+              owner.username,
+              owner.password,
+              testContext,
+            );
+            const filters: Record<string, string> = {
+              [`filters[group][documentId][$eq]`]: group,
+              pageSize: '100',
+              sort: 'documentId:asc',
+            };
+            const originalDraftResponse: Response = await manager.readDocuments(
+              'api::scenario.scenario',
+              { ...filters, status: 'draft' },
+              testContext,
+            );
+            assert.equal(originalDraftResponse.status, 200);
+            const originalDraft: z.infer<typeof listStateSchema> =
+              listStateSchema.parse(await originalDraftResponse.json());
+            assert.ok(
+              originalDraft.results.some(
+                (item: { documentId: string }): boolean =>
+                  item.documentId === resource,
+              ),
+            );
+            const originalPublishedResponse: Response =
+              await manager.readDocuments(
+                'api::scenario.scenario',
+                { ...filters, status: 'published' },
+                testContext,
+              );
+            assert.equal(originalPublishedResponse.status, 200);
+            const originalPublished: z.infer<typeof listStateSchema> =
+              listStateSchema.parse(await originalPublishedResponse.json());
+
+            // when
+            const response: Response = await fetch(
+              `${manager.apiUrl}/project/${project}/scenario-group/${group}/scenario/${resource}`,
+              {
+                method: 'DELETE',
+                signal: testContext.signal,
+                headers: new Headers(variant.headers),
+              },
+            );
+
+            // then
+            assert.equal(response.status, 401);
+            assert.equal(response.headers.get('www-authenticate'), 'Bearer');
+            assert.deepEqual(await response.json(), {
+              statusCode: 401,
+              message: 'Unauthorized',
+            });
+            const draftResponse: Response = await manager.readDocuments(
+              'api::scenario.scenario',
+              { ...filters, status: 'draft' },
+              testContext,
+            );
+            assert.equal(draftResponse.status, 200);
+            assert.deepEqual(
+              listStateSchema.parse(await draftResponse.json()),
+              originalDraft,
+            );
+            const publishedResponse: Response = await manager.readDocuments(
               'api::scenario.scenario',
               { ...filters, status: 'published' },
               testContext,
             );
-          assert.equal(originalPublishedResponse.status, 200);
-          const originalPublished: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalPublishedResponse.json());
-
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/scenario-group/${group}/scenario/${resource}`,
-            {
-              method: 'DELETE',
-              headers: new Headers([]),
-              signal: testContext.signal,
-            },
-          );
-
-          // then
-          assert.equal(response.status, 401);
-          assert.equal(response.headers.get('www-authenticate'), 'Bearer');
-          assert.deepEqual(await response.json(), {
-            statusCode: 401,
-            message: 'Unauthorized',
-          });
-          const draftResponse: Response = await manager.readDocuments(
-            'api::scenario.scenario',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(draftResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await draftResponse.json()),
-            originalDraft,
-          );
-          const publishedResponse: Response = await manager.readDocuments(
-            'api::scenario.scenario',
-            { ...filters, status: 'published' },
-            testContext,
-          );
-          assert.equal(publishedResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await publishedResponse.json()),
-            originalPublished,
-          );
-        });
-        test('rejects invalid jwt access', async (testContext: TestContext): Promise<void> => {
-          // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
-          const group: string = await manager.createPublishedDocument(
-            'api::scenario-group.scenario-group',
-            { title: 'Scenario Group', project },
-            testContext,
-          );
-          const resource: string = await manager.createPublishedDocument(
-            'api::scenario.scenario',
-            {
-              title: 'Original Scenario',
-              description: 'Original description',
-              group,
-            },
-            testContext,
-          );
-          await manager.loginUser(owner.username, owner.password, testContext);
-          const filters: Record<string, string> = {
-            [`filters[group][documentId][$eq]`]: group,
-            pageSize: '100',
-            sort: 'documentId:asc',
-          };
-          const originalDraftResponse: Response = await manager.readDocuments(
-            'api::scenario.scenario',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(originalDraftResponse.status, 200);
-          const originalDraft: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalDraftResponse.json());
-          assert.ok(
-            originalDraft.results.some(
-              (item: { documentId: string }): boolean =>
-                item.documentId === resource,
-            ),
-          );
-          const originalPublishedResponse: Response =
-            await manager.readDocuments(
-              'api::scenario.scenario',
-              { ...filters, status: 'published' },
-              testContext,
+            assert.equal(publishedResponse.status, 200);
+            assert.deepEqual(
+              listStateSchema.parse(await publishedResponse.json()),
+              originalPublished,
             );
-          assert.equal(originalPublishedResponse.status, 200);
-          const originalPublished: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalPublishedResponse.json());
-
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/scenario-group/${group}/scenario/${resource}`,
-            {
-              method: 'DELETE',
-              headers: new Headers([['Authorization', 'Bearer invalid-jwt']]),
-              signal: testContext.signal,
-            },
-          );
-
-          // then
-          assert.equal(response.status, 401);
-          assert.equal(response.headers.get('www-authenticate'), 'Bearer');
-          assert.deepEqual(await response.json(), {
-            statusCode: 401,
-            message: 'Unauthorized',
-          });
-          const draftResponse: Response = await manager.readDocuments(
-            'api::scenario.scenario',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(draftResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await draftResponse.json()),
-            originalDraft,
-          );
-          const publishedResponse: Response = await manager.readDocuments(
-            'api::scenario.scenario',
-            { ...filters, status: 'published' },
-            testContext,
-          );
-          assert.equal(publishedResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await publishedResponse.json()),
-            originalPublished,
-          );
+          }
         });
       });
 

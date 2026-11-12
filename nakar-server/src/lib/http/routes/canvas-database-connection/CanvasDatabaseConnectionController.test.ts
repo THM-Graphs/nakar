@@ -332,90 +332,59 @@ describe('/room/:roomId/canvas/:canvasId/database-connection/:databaseId', (suit
         });
       });
       describe('401', (): void => {
-        test('rejects anonymous access to a private room', async (testContext: TestContext): Promise<void> => {
-          // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const canvas: E2ETestCanvas = await manager.createCanvas(
-            owner,
-            testContext,
-            RoomVisibilityDto.private,
-          );
-
-          const database: string = await manager.createPublishedDocument(
-            'api::database-connection.database-connection',
+        test('requires valid authentication for a private room', async (testContext: TestContext): Promise<void> => {
+          const variants: { headers: [string, string][] }[] = [
             {
-              title: 'Test Database',
-              project: canvas.projectId,
-              databaseType: 'sparql',
-              connectionUrl: `${manager.getSparqlServer().getServerUrl()}/graph/${randomUUID()}`,
-              browserUrl: '',
-              database: '',
+              headers: [['Content-Type', 'application/json']],
             },
-            testContext,
-          );
-
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/room/${canvas.roomId}/canvas/${canvas.canvasId}/database-connection/${database}/stats`,
             {
-              method: 'GET',
-              headers: new Headers([['Content-Type', 'application/json']]),
-              signal: testContext.signal,
-            },
-          );
-
-          // then
-          assert.equal(response.status, 401);
-          assert.equal(response.headers.get('www-authenticate'), 'Bearer');
-          assert.deepEqual(await response.json(), {
-            statusCode: 401,
-            message: 'Unauthorized',
-          });
-        });
-        test('rejects an invalid jwt for a private room', async (testContext: TestContext): Promise<void> => {
-          // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const canvas: E2ETestCanvas = await manager.createCanvas(
-            owner,
-            testContext,
-            RoomVisibilityDto.private,
-          );
-
-          const database: string = await manager.createPublishedDocument(
-            'api::database-connection.database-connection',
-            {
-              title: 'Test Database',
-              project: canvas.projectId,
-              databaseType: 'sparql',
-              connectionUrl: `${manager.getSparqlServer().getServerUrl()}/graph/${randomUUID()}`,
-              browserUrl: '',
-              database: '',
-            },
-            testContext,
-          );
-
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/room/${canvas.roomId}/canvas/${canvas.canvasId}/database-connection/${database}/stats`,
-            {
-              method: 'GET',
-              headers: new Headers([
+              headers: [
                 ['Content-Type', 'application/json'],
                 ['Authorization', `Bearer invalid-jwt`],
-              ]),
-              signal: testContext.signal,
+              ],
             },
-          );
+          ];
+          for (const variant of variants) {
+            // given
+            const owner: E2ETestApplicationUser =
+              await manager.registerUser(testContext);
+            const canvas: E2ETestCanvas = await manager.createCanvas(
+              owner,
+              testContext,
+              RoomVisibilityDto.private,
+            );
 
-          // then
-          assert.equal(response.status, 401);
-          assert.equal(response.headers.get('www-authenticate'), 'Bearer');
-          assert.deepEqual(await response.json(), {
-            statusCode: 401,
-            message: 'Unauthorized',
-          });
+            const database: string = await manager.createPublishedDocument(
+              'api::database-connection.database-connection',
+              {
+                title: 'Test Database',
+                project: canvas.projectId,
+                databaseType: 'sparql',
+                connectionUrl: `${manager.getSparqlServer().getServerUrl()}/graph/${randomUUID()}`,
+                browserUrl: '',
+                database: '',
+              },
+              testContext,
+            );
+
+            // when
+            const response: Response = await fetch(
+              `${manager.apiUrl}/room/${canvas.roomId}/canvas/${canvas.canvasId}/database-connection/${database}/stats`,
+              {
+                method: 'GET',
+                signal: testContext.signal,
+                headers: new Headers(variant.headers),
+              },
+            );
+
+            // then
+            assert.equal(response.status, 401);
+            assert.equal(response.headers.get('www-authenticate'), 'Bearer');
+            assert.deepEqual(await response.json(), {
+              statusCode: 401,
+              message: 'Unauthorized',
+            });
+          }
         });
       });
       describe('403', (): void => {
@@ -1229,90 +1198,59 @@ describe('/room/:roomId/canvas/:canvasId/database-connection/:databaseId', (suit
         });
       });
       describe('401', (): void => {
-        test('rejects anonymous access to a private room', async (testContext: TestContext): Promise<void> => {
-          // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const canvas: E2ETestCanvas = await manager.createCanvas(
-            owner,
-            testContext,
-            RoomVisibilityDto.private,
-          );
-
-          const database: string = await manager.createPublishedDocument(
-            'api::database-connection.database-connection',
+        test('requires valid authentication for a private room', async (testContext: TestContext): Promise<void> => {
+          const variants: { headers: [string, string][] }[] = [
             {
-              title: 'Test Database',
-              project: canvas.projectId,
-              databaseType: 'sparql',
-              connectionUrl: `${manager.getSparqlServer().getServerUrl()}/graph/${randomUUID()}`,
-              browserUrl: '',
-              database: '',
+              headers: [['Content-Type', 'application/json']],
             },
-            testContext,
-          );
-
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/room/${canvas.roomId}/canvas/${canvas.canvasId}/database-connection/${database}/search-capabilities`,
             {
-              method: 'GET',
-              headers: new Headers([['Content-Type', 'application/json']]),
-              signal: testContext.signal,
-            },
-          );
-
-          // then
-          assert.equal(response.status, 401);
-          assert.equal(response.headers.get('www-authenticate'), 'Bearer');
-          assert.deepEqual(await response.json(), {
-            statusCode: 401,
-            message: 'Unauthorized',
-          });
-        });
-        test('rejects an invalid jwt for a private room', async (testContext: TestContext): Promise<void> => {
-          // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const canvas: E2ETestCanvas = await manager.createCanvas(
-            owner,
-            testContext,
-            RoomVisibilityDto.private,
-          );
-
-          const database: string = await manager.createPublishedDocument(
-            'api::database-connection.database-connection',
-            {
-              title: 'Test Database',
-              project: canvas.projectId,
-              databaseType: 'sparql',
-              connectionUrl: `${manager.getSparqlServer().getServerUrl()}/graph/${randomUUID()}`,
-              browserUrl: '',
-              database: '',
-            },
-            testContext,
-          );
-
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/room/${canvas.roomId}/canvas/${canvas.canvasId}/database-connection/${database}/search-capabilities`,
-            {
-              method: 'GET',
-              headers: new Headers([
+              headers: [
                 ['Content-Type', 'application/json'],
                 ['Authorization', `Bearer invalid-jwt`],
-              ]),
-              signal: testContext.signal,
+              ],
             },
-          );
+          ];
+          for (const variant of variants) {
+            // given
+            const owner: E2ETestApplicationUser =
+              await manager.registerUser(testContext);
+            const canvas: E2ETestCanvas = await manager.createCanvas(
+              owner,
+              testContext,
+              RoomVisibilityDto.private,
+            );
 
-          // then
-          assert.equal(response.status, 401);
-          assert.equal(response.headers.get('www-authenticate'), 'Bearer');
-          assert.deepEqual(await response.json(), {
-            statusCode: 401,
-            message: 'Unauthorized',
-          });
+            const database: string = await manager.createPublishedDocument(
+              'api::database-connection.database-connection',
+              {
+                title: 'Test Database',
+                project: canvas.projectId,
+                databaseType: 'sparql',
+                connectionUrl: `${manager.getSparqlServer().getServerUrl()}/graph/${randomUUID()}`,
+                browserUrl: '',
+                database: '',
+              },
+              testContext,
+            );
+
+            // when
+            const response: Response = await fetch(
+              `${manager.apiUrl}/room/${canvas.roomId}/canvas/${canvas.canvasId}/database-connection/${database}/search-capabilities`,
+              {
+                method: 'GET',
+                signal: testContext.signal,
+                headers: new Headers(variant.headers),
+              },
+            );
+
+            // then
+            assert.equal(response.status, 401);
+            assert.equal(response.headers.get('www-authenticate'), 'Bearer');
+            assert.deepEqual(await response.json(), {
+              statusCode: 401,
+              message: 'Unauthorized',
+            });
+          }
         });
       });
       describe('403', (): void => {
@@ -2212,310 +2150,137 @@ describe('/room/:roomId/canvas/:canvasId/database-connection/:databaseId', (suit
         });
       });
       describe('400', (): void => {
-        test('rejects missing search term', async (testContext: TestContext): Promise<void> => {
-          // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const canvas: E2ETestCanvas = await manager.createCanvas(
-            owner,
-            testContext,
-            RoomVisibilityDto.private,
-          );
-          const login: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
-            testContext,
-          );
-          const database: string = await manager.createPublishedDocument(
-            'api::database-connection.database-connection',
+        test('rejects invalid search request bodies', async (testContext: TestContext): Promise<void> => {
+          const variants: {
+            payload: Record<string, unknown>;
+            expectedMessages: string[];
+          }[] = [
             {
-              title: 'Test Database',
-              project: canvas.projectId,
-              databaseType: 'sparql',
-              connectionUrl: `${manager.getSparqlServer().getServerUrl()}/graph/${randomUUID()}`,
-              browserUrl: '',
-              database: '',
+              payload: {},
+              expectedMessages: ['searchTerm must be a string'],
             },
-            testContext,
-          );
-          await manager.startCanvas(canvas, login.jwt, testContext);
-
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/room/${canvas.roomId}/canvas/${canvas.canvasId}/database-connection/${database}/search`,
             {
-              method: 'POST',
-              headers: new Headers([
-                ['Content-Type', 'application/json'],
-                ['Authorization', `Bearer ${login.jwt}`],
-              ]),
-              body: JSON.stringify(
-                // eslint-disable-next-line @typescript-eslint/no-generated-empty-object-type -- The missing required field is intentional.
-                {} satisfies Omit<PostSearchRequestBodyDto, 'searchTerm'>,
-              ),
-              signal: testContext.signal,
+              payload: { searchTerm: null },
+              expectedMessages: ['searchTerm must be a string'],
             },
-          );
-
-          // then
-          assert.equal(response.status, 400);
-          assert.deepEqual(await response.json(), {
-            statusCode: 400,
-            error: 'Bad Request',
-            message: ['searchTerm must be a string'],
-          });
-        });
-        test('rejects null search term', async (testContext: TestContext): Promise<void> => {
-          // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const canvas: E2ETestCanvas = await manager.createCanvas(
-            owner,
-            testContext,
-            RoomVisibilityDto.private,
-          );
-          const login: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
-            testContext,
-          );
-          const database: string = await manager.createPublishedDocument(
-            'api::database-connection.database-connection',
             {
-              title: 'Test Database',
-              project: canvas.projectId,
-              databaseType: 'sparql',
-              connectionUrl: `${manager.getSparqlServer().getServerUrl()}/graph/${randomUUID()}`,
-              browserUrl: '',
-              database: '',
+              payload: { searchTerm: 42 },
+              expectedMessages: ['searchTerm must be a string'],
             },
-            testContext,
-          );
-          await manager.startCanvas(canvas, login.jwt, testContext);
-
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/room/${canvas.roomId}/canvas/${canvas.canvasId}/database-connection/${database}/search`,
             {
-              method: 'POST',
-              headers: new Headers([
-                ['Content-Type', 'application/json'],
-                ['Authorization', `Bearer ${login.jwt}`],
-              ]),
-              body: JSON.stringify({ searchTerm: null } satisfies Omit<
-                PostSearchRequestBodyDto,
-                'searchTerm'
-              > & { searchTerm: null }),
-              signal: testContext.signal,
+              payload: { searchTerm: 'term', extra: true },
+              expectedMessages: ['property extra should not exist'],
             },
-          );
+          ];
+          for (const variant of variants) {
+            // given
+            const owner: E2ETestApplicationUser =
+              await manager.registerUser(testContext);
+            const canvas: E2ETestCanvas = await manager.createCanvas(
+              owner,
+              testContext,
+              RoomVisibilityDto.private,
+            );
+            const login: PostAuthResponseBodyDto = await manager.loginUser(
+              owner.username,
+              owner.password,
+              testContext,
+            );
+            const database: string = await manager.createPublishedDocument(
+              'api::database-connection.database-connection',
+              {
+                title: 'Test Database',
+                project: canvas.projectId,
+                databaseType: 'sparql',
+                connectionUrl: `${manager.getSparqlServer().getServerUrl()}/graph/${randomUUID()}`,
+                browserUrl: '',
+                database: '',
+              },
+              testContext,
+            );
+            await manager.startCanvas(canvas, login.jwt, testContext);
 
-          // then
-          assert.equal(response.status, 400);
-          assert.deepEqual(await response.json(), {
-            statusCode: 400,
-            error: 'Bad Request',
-            message: ['searchTerm must be a string'],
-          });
-        });
-        test('rejects non-string search term', async (testContext: TestContext): Promise<void> => {
-          // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const canvas: E2ETestCanvas = await manager.createCanvas(
-            owner,
-            testContext,
-            RoomVisibilityDto.private,
-          );
-          const login: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
-            testContext,
-          );
-          const database: string = await manager.createPublishedDocument(
-            'api::database-connection.database-connection',
-            {
-              title: 'Test Database',
-              project: canvas.projectId,
-              databaseType: 'sparql',
-              connectionUrl: `${manager.getSparqlServer().getServerUrl()}/graph/${randomUUID()}`,
-              browserUrl: '',
-              database: '',
-            },
-            testContext,
-          );
-          await manager.startCanvas(canvas, login.jwt, testContext);
+            // when
+            const response: Response = await fetch(
+              `${manager.apiUrl}/room/${canvas.roomId}/canvas/${canvas.canvasId}/database-connection/${database}/search`,
+              {
+                method: 'POST',
+                headers: new Headers([
+                  ['Content-Type', 'application/json'],
+                  ['Authorization', `Bearer ${login.jwt}`],
+                ]),
+                body: JSON.stringify(variant.payload),
+                signal: testContext.signal,
+              },
+            );
 
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/room/${canvas.roomId}/canvas/${canvas.canvasId}/database-connection/${database}/search`,
-            {
-              method: 'POST',
-              headers: new Headers([
-                ['Content-Type', 'application/json'],
-                ['Authorization', `Bearer ${login.jwt}`],
-              ]),
-              body: JSON.stringify({ searchTerm: 42 } satisfies Omit<
-                PostSearchRequestBodyDto,
-                'searchTerm'
-              > & { searchTerm: number }),
-              signal: testContext.signal,
-            },
-          );
-
-          // then
-          assert.equal(response.status, 400);
-          assert.deepEqual(await response.json(), {
-            statusCode: 400,
-            error: 'Bad Request',
-            message: ['searchTerm must be a string'],
-          });
-        });
-        test('rejects unexpected body properties', async (testContext: TestContext): Promise<void> => {
-          // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const canvas: E2ETestCanvas = await manager.createCanvas(
-            owner,
-            testContext,
-            RoomVisibilityDto.private,
-          );
-          const login: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
-            testContext,
-          );
-          const database: string = await manager.createPublishedDocument(
-            'api::database-connection.database-connection',
-            {
-              title: 'Test Database',
-              project: canvas.projectId,
-              databaseType: 'sparql',
-              connectionUrl: `${manager.getSparqlServer().getServerUrl()}/graph/${randomUUID()}`,
-              browserUrl: '',
-              database: '',
-            },
-            testContext,
-          );
-          await manager.startCanvas(canvas, login.jwt, testContext);
-
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/room/${canvas.roomId}/canvas/${canvas.canvasId}/database-connection/${database}/search`,
-            {
-              method: 'POST',
-              headers: new Headers([
-                ['Content-Type', 'application/json'],
-                ['Authorization', `Bearer ${login.jwt}`],
-              ]),
-              body: JSON.stringify({
-                searchTerm: 'term',
-                extra: true,
-              } satisfies PostSearchRequestBodyDto & { extra: boolean }),
-              signal: testContext.signal,
-            },
-          );
-
-          // then
-          assert.equal(response.status, 400);
-          assert.deepEqual(await response.json(), {
-            statusCode: 400,
-            error: 'Bad Request',
-            message: ['property extra should not exist'],
-          });
+            // then
+            assert.equal(response.status, 400);
+            assert.deepEqual(await response.json(), {
+              statusCode: 400,
+              error: 'Bad Request',
+              message: variant.expectedMessages,
+            });
+          }
         });
       });
       describe('401', (): void => {
-        test('rejects anonymous access to a private room', async (testContext: TestContext): Promise<void> => {
-          // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const canvas: E2ETestCanvas = await manager.createCanvas(
-            owner,
-            testContext,
-            RoomVisibilityDto.private,
-          );
-
-          const database: string = await manager.createPublishedDocument(
-            'api::database-connection.database-connection',
+        test('requires valid authentication for a private room', async (testContext: TestContext): Promise<void> => {
+          const variants: { headers: [string, string][] }[] = [
             {
-              title: 'Test Database',
-              project: canvas.projectId,
-              databaseType: 'sparql',
-              connectionUrl: `${manager.getSparqlServer().getServerUrl()}/graph/${randomUUID()}`,
-              browserUrl: '',
-              database: '',
+              headers: [['Content-Type', 'application/json']],
             },
-            testContext,
-          );
-
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/room/${canvas.roomId}/canvas/${canvas.canvasId}/database-connection/${database}/search`,
             {
-              method: 'POST',
-              headers: new Headers([['Content-Type', 'application/json']]),
-              body: JSON.stringify({
-                searchTerm: 'https://example.test/alice',
-              } satisfies PostSearchRequestBodyDto),
-              signal: testContext.signal,
-            },
-          );
-
-          // then
-          assert.equal(response.status, 401);
-          assert.equal(response.headers.get('www-authenticate'), 'Bearer');
-          assert.deepEqual(await response.json(), {
-            statusCode: 401,
-            message: 'Unauthorized',
-          });
-        });
-        test('rejects an invalid jwt for a private room', async (testContext: TestContext): Promise<void> => {
-          // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const canvas: E2ETestCanvas = await manager.createCanvas(
-            owner,
-            testContext,
-            RoomVisibilityDto.private,
-          );
-
-          const database: string = await manager.createPublishedDocument(
-            'api::database-connection.database-connection',
-            {
-              title: 'Test Database',
-              project: canvas.projectId,
-              databaseType: 'sparql',
-              connectionUrl: `${manager.getSparqlServer().getServerUrl()}/graph/${randomUUID()}`,
-              browserUrl: '',
-              database: '',
-            },
-            testContext,
-          );
-
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/room/${canvas.roomId}/canvas/${canvas.canvasId}/database-connection/${database}/search`,
-            {
-              method: 'POST',
-              headers: new Headers([
+              headers: [
                 ['Content-Type', 'application/json'],
                 ['Authorization', `Bearer invalid-jwt`],
-              ]),
-              body: JSON.stringify({
-                searchTerm: 'https://example.test/alice',
-              } satisfies PostSearchRequestBodyDto),
-              signal: testContext.signal,
+              ],
             },
-          );
+          ];
+          for (const variant of variants) {
+            // given
+            const owner: E2ETestApplicationUser =
+              await manager.registerUser(testContext);
+            const canvas: E2ETestCanvas = await manager.createCanvas(
+              owner,
+              testContext,
+              RoomVisibilityDto.private,
+            );
 
-          // then
-          assert.equal(response.status, 401);
-          assert.equal(response.headers.get('www-authenticate'), 'Bearer');
-          assert.deepEqual(await response.json(), {
-            statusCode: 401,
-            message: 'Unauthorized',
-          });
+            const database: string = await manager.createPublishedDocument(
+              'api::database-connection.database-connection',
+              {
+                title: 'Test Database',
+                project: canvas.projectId,
+                databaseType: 'sparql',
+                connectionUrl: `${manager.getSparqlServer().getServerUrl()}/graph/${randomUUID()}`,
+                browserUrl: '',
+                database: '',
+              },
+              testContext,
+            );
+
+            // when
+            const response: Response = await fetch(
+              `${manager.apiUrl}/room/${canvas.roomId}/canvas/${canvas.canvasId}/database-connection/${database}/search`,
+              {
+                method: 'POST',
+                body: JSON.stringify({
+                  searchTerm: 'https://example.test/alice',
+                } satisfies PostSearchRequestBodyDto),
+                signal: testContext.signal,
+                headers: new Headers(variant.headers),
+              },
+            );
+
+            // then
+            assert.equal(response.status, 401);
+            assert.equal(response.headers.get('www-authenticate'), 'Bearer');
+            assert.deepEqual(await response.json(), {
+              statusCode: 401,
+              message: 'Unauthorized',
+            });
+          }
         });
       });
       describe('403', (): void => {
@@ -3404,239 +3169,129 @@ describe('/room/:roomId/canvas/:canvasId/database-connection/:databaseId', (suit
         });
       });
       describe('400', (): void => {
-        test('rejects missing node identifier', async (testContext: TestContext): Promise<void> => {
-          // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const canvas: E2ETestCanvas = await manager.createCanvas(
-            owner,
-            testContext,
-            RoomVisibilityDto.private,
-          );
-          const login: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
-            testContext,
-          );
-          const database: string = await manager.createPublishedDocument(
-            'api::database-connection.database-connection',
+        test('rejects invalid node identifier query parameters', async (testContext: TestContext): Promise<void> => {
+          const variants: {
+            expectedMessages: string[];
+            query: string;
+          }[] = [
             {
-              title: 'Test Database',
-              project: canvas.projectId,
-              databaseType: 'sparql',
-              connectionUrl: `${manager.getSparqlServer().getServerUrl()}/graph/${randomUUID()}`,
-              browserUrl: '',
-              database: '',
+              expectedMessages: ['nodeId must be a string'],
+              query: '',
             },
-            testContext,
-          );
-          await manager.startCanvas(canvas, login.jwt, testContext);
-
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/room/${canvas.roomId}/canvas/${canvas.canvasId}/database-connection/${database}/expand-node-preview`,
             {
-              method: 'GET',
-              headers: new Headers([
-                ['Content-Type', 'application/json'],
-                ['Authorization', `Bearer ${login.jwt}`],
-              ]),
-              signal: testContext.signal,
+              expectedMessages: ['nodeId must be a string'],
+              query: `?nodeId=a&nodeId=b`,
             },
-          );
-
-          // then
-          assert.equal(response.status, 400);
-          assert.deepEqual(await response.json(), {
-            statusCode: 400,
-            error: 'Bad Request',
-            message: ['nodeId must be a string'],
-          });
-        });
-        test('rejects repeated node identifiers', async (testContext: TestContext): Promise<void> => {
-          // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const canvas: E2ETestCanvas = await manager.createCanvas(
-            owner,
-            testContext,
-            RoomVisibilityDto.private,
-          );
-          const login: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
-            testContext,
-          );
-          const database: string = await manager.createPublishedDocument(
-            'api::database-connection.database-connection',
             {
-              title: 'Test Database',
-              project: canvas.projectId,
-              databaseType: 'sparql',
-              connectionUrl: `${manager.getSparqlServer().getServerUrl()}/graph/${randomUUID()}`,
-              browserUrl: '',
-              database: '',
+              expectedMessages: ['property extra should not exist'],
+              query: `?nodeId=a&extra=true`,
             },
-            testContext,
-          );
-          await manager.startCanvas(canvas, login.jwt, testContext);
+          ];
+          for (const variant of variants) {
+            // given
+            const owner: E2ETestApplicationUser =
+              await manager.registerUser(testContext);
+            const canvas: E2ETestCanvas = await manager.createCanvas(
+              owner,
+              testContext,
+              RoomVisibilityDto.private,
+            );
+            const login: PostAuthResponseBodyDto = await manager.loginUser(
+              owner.username,
+              owner.password,
+              testContext,
+            );
+            const database: string = await manager.createPublishedDocument(
+              'api::database-connection.database-connection',
+              {
+                title: 'Test Database',
+                project: canvas.projectId,
+                databaseType: 'sparql',
+                connectionUrl: `${manager.getSparqlServer().getServerUrl()}/graph/${randomUUID()}`,
+                browserUrl: '',
+                database: '',
+              },
+              testContext,
+            );
+            await manager.startCanvas(canvas, login.jwt, testContext);
 
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/room/${canvas.roomId}/canvas/${canvas.canvasId}/database-connection/${database}/expand-node-preview?nodeId=a&nodeId=b`,
-            {
-              method: 'GET',
-              headers: new Headers([
-                ['Content-Type', 'application/json'],
-                ['Authorization', `Bearer ${login.jwt}`],
-              ]),
-              signal: testContext.signal,
-            },
-          );
+            // when
+            const response: Response = await fetch(
+              `${manager.apiUrl}/room/${canvas.roomId}/canvas/${canvas.canvasId}/database-connection/${database}/expand-node-preview${variant.query}`,
+              {
+                method: 'GET',
+                headers: new Headers([
+                  ['Content-Type', 'application/json'],
+                  ['Authorization', `Bearer ${login.jwt}`],
+                ]),
+                signal: testContext.signal,
+              },
+            );
 
-          // then
-          assert.equal(response.status, 400);
-          assert.deepEqual(await response.json(), {
-            statusCode: 400,
-            error: 'Bad Request',
-            message: ['nodeId must be a string'],
-          });
-        });
-        test('rejects unexpected query parameters', async (testContext: TestContext): Promise<void> => {
-          // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const canvas: E2ETestCanvas = await manager.createCanvas(
-            owner,
-            testContext,
-            RoomVisibilityDto.private,
-          );
-          const login: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
-            testContext,
-          );
-          const database: string = await manager.createPublishedDocument(
-            'api::database-connection.database-connection',
-            {
-              title: 'Test Database',
-              project: canvas.projectId,
-              databaseType: 'sparql',
-              connectionUrl: `${manager.getSparqlServer().getServerUrl()}/graph/${randomUUID()}`,
-              browserUrl: '',
-              database: '',
-            },
-            testContext,
-          );
-          await manager.startCanvas(canvas, login.jwt, testContext);
-
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/room/${canvas.roomId}/canvas/${canvas.canvasId}/database-connection/${database}/expand-node-preview?nodeId=a&extra=true`,
-            {
-              method: 'GET',
-              headers: new Headers([
-                ['Content-Type', 'application/json'],
-                ['Authorization', `Bearer ${login.jwt}`],
-              ]),
-              signal: testContext.signal,
-            },
-          );
-
-          // then
-          assert.equal(response.status, 400);
-          assert.deepEqual(await response.json(), {
-            statusCode: 400,
-            error: 'Bad Request',
-            message: ['property extra should not exist'],
-          });
+            // then
+            assert.equal(response.status, 400);
+            assert.deepEqual(await response.json(), {
+              statusCode: 400,
+              error: 'Bad Request',
+              message: variant.expectedMessages,
+            });
+          }
         });
       });
       describe('401', (): void => {
-        test('rejects anonymous access to a private room', async (testContext: TestContext): Promise<void> => {
-          // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const canvas: E2ETestCanvas = await manager.createCanvas(
-            owner,
-            testContext,
-            RoomVisibilityDto.private,
-          );
-
-          const database: string = await manager.createPublishedDocument(
-            'api::database-connection.database-connection',
+        test('requires valid authentication for a private room', async (testContext: TestContext): Promise<void> => {
+          const variants: { headers: [string, string][] }[] = [
             {
-              title: 'Test Database',
-              project: canvas.projectId,
-              databaseType: 'sparql',
-              connectionUrl: `${manager.getSparqlServer().getServerUrl()}/graph/${randomUUID()}`,
-              browserUrl: '',
-              database: '',
+              headers: [['Content-Type', 'application/json']],
             },
-            testContext,
-          );
-
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/room/${canvas.roomId}/canvas/${canvas.canvasId}/database-connection/${database}/expand-node-preview?nodeId=unknown`,
             {
-              method: 'GET',
-              headers: new Headers([['Content-Type', 'application/json']]),
-              signal: testContext.signal,
-            },
-          );
-
-          // then
-          assert.equal(response.status, 401);
-          assert.equal(response.headers.get('www-authenticate'), 'Bearer');
-          assert.deepEqual(await response.json(), {
-            statusCode: 401,
-            message: 'Unauthorized',
-          });
-        });
-        test('rejects an invalid jwt for a private room', async (testContext: TestContext): Promise<void> => {
-          // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const canvas: E2ETestCanvas = await manager.createCanvas(
-            owner,
-            testContext,
-            RoomVisibilityDto.private,
-          );
-
-          const database: string = await manager.createPublishedDocument(
-            'api::database-connection.database-connection',
-            {
-              title: 'Test Database',
-              project: canvas.projectId,
-              databaseType: 'sparql',
-              connectionUrl: `${manager.getSparqlServer().getServerUrl()}/graph/${randomUUID()}`,
-              browserUrl: '',
-              database: '',
-            },
-            testContext,
-          );
-
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/room/${canvas.roomId}/canvas/${canvas.canvasId}/database-connection/${database}/expand-node-preview?nodeId=unknown`,
-            {
-              method: 'GET',
-              headers: new Headers([
+              headers: [
                 ['Content-Type', 'application/json'],
                 ['Authorization', `Bearer invalid-jwt`],
-              ]),
-              signal: testContext.signal,
+              ],
             },
-          );
+          ];
+          for (const variant of variants) {
+            // given
+            const owner: E2ETestApplicationUser =
+              await manager.registerUser(testContext);
+            const canvas: E2ETestCanvas = await manager.createCanvas(
+              owner,
+              testContext,
+              RoomVisibilityDto.private,
+            );
 
-          // then
-          assert.equal(response.status, 401);
-          assert.equal(response.headers.get('www-authenticate'), 'Bearer');
-          assert.deepEqual(await response.json(), {
-            statusCode: 401,
-            message: 'Unauthorized',
-          });
+            const database: string = await manager.createPublishedDocument(
+              'api::database-connection.database-connection',
+              {
+                title: 'Test Database',
+                project: canvas.projectId,
+                databaseType: 'sparql',
+                connectionUrl: `${manager.getSparqlServer().getServerUrl()}/graph/${randomUUID()}`,
+                browserUrl: '',
+                database: '',
+              },
+              testContext,
+            );
+
+            // when
+            const response: Response = await fetch(
+              `${manager.apiUrl}/room/${canvas.roomId}/canvas/${canvas.canvasId}/database-connection/${database}/expand-node-preview?nodeId=unknown`,
+              {
+                method: 'GET',
+                signal: testContext.signal,
+                headers: new Headers(variant.headers),
+              },
+            );
+
+            // then
+            assert.equal(response.status, 401);
+            assert.equal(response.headers.get('www-authenticate'), 'Bearer');
+            assert.deepEqual(await response.json(), {
+              statusCode: 401,
+              message: 'Unauthorized',
+            });
+          }
         });
       });
       describe('403', (): void => {
