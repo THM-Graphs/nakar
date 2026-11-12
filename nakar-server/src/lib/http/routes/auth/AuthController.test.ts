@@ -4,12 +4,75 @@ import type { E2ETestApplicationUser } from '../../../../e2e/E2ETestApplicationU
 import assert from 'node:assert/strict';
 import { createHmac, randomUUID } from 'node:crypto';
 import type { SuiteContext, TestContext } from 'node:test';
-import { after, before, describe } from 'node:test';
-import { test } from 'node:test';
+import { after, before, describe, test } from 'node:test';
 import type { PostAuthResponseBodyDto } from './dto/PostAuthResponseBodyDto';
 import { E2ETestManager } from '../../../../e2e/E2ETestManager';
 import z from 'zod';
 import type { JwtPayload } from 'jsonwebtoken';
+
+/* eslint-disable @typescript-eslint/naming-convention -- Strapi settings use snake_case. */
+interface AdvancedSettings {
+  [key: string]: unknown;
+  unique_email: boolean;
+  allow_register: boolean;
+  email_confirmation: boolean;
+  email_reset_password: string | null;
+  email_confirmation_redirection: string | null;
+  default_role: string;
+}
+
+const advancedSettingsResponseSchema: z.ZodType<{
+  settings: AdvancedSettings;
+}> = z.object({
+  settings: z.looseObject({
+    unique_email: z.boolean(),
+    allow_register: z.boolean(),
+    email_confirmation: z.boolean(),
+    email_reset_password: z.string().nullable(),
+    email_confirmation_redirection: z.string().nullable(),
+    default_role: z.string(),
+  }),
+});
+/* eslint-enable @typescript-eslint/naming-convention */
+
+interface RoleAction {
+  enabled: boolean;
+  policy: string;
+}
+
+type RolePermissions = Partial<
+  Record<
+    string,
+    {
+      controllers: Partial<Record<string, Partial<Record<string, RoleAction>>>>;
+    }
+  >
+>;
+
+interface Role {
+  name: string;
+  description: string;
+  permissions: RolePermissions;
+}
+
+const roleSchema: z.ZodType<{ role: Role }> = z.object({
+  role: z.looseObject({
+    name: z.string(),
+    description: z.string(),
+    permissions: z.record(
+      z.string(),
+      z.looseObject({
+        controllers: z.record(
+          z.string(),
+          z.record(
+            z.string(),
+            z.looseObject({ enabled: z.boolean(), policy: z.string() }),
+          ),
+        ),
+      }),
+    ),
+  }),
+});
 
 describe('/auth', (suiteContext: SuiteContext): void => {
   const manager: E2ETestManager = new E2ETestManager();
@@ -138,47 +201,109 @@ describe('/auth', (suiteContext: SuiteContext): void => {
           message: 'Unauthorized',
         });
       });
+
+      test('empty username', async (testContext: TestContext): Promise<void> => {
+        // when
+        const response: Response = await fetch(`${manager.apiUrl}/auth`, {
+          method: 'POST',
+          headers: new Headers([['Content-Type', 'application/json']]),
+          body: JSON.stringify({
+            username: '',
+            password: randomUUID(),
+          } satisfies PostAuthRequestBodyDto),
+          signal: testContext.signal,
+        });
+
+        // then
+        assert.equal(response.status, 401);
+        assert.deepEqual(await response.json(), {
+          statusCode: 401,
+          message: 'Unauthorized',
+        });
+      });
+
+      test('empty password', async (testContext: TestContext): Promise<void> => {
+        // when
+        const response: Response = await fetch(`${manager.apiUrl}/auth`, {
+          method: 'POST',
+          headers: new Headers([['Content-Type', 'application/json']]),
+          body: JSON.stringify({
+            username: `e2e-${randomUUID()}`,
+            password: '',
+          } satisfies PostAuthRequestBodyDto),
+          signal: testContext.signal,
+        });
+
+        // then
+        assert.equal(response.status, 401);
+        assert.deepEqual(await response.json(), {
+          statusCode: 401,
+          message: 'Unauthorized',
+        });
+      });
     });
 
     describe('400', (): void => {
-      test('rejects malformed login request bodies', async (testContext: TestContext): Promise<void> => {
+      test('rejects invalid login bodies', async (testContext: TestContext): Promise<void> => {
         const variants: {
-          payload: Record<string, unknown>;
-          expectedMessages: string[];
+          payload:
+            | Omit<PostAuthRequestBodyDto, 'username'>
+            | Omit<PostAuthRequestBodyDto, 'password'>
+            | (Omit<PostAuthRequestBodyDto, 'username'> & { username: number })
+            | (Omit<PostAuthRequestBodyDto, 'password'> & { password: number })
+            | (PostAuthRequestBodyDto & { unexpected: boolean });
+          expectedBody: {
+            statusCode: 400;
+            error: 'Bad Request';
+            message: string[];
+          };
         }[] = [
           {
-            payload: { username: undefined, password: randomUUID() },
-            expectedMessages: ['username should not be empty'],
+            payload: { password: randomUUID() },
+            expectedBody: {
+              statusCode: 400,
+              error: 'Bad Request',
+              message: ['username must be a string'],
+            },
           },
           {
-            payload: { password: undefined, username: `e2e-${randomUUID()}` },
-            expectedMessages: ['password should not be empty'],
+            payload: { username: `e2e-${randomUUID()}` },
+            expectedBody: {
+              statusCode: 400,
+              error: 'Bad Request',
+              message: ['password must be a string'],
+            },
           },
           {
             payload: { username: 123, password: randomUUID() },
-            expectedMessages: ['username must be a string'],
+            expectedBody: {
+              statusCode: 400,
+              error: 'Bad Request',
+              message: ['username must be a string'],
+            },
           },
           {
-            payload: { password: 123, username: `e2e-${randomUUID()}` },
-            expectedMessages: ['password must be a string'],
+            payload: { username: `e2e-${randomUUID()}`, password: 123 },
+            expectedBody: {
+              statusCode: 400,
+              error: 'Bad Request',
+              message: ['password must be a string'],
+            },
           },
           {
             payload: {
-              unexpected: true,
-              password: randomUUID(),
               username: `e2e-${randomUUID()}`,
+              password: randomUUID(),
+              unexpected: true,
             },
-            expectedMessages: ['property unexpected should not exist'],
-          },
-          {
-            payload: { username: '', password: randomUUID() },
-            expectedMessages: ['username should not be empty'],
-          },
-          {
-            payload: { password: '', username: `e2e-${randomUUID()}` },
-            expectedMessages: ['password should not be empty'],
+            expectedBody: {
+              statusCode: 400,
+              error: 'Bad Request',
+              message: ['property unexpected should not exist'],
+            },
           },
         ];
+
         for (const variant of variants) {
           // when
           const response: Response = await fetch(`${manager.apiUrl}/auth`, {
@@ -190,11 +315,7 @@ describe('/auth', (suiteContext: SuiteContext): void => {
 
           // then
           assert.equal(response.status, 400);
-          assert.deepEqual(await response.json(), {
-            statusCode: 400,
-            error: 'Bad Request',
-            message: variant.expectedMessages,
-          });
+          assert.deepEqual(await response.json(), variant.expectedBody);
         }
       });
     });
@@ -263,58 +384,191 @@ describe('/auth', (suiteContext: SuiteContext): void => {
       });
 
       describe('400', (): void => {
-        test('rejects an invalid email address', async (testContext: TestContext): Promise<void> => {
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/auth/register`,
+        test('rejects invalid registration bodies', async (testContext: TestContext): Promise<void> => {
+          const variants: {
+            requestBody: unknown;
+            expectedResponseBody: unknown;
+          }[] = [
             {
-              method: 'POST',
-              headers: new Headers([['Content-Type', 'application/json']]),
-              body: JSON.stringify({
+              requestBody: {
                 username: `e2e-${randomUUID()}`,
                 email: 'invalid',
                 password: randomUUID(),
-              } satisfies PostRegisterRequestBodyDto),
-              signal: testContext.signal,
+              },
+              expectedResponseBody: {
+                statusCode: 400,
+                message: 'Registration details are invalid.',
+              },
             },
-          );
-
-          // then
-          assert.equal(response.status, 400);
-          z.object({ message: z.array(z.string()) }).parse(
-            await response.json(),
-          );
-        });
-
-        test('rejects a client-supplied role', async (testContext: TestContext): Promise<void> => {
-          // given
-          const username: string = `e2e-${randomUUID()}`;
-
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/auth/register`,
             {
-              method: 'POST',
-              headers: new Headers([['Content-Type', 'application/json']]),
-              body: JSON.stringify({
-                username,
-                email: `${username}@example.test`,
+              requestBody: {
+                username: '',
+                email: `${randomUUID()}@example.test`,
+                password: randomUUID(),
+              },
+              expectedResponseBody: {
+                statusCode: 400,
+                message: 'Registration details are invalid.',
+              },
+            },
+            {
+              requestBody: {
+                username: `e2e-${randomUUID()}`,
+                email: '',
+                password: randomUUID(),
+              },
+              expectedResponseBody: {
+                statusCode: 400,
+                message: 'Registration details are invalid.',
+              },
+            },
+            {
+              requestBody: {
+                username: `e2e-${randomUUID()}`,
+                email: `${randomUUID()}@example.test`,
+                password: '',
+              },
+              expectedResponseBody: {
+                statusCode: 400,
+                message: 'Registration details are invalid.',
+              },
+            },
+            {
+              requestBody: {
+                username: 'ab',
+                email: `${randomUUID()}@example.test`,
+                password: randomUUID(),
+              },
+              expectedResponseBody: {
+                statusCode: 400,
+                message: 'Registration details are invalid.',
+              },
+            },
+            {
+              requestBody: {
+                username: `e2e-${randomUUID()}`,
+                email: `${randomUUID()}@example.test`,
+                password: 'abcde',
+              },
+              expectedResponseBody: {
+                statusCode: 400,
+                message: 'Registration details are invalid.',
+              },
+            },
+            {
+              requestBody: {
+                username: `e2e-${randomUUID()}`,
+                email: `${randomUUID()}@example.test`,
+                password: 'a'.repeat(73),
+              },
+              expectedResponseBody: {
+                statusCode: 400,
+                message: 'Registration details are invalid.',
+              },
+            },
+            {
+              requestBody: {
+                email: `${randomUUID()}@example.test`,
+                password: randomUUID(),
+              },
+              expectedResponseBody: {
+                statusCode: 400,
+                error: 'Bad Request',
+                message: ['username must be a string'],
+              },
+            },
+            {
+              requestBody: {
+                username: `e2e-${randomUUID()}`,
+                password: randomUUID(),
+              },
+              expectedResponseBody: {
+                statusCode: 400,
+                error: 'Bad Request',
+                message: ['email must be a string'],
+              },
+            },
+            {
+              requestBody: {
+                username: `e2e-${randomUUID()}`,
+                email: `${randomUUID()}@example.test`,
+              },
+              expectedResponseBody: {
+                statusCode: 400,
+                error: 'Bad Request',
+                message: ['password must be a string'],
+              },
+            },
+            {
+              requestBody: {
+                username: 123,
+                email: `${randomUUID()}@example.test`,
+                password: randomUUID(),
+              },
+              expectedResponseBody: {
+                statusCode: 400,
+                error: 'Bad Request',
+                message: ['username must be a string'],
+              },
+            },
+            {
+              requestBody: {
+                username: `e2e-${randomUUID()}`,
+                email: 123,
+                password: randomUUID(),
+              },
+              expectedResponseBody: {
+                statusCode: 400,
+                error: 'Bad Request',
+                message: ['email must be a string'],
+              },
+            },
+            {
+              requestBody: {
+                username: `e2e-${randomUUID()}`,
+                email: `${randomUUID()}@example.test`,
+                password: 123,
+              },
+              expectedResponseBody: {
+                statusCode: 400,
+                error: 'Bad Request',
+                message: ['password must be a string'],
+              },
+            },
+            {
+              requestBody: {
+                username: `e2e-${randomUUID()}`,
+                email: `${randomUUID()}@example.test`,
                 password: randomUUID(),
                 role: manager.context.authenticatedRoleId,
-              } satisfies PostRegisterRequestBodyDto & { role: number }),
-              signal: testContext.signal,
+              },
+              expectedResponseBody: {
+                statusCode: 400,
+                error: 'Bad Request',
+                message: ['property role should not exist'],
+              },
             },
-          );
+          ];
 
-          // then
-          assert.equal(response.status, 400);
-          z.object({
-            message: z
-              .array(z.string())
-              .refine((messages: string[]): boolean =>
-                messages.includes('property role should not exist'),
-              ),
-          }).parse(await response.json());
+          for (const variant of variants) {
+            // when
+            const response: Response = await fetch(
+              `${manager.apiUrl}/auth/register`,
+              {
+                method: 'POST',
+                headers: new Headers([['Content-Type', 'application/json']]),
+                body: JSON.stringify(variant.requestBody),
+                signal: testContext.signal,
+              },
+            );
+
+            // then
+            assert.equal(response.status, 400);
+            assert.deepEqual(
+              await response.json(),
+              variant.expectedResponseBody,
+            );
+          }
         });
       });
 
@@ -394,6 +648,152 @@ describe('/auth', (suiteContext: SuiteContext): void => {
             statusCode: z.literal(409),
             message: z.string().min(1),
           }).parse(json);
+        });
+      });
+
+      describe('503', (): void => {
+        test('rejects registration when the register action is disabled', async (testContext: TestContext): Promise<void> => {
+          // given
+          const headers: Headers = new Headers([
+            ['Authorization', `Bearer ${manager.context.admin.token}`],
+            ['Content-Type', 'application/json'],
+          ]);
+          const settingsUrl: string = `${manager.strapiUrl}/users-permissions/advanced`;
+          const settingsResponse: Response = await fetch(settingsUrl, {
+            headers,
+            signal: testContext.signal,
+          });
+          assert.equal(settingsResponse.status, 200);
+          const settings: AdvancedSettings =
+            advancedSettingsResponseSchema.parse(
+              await settingsResponse.json(),
+            ).settings;
+          const disabledSettings: AdvancedSettings = { ...settings };
+          disabledSettings.allow_register = false;
+          const disableResponse: Response = await fetch(settingsUrl, {
+            method: 'PUT',
+            headers,
+            body: JSON.stringify(disabledSettings),
+            signal: testContext.signal,
+          });
+          assert.equal(disableResponse.status, 200);
+
+          try {
+            // when
+            const response: Response = await fetch(
+              `${manager.apiUrl}/auth/register`,
+              {
+                method: 'POST',
+                headers: new Headers([['Content-Type', 'application/json']]),
+                body: JSON.stringify({
+                  username: `e2e-${randomUUID()}`,
+                  email: `${randomUUID()}@example.test`,
+                  password: randomUUID(),
+                } satisfies PostRegisterRequestBodyDto),
+                signal: testContext.signal,
+              },
+            );
+
+            // then
+            assert.equal(response.status, 503);
+            assert.deepEqual(await response.json(), {
+              statusCode: 503,
+              message: 'Service Unavailable',
+            });
+          } finally {
+            const restoreResponse: Response = await fetch(settingsUrl, {
+              method: 'PUT',
+              headers,
+              body: JSON.stringify(settings),
+              signal: testContext.signal,
+            });
+            assert.equal(restoreResponse.status, 200);
+          }
+        });
+
+        test('rejects registration when the public role lacks the register permission', async (testContext: TestContext): Promise<void> => {
+          // given
+          const headers: Headers = new Headers([
+            ['Authorization', `Bearer ${manager.context.admin.token}`],
+            ['Content-Type', 'application/json'],
+          ]);
+          const rolesUrl: string = `${manager.strapiUrl}/users-permissions/roles`;
+          const rolesResponse: Response = await fetch(rolesUrl, {
+            headers,
+            signal: testContext.signal,
+          });
+          assert.equal(rolesResponse.status, 200);
+          const publicRole: { id: number; type: string } | undefined = z
+            .object({
+              roles: z.array(z.object({ id: z.number(), type: z.string() })),
+            })
+            .parse(await rolesResponse.json())
+            .roles.find(
+              (role: { id: number; type: string }): boolean =>
+                role.type === 'public',
+            );
+          assert.ok(publicRole, 'Missing Public role');
+          const roleUrl: string = `${rolesUrl}/${publicRole.id.toString()}`;
+          const roleResponse: Response = await fetch(roleUrl, {
+            headers,
+            signal: testContext.signal,
+          });
+          assert.equal(roleResponse.status, 200);
+          const role: Role = roleSchema.parse(await roleResponse.json()).role;
+          const registerPermission: RoleAction | undefined =
+            role.permissions['plugin::users-permissions']?.controllers[
+              'auth'
+            ]?.['register'];
+          assert.ok(registerPermission, 'Missing register permission');
+          registerPermission.enabled = false;
+          const disableResponse: Response = await fetch(roleUrl, {
+            method: 'PUT',
+            headers,
+            body: JSON.stringify({
+              name: role.name,
+              description: role.description,
+              permissions: role.permissions,
+            }),
+            signal: testContext.signal,
+          });
+          assert.equal(disableResponse.status, 200);
+
+          try {
+            // when
+            const response: Response = await fetch(
+              `${manager.apiUrl}/auth/register`,
+              {
+                method: 'POST',
+                headers: new Headers([['Content-Type', 'application/json']]),
+                body: JSON.stringify({
+                  username: `e2e-${randomUUID()}`,
+                  email: `${randomUUID()}@example.test`,
+                  password: randomUUID(),
+                } satisfies PostRegisterRequestBodyDto),
+                signal: testContext.signal,
+              },
+            );
+
+            // then
+            assert.equal(response.status, 503);
+            assert.deepEqual(await response.json(), {
+              statusCode: 503,
+              message: 'Service Unavailable',
+            });
+          } finally {
+            registerPermission.enabled = true;
+            const restoreResponse: Response = await fetch(roleUrl, {
+              method: 'PUT',
+              headers,
+              body: JSON.stringify({
+                name: role.name,
+                description: role.description,
+                permissions: role.permissions,
+              }),
+              signal: testContext.signal,
+            });
+            assert.equal(restoreResponse.status, 200);
+          }
         });
       });
     });
