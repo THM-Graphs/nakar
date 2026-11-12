@@ -4,6 +4,7 @@ import {
   Controller,
   Delete,
   Get,
+  HttpCode,
   NotFoundException,
   Param,
   Post,
@@ -26,6 +27,7 @@ import { DatabaseService } from '../../../database/DatabaseService';
 import { databaseBelongsToProject } from '../../../policies/databaseBelongsToProject';
 import { DatabaseConnectionDatabaseType } from './dto/DatabaseConnectionDatabaseType';
 import { ExternalGraphDatabaseType } from '../../../external-database/data/ExternalGraphDatabaseType';
+import { HttpException } from '@nestjs/common/exceptions/http.exception';
 
 @Controller('/project/:projectId/database-connection')
 @ApiParam({
@@ -55,6 +57,7 @@ export class DatabaseConnectionController {
   @Post('test')
   @ApiResponse({ type: TestDatabaseConnectionResponseBodyDto })
   @ApiBody({ type: TestDatabaseConnectionRequestBodyDto })
+  @HttpCode(200)
   public async testDatabaseConnection(
     @Param('projectId') projectId: string,
     @Body() body: TestDatabaseConnectionRequestBodyDto,
@@ -76,10 +79,7 @@ export class DatabaseConnectionController {
           this._database,
         ))
       ) {
-        return new TestDatabaseConnectionResponseBodyDto({
-          success: false,
-          message: `Database not found.`,
-        });
+        throw new NotFoundException();
       }
 
       const dbInfo: ExternalGraphDatabaseStats =
@@ -113,15 +113,24 @@ export class DatabaseConnectionController {
         message: `Success: Nodes: ${dbInfo.nodeCount}, Relationships: ${dbInfo.relCount}.`,
       });
     } catch (error: unknown) {
-      return new TestDatabaseConnectionResponseBodyDto({
-        success: false,
-        message: match(error)
-          .with(
-            P.instanceOf(Error),
-            (e: Error): string => `${e.name}: ${e.message}`,
-          )
-          .otherwise((e: unknown): string => JSON.stringify(e)),
-      });
+      return match(error)
+        .with(
+          P.instanceOf(HttpException),
+          (httpException: HttpException): never => {
+            throw httpException;
+          },
+        )
+        .otherwise((): TestDatabaseConnectionResponseBodyDto => {
+          return new TestDatabaseConnectionResponseBodyDto({
+            success: false,
+            message: match(error)
+              .with(
+                P.instanceOf(Error),
+                (e: Error): string => `${e.name}: ${e.message}`,
+              )
+              .otherwise((e: unknown): string => JSON.stringify(e)),
+          });
+        });
     }
   }
 
