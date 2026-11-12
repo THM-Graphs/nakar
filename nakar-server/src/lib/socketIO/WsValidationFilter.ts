@@ -1,5 +1,6 @@
 import { ArgumentsHost, Catch, ExceptionFilter } from '@nestjs/common';
-import { Socket, WebSocketManager } from './WebSocketManager';
+import type { Socket } from './Socket';
+import { WebSocketManager } from './WebSocketManager';
 
 @Catch()
 export class WsValidationFilter implements ExceptionFilter {

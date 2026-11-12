@@ -35,9 +35,8 @@ import { CanvasEventEventKick } from '../live-canvas/events/CanvasEventEventKick
 import { CanvasEventNotAllNodesLoaded } from '../live-canvas/events/CanvasEventNotAllNodesLoaded';
 import { CanvasEventError } from '../live-canvas/events/CanvasEventError';
 import { CanvasEventViewSettingsChanged } from '../live-canvas/events/CanvasEventViewSettingsChanged';
-import { ServerToClientEvents } from './ServerToClientEvents';
-import { ClientToServerEvents } from './ClientToServerEvents';
-import { Server as UntypedServer, Socket as UntypedSocket } from 'socket.io';
+import type { Server } from './Server';
+import type { Socket } from './Socket';
 import { ActionWsdto } from './dto/ActionWsdto';
 import { GrabNodeWsdto } from './dto/actions/GrabNodeWsdto';
 import { UngrabNodeWsdto } from './dto/actions/UngrabNodeWsdto';
@@ -73,9 +72,6 @@ import { CanvasReadyWsdto } from './dto/events/CanvasReadyWsdto';
 import { RoomCanvasesChangedWsdto } from './dto/events/RoomCanvasesChangedWsdto';
 import { CanvasDto } from '../schema/dtos/CanvasDto';
 import type { CanvasEventRoomCanvasesChanged } from '../live-canvas/events/CanvasEventRoomCanvasesChanged';
-
-export type Server = UntypedServer<ClientToServerEvents, ServerToClientEvents>;
-export type Socket = UntypedSocket<ClientToServerEvents, ServerToClientEvents>;
 
 @WebSocketGateway({
   cors: {
