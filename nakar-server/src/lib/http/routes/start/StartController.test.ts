@@ -1,9 +1,13 @@
+import type { FixtureContext } from '../../../../e2e/FixtureContext';
 import type { E2ETestApplicationUser } from '../../../../e2e/E2ETestApplicationUser';
 import type { PostAuthResponseBodyDto } from '../auth/dto/PostAuthResponseBodyDto';
 import type { StartPageDto } from './dto/StartPageDto';
 import type { StartPageProjectDto } from './dto/StartPageProjectDto';
 import type { StartPageRoomDto } from './dto/StartPageRoomDto';
 import type { UserPreviewDto } from '../../../schema/dtos/UserPreviewDto';
+import type { DatabaseConnectionDto } from '../../../schema/dtos/DatabaseConnectionDto';
+import { NodeConfigurationTypeDto } from '../../../schema/dtos/NodeConfigurationTypeDto';
+import { DatabaseConnectionDatabaseType } from '../database-connection/dto/DatabaseConnectionDatabaseType';
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
 import type { SuiteContext, TestContext } from 'node:test';
@@ -16,12 +20,33 @@ const userSchema: z.ZodType<UserPreviewDto> = z.strictObject({
   id: z.string().min(1),
   displayName: z.string().nullable(),
 });
+// eslint-disable-next-line @typescript-eslint/no-unsafe-enum-assignment -- Zod validates the nested enum values at runtime.
+const databaseSchema: z.ZodType<DatabaseConnectionDto> = z.strictObject({
+  id: z.string().min(1),
+  title: z.string(),
+  connectionUrl: z.string(),
+  browserUrl: z.string(),
+  database: z.string(),
+  databaseType: z.enum(DatabaseConnectionDatabaseType),
+  language: z.string().nullable(),
+  nodeConfigurations: z.array(
+    z.strictObject({
+      id: z.string().min(1),
+      type: z.enum(NodeConfigurationTypeDto),
+      label: z.string(),
+      property: z.string(),
+      linkTemplate: z.string(),
+      urlEncode: z.boolean(),
+      valueRegex: z.string(),
+    }),
+  ),
+});
 const projectSchema: z.ZodType<StartPageProjectDto> = z.strictObject({
   id: z.string().min(1),
   title: z.string(),
   owner: userSchema.nullable(),
   collaborators: z.array(userSchema),
-  databases: z.array(z.never()),
+  databases: z.array(databaseSchema),
   activeUsers: z.array(userSchema),
 });
 const roomSchema: z.ZodType<StartPageRoomDto> = z.strictObject({
@@ -556,23 +581,10 @@ describe('/', (suiteContext: SuiteContext): void => {
 
       test('owner sees owned project', async (testContext: TestContext): Promise<void> => {
         // given
-        const primaryUser: E2ETestApplicationUser =
-          await manager.registerUser(testContext);
-
-        const secondaryUser: E2ETestApplicationUser =
-          await manager.registerUser(testContext);
-        const project: string = await manager.createPublishedDocument(
-          'api::project.project',
-          {
-            title: 'E2E Project',
-            owner: primaryUser.documentId,
-            collaborators: [secondaryUser.documentId],
-          },
-          testContext,
-        );
+        const fixture: FixtureContext = await manager.setupFixture(testContext);
         const login: PostAuthResponseBodyDto = await manager.loginUser(
-          primaryUser.username,
-          primaryUser.password,
+          fixture.owner.username,
+          fixture.owner.password,
           testContext,
         );
 
@@ -585,21 +597,29 @@ describe('/', (suiteContext: SuiteContext): void => {
         // then
         assert.equal(response.status, 200);
         const body: StartPageDto = startSchema.parse(await response.json());
+        assert.equal(body.myProjects.length, 1);
+        const databases: DatabaseConnectionDto[] = body.myProjects[0].databases;
+        assert.deepEqual(
+          databases
+            .map((database: DatabaseConnectionDto): string => database.id)
+            .toSorted(),
+          [fixture.databaseConnectionId, fixture.sparqlConnectionId].toSorted(),
+        );
         assert.deepEqual(body.myProjects, [
           {
-            id: project,
-            title: 'E2E Project',
+            id: fixture.projectId,
+            title: 'Test Project',
             owner: {
-              id: primaryUser.documentId,
-              displayName: primaryUser.username,
+              id: fixture.owner.documentId,
+              displayName: fixture.owner.username,
             },
             collaborators: [
               {
-                id: secondaryUser.documentId,
-                displayName: secondaryUser.username,
+                id: fixture.collaborator.documentId,
+                displayName: fixture.collaborator.username,
               },
             ],
-            databases: [],
+            databases,
             activeUsers: [],
           },
         ]);
@@ -607,23 +627,10 @@ describe('/', (suiteContext: SuiteContext): void => {
 
       test('collaborator has no owned projects', async (testContext: TestContext): Promise<void> => {
         // given
-        const primaryUser: E2ETestApplicationUser =
-          await manager.registerUser(testContext);
-
-        const secondaryUser: E2ETestApplicationUser =
-          await manager.registerUser(testContext);
-        await manager.createPublishedDocument(
-          'api::project.project',
-          {
-            title: 'E2E Project',
-            owner: primaryUser.documentId,
-            collaborators: [secondaryUser.documentId],
-          },
-          testContext,
-        );
+        const fixture: FixtureContext = await manager.setupFixture(testContext);
         const login: PostAuthResponseBodyDto = await manager.loginUser(
-          secondaryUser.username,
-          secondaryUser.password,
+          fixture.collaborator.username,
+          fixture.collaborator.password,
           testContext,
         );
 
@@ -641,23 +648,10 @@ describe('/', (suiteContext: SuiteContext): void => {
 
       test('outsider has no owned projects', async (testContext: TestContext): Promise<void> => {
         // given
-        const primaryUser: E2ETestApplicationUser =
-          await manager.registerUser(testContext);
-
-        const tertiaryUser: E2ETestApplicationUser =
-          await manager.registerUser(testContext);
-        await manager.createPublishedDocument(
-          'api::project.project',
-          {
-            title: 'E2E Project',
-            owner: primaryUser.documentId,
-            collaborators: [],
-          },
-          testContext,
-        );
+        const fixture: FixtureContext = await manager.setupFixture(testContext);
         const login: PostAuthResponseBodyDto = await manager.loginUser(
-          tertiaryUser.username,
-          tertiaryUser.password,
+          fixture.outsider.username,
+          fixture.outsider.password,
           testContext,
         );
 
@@ -700,20 +694,10 @@ describe('/', (suiteContext: SuiteContext): void => {
 
       test('owner has no collaboration projects', async (testContext: TestContext): Promise<void> => {
         // given
-        const primaryUser: E2ETestApplicationUser =
-          await manager.registerUser(testContext);
-        await manager.createPublishedDocument(
-          'api::project.project',
-          {
-            title: 'E2E Project',
-            owner: primaryUser.documentId,
-            collaborators: [],
-          },
-          testContext,
-        );
+        const fixture: FixtureContext = await manager.setupFixture(testContext);
         const login: PostAuthResponseBodyDto = await manager.loginUser(
-          primaryUser.username,
-          primaryUser.password,
+          fixture.owner.username,
+          fixture.owner.password,
           testContext,
         );
 
@@ -731,23 +715,10 @@ describe('/', (suiteContext: SuiteContext): void => {
 
       test('collaborator sees collaboration project', async (testContext: TestContext): Promise<void> => {
         // given
-        const primaryUser: E2ETestApplicationUser =
-          await manager.registerUser(testContext);
-
-        const secondaryUser: E2ETestApplicationUser =
-          await manager.registerUser(testContext);
-        const project: string = await manager.createPublishedDocument(
-          'api::project.project',
-          {
-            title: 'E2E Project',
-            owner: primaryUser.documentId,
-            collaborators: [secondaryUser.documentId],
-          },
-          testContext,
-        );
+        const fixture: FixtureContext = await manager.setupFixture(testContext);
         const login: PostAuthResponseBodyDto = await manager.loginUser(
-          secondaryUser.username,
-          secondaryUser.password,
+          fixture.collaborator.username,
+          fixture.collaborator.password,
           testContext,
         );
 
@@ -760,21 +731,30 @@ describe('/', (suiteContext: SuiteContext): void => {
         // then
         assert.equal(response.status, 200);
         const body: StartPageDto = startSchema.parse(await response.json());
+        assert.equal(body.collaborationProjects.length, 1);
+        const databases: DatabaseConnectionDto[] =
+          body.collaborationProjects[0].databases;
+        assert.deepEqual(
+          databases
+            .map((database: DatabaseConnectionDto): string => database.id)
+            .toSorted(),
+          [fixture.databaseConnectionId, fixture.sparqlConnectionId].toSorted(),
+        );
         assert.deepEqual(body.collaborationProjects, [
           {
-            id: project,
-            title: 'E2E Project',
+            id: fixture.projectId,
+            title: 'Test Project',
             owner: {
-              id: primaryUser.documentId,
-              displayName: primaryUser.username,
+              id: fixture.owner.documentId,
+              displayName: fixture.owner.username,
             },
             collaborators: [
               {
-                id: secondaryUser.documentId,
-                displayName: secondaryUser.username,
+                id: fixture.collaborator.documentId,
+                displayName: fixture.collaborator.username,
               },
             ],
-            databases: [],
+            databases,
             activeUsers: [],
           },
         ]);
@@ -782,23 +762,10 @@ describe('/', (suiteContext: SuiteContext): void => {
 
       test('outsider has no collaboration projects', async (testContext: TestContext): Promise<void> => {
         // given
-        const primaryUser: E2ETestApplicationUser =
-          await manager.registerUser(testContext);
-
-        const tertiaryUser: E2ETestApplicationUser =
-          await manager.registerUser(testContext);
-        await manager.createPublishedDocument(
-          'api::project.project',
-          {
-            title: 'E2E Project',
-            owner: primaryUser.documentId,
-            collaborators: [],
-          },
-          testContext,
-        );
+        const fixture: FixtureContext = await manager.setupFixture(testContext);
         const login: PostAuthResponseBodyDto = await manager.loginUser(
-          tertiaryUser.username,
-          tertiaryUser.password,
+          fixture.outsider.username,
+          fixture.outsider.password,
           testContext,
         );
 
@@ -843,44 +810,9 @@ describe('/', (suiteContext: SuiteContext): void => {
 
       test('public room listing for anonymous', async (testContext: TestContext): Promise<void> => {
         // given
-        const primaryUser: E2ETestApplicationUser =
-          await manager.registerUser(testContext);
-        const project: string = await manager.createPublishedDocument(
-          'api::project.project',
-          {
-            title: 'E2E Project',
-            owner: primaryUser.documentId,
-            collaborators: [],
-          },
-          testContext,
-        );
-        await manager.createPublishedDocument(
-          'api::room.room',
-          {
-            title: 'Private Room',
-            visibility: RoomVisibilityDto.private,
-            project: project,
-          },
-          testContext,
-        );
-        await manager.createPublishedDocument(
-          'api::room.room',
-          {
-            title: 'Unlisted Room',
-            visibility: RoomVisibilityDto.unlisted,
-            project: project,
-          },
-          testContext,
-        );
-        const publicRoom: string = await manager.createPublishedDocument(
-          'api::room.room',
-          {
-            title: 'Public Room',
-            visibility: RoomVisibilityDto.public,
-            project: project,
-          },
-          testContext,
-        );
+        const fixture: FixtureContext = await manager.setupFixture(testContext);
+        const publicRoom: string =
+          fixture.canvases[RoomVisibilityDto.public].roomId;
 
         // when
         const response: Response = await fetch(manager.apiUrl, {
@@ -908,47 +840,12 @@ describe('/', (suiteContext: SuiteContext): void => {
 
       test('public room listing for owner', async (testContext: TestContext): Promise<void> => {
         // given
-        const primaryUser: E2ETestApplicationUser =
-          await manager.registerUser(testContext);
-        const project: string = await manager.createPublishedDocument(
-          'api::project.project',
-          {
-            title: 'E2E Project',
-            owner: primaryUser.documentId,
-            collaborators: [],
-          },
-          testContext,
-        );
-        await manager.createPublishedDocument(
-          'api::room.room',
-          {
-            title: 'Private Room',
-            visibility: RoomVisibilityDto.private,
-            project: project,
-          },
-          testContext,
-        );
-        await manager.createPublishedDocument(
-          'api::room.room',
-          {
-            title: 'Unlisted Room',
-            visibility: RoomVisibilityDto.unlisted,
-            project: project,
-          },
-          testContext,
-        );
-        const publicRoom: string = await manager.createPublishedDocument(
-          'api::room.room',
-          {
-            title: 'Public Room',
-            visibility: RoomVisibilityDto.public,
-            project: project,
-          },
-          testContext,
-        );
+        const fixture: FixtureContext = await manager.setupFixture(testContext);
+        const publicRoom: string =
+          fixture.canvases[RoomVisibilityDto.public].roomId;
         const login: PostAuthResponseBodyDto = await manager.loginUser(
-          primaryUser.username,
-          primaryUser.password,
+          fixture.owner.username,
+          fixture.owner.password,
           testContext,
         );
 
@@ -979,50 +876,12 @@ describe('/', (suiteContext: SuiteContext): void => {
 
       test('public room listing for collaborator', async (testContext: TestContext): Promise<void> => {
         // given
-        const primaryUser: E2ETestApplicationUser =
-          await manager.registerUser(testContext);
-
-        const secondaryUser: E2ETestApplicationUser =
-          await manager.registerUser(testContext);
-        const project: string = await manager.createPublishedDocument(
-          'api::project.project',
-          {
-            title: 'E2E Project',
-            owner: primaryUser.documentId,
-            collaborators: [secondaryUser.documentId],
-          },
-          testContext,
-        );
-        await manager.createPublishedDocument(
-          'api::room.room',
-          {
-            title: 'Private Room',
-            visibility: RoomVisibilityDto.private,
-            project: project,
-          },
-          testContext,
-        );
-        await manager.createPublishedDocument(
-          'api::room.room',
-          {
-            title: 'Unlisted Room',
-            visibility: RoomVisibilityDto.unlisted,
-            project: project,
-          },
-          testContext,
-        );
-        const publicRoom: string = await manager.createPublishedDocument(
-          'api::room.room',
-          {
-            title: 'Public Room',
-            visibility: RoomVisibilityDto.public,
-            project: project,
-          },
-          testContext,
-        );
+        const fixture: FixtureContext = await manager.setupFixture(testContext);
+        const publicRoom: string =
+          fixture.canvases[RoomVisibilityDto.public].roomId;
         const login: PostAuthResponseBodyDto = await manager.loginUser(
-          secondaryUser.username,
-          secondaryUser.password,
+          fixture.collaborator.username,
+          fixture.collaborator.password,
           testContext,
         );
 
@@ -1053,50 +912,12 @@ describe('/', (suiteContext: SuiteContext): void => {
 
       test('public room listing for outsider', async (testContext: TestContext): Promise<void> => {
         // given
-        const primaryUser: E2ETestApplicationUser =
-          await manager.registerUser(testContext);
-
-        const tertiaryUser: E2ETestApplicationUser =
-          await manager.registerUser(testContext);
-        const project: string = await manager.createPublishedDocument(
-          'api::project.project',
-          {
-            title: 'E2E Project',
-            owner: primaryUser.documentId,
-            collaborators: [],
-          },
-          testContext,
-        );
-        await manager.createPublishedDocument(
-          'api::room.room',
-          {
-            title: 'Private Room',
-            visibility: RoomVisibilityDto.private,
-            project: project,
-          },
-          testContext,
-        );
-        await manager.createPublishedDocument(
-          'api::room.room',
-          {
-            title: 'Unlisted Room',
-            visibility: RoomVisibilityDto.unlisted,
-            project: project,
-          },
-          testContext,
-        );
-        const publicRoom: string = await manager.createPublishedDocument(
-          'api::room.room',
-          {
-            title: 'Public Room',
-            visibility: RoomVisibilityDto.public,
-            project: project,
-          },
-          testContext,
-        );
+        const fixture: FixtureContext = await manager.setupFixture(testContext);
+        const publicRoom: string =
+          fixture.canvases[RoomVisibilityDto.public].roomId;
         const login: PostAuthResponseBodyDto = await manager.loginUser(
-          tertiaryUser.username,
-          tertiaryUser.password,
+          fixture.outsider.username,
+          fixture.outsider.password,
           testContext,
         );
 
@@ -1127,26 +948,9 @@ describe('/', (suiteContext: SuiteContext): void => {
 
       test('anonymous cannot see recent private room', async (testContext: TestContext): Promise<void> => {
         // given
-        const primaryUser: E2ETestApplicationUser =
-          await manager.registerUser(testContext);
-        const project: string = await manager.createPublishedDocument(
-          'api::project.project',
-          {
-            title: 'E2E Project',
-            owner: primaryUser.documentId,
-            collaborators: [],
-          },
-          testContext,
-        );
-        const privateRoom: string = await manager.createPublishedDocument(
-          'api::room.room',
-          {
-            title: 'Private Room',
-            visibility: RoomVisibilityDto.private,
-            project: project,
-          },
-          testContext,
-        );
+        const fixture: FixtureContext = await manager.setupFixture(testContext);
+        const privateRoom: string =
+          fixture.canvases[RoomVisibilityDto.private].roomId;
 
         // when
         const response: Response = await fetch(
@@ -1164,29 +968,12 @@ describe('/', (suiteContext: SuiteContext): void => {
 
       test('owner sees recent private room', async (testContext: TestContext): Promise<void> => {
         // given
-        const primaryUser: E2ETestApplicationUser =
-          await manager.registerUser(testContext);
-        const project: string = await manager.createPublishedDocument(
-          'api::project.project',
-          {
-            title: 'E2E Project',
-            owner: primaryUser.documentId,
-            collaborators: [],
-          },
-          testContext,
-        );
-        const privateRoom: string = await manager.createPublishedDocument(
-          'api::room.room',
-          {
-            title: 'Private Room',
-            visibility: RoomVisibilityDto.private,
-            project: project,
-          },
-          testContext,
-        );
+        const fixture: FixtureContext = await manager.setupFixture(testContext);
+        const privateRoom: string =
+          fixture.canvases[RoomVisibilityDto.private].roomId;
         const login: PostAuthResponseBodyDto = await manager.loginUser(
-          primaryUser.username,
-          primaryUser.password,
+          fixture.owner.username,
+          fixture.owner.password,
           testContext,
         );
 
@@ -1211,32 +998,12 @@ describe('/', (suiteContext: SuiteContext): void => {
 
       test('collaborator sees recent private room', async (testContext: TestContext): Promise<void> => {
         // given
-        const primaryUser: E2ETestApplicationUser =
-          await manager.registerUser(testContext);
-
-        const secondaryUser: E2ETestApplicationUser =
-          await manager.registerUser(testContext);
-        const project: string = await manager.createPublishedDocument(
-          'api::project.project',
-          {
-            title: 'E2E Project',
-            owner: primaryUser.documentId,
-            collaborators: [secondaryUser.documentId],
-          },
-          testContext,
-        );
-        const privateRoom: string = await manager.createPublishedDocument(
-          'api::room.room',
-          {
-            title: 'Private Room',
-            visibility: RoomVisibilityDto.private,
-            project: project,
-          },
-          testContext,
-        );
+        const fixture: FixtureContext = await manager.setupFixture(testContext);
+        const privateRoom: string =
+          fixture.canvases[RoomVisibilityDto.private].roomId;
         const login: PostAuthResponseBodyDto = await manager.loginUser(
-          secondaryUser.username,
-          secondaryUser.password,
+          fixture.collaborator.username,
+          fixture.collaborator.password,
           testContext,
         );
 
@@ -1261,32 +1028,12 @@ describe('/', (suiteContext: SuiteContext): void => {
 
       test('outsider cannot see recent private room', async (testContext: TestContext): Promise<void> => {
         // given
-        const primaryUser: E2ETestApplicationUser =
-          await manager.registerUser(testContext);
-
-        const tertiaryUser: E2ETestApplicationUser =
-          await manager.registerUser(testContext);
-        const project: string = await manager.createPublishedDocument(
-          'api::project.project',
-          {
-            title: 'E2E Project',
-            owner: primaryUser.documentId,
-            collaborators: [],
-          },
-          testContext,
-        );
-        const privateRoom: string = await manager.createPublishedDocument(
-          'api::room.room',
-          {
-            title: 'Private Room',
-            visibility: RoomVisibilityDto.private,
-            project: project,
-          },
-          testContext,
-        );
+        const fixture: FixtureContext = await manager.setupFixture(testContext);
+        const privateRoom: string =
+          fixture.canvases[RoomVisibilityDto.private].roomId;
         const login: PostAuthResponseBodyDto = await manager.loginUser(
-          tertiaryUser.username,
-          tertiaryUser.password,
+          fixture.outsider.username,
+          fixture.outsider.password,
           testContext,
         );
 
@@ -1307,26 +1054,9 @@ describe('/', (suiteContext: SuiteContext): void => {
 
       test('anonymous sees recent unlisted room', async (testContext: TestContext): Promise<void> => {
         // given
-        const primaryUser: E2ETestApplicationUser =
-          await manager.registerUser(testContext);
-        const project: string = await manager.createPublishedDocument(
-          'api::project.project',
-          {
-            title: 'E2E Project',
-            owner: primaryUser.documentId,
-            collaborators: [],
-          },
-          testContext,
-        );
-        const unlistedRoom: string = await manager.createPublishedDocument(
-          'api::room.room',
-          {
-            title: 'Unlisted Room',
-            visibility: RoomVisibilityDto.unlisted,
-            project: project,
-          },
-          testContext,
-        );
+        const fixture: FixtureContext = await manager.setupFixture(testContext);
+        const unlistedRoom: string =
+          fixture.canvases[RoomVisibilityDto.unlisted].roomId;
 
         // when
         const response: Response = await fetch(
@@ -1351,29 +1081,12 @@ describe('/', (suiteContext: SuiteContext): void => {
 
       test('owner sees recent unlisted room', async (testContext: TestContext): Promise<void> => {
         // given
-        const primaryUser: E2ETestApplicationUser =
-          await manager.registerUser(testContext);
-        const project: string = await manager.createPublishedDocument(
-          'api::project.project',
-          {
-            title: 'E2E Project',
-            owner: primaryUser.documentId,
-            collaborators: [],
-          },
-          testContext,
-        );
-        const unlistedRoom: string = await manager.createPublishedDocument(
-          'api::room.room',
-          {
-            title: 'Unlisted Room',
-            visibility: RoomVisibilityDto.unlisted,
-            project: project,
-          },
-          testContext,
-        );
+        const fixture: FixtureContext = await manager.setupFixture(testContext);
+        const unlistedRoom: string =
+          fixture.canvases[RoomVisibilityDto.unlisted].roomId;
         const login: PostAuthResponseBodyDto = await manager.loginUser(
-          primaryUser.username,
-          primaryUser.password,
+          fixture.owner.username,
+          fixture.owner.password,
           testContext,
         );
 
@@ -1401,32 +1114,12 @@ describe('/', (suiteContext: SuiteContext): void => {
 
       test('collaborator sees recent unlisted room', async (testContext: TestContext): Promise<void> => {
         // given
-        const primaryUser: E2ETestApplicationUser =
-          await manager.registerUser(testContext);
-
-        const secondaryUser: E2ETestApplicationUser =
-          await manager.registerUser(testContext);
-        const project: string = await manager.createPublishedDocument(
-          'api::project.project',
-          {
-            title: 'E2E Project',
-            owner: primaryUser.documentId,
-            collaborators: [secondaryUser.documentId],
-          },
-          testContext,
-        );
-        const unlistedRoom: string = await manager.createPublishedDocument(
-          'api::room.room',
-          {
-            title: 'Unlisted Room',
-            visibility: RoomVisibilityDto.unlisted,
-            project: project,
-          },
-          testContext,
-        );
+        const fixture: FixtureContext = await manager.setupFixture(testContext);
+        const unlistedRoom: string =
+          fixture.canvases[RoomVisibilityDto.unlisted].roomId;
         const login: PostAuthResponseBodyDto = await manager.loginUser(
-          secondaryUser.username,
-          secondaryUser.password,
+          fixture.collaborator.username,
+          fixture.collaborator.password,
           testContext,
         );
 
@@ -1454,32 +1147,12 @@ describe('/', (suiteContext: SuiteContext): void => {
 
       test('outsider sees recent unlisted room', async (testContext: TestContext): Promise<void> => {
         // given
-        const primaryUser: E2ETestApplicationUser =
-          await manager.registerUser(testContext);
-
-        const tertiaryUser: E2ETestApplicationUser =
-          await manager.registerUser(testContext);
-        const project: string = await manager.createPublishedDocument(
-          'api::project.project',
-          {
-            title: 'E2E Project',
-            owner: primaryUser.documentId,
-            collaborators: [],
-          },
-          testContext,
-        );
-        const unlistedRoom: string = await manager.createPublishedDocument(
-          'api::room.room',
-          {
-            title: 'Unlisted Room',
-            visibility: RoomVisibilityDto.unlisted,
-            project: project,
-          },
-          testContext,
-        );
+        const fixture: FixtureContext = await manager.setupFixture(testContext);
+        const unlistedRoom: string =
+          fixture.canvases[RoomVisibilityDto.unlisted].roomId;
         const login: PostAuthResponseBodyDto = await manager.loginUser(
-          tertiaryUser.username,
-          tertiaryUser.password,
+          fixture.outsider.username,
+          fixture.outsider.password,
           testContext,
         );
 
@@ -1507,26 +1180,9 @@ describe('/', (suiteContext: SuiteContext): void => {
 
       test('anonymous sees recent public room', async (testContext: TestContext): Promise<void> => {
         // given
-        const primaryUser: E2ETestApplicationUser =
-          await manager.registerUser(testContext);
-        const project: string = await manager.createPublishedDocument(
-          'api::project.project',
-          {
-            title: 'E2E Project',
-            owner: primaryUser.documentId,
-            collaborators: [],
-          },
-          testContext,
-        );
-        const publicRoom: string = await manager.createPublishedDocument(
-          'api::room.room',
-          {
-            title: 'Public Room',
-            visibility: RoomVisibilityDto.public,
-            project: project,
-          },
-          testContext,
-        );
+        const fixture: FixtureContext = await manager.setupFixture(testContext);
+        const publicRoom: string =
+          fixture.canvases[RoomVisibilityDto.public].roomId;
 
         // when
         const response: Response = await fetch(
@@ -1548,29 +1204,12 @@ describe('/', (suiteContext: SuiteContext): void => {
 
       test('owner sees recent public room', async (testContext: TestContext): Promise<void> => {
         // given
-        const primaryUser: E2ETestApplicationUser =
-          await manager.registerUser(testContext);
-        const project: string = await manager.createPublishedDocument(
-          'api::project.project',
-          {
-            title: 'E2E Project',
-            owner: primaryUser.documentId,
-            collaborators: [],
-          },
-          testContext,
-        );
-        const publicRoom: string = await manager.createPublishedDocument(
-          'api::room.room',
-          {
-            title: 'Public Room',
-            visibility: RoomVisibilityDto.public,
-            project: project,
-          },
-          testContext,
-        );
+        const fixture: FixtureContext = await manager.setupFixture(testContext);
+        const publicRoom: string =
+          fixture.canvases[RoomVisibilityDto.public].roomId;
         const login: PostAuthResponseBodyDto = await manager.loginUser(
-          primaryUser.username,
-          primaryUser.password,
+          fixture.owner.username,
+          fixture.owner.password,
           testContext,
         );
 
@@ -1595,32 +1234,12 @@ describe('/', (suiteContext: SuiteContext): void => {
 
       test('collaborator sees recent public room', async (testContext: TestContext): Promise<void> => {
         // given
-        const primaryUser: E2ETestApplicationUser =
-          await manager.registerUser(testContext);
-
-        const secondaryUser: E2ETestApplicationUser =
-          await manager.registerUser(testContext);
-        const project: string = await manager.createPublishedDocument(
-          'api::project.project',
-          {
-            title: 'E2E Project',
-            owner: primaryUser.documentId,
-            collaborators: [secondaryUser.documentId],
-          },
-          testContext,
-        );
-        const publicRoom: string = await manager.createPublishedDocument(
-          'api::room.room',
-          {
-            title: 'Public Room',
-            visibility: RoomVisibilityDto.public,
-            project: project,
-          },
-          testContext,
-        );
+        const fixture: FixtureContext = await manager.setupFixture(testContext);
+        const publicRoom: string =
+          fixture.canvases[RoomVisibilityDto.public].roomId;
         const login: PostAuthResponseBodyDto = await manager.loginUser(
-          secondaryUser.username,
-          secondaryUser.password,
+          fixture.collaborator.username,
+          fixture.collaborator.password,
           testContext,
         );
 
@@ -1645,32 +1264,12 @@ describe('/', (suiteContext: SuiteContext): void => {
 
       test('outsider sees recent public room', async (testContext: TestContext): Promise<void> => {
         // given
-        const primaryUser: E2ETestApplicationUser =
-          await manager.registerUser(testContext);
-
-        const tertiaryUser: E2ETestApplicationUser =
-          await manager.registerUser(testContext);
-        const project: string = await manager.createPublishedDocument(
-          'api::project.project',
-          {
-            title: 'E2E Project',
-            owner: primaryUser.documentId,
-            collaborators: [],
-          },
-          testContext,
-        );
-        const publicRoom: string = await manager.createPublishedDocument(
-          'api::room.room',
-          {
-            title: 'Public Room',
-            visibility: RoomVisibilityDto.public,
-            project: project,
-          },
-          testContext,
-        );
+        const fixture: FixtureContext = await manager.setupFixture(testContext);
+        const publicRoom: string =
+          fixture.canvases[RoomVisibilityDto.public].roomId;
         const login: PostAuthResponseBodyDto = await manager.loginUser(
-          tertiaryUser.username,
-          tertiaryUser.password,
+          fixture.outsider.username,
+          fixture.outsider.password,
           testContext,
         );
 
@@ -1787,26 +1386,9 @@ describe('/', (suiteContext: SuiteContext): void => {
 
       test('unknown recent room is skipped', async (testContext: TestContext): Promise<void> => {
         // given
-        const primaryUser: E2ETestApplicationUser =
-          await manager.registerUser(testContext);
-        const project: string = await manager.createPublishedDocument(
-          'api::project.project',
-          {
-            title: 'E2E Project',
-            owner: primaryUser.documentId,
-            collaborators: [],
-          },
-          testContext,
-        );
-        const publicRoom: string = await manager.createPublishedDocument(
-          'api::room.room',
-          {
-            title: 'Public Room',
-            visibility: RoomVisibilityDto.public,
-            project: project,
-          },
-          testContext,
-        );
+        const fixture: FixtureContext = await manager.setupFixture(testContext);
+        const publicRoom: string =
+          fixture.canvases[RoomVisibilityDto.public].roomId;
 
         // when
         const response: Response = await fetch(
@@ -1845,26 +1427,9 @@ describe('/', (suiteContext: SuiteContext): void => {
 
       test('invalid jwt does not reveal owned projects', async (testContext: TestContext): Promise<void> => {
         // given
-        const primaryUser: E2ETestApplicationUser =
-          await manager.registerUser(testContext);
-        const project: string = await manager.createPublishedDocument(
-          'api::project.project',
-          {
-            title: 'E2E Project',
-            owner: primaryUser.documentId,
-            collaborators: [],
-          },
-          testContext,
-        );
-        const privateRoom: string = await manager.createPublishedDocument(
-          'api::room.room',
-          {
-            title: 'Private Room',
-            visibility: RoomVisibilityDto.private,
-            project: project,
-          },
-          testContext,
-        );
+        const fixture: FixtureContext = await manager.setupFixture(testContext);
+        const privateRoom: string =
+          fixture.canvases[RoomVisibilityDto.private].roomId;
 
         // when
         const response: Response = await fetch(
@@ -1883,29 +1448,9 @@ describe('/', (suiteContext: SuiteContext): void => {
 
       test('invalid jwt does not reveal collaboration projects', async (testContext: TestContext): Promise<void> => {
         // given
-        const primaryUser: E2ETestApplicationUser =
-          await manager.registerUser(testContext);
-
-        const secondaryUser: E2ETestApplicationUser =
-          await manager.registerUser(testContext);
-        const project: string = await manager.createPublishedDocument(
-          'api::project.project',
-          {
-            title: 'E2E Project',
-            owner: primaryUser.documentId,
-            collaborators: [secondaryUser.documentId],
-          },
-          testContext,
-        );
-        const privateRoom: string = await manager.createPublishedDocument(
-          'api::room.room',
-          {
-            title: 'Private Room',
-            visibility: RoomVisibilityDto.private,
-            project: project,
-          },
-          testContext,
-        );
+        const fixture: FixtureContext = await manager.setupFixture(testContext);
+        const privateRoom: string =
+          fixture.canvases[RoomVisibilityDto.private].roomId;
 
         // when
         const response: Response = await fetch(
@@ -1924,26 +1469,9 @@ describe('/', (suiteContext: SuiteContext): void => {
 
       test('invalid jwt does not reveal private recent rooms', async (testContext: TestContext): Promise<void> => {
         // given
-        const primaryUser: E2ETestApplicationUser =
-          await manager.registerUser(testContext);
-        const project: string = await manager.createPublishedDocument(
-          'api::project.project',
-          {
-            title: 'E2E Project',
-            owner: primaryUser.documentId,
-            collaborators: [],
-          },
-          testContext,
-        );
-        const privateRoom: string = await manager.createPublishedDocument(
-          'api::room.room',
-          {
-            title: 'Private Room',
-            visibility: RoomVisibilityDto.private,
-            project: project,
-          },
-          testContext,
-        );
+        const fixture: FixtureContext = await manager.setupFixture(testContext);
+        const privateRoom: string =
+          fixture.canvases[RoomVisibilityDto.private].roomId;
 
         // when
         const response: Response = await fetch(

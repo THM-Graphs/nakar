@@ -1,3 +1,4 @@
+import type { FixtureContext } from '../../../../e2e/FixtureContext';
 import type { UpdateCommonPropertyRequestBodyDto } from './dto/UpdateCommonPropertyRequestBodyDto';
 import type { E2ETestApplicationUser } from '../../../../e2e/E2ETestApplicationUser';
 import assert from 'node:assert/strict';
@@ -74,43 +75,20 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
     describe('201', (): void => {
       test('published collaborator retains access after draft removal', async (testContext: TestContext): Promise<void> => {
         // given
-        const owner: E2ETestApplicationUser =
-          await manager.registerUser(testContext);
-        const collaborator: E2ETestApplicationUser =
-          await manager.registerUser(testContext);
-        const project: string = await manager.createPublishedDocument(
-          'api::project.project',
-          {
-            title: 'Test Project',
-            owner: owner.documentId,
-            collaborators: [collaborator.documentId],
-          },
-          testContext,
-        );
-        const resource: string = await manager.createPublishedDocument(
-          'api::common-property.common-property',
-          {
-            project,
-            leftLabel: 'Original Label',
-            leftProperty: 'original',
-            rightLabel: 'Other Label',
-            rightProperty: 'other',
-          },
-          testContext,
-        );
+        const fixture: FixtureContext = await manager.setupFixture(testContext);
         const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-          owner.username,
-          owner.password,
+          fixture.owner.username,
+          fixture.owner.password,
           testContext,
         );
         const login: PostAuthResponseBodyDto = await manager.loginUser(
-          collaborator.username,
-          collaborator.password,
+          fixture.collaborator.username,
+          fixture.collaborator.password,
           testContext,
         );
         const draftRemoval: Response = await manager.updateDocument(
           'api::project.project',
-          project,
+          fixture.projectId,
           { collaborators: [] },
           testContext,
         );
@@ -118,7 +96,7 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
 
         // when
         const response: Response = await fetch(
-          `${manager.apiUrl}/project/${project}/common-property`,
+          `${manager.apiUrl}/project/${fixture.projectId}/common-property`,
           {
             method: 'POST',
             headers: new Headers([['Authorization', `Bearer ${login.jwt}`]]),
@@ -131,7 +109,7 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
         const body: CommonPropertyDto = commonPropertySchema.parse(
           await response.json(),
         );
-        assert.notEqual(body.id, resource);
+        assert.notEqual(body.id, fixture.commonPropertyId);
         assert.deepEqual(body, {
           id: body.id,
           leftLabel: '',
@@ -142,7 +120,7 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
           rightDatabase: null,
         });
         const projectResponse: Response = await fetch(
-          `${manager.apiUrl}/project/${project}`,
+          `${manager.apiUrl}/project/${fixture.projectId}`,
           {
             headers: new Headers([
               ['Authorization', `Bearer ${ownerLogin.jwt}`],
@@ -164,33 +142,16 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
 
       test('owner can create a common property', async (testContext: TestContext): Promise<void> => {
         // given
-        const owner: E2ETestApplicationUser =
-          await manager.registerUser(testContext);
-        const project: string = await manager.createPublishedDocument(
-          'api::project.project',
-          { title: 'Test Project', owner: owner.documentId, collaborators: [] },
-          testContext,
-        );
-        const resource: string = await manager.createPublishedDocument(
-          'api::common-property.common-property',
-          {
-            project,
-            leftLabel: 'Original Label',
-            leftProperty: 'original',
-            rightLabel: 'Other Label',
-            rightProperty: 'other',
-          },
-          testContext,
-        );
+        const fixture: FixtureContext = await manager.setupFixture(testContext);
         const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-          owner.username,
-          owner.password,
+          fixture.owner.username,
+          fixture.owner.password,
           testContext,
         );
 
         // when
         const response: Response = await fetch(
-          `${manager.apiUrl}/project/${project}/common-property`,
+          `${manager.apiUrl}/project/${fixture.projectId}/common-property`,
           {
             method: 'POST',
             headers: new Headers([
@@ -205,7 +166,7 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
         const body: CommonPropertyDto = commonPropertySchema.parse(
           await response.json(),
         );
-        assert.notEqual(body.id, resource);
+        assert.notEqual(body.id, fixture.commonPropertyId);
         assert.deepEqual(body, {
           id: body.id,
           leftLabel: '',
@@ -216,7 +177,7 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
           rightDatabase: null,
         });
         const projectResponse: Response = await fetch(
-          `${manager.apiUrl}/project/${project}`,
+          `${manager.apiUrl}/project/${fixture.projectId}`,
           {
             headers: new Headers([
               ['Authorization', `Bearer ${ownerLogin.jwt}`],
@@ -237,44 +198,21 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
 
       test('collaborator can create a common property', async (testContext: TestContext): Promise<void> => {
         // given
-        const owner: E2ETestApplicationUser =
-          await manager.registerUser(testContext);
-        const collaborator: E2ETestApplicationUser =
-          await manager.registerUser(testContext);
-        const project: string = await manager.createPublishedDocument(
-          'api::project.project',
-          {
-            title: 'Test Project',
-            owner: owner.documentId,
-            collaborators: [collaborator.documentId],
-          },
-          testContext,
-        );
-        const resource: string = await manager.createPublishedDocument(
-          'api::common-property.common-property',
-          {
-            project,
-            leftLabel: 'Original Label',
-            leftProperty: 'original',
-            rightLabel: 'Other Label',
-            rightProperty: 'other',
-          },
-          testContext,
-        );
+        const fixture: FixtureContext = await manager.setupFixture(testContext);
         const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-          owner.username,
-          owner.password,
+          fixture.owner.username,
+          fixture.owner.password,
           testContext,
         );
         const login: PostAuthResponseBodyDto = await manager.loginUser(
-          collaborator.username,
-          collaborator.password,
+          fixture.collaborator.username,
+          fixture.collaborator.password,
           testContext,
         );
 
         // when
         const response: Response = await fetch(
-          `${manager.apiUrl}/project/${project}/common-property`,
+          `${manager.apiUrl}/project/${fixture.projectId}/common-property`,
           {
             method: 'POST',
             headers: new Headers([['Authorization', `Bearer ${login.jwt}`]]),
@@ -287,7 +225,7 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
         const body: CommonPropertyDto = commonPropertySchema.parse(
           await response.json(),
         );
-        assert.notEqual(body.id, resource);
+        assert.notEqual(body.id, fixture.commonPropertyId);
         assert.deepEqual(body, {
           id: body.id,
           leftLabel: '',
@@ -298,7 +236,7 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
           rightDatabase: null,
         });
         const projectResponse: Response = await fetch(
-          `${manager.apiUrl}/project/${project}`,
+          `${manager.apiUrl}/project/${fixture.projectId}`,
           {
             headers: new Headers([
               ['Authorization', `Bearer ${ownerLogin.jwt}`],
@@ -327,31 +265,15 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
         ];
         for (const variant of variants) {
           // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
+          const fixture: FixtureContext =
+            await manager.setupFixture(testContext);
+          await manager.loginUser(
+            fixture.owner.username,
+            fixture.owner.password,
             testContext,
           );
-          const resource: string = await manager.createPublishedDocument(
-            'api::common-property.common-property',
-            {
-              project,
-              leftLabel: 'Original Label',
-              leftProperty: 'original',
-              rightLabel: 'Other Label',
-              rightProperty: 'other',
-            },
-            testContext,
-          );
-          await manager.loginUser(owner.username, owner.password, testContext);
           const filters: Record<string, string> = {
-            [`filters[project][documentId][$eq]`]: project,
+            [`filters[project][documentId][$eq]`]: fixture.projectId,
             pageSize: '100',
             sort: 'documentId:asc',
           };
@@ -366,7 +288,7 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
           assert.ok(
             originalDraft.results.some(
               (item: { documentId: string }): boolean =>
-                item.documentId === resource,
+                item.documentId === fixture.commonPropertyId,
             ),
           );
           const originalPublishedResponse: Response =
@@ -381,7 +303,7 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/common-property`,
+            `${manager.apiUrl}/project/${fixture.projectId}/common-property`,
             {
               method: 'POST',
               signal: testContext.signal,
@@ -423,34 +345,19 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
     describe('403', (): void => {
       test('rejects outsider access', async (testContext: TestContext): Promise<void> => {
         // given
-        const owner: E2ETestApplicationUser =
-          await manager.registerUser(testContext);
-        const outsider: E2ETestApplicationUser =
-          await manager.registerUser(testContext);
-        const project: string = await manager.createPublishedDocument(
-          'api::project.project',
-          { title: 'Test Project', owner: owner.documentId, collaborators: [] },
+        const fixture: FixtureContext = await manager.setupFixture(testContext);
+        await manager.loginUser(
+          fixture.owner.username,
+          fixture.owner.password,
           testContext,
         );
-        const resource: string = await manager.createPublishedDocument(
-          'api::common-property.common-property',
-          {
-            project,
-            leftLabel: 'Original Label',
-            leftProperty: 'original',
-            rightLabel: 'Other Label',
-            rightProperty: 'other',
-          },
-          testContext,
-        );
-        await manager.loginUser(owner.username, owner.password, testContext);
         const login: PostAuthResponseBodyDto = await manager.loginUser(
-          outsider.username,
-          outsider.password,
+          fixture.outsider.username,
+          fixture.outsider.password,
           testContext,
         );
         const filters: Record<string, string> = {
-          [`filters[project][documentId][$eq]`]: project,
+          [`filters[project][documentId][$eq]`]: fixture.projectId,
           pageSize: '100',
           sort: 'documentId:asc',
         };
@@ -465,7 +372,7 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
         assert.ok(
           originalDraft.results.some(
             (item: { documentId: string }): boolean =>
-              item.documentId === resource,
+              item.documentId === fixture.commonPropertyId,
           ),
         );
         const originalPublishedResponse: Response = await manager.readDocuments(
@@ -479,7 +386,7 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
 
         // when
         const response: Response = await fetch(
-          `${manager.apiUrl}/project/${project}/common-property`,
+          `${manager.apiUrl}/project/${fixture.projectId}/common-property`,
           {
             method: 'POST',
             headers: new Headers([['Authorization', `Bearer ${login.jwt}`]]),
@@ -518,45 +425,26 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
 
       test('rejects removed collaborator access', async (testContext: TestContext): Promise<void> => {
         // given
-        const owner: E2ETestApplicationUser =
-          await manager.registerUser(testContext);
-        const collaborator: E2ETestApplicationUser =
-          await manager.registerUser(testContext);
-        const project: string = await manager.createPublishedDocument(
-          'api::project.project',
-          {
-            title: 'Test Project',
-            owner: owner.documentId,
-            collaborators: [collaborator.documentId],
-          },
+        const fixture: FixtureContext = await manager.setupFixture(testContext);
+        await manager.loginUser(
+          fixture.owner.username,
+          fixture.owner.password,
           testContext,
         );
-        const resource: string = await manager.createPublishedDocument(
-          'api::common-property.common-property',
-          {
-            project,
-            leftLabel: 'Original Label',
-            leftProperty: 'original',
-            rightLabel: 'Other Label',
-            rightProperty: 'other',
-          },
-          testContext,
-        );
-        await manager.loginUser(owner.username, owner.password, testContext);
         const login: PostAuthResponseBodyDto = await manager.loginUser(
-          collaborator.username,
-          collaborator.password,
+          fixture.collaborator.username,
+          fixture.collaborator.password,
           testContext,
         );
         const removal: Response = await manager.publishDocument(
           'api::project.project',
-          project,
+          fixture.projectId,
           { collaborators: [] },
           testContext,
         );
         assert.equal(removal.status, 200);
         const filters: Record<string, string> = {
-          [`filters[project][documentId][$eq]`]: project,
+          [`filters[project][documentId][$eq]`]: fixture.projectId,
           pageSize: '100',
           sort: 'documentId:asc',
         };
@@ -571,7 +459,7 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
         assert.ok(
           originalDraft.results.some(
             (item: { documentId: string }): boolean =>
-              item.documentId === resource,
+              item.documentId === fixture.commonPropertyId,
           ),
         );
         const originalPublishedResponse: Response = await manager.readDocuments(
@@ -585,7 +473,7 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
 
         // when
         const response: Response = await fetch(
-          `${manager.apiUrl}/project/${project}/common-property`,
+          `${manager.apiUrl}/project/${fixture.projectId}/common-property`,
           {
             method: 'POST',
             headers: new Headers([['Authorization', `Bearer ${login.jwt}`]]),
@@ -1028,43 +916,21 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
 
         test('published collaborator retains access after draft removal', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const collaborator: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [collaborator.documentId],
-            },
-            testContext,
-          );
-          const resource: string = await manager.createPublishedDocument(
-            'api::common-property.common-property',
-            {
-              project,
-              leftLabel: 'Original Label',
-              leftProperty: 'original',
-              rightLabel: 'Other Label',
-              rightProperty: 'other',
-            },
-            testContext,
-          );
+          const fixture: FixtureContext =
+            await manager.setupFixture(testContext);
           const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
+            fixture.owner.username,
+            fixture.owner.password,
             testContext,
           );
           const login: PostAuthResponseBodyDto = await manager.loginUser(
-            collaborator.username,
-            collaborator.password,
+            fixture.collaborator.username,
+            fixture.collaborator.password,
             testContext,
           );
           const draftRemoval: Response = await manager.updateDocument(
             'api::project.project',
-            project,
+            fixture.projectId,
             { collaborators: [] },
             testContext,
           );
@@ -1072,7 +938,7 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/common-property/${resource}`,
+            `${manager.apiUrl}/project/${fixture.projectId}/common-property/${fixture.commonPropertyId}`,
             {
               method: 'PUT',
               headers: new Headers([
@@ -1095,7 +961,7 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
           assert.equal(response.status, 204);
           assert.equal(await response.text(), '');
           const projectResponse: Response = await fetch(
-            `${manager.apiUrl}/project/${project}`,
+            `${manager.apiUrl}/project/${fixture.projectId}`,
             {
               headers: new Headers([
                 ['Authorization', `Bearer ${ownerLogin.jwt}`],
@@ -1110,7 +976,8 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
             publishedState.commonProperties;
 
           const persisted: CommonPropertyDto | undefined = items.find(
-            (item: CommonPropertyDto): boolean => item.id === resource,
+            (item: CommonPropertyDto): boolean =>
+              item.id === fixture.commonPropertyId,
           );
           assert.ok(persisted);
           assert.equal(persisted.leftLabel, 'Person');
@@ -1310,37 +1177,17 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
 
         test('owner can update a common property', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
-          const resource: string = await manager.createPublishedDocument(
-            'api::common-property.common-property',
-            {
-              project,
-              leftLabel: 'Original Label',
-              leftProperty: 'original',
-              rightLabel: 'Other Label',
-              rightProperty: 'other',
-            },
-            testContext,
-          );
+          const fixture: FixtureContext =
+            await manager.setupFixture(testContext);
           const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
+            fixture.owner.username,
+            fixture.owner.password,
             testContext,
           );
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/common-property/${resource}`,
+            `${manager.apiUrl}/project/${fixture.projectId}/common-property/${fixture.commonPropertyId}`,
             {
               method: 'PUT',
               headers: new Headers([
@@ -1363,7 +1210,7 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
           assert.equal(response.status, 204);
           assert.equal(await response.text(), '');
           const projectResponse: Response = await fetch(
-            `${manager.apiUrl}/project/${project}`,
+            `${manager.apiUrl}/project/${fixture.projectId}`,
             {
               headers: new Headers([
                 ['Authorization', `Bearer ${ownerLogin.jwt}`],
@@ -1377,7 +1224,8 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
           const items: CommonPropertyDto[] | undefined =
             publishedState.commonProperties;
           const persisted: CommonPropertyDto | undefined = items.find(
-            (item: CommonPropertyDto): boolean => item.id === resource,
+            (item: CommonPropertyDto): boolean =>
+              item.id === fixture.commonPropertyId,
           );
           assert.ok(persisted);
           assert.equal(persisted.leftLabel, 'Person');
@@ -1388,44 +1236,22 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
 
         test('collaborator can update a common property', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const collaborator: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [collaborator.documentId],
-            },
-            testContext,
-          );
-          const resource: string = await manager.createPublishedDocument(
-            'api::common-property.common-property',
-            {
-              project,
-              leftLabel: 'Original Label',
-              leftProperty: 'original',
-              rightLabel: 'Other Label',
-              rightProperty: 'other',
-            },
-            testContext,
-          );
+          const fixture: FixtureContext =
+            await manager.setupFixture(testContext);
           const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
+            fixture.owner.username,
+            fixture.owner.password,
             testContext,
           );
           const login: PostAuthResponseBodyDto = await manager.loginUser(
-            collaborator.username,
-            collaborator.password,
+            fixture.collaborator.username,
+            fixture.collaborator.password,
             testContext,
           );
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/common-property/${resource}`,
+            `${manager.apiUrl}/project/${fixture.projectId}/common-property/${fixture.commonPropertyId}`,
             {
               method: 'PUT',
               headers: new Headers([
@@ -1448,7 +1274,7 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
           assert.equal(response.status, 204);
           assert.equal(await response.text(), '');
           const projectResponse: Response = await fetch(
-            `${manager.apiUrl}/project/${project}`,
+            `${manager.apiUrl}/project/${fixture.projectId}`,
             {
               headers: new Headers([
                 ['Authorization', `Bearer ${ownerLogin.jwt}`],
@@ -1462,7 +1288,8 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
           const items: CommonPropertyDto[] | undefined =
             publishedState.commonProperties;
           const persisted: CommonPropertyDto | undefined = items.find(
-            (item: CommonPropertyDto): boolean => item.id === resource,
+            (item: CommonPropertyDto): boolean =>
+              item.id === fixture.commonPropertyId,
           );
           assert.ok(persisted);
           assert.equal(persisted.leftLabel, 'Person');
@@ -1473,37 +1300,17 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
 
         test('accepts empty property fields and clears database relations', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
-          const resource: string = await manager.createPublishedDocument(
-            'api::common-property.common-property',
-            {
-              project,
-              leftLabel: 'Original Label',
-              leftProperty: 'original',
-              rightLabel: 'Other Label',
-              rightProperty: 'other',
-            },
-            testContext,
-          );
+          const fixture: FixtureContext =
+            await manager.setupFixture(testContext);
           const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
+            fixture.owner.username,
+            fixture.owner.password,
             testContext,
           );
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/common-property/${resource}`,
+            `${manager.apiUrl}/project/${fixture.projectId}/common-property/${fixture.commonPropertyId}`,
             {
               method: 'PUT',
               headers: new Headers([
@@ -1526,7 +1333,7 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
           assert.equal(response.status, 204);
           assert.equal(await response.text(), '');
           const projectResponse: Response = await fetch(
-            `${manager.apiUrl}/project/${project}`,
+            `${manager.apiUrl}/project/${fixture.projectId}`,
             {
               headers: new Headers([
                 ['Authorization', `Bearer ${ownerLogin.jwt}`],
@@ -1540,7 +1347,8 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
           const items: CommonPropertyDto[] | undefined =
             publishedState.commonProperties;
           const persisted: CommonPropertyDto | undefined = items.find(
-            (item: CommonPropertyDto): boolean => item.id === resource,
+            (item: CommonPropertyDto): boolean =>
+              item.id === fixture.commonPropertyId,
           );
           assert.ok(persisted);
           assert.equal(persisted.leftLabel, '');
@@ -1637,36 +1445,16 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
             ];
             for (const variant of variants) {
               // given
-              const owner: E2ETestApplicationUser =
-                await manager.registerUser(testContext);
-              const project: string = await manager.createPublishedDocument(
-                'api::project.project',
-                {
-                  title: 'Test Project',
-                  owner: owner.documentId,
-                  collaborators: [],
-                },
-                testContext,
-              );
-              const resource: string = await manager.createPublishedDocument(
-                'api::common-property.common-property',
-                {
-                  project,
-                  leftLabel: 'Original Label',
-                  leftProperty: 'original',
-                  rightLabel: 'Other Label',
-                  rightProperty: 'other',
-                },
-                testContext,
-              );
+              const fixture: FixtureContext =
+                await manager.setupFixture(testContext);
               const ownerLogin: PostAuthResponseBodyDto =
                 await manager.loginUser(
-                  owner.username,
-                  owner.password,
+                  fixture.owner.username,
+                  fixture.owner.password,
                   testContext,
                 );
               const filters: Record<string, string> = {
-                [`filters[project][documentId][$eq]`]: project,
+                [`filters[project][documentId][$eq]`]: fixture.projectId,
                 pageSize: '100',
                 sort: 'documentId:asc',
               };
@@ -1682,7 +1470,7 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
               assert.ok(
                 originalDraft.results.some(
                   (item: { documentId: string }): boolean =>
-                    item.documentId === resource,
+                    item.documentId === fixture.commonPropertyId,
                 ),
               );
               const originalPublishedResponse: Response =
@@ -1697,7 +1485,7 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
 
               // when
               const response: Response = await fetch(
-                `${manager.apiUrl}/project/${project}/common-property/${resource}`,
+                `${manager.apiUrl}/project/${fixture.projectId}/common-property/${fixture.commonPropertyId}`,
                 {
                   method: 'PUT',
                   headers: new Headers([
@@ -1774,35 +1562,15 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
           ];
           for (const variant of variants) {
             // given
-            const owner: E2ETestApplicationUser =
-              await manager.registerUser(testContext);
-            const project: string = await manager.createPublishedDocument(
-              'api::project.project',
-              {
-                title: 'Test Project',
-                owner: owner.documentId,
-                collaborators: [],
-              },
-              testContext,
-            );
-            const resource: string = await manager.createPublishedDocument(
-              'api::common-property.common-property',
-              {
-                project,
-                leftLabel: 'Original Label',
-                leftProperty: 'original',
-                rightLabel: 'Other Label',
-                rightProperty: 'other',
-              },
-              testContext,
-            );
+            const fixture: FixtureContext =
+              await manager.setupFixture(testContext);
             await manager.loginUser(
-              owner.username,
-              owner.password,
+              fixture.owner.username,
+              fixture.owner.password,
               testContext,
             );
             const filters: Record<string, string> = {
-              [`filters[project][documentId][$eq]`]: project,
+              [`filters[project][documentId][$eq]`]: fixture.projectId,
               pageSize: '100',
               sort: 'documentId:asc',
             };
@@ -1817,7 +1585,7 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
             assert.ok(
               originalDraft.results.some(
                 (item: { documentId: string }): boolean =>
-                  item.documentId === resource,
+                  item.documentId === fixture.commonPropertyId,
               ),
             );
             const originalPublishedResponse: Response =
@@ -1832,7 +1600,7 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
 
             // when
             const response: Response = await fetch(
-              `${manager.apiUrl}/project/${project}/common-property/${resource}`,
+              `${manager.apiUrl}/project/${fixture.projectId}/common-property/${fixture.commonPropertyId}`,
               {
                 method: 'PUT',
                 body: JSON.stringify({
@@ -1882,38 +1650,20 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
       describe('403', (): void => {
         test('rejects outsider access', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const outsider: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
+          const fixture: FixtureContext =
+            await manager.setupFixture(testContext);
+          await manager.loginUser(
+            fixture.owner.username,
+            fixture.owner.password,
             testContext,
           );
-          const resource: string = await manager.createPublishedDocument(
-            'api::common-property.common-property',
-            {
-              project,
-              leftLabel: 'Original Label',
-              leftProperty: 'original',
-              rightLabel: 'Other Label',
-              rightProperty: 'other',
-            },
-            testContext,
-          );
-          await manager.loginUser(owner.username, owner.password, testContext);
           const login: PostAuthResponseBodyDto = await manager.loginUser(
-            outsider.username,
-            outsider.password,
+            fixture.outsider.username,
+            fixture.outsider.password,
             testContext,
           );
           const filters: Record<string, string> = {
-            [`filters[project][documentId][$eq]`]: project,
+            [`filters[project][documentId][$eq]`]: fixture.projectId,
             pageSize: '100',
             sort: 'documentId:asc',
           };
@@ -1928,7 +1678,7 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
           assert.ok(
             originalDraft.results.some(
               (item: { documentId: string }): boolean =>
-                item.documentId === resource,
+                item.documentId === fixture.commonPropertyId,
             ),
           );
           const originalPublishedResponse: Response =
@@ -1943,7 +1693,7 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/common-property/${resource}`,
+            `${manager.apiUrl}/project/${fixture.projectId}/common-property/${fixture.commonPropertyId}`,
             {
               method: 'PUT',
               headers: new Headers([
@@ -1993,45 +1743,27 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
 
         test('rejects removed collaborator access', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const collaborator: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [collaborator.documentId],
-            },
+          const fixture: FixtureContext =
+            await manager.setupFixture(testContext);
+          await manager.loginUser(
+            fixture.owner.username,
+            fixture.owner.password,
             testContext,
           );
-          const resource: string = await manager.createPublishedDocument(
-            'api::common-property.common-property',
-            {
-              project,
-              leftLabel: 'Original Label',
-              leftProperty: 'original',
-              rightLabel: 'Other Label',
-              rightProperty: 'other',
-            },
-            testContext,
-          );
-          await manager.loginUser(owner.username, owner.password, testContext);
           const login: PostAuthResponseBodyDto = await manager.loginUser(
-            collaborator.username,
-            collaborator.password,
+            fixture.collaborator.username,
+            fixture.collaborator.password,
             testContext,
           );
           const removal: Response = await manager.publishDocument(
             'api::project.project',
-            project,
+            fixture.projectId,
             { collaborators: [] },
             testContext,
           );
           assert.equal(removal.status, 200);
           const filters: Record<string, string> = {
-            [`filters[project][documentId][$eq]`]: project,
+            [`filters[project][documentId][$eq]`]: fixture.projectId,
             pageSize: '100',
             sort: 'documentId:asc',
           };
@@ -2046,7 +1778,7 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
           assert.ok(
             originalDraft.results.some(
               (item: { documentId: string }): boolean =>
-                item.documentId === resource,
+                item.documentId === fixture.commonPropertyId,
             ),
           );
           const originalPublishedResponse: Response =
@@ -2061,7 +1793,7 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/common-property/${resource}`,
+            `${manager.apiUrl}/project/${fixture.projectId}/common-property/${fixture.commonPropertyId}`,
             {
               method: 'PUT',
               headers: new Headers([
@@ -2232,36 +1964,16 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
           const sides: ('left' | 'right')[] = ['left', 'right'];
           for (const side of sides) {
             // given
-            const owner: E2ETestApplicationUser =
-              await manager.registerUser(testContext);
-            const project: string = await manager.createPublishedDocument(
-              'api::project.project',
-              {
-                title: 'Test Project',
-                owner: owner.documentId,
-                collaborators: [],
-              },
-              testContext,
-            );
-            const resource: string = await manager.createPublishedDocument(
-              'api::common-property.common-property',
-              {
-                project,
-                leftLabel: 'Original Label',
-                leftProperty: 'original',
-                rightLabel: 'Other Label',
-                rightProperty: 'other',
-              },
-              testContext,
-            );
+            const fixture: FixtureContext =
+              await manager.setupFixture(testContext);
             const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-              owner.username,
-              owner.password,
+              fixture.owner.username,
+              fixture.owner.password,
               testContext,
             );
             const database: string = randomUUID();
             const filters: Record<string, string> = {
-              [`filters[project][documentId][$eq]`]: project,
+              [`filters[project][documentId][$eq]`]: fixture.projectId,
               pageSize: '100',
               sort: 'documentId:asc',
             };
@@ -2276,7 +1988,7 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
             assert.ok(
               originalDraft.results.some(
                 (item: { documentId: string }): boolean =>
-                  item.documentId === resource,
+                  item.documentId === fixture.commonPropertyId,
               ),
             );
             const originalPublishedResponse: Response =
@@ -2291,7 +2003,7 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
 
             // when
             const response: Response = await fetch(
-              `${manager.apiUrl}/project/${project}/common-property/${resource}`,
+              `${manager.apiUrl}/project/${fixture.projectId}/common-property/${fixture.commonPropertyId}`,
               {
                 method: 'PUT',
                 headers: new Headers([
@@ -2826,35 +2538,15 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
 
         test('rejects an unknown common property', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
-          const resource: string = await manager.createPublishedDocument(
-            'api::common-property.common-property',
-            {
-              project,
-              leftLabel: 'Original Label',
-              leftProperty: 'original',
-              rightLabel: 'Other Label',
-              rightProperty: 'other',
-            },
-            testContext,
-          );
+          const fixture: FixtureContext =
+            await manager.setupFixture(testContext);
           const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
+            fixture.owner.username,
+            fixture.owner.password,
             testContext,
           );
           const filters: Record<string, string> = {
-            [`filters[project][documentId][$eq]`]: project,
+            [`filters[project][documentId][$eq]`]: fixture.projectId,
             pageSize: '100',
             sort: 'documentId:asc',
           };
@@ -2869,7 +2561,7 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
           assert.ok(
             originalDraft.results.some(
               (item: { documentId: string }): boolean =>
-                item.documentId === resource,
+                item.documentId === fixture.commonPropertyId,
             ),
           );
           const originalPublishedResponse: Response =
@@ -2884,7 +2576,7 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/common-property/${randomUUID()}`,
+            `${manager.apiUrl}/project/${fixture.projectId}/common-property/${randomUUID()}`,
             {
               method: 'PUT',
               headers: new Headers([
@@ -3370,43 +3062,21 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
 
         test('published collaborator retains access after draft removal', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const collaborator: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [collaborator.documentId],
-            },
-            testContext,
-          );
-          const resource: string = await manager.createPublishedDocument(
-            'api::common-property.common-property',
-            {
-              project,
-              leftLabel: 'Original Label',
-              leftProperty: 'original',
-              rightLabel: 'Other Label',
-              rightProperty: 'other',
-            },
-            testContext,
-          );
+          const fixture: FixtureContext =
+            await manager.setupFixture(testContext);
           const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
+            fixture.owner.username,
+            fixture.owner.password,
             testContext,
           );
           const login: PostAuthResponseBodyDto = await manager.loginUser(
-            collaborator.username,
-            collaborator.password,
+            fixture.collaborator.username,
+            fixture.collaborator.password,
             testContext,
           );
           const draftRemoval: Response = await manager.updateDocument(
             'api::project.project',
-            project,
+            fixture.projectId,
             { collaborators: [] },
             testContext,
           );
@@ -3414,7 +3084,7 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/common-property/${resource}`,
+            `${manager.apiUrl}/project/${fixture.projectId}/common-property/${fixture.commonPropertyId}`,
             {
               method: 'DELETE',
               headers: new Headers([['Authorization', `Bearer ${login.jwt}`]]),
@@ -3426,7 +3096,7 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
           assert.equal(response.status, 204);
           assert.equal(await response.text(), '');
           const projectResponse: Response = await fetch(
-            `${manager.apiUrl}/project/${project}`,
+            `${manager.apiUrl}/project/${fixture.projectId}`,
             {
               headers: new Headers([
                 ['Authorization', `Bearer ${ownerLogin.jwt}`],
@@ -3442,13 +3112,14 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
 
           assert.equal(
             items.some(
-              (item: CommonPropertyDto): boolean => item.id === resource,
+              (item: CommonPropertyDto): boolean =>
+                item.id === fixture.commonPropertyId,
             ),
             false,
           );
           const stored: Response = await manager.readDocument(
             'api::common-property.common-property',
-            resource,
+            fixture.commonPropertyId,
             testContext,
           );
           assert.equal(stored.status, 404);
@@ -3456,37 +3127,17 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
 
         test('owner can delete a common property', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
-          const resource: string = await manager.createPublishedDocument(
-            'api::common-property.common-property',
-            {
-              project,
-              leftLabel: 'Original Label',
-              leftProperty: 'original',
-              rightLabel: 'Other Label',
-              rightProperty: 'other',
-            },
-            testContext,
-          );
+          const fixture: FixtureContext =
+            await manager.setupFixture(testContext);
           const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
+            fixture.owner.username,
+            fixture.owner.password,
             testContext,
           );
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/common-property/${resource}`,
+            `${manager.apiUrl}/project/${fixture.projectId}/common-property/${fixture.commonPropertyId}`,
             {
               method: 'DELETE',
               headers: new Headers([
@@ -3500,7 +3151,7 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
           assert.equal(response.status, 204);
           assert.equal(await response.text(), '');
           const projectResponse: Response = await fetch(
-            `${manager.apiUrl}/project/${project}`,
+            `${manager.apiUrl}/project/${fixture.projectId}`,
             {
               headers: new Headers([
                 ['Authorization', `Bearer ${ownerLogin.jwt}`],
@@ -3515,13 +3166,14 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
             publishedState.commonProperties;
           assert.equal(
             items.some(
-              (item: CommonPropertyDto): boolean => item.id === resource,
+              (item: CommonPropertyDto): boolean =>
+                item.id === fixture.commonPropertyId,
             ),
             false,
           );
           const stored: Response = await manager.readDocument(
             'api::common-property.common-property',
-            resource,
+            fixture.commonPropertyId,
             testContext,
           );
           assert.equal(stored.status, 404);
@@ -3529,44 +3181,22 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
 
         test('collaborator can delete a common property', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const collaborator: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [collaborator.documentId],
-            },
-            testContext,
-          );
-          const resource: string = await manager.createPublishedDocument(
-            'api::common-property.common-property',
-            {
-              project,
-              leftLabel: 'Original Label',
-              leftProperty: 'original',
-              rightLabel: 'Other Label',
-              rightProperty: 'other',
-            },
-            testContext,
-          );
+          const fixture: FixtureContext =
+            await manager.setupFixture(testContext);
           const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
+            fixture.owner.username,
+            fixture.owner.password,
             testContext,
           );
           const login: PostAuthResponseBodyDto = await manager.loginUser(
-            collaborator.username,
-            collaborator.password,
+            fixture.collaborator.username,
+            fixture.collaborator.password,
             testContext,
           );
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/common-property/${resource}`,
+            `${manager.apiUrl}/project/${fixture.projectId}/common-property/${fixture.commonPropertyId}`,
             {
               method: 'DELETE',
               headers: new Headers([['Authorization', `Bearer ${login.jwt}`]]),
@@ -3578,7 +3208,7 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
           assert.equal(response.status, 204);
           assert.equal(await response.text(), '');
           const projectResponse: Response = await fetch(
-            `${manager.apiUrl}/project/${project}`,
+            `${manager.apiUrl}/project/${fixture.projectId}`,
             {
               headers: new Headers([
                 ['Authorization', `Bearer ${ownerLogin.jwt}`],
@@ -3593,13 +3223,14 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
             publishedState.commonProperties;
           assert.equal(
             items.some(
-              (item: CommonPropertyDto): boolean => item.id === resource,
+              (item: CommonPropertyDto): boolean =>
+                item.id === fixture.commonPropertyId,
             ),
             false,
           );
           const stored: Response = await manager.readDocument(
             'api::common-property.common-property',
-            resource,
+            fixture.commonPropertyId,
             testContext,
           );
           assert.equal(stored.status, 404);
@@ -3615,35 +3246,15 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
           ];
           for (const variant of variants) {
             // given
-            const owner: E2ETestApplicationUser =
-              await manager.registerUser(testContext);
-            const project: string = await manager.createPublishedDocument(
-              'api::project.project',
-              {
-                title: 'Test Project',
-                owner: owner.documentId,
-                collaborators: [],
-              },
-              testContext,
-            );
-            const resource: string = await manager.createPublishedDocument(
-              'api::common-property.common-property',
-              {
-                project,
-                leftLabel: 'Original Label',
-                leftProperty: 'original',
-                rightLabel: 'Other Label',
-                rightProperty: 'other',
-              },
-              testContext,
-            );
+            const fixture: FixtureContext =
+              await manager.setupFixture(testContext);
             await manager.loginUser(
-              owner.username,
-              owner.password,
+              fixture.owner.username,
+              fixture.owner.password,
               testContext,
             );
             const filters: Record<string, string> = {
-              [`filters[project][documentId][$eq]`]: project,
+              [`filters[project][documentId][$eq]`]: fixture.projectId,
               pageSize: '100',
               sort: 'documentId:asc',
             };
@@ -3658,7 +3269,7 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
             assert.ok(
               originalDraft.results.some(
                 (item: { documentId: string }): boolean =>
-                  item.documentId === resource,
+                  item.documentId === fixture.commonPropertyId,
               ),
             );
             const originalPublishedResponse: Response =
@@ -3673,7 +3284,7 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
 
             // when
             const response: Response = await fetch(
-              `${manager.apiUrl}/project/${project}/common-property/${resource}`,
+              `${manager.apiUrl}/project/${fixture.projectId}/common-property/${fixture.commonPropertyId}`,
               {
                 method: 'DELETE',
                 signal: testContext.signal,
@@ -3715,38 +3326,20 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
       describe('403', (): void => {
         test('rejects outsider access', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const outsider: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
+          const fixture: FixtureContext =
+            await manager.setupFixture(testContext);
+          await manager.loginUser(
+            fixture.owner.username,
+            fixture.owner.password,
             testContext,
           );
-          const resource: string = await manager.createPublishedDocument(
-            'api::common-property.common-property',
-            {
-              project,
-              leftLabel: 'Original Label',
-              leftProperty: 'original',
-              rightLabel: 'Other Label',
-              rightProperty: 'other',
-            },
-            testContext,
-          );
-          await manager.loginUser(owner.username, owner.password, testContext);
           const login: PostAuthResponseBodyDto = await manager.loginUser(
-            outsider.username,
-            outsider.password,
+            fixture.outsider.username,
+            fixture.outsider.password,
             testContext,
           );
           const filters: Record<string, string> = {
-            [`filters[project][documentId][$eq]`]: project,
+            [`filters[project][documentId][$eq]`]: fixture.projectId,
             pageSize: '100',
             sort: 'documentId:asc',
           };
@@ -3761,7 +3354,7 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
           assert.ok(
             originalDraft.results.some(
               (item: { documentId: string }): boolean =>
-                item.documentId === resource,
+                item.documentId === fixture.commonPropertyId,
             ),
           );
           const originalPublishedResponse: Response =
@@ -3776,7 +3369,7 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/common-property/${resource}`,
+            `${manager.apiUrl}/project/${fixture.projectId}/common-property/${fixture.commonPropertyId}`,
             {
               method: 'DELETE',
               headers: new Headers([['Authorization', `Bearer ${login.jwt}`]]),
@@ -3815,45 +3408,27 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
 
         test('rejects removed collaborator access', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const collaborator: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [collaborator.documentId],
-            },
+          const fixture: FixtureContext =
+            await manager.setupFixture(testContext);
+          await manager.loginUser(
+            fixture.owner.username,
+            fixture.owner.password,
             testContext,
           );
-          const resource: string = await manager.createPublishedDocument(
-            'api::common-property.common-property',
-            {
-              project,
-              leftLabel: 'Original Label',
-              leftProperty: 'original',
-              rightLabel: 'Other Label',
-              rightProperty: 'other',
-            },
-            testContext,
-          );
-          await manager.loginUser(owner.username, owner.password, testContext);
           const login: PostAuthResponseBodyDto = await manager.loginUser(
-            collaborator.username,
-            collaborator.password,
+            fixture.collaborator.username,
+            fixture.collaborator.password,
             testContext,
           );
           const removal: Response = await manager.publishDocument(
             'api::project.project',
-            project,
+            fixture.projectId,
             { collaborators: [] },
             testContext,
           );
           assert.equal(removal.status, 200);
           const filters: Record<string, string> = {
-            [`filters[project][documentId][$eq]`]: project,
+            [`filters[project][documentId][$eq]`]: fixture.projectId,
             pageSize: '100',
             sort: 'documentId:asc',
           };
@@ -3868,7 +3443,7 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
           assert.ok(
             originalDraft.results.some(
               (item: { documentId: string }): boolean =>
-                item.documentId === resource,
+                item.documentId === fixture.commonPropertyId,
             ),
           );
           const originalPublishedResponse: Response =
@@ -3883,7 +3458,7 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/common-property/${resource}`,
+            `${manager.apiUrl}/project/${fixture.projectId}/common-property/${fixture.commonPropertyId}`,
             {
               method: 'DELETE',
               headers: new Headers([['Authorization', `Bearer ${login.jwt}`]]),
@@ -4242,35 +3817,15 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
 
         test('rejects an unknown common property', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
-          const resource: string = await manager.createPublishedDocument(
-            'api::common-property.common-property',
-            {
-              project,
-              leftLabel: 'Original Label',
-              leftProperty: 'original',
-              rightLabel: 'Other Label',
-              rightProperty: 'other',
-            },
-            testContext,
-          );
+          const fixture: FixtureContext =
+            await manager.setupFixture(testContext);
           const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
+            fixture.owner.username,
+            fixture.owner.password,
             testContext,
           );
           const filters: Record<string, string> = {
-            [`filters[project][documentId][$eq]`]: project,
+            [`filters[project][documentId][$eq]`]: fixture.projectId,
             pageSize: '100',
             sort: 'documentId:asc',
           };
@@ -4285,7 +3840,7 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
           assert.ok(
             originalDraft.results.some(
               (item: { documentId: string }): boolean =>
-                item.documentId === resource,
+                item.documentId === fixture.commonPropertyId,
             ),
           );
           const originalPublishedResponse: Response =
@@ -4300,7 +3855,7 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/common-property/${randomUUID()}`,
+            `${manager.apiUrl}/project/${fixture.projectId}/common-property/${randomUUID()}`,
             {
               method: 'DELETE',
               headers: new Headers([

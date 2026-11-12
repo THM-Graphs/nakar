@@ -1,3 +1,4 @@
+import type { FixtureContext } from '../../../../e2e/FixtureContext';
 import type { CreateProjectRequestBodyDto } from './dto/CreateProjectRequestBodyDto';
 import type { UpdateProjectRequestBodyDto } from './dto/UpdateProjectRequestBodyDto';
 import type { E2ETestApplicationUser } from '../../../../e2e/E2ETestApplicationUser';
@@ -1273,21 +1274,12 @@ describe('/project', (suiteContext: SuiteContext): void => {
           ];
           for (const variant of variants) {
             // given
-            const owner: E2ETestApplicationUser =
-              await manager.registerUser(testContext);
-            const project: string = await manager.createPublishedDocument(
-              'api::project.project',
-              {
-                title: 'Test Project',
-                owner: owner.documentId,
-                collaborators: [],
-              },
-              testContext,
-            );
+            const fixture: FixtureContext =
+              await manager.setupFixture(testContext);
 
             // when
             const response: Response = await fetch(
-              `${manager.apiUrl}/project/${project}`,
+              `${manager.apiUrl}/project/${fixture.projectId}`,
               {
                 method: 'GET',
                 signal: testContext.signal,
@@ -1576,29 +1568,17 @@ describe('/project', (suiteContext: SuiteContext): void => {
 
         test('rejects outsider access', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-
-          const outsider: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
+          const fixture: FixtureContext =
+            await manager.setupFixture(testContext);
           const login: PostAuthResponseBodyDto = await manager.loginUser(
-            outsider.username,
-            outsider.password,
+            fixture.outsider.username,
+            fixture.outsider.password,
             testContext,
           );
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}`,
+            `${manager.apiUrl}/project/${fixture.projectId}`,
             {
               method: 'GET',
               headers: new Headers([['Authorization', `Bearer ${login.jwt}`]]),
@@ -1617,38 +1597,17 @@ describe('/project', (suiteContext: SuiteContext): void => {
 
         test('public rooms do not grant outsiders project access', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-
-          const outsider: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
+          const fixture: FixtureContext =
+            await manager.setupFixture(testContext);
           const login: PostAuthResponseBodyDto = await manager.loginUser(
-            outsider.username,
-            outsider.password,
-            testContext,
-          );
-          await manager.createPublishedDocument(
-            'api::room.room',
-            {
-              title: 'Public Room',
-              visibility: RoomVisibilityDto.public,
-              project: project,
-            },
+            fixture.outsider.username,
+            fixture.outsider.password,
             testContext,
           );
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}`,
+            `${manager.apiUrl}/project/${fixture.projectId}`,
             {
               method: 'GET',
               headers: new Headers([['authorization', `Bearer ${login.jwt}`]]),
@@ -1970,26 +1929,28 @@ describe('/project', (suiteContext: SuiteContext): void => {
           ];
           for (const variant of variants) {
             // given
-            const owner: E2ETestApplicationUser =
-              await manager.registerUser(testContext);
-            const project: string = await manager.createPublishedDocument(
-              'api::project.project',
-              {
-                title: 'Test Project',
-                owner: owner.documentId,
-                collaborators: [],
-              },
-              testContext,
-            );
+            const fixture: FixtureContext =
+              await manager.setupFixture(testContext);
             const login: PostAuthResponseBodyDto = await manager.loginUser(
-              owner.username,
-              owner.password,
+              fixture.owner.username,
+              fixture.owner.password,
               testContext,
             );
+            const originalResponse: Response = await fetch(
+              `${manager.apiUrl}/project/${fixture.projectId}`,
+              {
+                headers: new Headers([
+                  ['Authorization', `Bearer ${login.jwt}`],
+                ]),
+                signal: testContext.signal,
+              },
+            );
+            assert.equal(originalResponse.status, 200);
+            const original: unknown = await originalResponse.json();
 
             // when
             const response: Response = await fetch(
-              `${manager.apiUrl}/project/${project}`,
+              `${manager.apiUrl}/project/${fixture.projectId}`,
               {
                 method: 'PUT',
                 headers: new Headers([
@@ -2003,7 +1964,7 @@ describe('/project', (suiteContext: SuiteContext): void => {
 
             // then
             const unchanged: Response = await fetch(
-              `${manager.apiUrl}/project/${project}`,
+              `${manager.apiUrl}/project/${fixture.projectId}`,
               {
                 headers: new Headers([
                   ['Authorization', `Bearer ${login.jwt}`],
@@ -2019,16 +1980,7 @@ describe('/project', (suiteContext: SuiteContext): void => {
               message: variant.expectedMessages,
             });
             assert.equal(unchanged.status, 200);
-            assert.deepEqual(await unchanged.json(), {
-              id: project,
-              title: 'Test Project',
-              owner: { id: owner.documentId, displayName: owner.username },
-              collaborators: [],
-              databases: [],
-              scenarioGroups: [],
-              rooms: [],
-              commonProperties: [],
-            });
+            assert.deepEqual(await unchanged.json(), original);
           }
         });
       });
@@ -2047,26 +1999,28 @@ describe('/project', (suiteContext: SuiteContext): void => {
           ];
           for (const variant of variants) {
             // given
-            const owner: E2ETestApplicationUser =
-              await manager.registerUser(testContext);
-            const project: string = await manager.createPublishedDocument(
-              'api::project.project',
-              {
-                title: 'Test Project',
-                owner: owner.documentId,
-                collaborators: [],
-              },
-              testContext,
-            );
+            const fixture: FixtureContext =
+              await manager.setupFixture(testContext);
             const login: PostAuthResponseBodyDto = await manager.loginUser(
-              owner.username,
-              owner.password,
+              fixture.owner.username,
+              fixture.owner.password,
               testContext,
             );
+            const originalResponse: Response = await fetch(
+              `${manager.apiUrl}/project/${fixture.projectId}`,
+              {
+                headers: new Headers([
+                  ['Authorization', `Bearer ${login.jwt}`],
+                ]),
+                signal: testContext.signal,
+              },
+            );
+            assert.equal(originalResponse.status, 200);
+            const original: unknown = await originalResponse.json();
 
             // when
             const response: Response = await fetch(
-              `${manager.apiUrl}/project/${project}`,
+              `${manager.apiUrl}/project/${fixture.projectId}`,
               {
                 method: 'PUT',
                 body: JSON.stringify({
@@ -2079,7 +2033,7 @@ describe('/project', (suiteContext: SuiteContext): void => {
 
             // then
             const unchanged: Response = await fetch(
-              `${manager.apiUrl}/project/${project}`,
+              `${manager.apiUrl}/project/${fixture.projectId}`,
               {
                 headers: new Headers([
                   ['Authorization', `Bearer ${login.jwt}`],
@@ -2095,16 +2049,7 @@ describe('/project', (suiteContext: SuiteContext): void => {
               message: 'Unauthorized',
             });
             assert.equal(unchanged.status, 200);
-            assert.deepEqual(await unchanged.json(), {
-              id: project,
-              title: 'Test Project',
-              owner: { id: owner.documentId, displayName: owner.username },
-              collaborators: [],
-              databases: [],
-              scenarioGroups: [],
-              rooms: [],
-              commonProperties: [],
-            });
+            assert.deepEqual(await unchanged.json(), original);
           }
         });
       });
@@ -2408,34 +2353,33 @@ describe('/project', (suiteContext: SuiteContext): void => {
 
         test('rejects outsider access', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-
-          const outsider: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
+          const fixture: FixtureContext =
+            await manager.setupFixture(testContext);
           const login: PostAuthResponseBodyDto = await manager.loginUser(
-            outsider.username,
-            outsider.password,
+            fixture.outsider.username,
+            fixture.outsider.password,
             testContext,
           );
           const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
+            fixture.owner.username,
+            fixture.owner.password,
             testContext,
           );
+          const originalResponse: Response = await fetch(
+            `${manager.apiUrl}/project/${fixture.projectId}`,
+            {
+              headers: new Headers([
+                ['Authorization', `Bearer ${ownerLogin.jwt}`],
+              ]),
+              signal: testContext.signal,
+            },
+          );
+          assert.equal(originalResponse.status, 200);
+          const original: unknown = await originalResponse.json();
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}`,
+            `${manager.apiUrl}/project/${fixture.projectId}`,
             {
               method: 'PUT',
               headers: new Headers([
@@ -2451,7 +2395,7 @@ describe('/project', (suiteContext: SuiteContext): void => {
 
           // then
           const unchanged: Response = await fetch(
-            `${manager.apiUrl}/project/${project}`,
+            `${manager.apiUrl}/project/${fixture.projectId}`,
             {
               headers: new Headers([
                 ['Authorization', `Bearer ${ownerLogin.jwt}`],
@@ -2467,16 +2411,7 @@ describe('/project', (suiteContext: SuiteContext): void => {
             message: 'Forbidden resource',
           });
           assert.equal(unchanged.status, 200);
-          assert.deepEqual(await unchanged.json(), {
-            id: project,
-            title: 'Test Project',
-            owner: { id: owner.documentId, displayName: owner.username },
-            collaborators: [],
-            databases: [],
-            scenarioGroups: [],
-            rooms: [],
-            commonProperties: [],
-          });
+          assert.deepEqual(await unchanged.json(), original);
         });
       });
       describe('404', (): void => {
@@ -3685,26 +3620,28 @@ describe('/project', (suiteContext: SuiteContext): void => {
           ];
           for (const variant of variants) {
             // given
-            const owner: E2ETestApplicationUser =
-              await manager.registerUser(testContext);
-            const project: string = await manager.createPublishedDocument(
-              'api::project.project',
-              {
-                title: 'Test Project',
-                owner: owner.documentId,
-                collaborators: [],
-              },
-              testContext,
-            );
+            const fixture: FixtureContext =
+              await manager.setupFixture(testContext);
             const login: PostAuthResponseBodyDto = await manager.loginUser(
-              owner.username,
-              owner.password,
+              fixture.owner.username,
+              fixture.owner.password,
               testContext,
             );
+            const originalResponse: Response = await fetch(
+              `${manager.apiUrl}/project/${fixture.projectId}`,
+              {
+                headers: new Headers([
+                  ['Authorization', `Bearer ${login.jwt}`],
+                ]),
+                signal: testContext.signal,
+              },
+            );
+            assert.equal(originalResponse.status, 200);
+            const original: unknown = await originalResponse.json();
 
             // when
             const response: Response = await fetch(
-              `${manager.apiUrl}/project/${project}`,
+              `${manager.apiUrl}/project/${fixture.projectId}`,
               {
                 method: 'DELETE',
                 signal: testContext.signal,
@@ -3714,7 +3651,7 @@ describe('/project', (suiteContext: SuiteContext): void => {
 
             // then
             const unchanged: Response = await fetch(
-              `${manager.apiUrl}/project/${project}`,
+              `${manager.apiUrl}/project/${fixture.projectId}`,
               {
                 headers: new Headers([
                   ['Authorization', `Bearer ${login.jwt}`],
@@ -3730,16 +3667,7 @@ describe('/project', (suiteContext: SuiteContext): void => {
               message: 'Unauthorized',
             });
             assert.equal(unchanged.status, 200);
-            assert.deepEqual(await unchanged.json(), {
-              id: project,
-              title: 'Test Project',
-              owner: { id: owner.documentId, displayName: owner.username },
-              collaborators: [],
-              databases: [],
-              scenarioGroups: [],
-              rooms: [],
-              commonProperties: [],
-            });
+            assert.deepEqual(await unchanged.json(), original);
           }
         });
       });
@@ -4025,34 +3953,33 @@ describe('/project', (suiteContext: SuiteContext): void => {
 
         test('rejects outsider access', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-
-          const outsider: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
+          const fixture: FixtureContext =
+            await manager.setupFixture(testContext);
           const login: PostAuthResponseBodyDto = await manager.loginUser(
-            outsider.username,
-            outsider.password,
+            fixture.outsider.username,
+            fixture.outsider.password,
             testContext,
           );
           const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
+            fixture.owner.username,
+            fixture.owner.password,
             testContext,
           );
+          const originalResponse: Response = await fetch(
+            `${manager.apiUrl}/project/${fixture.projectId}`,
+            {
+              headers: new Headers([
+                ['Authorization', `Bearer ${ownerLogin.jwt}`],
+              ]),
+              signal: testContext.signal,
+            },
+          );
+          assert.equal(originalResponse.status, 200);
+          const original: unknown = await originalResponse.json();
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}`,
+            `${manager.apiUrl}/project/${fixture.projectId}`,
             {
               method: 'DELETE',
               headers: new Headers([['Authorization', `Bearer ${login.jwt}`]]),
@@ -4062,7 +3989,7 @@ describe('/project', (suiteContext: SuiteContext): void => {
 
           // then
           const unchanged: Response = await fetch(
-            `${manager.apiUrl}/project/${project}`,
+            `${manager.apiUrl}/project/${fixture.projectId}`,
             {
               headers: new Headers([
                 ['Authorization', `Bearer ${ownerLogin.jwt}`],
@@ -4078,16 +4005,7 @@ describe('/project', (suiteContext: SuiteContext): void => {
             message: 'Forbidden resource',
           });
           assert.equal(unchanged.status, 200);
-          assert.deepEqual(await unchanged.json(), {
-            id: project,
-            title: 'Test Project',
-            owner: { id: owner.documentId, displayName: owner.username },
-            collaborators: [],
-            databases: [],
-            scenarioGroups: [],
-            rooms: [],
-            commonProperties: [],
-          });
+          assert.deepEqual(await unchanged.json(), original);
         });
       });
       describe('404', (): void => {

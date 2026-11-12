@@ -1,3 +1,4 @@
+import type { FixtureContext } from '../../../../e2e/FixtureContext';
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
 import type { SuiteContext, TestContext } from 'node:test';
@@ -52,19 +53,15 @@ describe('/room/:roomId/canvas/:canvasId/note', (suiteContext: SuiteContext): vo
     describe('201', (): void => {
       test('owner can create a note with node references', async (testContext: TestContext): Promise<void> => {
         // given
-        const owner: E2ETestApplicationUser =
-          await manager.registerUser(testContext);
-        const canvas: E2ETestCanvas = await manager.createCanvas(
-          owner,
-          testContext,
-          RoomVisibilityDto.private,
-        );
+        const fixture: FixtureContext = await manager.setupFixture(testContext);
+        const canvas: E2ETestCanvas =
+          fixture.canvases[RoomVisibilityDto.private];
         const login: PostAuthResponseBodyDto = await manager.loginUser(
-          owner.username,
-          owner.password,
+          fixture.owner.username,
+          fixture.owner.password,
           testContext,
         );
-        const loginAuthor: string = owner.documentId;
+        const loginAuthor: string = fixture.owner.documentId;
         const nodeIds: string[] = [randomUUID(), randomUUID()];
 
         // when
@@ -122,22 +119,15 @@ describe('/room/:roomId/canvas/:canvasId/note', (suiteContext: SuiteContext): vo
       });
       test('collaborator can create a note', async (testContext: TestContext): Promise<void> => {
         // given
-        const owner: E2ETestApplicationUser =
-          await manager.registerUser(testContext);
-        const collaborator: E2ETestApplicationUser =
-          await manager.registerUser(testContext);
-        const canvas: E2ETestCanvas = await manager.createCanvas(
-          owner,
-          testContext,
-          RoomVisibilityDto.private,
-          [collaborator.documentId],
-        );
+        const fixture: FixtureContext = await manager.setupFixture(testContext);
+        const canvas: E2ETestCanvas =
+          fixture.canvases[RoomVisibilityDto.private];
         const login: PostAuthResponseBodyDto = await manager.loginUser(
-          collaborator.username,
-          collaborator.password,
+          fixture.collaborator.username,
+          fixture.collaborator.password,
           testContext,
         );
-        const loginAuthor: string = collaborator.documentId;
+        const loginAuthor: string = fixture.collaborator.documentId;
         const nodeIds: string[] = [randomUUID(), randomUUID()];
 
         // when
@@ -195,21 +185,15 @@ describe('/room/:roomId/canvas/:canvasId/note', (suiteContext: SuiteContext): vo
       });
       test('authenticated visitor can create a note in a public room', async (testContext: TestContext): Promise<void> => {
         // given
-        const owner: E2ETestApplicationUser =
-          await manager.registerUser(testContext);
-        const outsider: E2ETestApplicationUser =
-          await manager.registerUser(testContext);
-        const canvas: E2ETestCanvas = await manager.createCanvas(
-          owner,
-          testContext,
-          RoomVisibilityDto.public,
-        );
+        const fixture: FixtureContext = await manager.setupFixture(testContext);
+        const canvas: E2ETestCanvas =
+          fixture.canvases[RoomVisibilityDto.public];
         const login: PostAuthResponseBodyDto = await manager.loginUser(
-          outsider.username,
-          outsider.password,
+          fixture.outsider.username,
+          fixture.outsider.password,
           testContext,
         );
-        const loginAuthor: string = outsider.documentId;
+        const loginAuthor: string = fixture.outsider.documentId;
         const nodeIds: string[] = [randomUUID(), randomUUID()];
 
         // when
@@ -267,21 +251,15 @@ describe('/room/:roomId/canvas/:canvasId/note', (suiteContext: SuiteContext): vo
       });
       test('authenticated visitor can create a note in an unlisted room', async (testContext: TestContext): Promise<void> => {
         // given
-        const owner: E2ETestApplicationUser =
-          await manager.registerUser(testContext);
-        const outsider: E2ETestApplicationUser =
-          await manager.registerUser(testContext);
-        const canvas: E2ETestCanvas = await manager.createCanvas(
-          owner,
-          testContext,
-          RoomVisibilityDto.unlisted,
-        );
+        const fixture: FixtureContext = await manager.setupFixture(testContext);
+        const canvas: E2ETestCanvas =
+          fixture.canvases[RoomVisibilityDto.unlisted];
         const login: PostAuthResponseBodyDto = await manager.loginUser(
-          outsider.username,
-          outsider.password,
+          fixture.outsider.username,
+          fixture.outsider.password,
           testContext,
         );
-        const loginAuthor: string = outsider.documentId;
+        const loginAuthor: string = fixture.outsider.documentId;
         const nodeIds: string[] = [randomUUID(), randomUUID()];
 
         // when
@@ -339,16 +317,12 @@ describe('/room/:roomId/canvas/:canvasId/note', (suiteContext: SuiteContext): vo
       });
       test('accepts an empty note without node references', async (testContext: TestContext): Promise<void> => {
         // given
-        const owner: E2ETestApplicationUser =
-          await manager.registerUser(testContext);
-        const canvas: E2ETestCanvas = await manager.createCanvas(
-          owner,
-          testContext,
-          RoomVisibilityDto.private,
-        );
+        const fixture: FixtureContext = await manager.setupFixture(testContext);
+        const canvas: E2ETestCanvas =
+          fixture.canvases[RoomVisibilityDto.private];
         const login: PostAuthResponseBodyDto = await manager.loginUser(
-          owner.username,
-          owner.password,
+          fixture.owner.username,
+          fixture.owner.password,
           testContext,
         );
 
@@ -427,16 +401,13 @@ describe('/room/:roomId/canvas/:canvasId/note', (suiteContext: SuiteContext): vo
         ];
         for (const variant of variants) {
           // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const canvas: E2ETestCanvas = await manager.createCanvas(
-            owner,
-            testContext,
-            RoomVisibilityDto.private,
-          );
+          const fixture: FixtureContext =
+            await manager.setupFixture(testContext);
+          const canvas: E2ETestCanvas =
+            fixture.canvases[RoomVisibilityDto.private];
           const login: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
+            fixture.owner.username,
+            fixture.owner.password,
             testContext,
           );
           const existing: Response = await manager.readDocuments(
@@ -509,13 +480,9 @@ describe('/room/:roomId/canvas/:canvasId/note', (suiteContext: SuiteContext): vo
         ];
         for (const variant of variants) {
           // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const canvas: E2ETestCanvas = await manager.createCanvas(
-            owner,
-            testContext,
-            variant.visibility,
-          );
+          const fixture: FixtureContext =
+            await manager.setupFixture(testContext);
+          const canvas: E2ETestCanvas = fixture.canvases[variant.visibility];
 
           // when
           const response: Response = await fetch(
@@ -544,18 +511,12 @@ describe('/room/:roomId/canvas/:canvasId/note', (suiteContext: SuiteContext): vo
     describe('403', (): void => {
       test('rejects an outsider in a private room', async (testContext: TestContext): Promise<void> => {
         // given
-        const owner: E2ETestApplicationUser =
-          await manager.registerUser(testContext);
-        const outsider: E2ETestApplicationUser =
-          await manager.registerUser(testContext);
-        const canvas: E2ETestCanvas = await manager.createCanvas(
-          owner,
-          testContext,
-          RoomVisibilityDto.private,
-        );
+        const fixture: FixtureContext = await manager.setupFixture(testContext);
+        const canvas: E2ETestCanvas =
+          fixture.canvases[RoomVisibilityDto.private];
         const login: PostAuthResponseBodyDto = await manager.loginUser(
-          outsider.username,
-          outsider.password,
+          fixture.outsider.username,
+          fixture.outsider.password,
           testContext,
         );
 
@@ -588,16 +549,12 @@ describe('/room/:roomId/canvas/:canvasId/note', (suiteContext: SuiteContext): vo
     describe('404', (): void => {
       test('rejects an unknown canvas', async (testContext: TestContext): Promise<void> => {
         // given
-        const owner: E2ETestApplicationUser =
-          await manager.registerUser(testContext);
-        const canvas: E2ETestCanvas = await manager.createCanvas(
-          owner,
-          testContext,
-          RoomVisibilityDto.private,
-        );
+        const fixture: FixtureContext = await manager.setupFixture(testContext);
+        const canvas: E2ETestCanvas =
+          fixture.canvases[RoomVisibilityDto.private];
         const login: PostAuthResponseBodyDto = await manager.loginUser(
-          owner.username,
-          owner.password,
+          fixture.owner.username,
+          fixture.owner.password,
           testContext,
         );
         canvas.canvasId = randomUUID();
@@ -769,36 +726,19 @@ describe('/room/:roomId/canvas/:canvasId/note', (suiteContext: SuiteContext): vo
       describe('204', (): void => {
         test('owner can update a note', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const canvas: E2ETestCanvas = await manager.createCanvas(
-            owner,
-            testContext,
-            RoomVisibilityDto.private,
-          );
+          const fixture: FixtureContext =
+            await manager.setupFixture(testContext);
+          const canvas: E2ETestCanvas =
+            fixture.canvases[RoomVisibilityDto.private];
           const login: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
-            testContext,
-          );
-          const note: string = await manager.createPublishedDocument(
-            'api::note.note',
-            {
-              project: canvas.projectId,
-              content: 'Original note',
-              author: owner.documentId,
-            },
-            testContext,
-          );
-          const reference: string = await manager.createPublishedDocument(
-            'api::node-reference.node-reference',
-            { note, nodeId: randomUUID() },
+            fixture.owner.username,
+            fixture.owner.password,
             testContext,
           );
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/room/${canvas.roomId}/canvas/${canvas.canvasId}/note/${note}`,
+            `${manager.apiUrl}/room/${canvas.roomId}/canvas/${canvas.canvasId}/note/${fixture.noteId}`,
             {
               method: 'PUT',
               headers: new Headers([
@@ -817,17 +757,17 @@ describe('/room/:roomId/canvas/:canvasId/note', (suiteContext: SuiteContext): vo
           assert.equal(await response.text(), '');
           const stored: Response = await manager.readDocument(
             'api::note.note',
-            note,
+            fixture.noteId,
             testContext,
           );
           assert.equal(stored.status, 200);
           assert.deepEqual(noteStateSchema.parse(await stored.json()).data, {
-            documentId: note,
+            documentId: fixture.noteId,
             content: 'Updated note',
           });
           const storedReference: Response = await manager.readDocument(
             'api::node-reference.node-reference',
-            reference,
+            fixture.nodeReferenceId,
             testContext,
           );
           assert.equal(storedReference.status, 200);
@@ -1000,38 +940,19 @@ describe('/room/:roomId/canvas/:canvasId/note', (suiteContext: SuiteContext): vo
         });
         test('authenticated public-room visitor can update a note', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const outsider: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const canvas: E2ETestCanvas = await manager.createCanvas(
-            owner,
-            testContext,
-            RoomVisibilityDto.public,
-          );
+          const fixture: FixtureContext =
+            await manager.setupFixture(testContext);
+          const canvas: E2ETestCanvas =
+            fixture.canvases[RoomVisibilityDto.public];
           const login: PostAuthResponseBodyDto = await manager.loginUser(
-            outsider.username,
-            outsider.password,
-            testContext,
-          );
-          const note: string = await manager.createPublishedDocument(
-            'api::note.note',
-            {
-              project: canvas.projectId,
-              content: 'Original note',
-              author: owner.documentId,
-            },
-            testContext,
-          );
-          const reference: string = await manager.createPublishedDocument(
-            'api::node-reference.node-reference',
-            { note, nodeId: randomUUID() },
+            fixture.outsider.username,
+            fixture.outsider.password,
             testContext,
           );
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/room/${canvas.roomId}/canvas/${canvas.canvasId}/note/${note}`,
+            `${manager.apiUrl}/room/${canvas.roomId}/canvas/${canvas.canvasId}/note/${fixture.noteId}`,
             {
               method: 'PUT',
               headers: new Headers([
@@ -1050,17 +971,17 @@ describe('/room/:roomId/canvas/:canvasId/note', (suiteContext: SuiteContext): vo
           assert.equal(await response.text(), '');
           const stored: Response = await manager.readDocument(
             'api::note.note',
-            note,
+            fixture.noteId,
             testContext,
           );
           assert.equal(stored.status, 200);
           assert.deepEqual(noteStateSchema.parse(await stored.json()).data, {
-            documentId: note,
+            documentId: fixture.noteId,
             content: 'Updated note',
           });
           const storedReference: Response = await manager.readDocument(
             'api::node-reference.node-reference',
-            reference,
+            fixture.nodeReferenceId,
             testContext,
           );
           assert.equal(storedReference.status, 200);
@@ -1091,30 +1012,18 @@ describe('/room/:roomId/canvas/:canvasId/note', (suiteContext: SuiteContext): vo
           ];
           for (const variant of variants) {
             // given
-            const owner: E2ETestApplicationUser =
-              await manager.registerUser(testContext);
-            const canvas: E2ETestCanvas = await manager.createCanvas(
-              owner,
-              testContext,
-              RoomVisibilityDto.private,
-            );
+            const fixture: FixtureContext =
+              await manager.setupFixture(testContext);
+            const canvas: E2ETestCanvas =
+              fixture.canvases[RoomVisibilityDto.private];
             const login: PostAuthResponseBodyDto = await manager.loginUser(
-              owner.username,
-              owner.password,
-              testContext,
-            );
-            const note: string = await manager.createPublishedDocument(
-              'api::note.note',
-              {
-                project: canvas.projectId,
-                content: 'Original note',
-                author: owner.documentId,
-              },
+              fixture.owner.username,
+              fixture.owner.password,
               testContext,
             );
             const originalResponse: Response = await manager.readDocument(
               'api::note.note',
-              note,
+              fixture.noteId,
               testContext,
             );
             assert.equal(originalResponse.status, 200);
@@ -1122,7 +1031,7 @@ describe('/room/:roomId/canvas/:canvasId/note', (suiteContext: SuiteContext): vo
 
             // when
             const response: Response = await fetch(
-              `${manager.apiUrl}/room/${canvas.roomId}/canvas/${canvas.canvasId}/note/${note}`,
+              `${manager.apiUrl}/room/${canvas.roomId}/canvas/${canvas.canvasId}/note/${fixture.noteId}`,
               {
                 method: 'PUT',
                 headers: new Headers([
@@ -1143,7 +1052,7 @@ describe('/room/:roomId/canvas/:canvasId/note', (suiteContext: SuiteContext): vo
             });
             const stored: Response = await manager.readDocument(
               'api::note.note',
-              note,
+              fixture.noteId,
               testContext,
             );
             assert.equal(stored.status, 200);
@@ -1175,26 +1084,12 @@ describe('/room/:roomId/canvas/:canvasId/note', (suiteContext: SuiteContext): vo
           ];
           for (const variant of variants) {
             // given
-            const owner: E2ETestApplicationUser =
-              await manager.registerUser(testContext);
-            const canvas: E2ETestCanvas = await manager.createCanvas(
-              owner,
-              testContext,
-              variant.visibility,
-            );
-
-            const note: string = await manager.createPublishedDocument(
-              'api::note.note',
-              {
-                project: canvas.projectId,
-                content: 'Original note',
-                author: owner.documentId,
-              },
-              testContext,
-            );
+            const fixture: FixtureContext =
+              await manager.setupFixture(testContext);
+            const canvas: E2ETestCanvas = fixture.canvases[variant.visibility];
             const originalResponse: Response = await manager.readDocument(
               'api::note.note',
-              note,
+              fixture.noteId,
               testContext,
             );
             assert.equal(originalResponse.status, 200);
@@ -1202,7 +1097,7 @@ describe('/room/:roomId/canvas/:canvasId/note', (suiteContext: SuiteContext): vo
 
             // when
             const response: Response = await fetch(
-              `${manager.apiUrl}/room/${canvas.roomId}/canvas/${canvas.canvasId}/note/${note}`,
+              `${manager.apiUrl}/room/${canvas.roomId}/canvas/${canvas.canvasId}/note/${fixture.noteId}`,
               {
                 method: 'PUT',
                 body: JSON.stringify({
@@ -1222,7 +1117,7 @@ describe('/room/:roomId/canvas/:canvasId/note', (suiteContext: SuiteContext): vo
             });
             const stored: Response = await manager.readDocument(
               'api::note.note',
-              note,
+              fixture.noteId,
               testContext,
             );
             assert.equal(stored.status, 200);
@@ -1233,32 +1128,18 @@ describe('/room/:roomId/canvas/:canvasId/note', (suiteContext: SuiteContext): vo
       describe('403', (): void => {
         test('rejects outsider access to a private room', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const outsider: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const canvas: E2ETestCanvas = await manager.createCanvas(
-            owner,
-            testContext,
-            RoomVisibilityDto.private,
-          );
+          const fixture: FixtureContext =
+            await manager.setupFixture(testContext);
+          const canvas: E2ETestCanvas =
+            fixture.canvases[RoomVisibilityDto.private];
           const login: PostAuthResponseBodyDto = await manager.loginUser(
-            outsider.username,
-            outsider.password,
-            testContext,
-          );
-          const note: string = await manager.createPublishedDocument(
-            'api::note.note',
-            {
-              project: canvas.projectId,
-              content: 'Original note',
-              author: owner.documentId,
-            },
+            fixture.outsider.username,
+            fixture.outsider.password,
             testContext,
           );
           const originalResponse: Response = await manager.readDocument(
             'api::note.note',
-            note,
+            fixture.noteId,
             testContext,
           );
           assert.equal(originalResponse.status, 200);
@@ -1266,7 +1147,7 @@ describe('/room/:roomId/canvas/:canvasId/note', (suiteContext: SuiteContext): vo
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/room/${canvas.roomId}/canvas/${canvas.canvasId}/note/${note}`,
+            `${manager.apiUrl}/room/${canvas.roomId}/canvas/${canvas.canvasId}/note/${fixture.noteId}`,
             {
               method: 'PUT',
               headers: new Headers([
@@ -1289,7 +1170,7 @@ describe('/room/:roomId/canvas/:canvasId/note', (suiteContext: SuiteContext): vo
           });
           const stored: Response = await manager.readDocument(
             'api::note.note',
-            note,
+            fixture.noteId,
             testContext,
           );
           assert.equal(stored.status, 200);
@@ -1299,16 +1180,13 @@ describe('/room/:roomId/canvas/:canvasId/note', (suiteContext: SuiteContext): vo
       describe('404', (): void => {
         test('rejects an unknown note', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const canvas: E2ETestCanvas = await manager.createCanvas(
-            owner,
-            testContext,
-            RoomVisibilityDto.private,
-          );
+          const fixture: FixtureContext =
+            await manager.setupFixture(testContext);
+          const canvas: E2ETestCanvas =
+            fixture.canvases[RoomVisibilityDto.private];
           const login: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
+            fixture.owner.username,
+            fixture.owner.password,
             testContext,
           );
           const note: string = randomUUID();
@@ -1453,31 +1331,19 @@ describe('/room/:roomId/canvas/:canvasId/note', (suiteContext: SuiteContext): vo
         });
         test('rejects an unknown canvas', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const canvas: E2ETestCanvas = await manager.createCanvas(
-            owner,
-            testContext,
-            RoomVisibilityDto.private,
-          );
+          const fixture: FixtureContext =
+            await manager.setupFixture(testContext);
+          const canvas: E2ETestCanvas =
+            fixture.canvases[RoomVisibilityDto.private];
           const login: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
-            testContext,
-          );
-          const note: string = await manager.createPublishedDocument(
-            'api::note.note',
-            {
-              project: canvas.projectId,
-              content: 'Original note',
-              author: owner.documentId,
-            },
+            fixture.owner.username,
+            fixture.owner.password,
             testContext,
           );
           canvas.canvasId = randomUUID();
           const originalResponse: Response = await manager.readDocument(
             'api::note.note',
-            note,
+            fixture.noteId,
             testContext,
           );
           assert.equal(originalResponse.status, 200);
@@ -1485,7 +1351,7 @@ describe('/room/:roomId/canvas/:canvasId/note', (suiteContext: SuiteContext): vo
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/room/${canvas.roomId}/canvas/${canvas.canvasId}/note/${note}`,
+            `${manager.apiUrl}/room/${canvas.roomId}/canvas/${canvas.canvasId}/note/${fixture.noteId}`,
             {
               method: 'PUT',
               headers: new Headers([
@@ -1507,7 +1373,7 @@ describe('/room/:roomId/canvas/:canvasId/note', (suiteContext: SuiteContext): vo
           });
           const stored: Response = await manager.readDocument(
             'api::note.note',
-            note,
+            fixture.noteId,
             testContext,
           );
           assert.equal(stored.status, 200);
@@ -1653,36 +1519,19 @@ describe('/room/:roomId/canvas/:canvasId/note', (suiteContext: SuiteContext): vo
       describe('204', (): void => {
         test('owner can delete a note', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const canvas: E2ETestCanvas = await manager.createCanvas(
-            owner,
-            testContext,
-            RoomVisibilityDto.private,
-          );
+          const fixture: FixtureContext =
+            await manager.setupFixture(testContext);
+          const canvas: E2ETestCanvas =
+            fixture.canvases[RoomVisibilityDto.private];
           const login: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
-            testContext,
-          );
-          const note: string = await manager.createPublishedDocument(
-            'api::note.note',
-            {
-              project: canvas.projectId,
-              content: 'Original note',
-              author: owner.documentId,
-            },
-            testContext,
-          );
-          const reference: string = await manager.createPublishedDocument(
-            'api::node-reference.node-reference',
-            { note, nodeId: randomUUID() },
+            fixture.owner.username,
+            fixture.owner.password,
             testContext,
           );
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/room/${canvas.roomId}/canvas/${canvas.canvasId}/note/${note}`,
+            `${manager.apiUrl}/room/${canvas.roomId}/canvas/${canvas.canvasId}/note/${fixture.noteId}`,
             {
               method: 'DELETE',
               headers: new Headers([
@@ -1698,13 +1547,13 @@ describe('/room/:roomId/canvas/:canvasId/note', (suiteContext: SuiteContext): vo
           assert.equal(await response.text(), '');
           const stored: Response = await manager.readDocument(
             'api::note.note',
-            note,
+            fixture.noteId,
             testContext,
           );
           assert.equal(stored.status, 404);
           const storedReference: Response = await manager.readDocument(
             'api::node-reference.node-reference',
-            reference,
+            fixture.nodeReferenceId,
             testContext,
           );
           assert.equal(storedReference.status, 404);
@@ -1772,38 +1621,19 @@ describe('/room/:roomId/canvas/:canvasId/note', (suiteContext: SuiteContext): vo
         });
         test('authenticated public-room visitor can delete a note', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const outsider: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const canvas: E2ETestCanvas = await manager.createCanvas(
-            owner,
-            testContext,
-            RoomVisibilityDto.public,
-          );
+          const fixture: FixtureContext =
+            await manager.setupFixture(testContext);
+          const canvas: E2ETestCanvas =
+            fixture.canvases[RoomVisibilityDto.public];
           const login: PostAuthResponseBodyDto = await manager.loginUser(
-            outsider.username,
-            outsider.password,
-            testContext,
-          );
-          const note: string = await manager.createPublishedDocument(
-            'api::note.note',
-            {
-              project: canvas.projectId,
-              content: 'Original note',
-              author: owner.documentId,
-            },
-            testContext,
-          );
-          const reference: string = await manager.createPublishedDocument(
-            'api::node-reference.node-reference',
-            { note, nodeId: randomUUID() },
+            fixture.outsider.username,
+            fixture.outsider.password,
             testContext,
           );
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/room/${canvas.roomId}/canvas/${canvas.canvasId}/note/${note}`,
+            `${manager.apiUrl}/room/${canvas.roomId}/canvas/${canvas.canvasId}/note/${fixture.noteId}`,
             {
               method: 'DELETE',
               headers: new Headers([
@@ -1819,13 +1649,13 @@ describe('/room/:roomId/canvas/:canvasId/note', (suiteContext: SuiteContext): vo
           assert.equal(await response.text(), '');
           const stored: Response = await manager.readDocument(
             'api::note.note',
-            note,
+            fixture.noteId,
             testContext,
           );
           assert.equal(stored.status, 404);
           const storedReference: Response = await manager.readDocument(
             'api::node-reference.node-reference',
-            reference,
+            fixture.nodeReferenceId,
             testContext,
           );
           assert.equal(storedReference.status, 404);
@@ -1855,26 +1685,12 @@ describe('/room/:roomId/canvas/:canvasId/note', (suiteContext: SuiteContext): vo
           ];
           for (const variant of variants) {
             // given
-            const owner: E2ETestApplicationUser =
-              await manager.registerUser(testContext);
-            const canvas: E2ETestCanvas = await manager.createCanvas(
-              owner,
-              testContext,
-              variant.visibility,
-            );
-
-            const note: string = await manager.createPublishedDocument(
-              'api::note.note',
-              {
-                project: canvas.projectId,
-                content: 'Original note',
-                author: owner.documentId,
-              },
-              testContext,
-            );
+            const fixture: FixtureContext =
+              await manager.setupFixture(testContext);
+            const canvas: E2ETestCanvas = fixture.canvases[variant.visibility];
             const originalResponse: Response = await manager.readDocument(
               'api::note.note',
-              note,
+              fixture.noteId,
               testContext,
             );
             assert.equal(originalResponse.status, 200);
@@ -1882,7 +1698,7 @@ describe('/room/:roomId/canvas/:canvasId/note', (suiteContext: SuiteContext): vo
 
             // when
             const response: Response = await fetch(
-              `${manager.apiUrl}/room/${canvas.roomId}/canvas/${canvas.canvasId}/note/${note}`,
+              `${manager.apiUrl}/room/${canvas.roomId}/canvas/${canvas.canvasId}/note/${fixture.noteId}`,
               {
                 method: 'DELETE',
                 signal: testContext.signal,
@@ -1899,7 +1715,7 @@ describe('/room/:roomId/canvas/:canvasId/note', (suiteContext: SuiteContext): vo
             });
             const stored: Response = await manager.readDocument(
               'api::note.note',
-              note,
+              fixture.noteId,
               testContext,
             );
             assert.equal(stored.status, 200);
@@ -1910,32 +1726,18 @@ describe('/room/:roomId/canvas/:canvasId/note', (suiteContext: SuiteContext): vo
       describe('403', (): void => {
         test('rejects outsider access to a private room', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const outsider: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const canvas: E2ETestCanvas = await manager.createCanvas(
-            owner,
-            testContext,
-            RoomVisibilityDto.private,
-          );
+          const fixture: FixtureContext =
+            await manager.setupFixture(testContext);
+          const canvas: E2ETestCanvas =
+            fixture.canvases[RoomVisibilityDto.private];
           const login: PostAuthResponseBodyDto = await manager.loginUser(
-            outsider.username,
-            outsider.password,
-            testContext,
-          );
-          const note: string = await manager.createPublishedDocument(
-            'api::note.note',
-            {
-              project: canvas.projectId,
-              content: 'Original note',
-              author: owner.documentId,
-            },
+            fixture.outsider.username,
+            fixture.outsider.password,
             testContext,
           );
           const originalResponse: Response = await manager.readDocument(
             'api::note.note',
-            note,
+            fixture.noteId,
             testContext,
           );
           assert.equal(originalResponse.status, 200);
@@ -1943,7 +1745,7 @@ describe('/room/:roomId/canvas/:canvasId/note', (suiteContext: SuiteContext): vo
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/room/${canvas.roomId}/canvas/${canvas.canvasId}/note/${note}`,
+            `${manager.apiUrl}/room/${canvas.roomId}/canvas/${canvas.canvasId}/note/${fixture.noteId}`,
             {
               method: 'DELETE',
               headers: new Headers([
@@ -1963,7 +1765,7 @@ describe('/room/:roomId/canvas/:canvasId/note', (suiteContext: SuiteContext): vo
           });
           const stored: Response = await manager.readDocument(
             'api::note.note',
-            note,
+            fixture.noteId,
             testContext,
           );
           assert.equal(stored.status, 200);
@@ -1973,16 +1775,13 @@ describe('/room/:roomId/canvas/:canvasId/note', (suiteContext: SuiteContext): vo
       describe('404', (): void => {
         test('rejects an unknown note', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const canvas: E2ETestCanvas = await manager.createCanvas(
-            owner,
-            testContext,
-            RoomVisibilityDto.private,
-          );
+          const fixture: FixtureContext =
+            await manager.setupFixture(testContext);
+          const canvas: E2ETestCanvas =
+            fixture.canvases[RoomVisibilityDto.private];
           const login: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
+            fixture.owner.username,
+            fixture.owner.password,
             testContext,
           );
           const note: string = randomUUID();
@@ -2118,31 +1917,19 @@ describe('/room/:roomId/canvas/:canvasId/note', (suiteContext: SuiteContext): vo
         });
         test('rejects an unknown canvas', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const canvas: E2ETestCanvas = await manager.createCanvas(
-            owner,
-            testContext,
-            RoomVisibilityDto.private,
-          );
+          const fixture: FixtureContext =
+            await manager.setupFixture(testContext);
+          const canvas: E2ETestCanvas =
+            fixture.canvases[RoomVisibilityDto.private];
           const login: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
-            testContext,
-          );
-          const note: string = await manager.createPublishedDocument(
-            'api::note.note',
-            {
-              project: canvas.projectId,
-              content: 'Original note',
-              author: owner.documentId,
-            },
+            fixture.owner.username,
+            fixture.owner.password,
             testContext,
           );
           canvas.canvasId = randomUUID();
           const originalResponse: Response = await manager.readDocument(
             'api::note.note',
-            note,
+            fixture.noteId,
             testContext,
           );
           assert.equal(originalResponse.status, 200);
@@ -2150,7 +1937,7 @@ describe('/room/:roomId/canvas/:canvasId/note', (suiteContext: SuiteContext): vo
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/room/${canvas.roomId}/canvas/${canvas.canvasId}/note/${note}`,
+            `${manager.apiUrl}/room/${canvas.roomId}/canvas/${canvas.canvasId}/note/${fixture.noteId}`,
             {
               method: 'DELETE',
               headers: new Headers([
@@ -2169,7 +1956,7 @@ describe('/room/:roomId/canvas/:canvasId/note', (suiteContext: SuiteContext): vo
           });
           const stored: Response = await manager.readDocument(
             'api::note.note',
-            note,
+            fixture.noteId,
             testContext,
           );
           assert.equal(stored.status, 200);

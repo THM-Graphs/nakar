@@ -1,3 +1,4 @@
+import type { FixtureContext } from '../../../../e2e/FixtureContext';
 import type { DatabaseStatsLabelDto } from './dto/DatabaseStatsLabelDto';
 import type { DatabaseStatsRelationshipDto } from './dto/DatabaseStatsRelationshipDto';
 import type { NodePreviewDto } from '../../../schema/dtos/NodePreviewDto';
@@ -91,34 +92,19 @@ describe('/room/:roomId/canvas/:canvasId/database-connection/:databaseId', (suit
       describe('200', (): void => {
         test('owner can access a private room', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const canvas: E2ETestCanvas = await manager.createCanvas(
-            owner,
-            testContext,
-            RoomVisibilityDto.private,
-          );
+          const fixture: FixtureContext =
+            await manager.setupFixture(testContext);
+          const canvas: E2ETestCanvas =
+            fixture.canvases[RoomVisibilityDto.private];
           const login: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
-            testContext,
-          );
-          const database: string = await manager.createPublishedDocument(
-            'api::database-connection.database-connection',
-            {
-              title: 'Test Database',
-              project: canvas.projectId,
-              databaseType: 'sparql',
-              connectionUrl: `${manager.getSparqlServer().getServerUrl()}/graph/${randomUUID()}`,
-              browserUrl: '',
-              database: '',
-            },
+            fixture.owner.username,
+            fixture.owner.password,
             testContext,
           );
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/room/${canvas.roomId}/canvas/${canvas.canvasId}/database-connection/${database}/stats`,
+            `${manager.apiUrl}/room/${canvas.roomId}/canvas/${canvas.canvasId}/database-connection/${fixture.sparqlConnectionId}/stats`,
             {
               method: 'GET',
               headers: new Headers([
@@ -154,37 +140,19 @@ describe('/room/:roomId/canvas/:canvasId/database-connection/:databaseId', (suit
         });
         test('collaborator can access a private room', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const collaborator: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const canvas: E2ETestCanvas = await manager.createCanvas(
-            owner,
-            testContext,
-            RoomVisibilityDto.private,
-            [collaborator.documentId],
-          );
+          const fixture: FixtureContext =
+            await manager.setupFixture(testContext);
+          const canvas: E2ETestCanvas =
+            fixture.canvases[RoomVisibilityDto.private];
           const login: PostAuthResponseBodyDto = await manager.loginUser(
-            collaborator.username,
-            collaborator.password,
-            testContext,
-          );
-          const database: string = await manager.createPublishedDocument(
-            'api::database-connection.database-connection',
-            {
-              title: 'Test Database',
-              project: canvas.projectId,
-              databaseType: 'sparql',
-              connectionUrl: `${manager.getSparqlServer().getServerUrl()}/graph/${randomUUID()}`,
-              browserUrl: '',
-              database: '',
-            },
+            fixture.collaborator.username,
+            fixture.collaborator.password,
             testContext,
           );
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/room/${canvas.roomId}/canvas/${canvas.canvasId}/database-connection/${database}/stats`,
+            `${manager.apiUrl}/room/${canvas.roomId}/canvas/${canvas.canvasId}/database-connection/${fixture.sparqlConnectionId}/stats`,
             {
               method: 'GET',
               headers: new Headers([
@@ -220,30 +188,14 @@ describe('/room/:roomId/canvas/:canvasId/database-connection/:databaseId', (suit
         });
         test('anonymous can access a public room', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const canvas: E2ETestCanvas = await manager.createCanvas(
-            owner,
-            testContext,
-            RoomVisibilityDto.public,
-          );
-
-          const database: string = await manager.createPublishedDocument(
-            'api::database-connection.database-connection',
-            {
-              title: 'Test Database',
-              project: canvas.projectId,
-              databaseType: 'sparql',
-              connectionUrl: `${manager.getSparqlServer().getServerUrl()}/graph/${randomUUID()}`,
-              browserUrl: '',
-              database: '',
-            },
-            testContext,
-          );
+          const fixture: FixtureContext =
+            await manager.setupFixture(testContext);
+          const canvas: E2ETestCanvas =
+            fixture.canvases[RoomVisibilityDto.public];
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/room/${canvas.roomId}/canvas/${canvas.canvasId}/database-connection/${database}/stats`,
+            `${manager.apiUrl}/room/${canvas.roomId}/canvas/${canvas.canvasId}/database-connection/${fixture.sparqlConnectionId}/stats`,
             {
               method: 'GET',
               headers: new Headers([['Content-Type', 'application/json']]),
@@ -276,30 +228,14 @@ describe('/room/:roomId/canvas/:canvasId/database-connection/:databaseId', (suit
         });
         test('anonymous can access an unlisted room', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const canvas: E2ETestCanvas = await manager.createCanvas(
-            owner,
-            testContext,
-            RoomVisibilityDto.unlisted,
-          );
-
-          const database: string = await manager.createPublishedDocument(
-            'api::database-connection.database-connection',
-            {
-              title: 'Test Database',
-              project: canvas.projectId,
-              databaseType: 'sparql',
-              connectionUrl: `${manager.getSparqlServer().getServerUrl()}/graph/${randomUUID()}`,
-              browserUrl: '',
-              database: '',
-            },
-            testContext,
-          );
+          const fixture: FixtureContext =
+            await manager.setupFixture(testContext);
+          const canvas: E2ETestCanvas =
+            fixture.canvases[RoomVisibilityDto.unlisted];
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/room/${canvas.roomId}/canvas/${canvas.canvasId}/database-connection/${database}/stats`,
+            `${manager.apiUrl}/room/${canvas.roomId}/canvas/${canvas.canvasId}/database-connection/${fixture.sparqlConnectionId}/stats`,
             {
               method: 'GET',
               headers: new Headers([['Content-Type', 'application/json']]),
@@ -346,30 +282,14 @@ describe('/room/:roomId/canvas/:canvasId/database-connection/:databaseId', (suit
           ];
           for (const variant of variants) {
             // given
-            const owner: E2ETestApplicationUser =
-              await manager.registerUser(testContext);
-            const canvas: E2ETestCanvas = await manager.createCanvas(
-              owner,
-              testContext,
-              RoomVisibilityDto.private,
-            );
-
-            const database: string = await manager.createPublishedDocument(
-              'api::database-connection.database-connection',
-              {
-                title: 'Test Database',
-                project: canvas.projectId,
-                databaseType: 'sparql',
-                connectionUrl: `${manager.getSparqlServer().getServerUrl()}/graph/${randomUUID()}`,
-                browserUrl: '',
-                database: '',
-              },
-              testContext,
-            );
+            const fixture: FixtureContext =
+              await manager.setupFixture(testContext);
+            const canvas: E2ETestCanvas =
+              fixture.canvases[RoomVisibilityDto.private];
 
             // when
             const response: Response = await fetch(
-              `${manager.apiUrl}/room/${canvas.roomId}/canvas/${canvas.canvasId}/database-connection/${database}/stats`,
+              `${manager.apiUrl}/room/${canvas.roomId}/canvas/${canvas.canvasId}/database-connection/${fixture.sparqlConnectionId}/stats`,
               {
                 method: 'GET',
                 signal: testContext.signal,
@@ -390,36 +310,19 @@ describe('/room/:roomId/canvas/:canvasId/database-connection/:databaseId', (suit
       describe('403', (): void => {
         test('rejects an outsider in a private room', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const outsider: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const canvas: E2ETestCanvas = await manager.createCanvas(
-            owner,
-            testContext,
-            RoomVisibilityDto.private,
-          );
+          const fixture: FixtureContext =
+            await manager.setupFixture(testContext);
+          const canvas: E2ETestCanvas =
+            fixture.canvases[RoomVisibilityDto.private];
           const login: PostAuthResponseBodyDto = await manager.loginUser(
-            outsider.username,
-            outsider.password,
-            testContext,
-          );
-          const database: string = await manager.createPublishedDocument(
-            'api::database-connection.database-connection',
-            {
-              title: 'Test Database',
-              project: canvas.projectId,
-              databaseType: 'sparql',
-              connectionUrl: `${manager.getSparqlServer().getServerUrl()}/graph/${randomUUID()}`,
-              browserUrl: '',
-              database: '',
-            },
+            fixture.outsider.username,
+            fixture.outsider.password,
             testContext,
           );
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/room/${canvas.roomId}/canvas/${canvas.canvasId}/database-connection/${database}/stats`,
+            `${manager.apiUrl}/room/${canvas.roomId}/canvas/${canvas.canvasId}/database-connection/${fixture.sparqlConnectionId}/stats`,
             {
               method: 'GET',
               headers: new Headers([
@@ -442,16 +345,13 @@ describe('/room/:roomId/canvas/:canvasId/database-connection/:databaseId', (suit
       describe('404', (): void => {
         test('rejects an unknown database', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const canvas: E2ETestCanvas = await manager.createCanvas(
-            owner,
-            testContext,
-            RoomVisibilityDto.private,
-          );
+          const fixture: FixtureContext =
+            await manager.setupFixture(testContext);
+          const canvas: E2ETestCanvas =
+            fixture.canvases[RoomVisibilityDto.private];
           const login: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
+            fixture.owner.username,
+            fixture.owner.password,
             testContext,
           );
 
@@ -583,35 +483,20 @@ describe('/room/:roomId/canvas/:canvasId/database-connection/:databaseId', (suit
         });
         test('rejects an unknown canvas', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const canvas: E2ETestCanvas = await manager.createCanvas(
-            owner,
-            testContext,
-            RoomVisibilityDto.private,
-          );
+          const fixture: FixtureContext =
+            await manager.setupFixture(testContext);
+          const canvas: E2ETestCanvas =
+            fixture.canvases[RoomVisibilityDto.private];
           const login: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
-            testContext,
-          );
-          const database: string = await manager.createPublishedDocument(
-            'api::database-connection.database-connection',
-            {
-              title: 'Test Database',
-              project: canvas.projectId,
-              databaseType: 'sparql',
-              connectionUrl: `${manager.getSparqlServer().getServerUrl()}/graph/${randomUUID()}`,
-              browserUrl: '',
-              database: '',
-            },
+            fixture.owner.username,
+            fixture.owner.password,
             testContext,
           );
           canvas.canvasId = randomUUID();
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/room/${canvas.roomId}/canvas/${canvas.canvasId}/database-connection/${database}/stats`,
+            `${manager.apiUrl}/room/${canvas.roomId}/canvas/${canvas.canvasId}/database-connection/${fixture.sparqlConnectionId}/stats`,
             {
               method: 'GET',
               headers: new Headers([
@@ -737,35 +622,20 @@ describe('/room/:roomId/canvas/:canvasId/database-connection/:databaseId', (suit
         });
         test('rejects an unknown room', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const canvas: E2ETestCanvas = await manager.createCanvas(
-            owner,
-            testContext,
-            RoomVisibilityDto.private,
-          );
+          const fixture: FixtureContext =
+            await manager.setupFixture(testContext);
+          const canvas: E2ETestCanvas =
+            fixture.canvases[RoomVisibilityDto.private];
           const login: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
-            testContext,
-          );
-          const database: string = await manager.createPublishedDocument(
-            'api::database-connection.database-connection',
-            {
-              title: 'Test Database',
-              project: canvas.projectId,
-              databaseType: 'sparql',
-              connectionUrl: `${manager.getSparqlServer().getServerUrl()}/graph/${randomUUID()}`,
-              browserUrl: '',
-              database: '',
-            },
+            fixture.owner.username,
+            fixture.owner.password,
             testContext,
           );
           canvas.roomId = randomUUID();
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/room/${canvas.roomId}/canvas/${canvas.canvasId}/database-connection/${database}/stats`,
+            `${manager.apiUrl}/room/${canvas.roomId}/canvas/${canvas.canvasId}/database-connection/${fixture.sparqlConnectionId}/stats`,
             {
               method: 'GET',
               headers: new Headers([
@@ -949,34 +819,19 @@ describe('/room/:roomId/canvas/:canvasId/database-connection/:databaseId', (suit
       describe('200', (): void => {
         test('owner can access a private room', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const canvas: E2ETestCanvas = await manager.createCanvas(
-            owner,
-            testContext,
-            RoomVisibilityDto.private,
-          );
+          const fixture: FixtureContext =
+            await manager.setupFixture(testContext);
+          const canvas: E2ETestCanvas =
+            fixture.canvases[RoomVisibilityDto.private];
           const login: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
-            testContext,
-          );
-          const database: string = await manager.createPublishedDocument(
-            'api::database-connection.database-connection',
-            {
-              title: 'Test Database',
-              project: canvas.projectId,
-              databaseType: 'sparql',
-              connectionUrl: `${manager.getSparqlServer().getServerUrl()}/graph/${randomUUID()}`,
-              browserUrl: '',
-              database: '',
-            },
+            fixture.owner.username,
+            fixture.owner.password,
             testContext,
           );
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/room/${canvas.roomId}/canvas/${canvas.canvasId}/database-connection/${database}/search-capabilities`,
+            `${manager.apiUrl}/room/${canvas.roomId}/canvas/${canvas.canvasId}/database-connection/${fixture.sparqlConnectionId}/search-capabilities`,
             {
               method: 'GET',
               headers: new Headers([
@@ -1001,37 +856,19 @@ describe('/room/:roomId/canvas/:canvasId/database-connection/:databaseId', (suit
         });
         test('collaborator can access a private room', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const collaborator: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const canvas: E2ETestCanvas = await manager.createCanvas(
-            owner,
-            testContext,
-            RoomVisibilityDto.private,
-            [collaborator.documentId],
-          );
+          const fixture: FixtureContext =
+            await manager.setupFixture(testContext);
+          const canvas: E2ETestCanvas =
+            fixture.canvases[RoomVisibilityDto.private];
           const login: PostAuthResponseBodyDto = await manager.loginUser(
-            collaborator.username,
-            collaborator.password,
-            testContext,
-          );
-          const database: string = await manager.createPublishedDocument(
-            'api::database-connection.database-connection',
-            {
-              title: 'Test Database',
-              project: canvas.projectId,
-              databaseType: 'sparql',
-              connectionUrl: `${manager.getSparqlServer().getServerUrl()}/graph/${randomUUID()}`,
-              browserUrl: '',
-              database: '',
-            },
+            fixture.collaborator.username,
+            fixture.collaborator.password,
             testContext,
           );
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/room/${canvas.roomId}/canvas/${canvas.canvasId}/database-connection/${database}/search-capabilities`,
+            `${manager.apiUrl}/room/${canvas.roomId}/canvas/${canvas.canvasId}/database-connection/${fixture.sparqlConnectionId}/search-capabilities`,
             {
               method: 'GET',
               headers: new Headers([
@@ -1056,30 +893,14 @@ describe('/room/:roomId/canvas/:canvasId/database-connection/:databaseId', (suit
         });
         test('anonymous can access a public room', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const canvas: E2ETestCanvas = await manager.createCanvas(
-            owner,
-            testContext,
-            RoomVisibilityDto.public,
-          );
-
-          const database: string = await manager.createPublishedDocument(
-            'api::database-connection.database-connection',
-            {
-              title: 'Test Database',
-              project: canvas.projectId,
-              databaseType: 'sparql',
-              connectionUrl: `${manager.getSparqlServer().getServerUrl()}/graph/${randomUUID()}`,
-              browserUrl: '',
-              database: '',
-            },
-            testContext,
-          );
+          const fixture: FixtureContext =
+            await manager.setupFixture(testContext);
+          const canvas: E2ETestCanvas =
+            fixture.canvases[RoomVisibilityDto.public];
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/room/${canvas.roomId}/canvas/${canvas.canvasId}/database-connection/${database}/search-capabilities`,
+            `${manager.apiUrl}/room/${canvas.roomId}/canvas/${canvas.canvasId}/database-connection/${fixture.sparqlConnectionId}/search-capabilities`,
             {
               method: 'GET',
               headers: new Headers([['Content-Type', 'application/json']]),
@@ -1101,30 +922,14 @@ describe('/room/:roomId/canvas/:canvasId/database-connection/:databaseId', (suit
         });
         test('anonymous can access an unlisted room', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const canvas: E2ETestCanvas = await manager.createCanvas(
-            owner,
-            testContext,
-            RoomVisibilityDto.unlisted,
-          );
-
-          const database: string = await manager.createPublishedDocument(
-            'api::database-connection.database-connection',
-            {
-              title: 'Test Database',
-              project: canvas.projectId,
-              databaseType: 'sparql',
-              connectionUrl: `${manager.getSparqlServer().getServerUrl()}/graph/${randomUUID()}`,
-              browserUrl: '',
-              database: '',
-            },
-            testContext,
-          );
+          const fixture: FixtureContext =
+            await manager.setupFixture(testContext);
+          const canvas: E2ETestCanvas =
+            fixture.canvases[RoomVisibilityDto.unlisted];
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/room/${canvas.roomId}/canvas/${canvas.canvasId}/database-connection/${database}/search-capabilities`,
+            `${manager.apiUrl}/room/${canvas.roomId}/canvas/${canvas.canvasId}/database-connection/${fixture.sparqlConnectionId}/search-capabilities`,
             {
               method: 'GET',
               headers: new Headers([['Content-Type', 'application/json']]),
@@ -1212,30 +1017,14 @@ describe('/room/:roomId/canvas/:canvasId/database-connection/:databaseId', (suit
           ];
           for (const variant of variants) {
             // given
-            const owner: E2ETestApplicationUser =
-              await manager.registerUser(testContext);
-            const canvas: E2ETestCanvas = await manager.createCanvas(
-              owner,
-              testContext,
-              RoomVisibilityDto.private,
-            );
-
-            const database: string = await manager.createPublishedDocument(
-              'api::database-connection.database-connection',
-              {
-                title: 'Test Database',
-                project: canvas.projectId,
-                databaseType: 'sparql',
-                connectionUrl: `${manager.getSparqlServer().getServerUrl()}/graph/${randomUUID()}`,
-                browserUrl: '',
-                database: '',
-              },
-              testContext,
-            );
+            const fixture: FixtureContext =
+              await manager.setupFixture(testContext);
+            const canvas: E2ETestCanvas =
+              fixture.canvases[RoomVisibilityDto.private];
 
             // when
             const response: Response = await fetch(
-              `${manager.apiUrl}/room/${canvas.roomId}/canvas/${canvas.canvasId}/database-connection/${database}/search-capabilities`,
+              `${manager.apiUrl}/room/${canvas.roomId}/canvas/${canvas.canvasId}/database-connection/${fixture.sparqlConnectionId}/search-capabilities`,
               {
                 method: 'GET',
                 signal: testContext.signal,
@@ -1256,36 +1045,19 @@ describe('/room/:roomId/canvas/:canvasId/database-connection/:databaseId', (suit
       describe('403', (): void => {
         test('rejects an outsider in a private room', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const outsider: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const canvas: E2ETestCanvas = await manager.createCanvas(
-            owner,
-            testContext,
-            RoomVisibilityDto.private,
-          );
+          const fixture: FixtureContext =
+            await manager.setupFixture(testContext);
+          const canvas: E2ETestCanvas =
+            fixture.canvases[RoomVisibilityDto.private];
           const login: PostAuthResponseBodyDto = await manager.loginUser(
-            outsider.username,
-            outsider.password,
-            testContext,
-          );
-          const database: string = await manager.createPublishedDocument(
-            'api::database-connection.database-connection',
-            {
-              title: 'Test Database',
-              project: canvas.projectId,
-              databaseType: 'sparql',
-              connectionUrl: `${manager.getSparqlServer().getServerUrl()}/graph/${randomUUID()}`,
-              browserUrl: '',
-              database: '',
-            },
+            fixture.outsider.username,
+            fixture.outsider.password,
             testContext,
           );
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/room/${canvas.roomId}/canvas/${canvas.canvasId}/database-connection/${database}/search-capabilities`,
+            `${manager.apiUrl}/room/${canvas.roomId}/canvas/${canvas.canvasId}/database-connection/${fixture.sparqlConnectionId}/search-capabilities`,
             {
               method: 'GET',
               headers: new Headers([
@@ -1308,16 +1080,13 @@ describe('/room/:roomId/canvas/:canvasId/database-connection/:databaseId', (suit
       describe('404', (): void => {
         test('rejects an unknown database', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const canvas: E2ETestCanvas = await manager.createCanvas(
-            owner,
-            testContext,
-            RoomVisibilityDto.private,
-          );
+          const fixture: FixtureContext =
+            await manager.setupFixture(testContext);
+          const canvas: E2ETestCanvas =
+            fixture.canvases[RoomVisibilityDto.private];
           const login: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
+            fixture.owner.username,
+            fixture.owner.password,
             testContext,
           );
 
@@ -1449,35 +1218,20 @@ describe('/room/:roomId/canvas/:canvasId/database-connection/:databaseId', (suit
         });
         test('rejects an unknown canvas', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const canvas: E2ETestCanvas = await manager.createCanvas(
-            owner,
-            testContext,
-            RoomVisibilityDto.private,
-          );
+          const fixture: FixtureContext =
+            await manager.setupFixture(testContext);
+          const canvas: E2ETestCanvas =
+            fixture.canvases[RoomVisibilityDto.private];
           const login: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
-            testContext,
-          );
-          const database: string = await manager.createPublishedDocument(
-            'api::database-connection.database-connection',
-            {
-              title: 'Test Database',
-              project: canvas.projectId,
-              databaseType: 'sparql',
-              connectionUrl: `${manager.getSparqlServer().getServerUrl()}/graph/${randomUUID()}`,
-              browserUrl: '',
-              database: '',
-            },
+            fixture.owner.username,
+            fixture.owner.password,
             testContext,
           );
           canvas.canvasId = randomUUID();
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/room/${canvas.roomId}/canvas/${canvas.canvasId}/database-connection/${database}/search-capabilities`,
+            `${manager.apiUrl}/room/${canvas.roomId}/canvas/${canvas.canvasId}/database-connection/${fixture.sparqlConnectionId}/search-capabilities`,
             {
               method: 'GET',
               headers: new Headers([
@@ -1603,35 +1357,20 @@ describe('/room/:roomId/canvas/:canvasId/database-connection/:databaseId', (suit
         });
         test('rejects an unknown room', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const canvas: E2ETestCanvas = await manager.createCanvas(
-            owner,
-            testContext,
-            RoomVisibilityDto.private,
-          );
+          const fixture: FixtureContext =
+            await manager.setupFixture(testContext);
+          const canvas: E2ETestCanvas =
+            fixture.canvases[RoomVisibilityDto.private];
           const login: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
-            testContext,
-          );
-          const database: string = await manager.createPublishedDocument(
-            'api::database-connection.database-connection',
-            {
-              title: 'Test Database',
-              project: canvas.projectId,
-              databaseType: 'sparql',
-              connectionUrl: `${manager.getSparqlServer().getServerUrl()}/graph/${randomUUID()}`,
-              browserUrl: '',
-              database: '',
-            },
+            fixture.owner.username,
+            fixture.owner.password,
             testContext,
           );
           canvas.roomId = randomUUID();
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/room/${canvas.roomId}/canvas/${canvas.canvasId}/database-connection/${database}/search-capabilities`,
+            `${manager.apiUrl}/room/${canvas.roomId}/canvas/${canvas.canvasId}/database-connection/${fixture.sparqlConnectionId}/search-capabilities`,
             {
               method: 'GET',
               headers: new Headers([
@@ -1765,35 +1504,20 @@ describe('/room/:roomId/canvas/:canvasId/database-connection/:databaseId', (suit
       describe('200', (): void => {
         test('owner can access a private room', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const canvas: E2ETestCanvas = await manager.createCanvas(
-            owner,
-            testContext,
-            RoomVisibilityDto.private,
-          );
+          const fixture: FixtureContext =
+            await manager.setupFixture(testContext);
+          const canvas: E2ETestCanvas =
+            fixture.canvases[RoomVisibilityDto.private];
           const login: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
-            testContext,
-          );
-          const database: string = await manager.createPublishedDocument(
-            'api::database-connection.database-connection',
-            {
-              title: 'Test Database',
-              project: canvas.projectId,
-              databaseType: 'sparql',
-              connectionUrl: `${manager.getSparqlServer().getServerUrl()}/graph/${randomUUID()}`,
-              browserUrl: '',
-              database: '',
-            },
+            fixture.owner.username,
+            fixture.owner.password,
             testContext,
           );
           await manager.startCanvas(canvas, login.jwt, testContext);
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/room/${canvas.roomId}/canvas/${canvas.canvasId}/database-connection/${database}/search`,
+            `${manager.apiUrl}/room/${canvas.roomId}/canvas/${canvas.canvasId}/database-connection/${fixture.sparqlConnectionId}/search`,
             {
               method: 'POST',
               headers: new Headers([
@@ -1826,7 +1550,7 @@ describe('/room/:roomId/canvas/:canvasId/database-connection/:databaseId', (suit
             [
               {
                 id:
-                  database +
+                  fixture.sparqlConnectionId +
                   '_' +
                   IdHash.create('<https://example.test/alice>'),
                 nativeId: '<https://example.test/alice>',
@@ -1837,38 +1561,20 @@ describe('/room/:roomId/canvas/:canvasId/database-connection/:databaseId', (suit
         });
         test('collaborator can access a private room', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const collaborator: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const canvas: E2ETestCanvas = await manager.createCanvas(
-            owner,
-            testContext,
-            RoomVisibilityDto.private,
-            [collaborator.documentId],
-          );
+          const fixture: FixtureContext =
+            await manager.setupFixture(testContext);
+          const canvas: E2ETestCanvas =
+            fixture.canvases[RoomVisibilityDto.private];
           const login: PostAuthResponseBodyDto = await manager.loginUser(
-            collaborator.username,
-            collaborator.password,
-            testContext,
-          );
-          const database: string = await manager.createPublishedDocument(
-            'api::database-connection.database-connection',
-            {
-              title: 'Test Database',
-              project: canvas.projectId,
-              databaseType: 'sparql',
-              connectionUrl: `${manager.getSparqlServer().getServerUrl()}/graph/${randomUUID()}`,
-              browserUrl: '',
-              database: '',
-            },
+            fixture.collaborator.username,
+            fixture.collaborator.password,
             testContext,
           );
           await manager.startCanvas(canvas, login.jwt, testContext);
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/room/${canvas.roomId}/canvas/${canvas.canvasId}/database-connection/${database}/search`,
+            `${manager.apiUrl}/room/${canvas.roomId}/canvas/${canvas.canvasId}/database-connection/${fixture.sparqlConnectionId}/search`,
             {
               method: 'POST',
               headers: new Headers([
@@ -1901,7 +1607,7 @@ describe('/room/:roomId/canvas/:canvasId/database-connection/:databaseId', (suit
             [
               {
                 id:
-                  database +
+                  fixture.sparqlConnectionId +
                   '_' +
                   IdHash.create('<https://example.test/alice>'),
                 nativeId: '<https://example.test/alice>',
@@ -1912,35 +1618,20 @@ describe('/room/:roomId/canvas/:canvasId/database-connection/:databaseId', (suit
         });
         test('anonymous can access a public room', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const canvas: E2ETestCanvas = await manager.createCanvas(
-            owner,
-            testContext,
-            RoomVisibilityDto.public,
-          );
+          const fixture: FixtureContext =
+            await manager.setupFixture(testContext);
+          const canvas: E2ETestCanvas =
+            fixture.canvases[RoomVisibilityDto.public];
           const login: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
-            testContext,
-          );
-          const database: string = await manager.createPublishedDocument(
-            'api::database-connection.database-connection',
-            {
-              title: 'Test Database',
-              project: canvas.projectId,
-              databaseType: 'sparql',
-              connectionUrl: `${manager.getSparqlServer().getServerUrl()}/graph/${randomUUID()}`,
-              browserUrl: '',
-              database: '',
-            },
+            fixture.owner.username,
+            fixture.owner.password,
             testContext,
           );
           await manager.startCanvas(canvas, login.jwt, testContext);
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/room/${canvas.roomId}/canvas/${canvas.canvasId}/database-connection/${database}/search`,
+            `${manager.apiUrl}/room/${canvas.roomId}/canvas/${canvas.canvasId}/database-connection/${fixture.sparqlConnectionId}/search`,
             {
               method: 'POST',
               headers: new Headers([['Content-Type', 'application/json']]),
@@ -1970,7 +1661,7 @@ describe('/room/:roomId/canvas/:canvasId/database-connection/:databaseId', (suit
             [
               {
                 id:
-                  database +
+                  fixture.sparqlConnectionId +
                   '_' +
                   IdHash.create('<https://example.test/alice>'),
                 nativeId: '<https://example.test/alice>',
@@ -1981,35 +1672,20 @@ describe('/room/:roomId/canvas/:canvasId/database-connection/:databaseId', (suit
         });
         test('anonymous can access an unlisted room', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const canvas: E2ETestCanvas = await manager.createCanvas(
-            owner,
-            testContext,
-            RoomVisibilityDto.unlisted,
-          );
+          const fixture: FixtureContext =
+            await manager.setupFixture(testContext);
+          const canvas: E2ETestCanvas =
+            fixture.canvases[RoomVisibilityDto.unlisted];
           const login: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
-            testContext,
-          );
-          const database: string = await manager.createPublishedDocument(
-            'api::database-connection.database-connection',
-            {
-              title: 'Test Database',
-              project: canvas.projectId,
-              databaseType: 'sparql',
-              connectionUrl: `${manager.getSparqlServer().getServerUrl()}/graph/${randomUUID()}`,
-              browserUrl: '',
-              database: '',
-            },
+            fixture.owner.username,
+            fixture.owner.password,
             testContext,
           );
           await manager.startCanvas(canvas, login.jwt, testContext);
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/room/${canvas.roomId}/canvas/${canvas.canvasId}/database-connection/${database}/search`,
+            `${manager.apiUrl}/room/${canvas.roomId}/canvas/${canvas.canvasId}/database-connection/${fixture.sparqlConnectionId}/search`,
             {
               method: 'POST',
               headers: new Headers([['Content-Type', 'application/json']]),
@@ -2039,7 +1715,7 @@ describe('/room/:roomId/canvas/:canvasId/database-connection/:databaseId', (suit
             [
               {
                 id:
-                  database +
+                  fixture.sparqlConnectionId +
                   '_' +
                   IdHash.create('<https://example.test/alice>'),
                 nativeId: '<https://example.test/alice>',
@@ -2050,35 +1726,20 @@ describe('/room/:roomId/canvas/:canvasId/database-connection/:databaseId', (suit
         });
         test('returns no nodes for an unmatched search term', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const canvas: E2ETestCanvas = await manager.createCanvas(
-            owner,
-            testContext,
-            RoomVisibilityDto.private,
-          );
+          const fixture: FixtureContext =
+            await manager.setupFixture(testContext);
+          const canvas: E2ETestCanvas =
+            fixture.canvases[RoomVisibilityDto.private];
           const login: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
-            testContext,
-          );
-          const database: string = await manager.createPublishedDocument(
-            'api::database-connection.database-connection',
-            {
-              title: 'Test Database',
-              project: canvas.projectId,
-              databaseType: 'sparql',
-              connectionUrl: `${manager.getSparqlServer().getServerUrl()}/graph/${randomUUID()}`,
-              browserUrl: '',
-              database: '',
-            },
+            fixture.owner.username,
+            fixture.owner.password,
             testContext,
           );
           await manager.startCanvas(canvas, login.jwt, testContext);
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/room/${canvas.roomId}/canvas/${canvas.canvasId}/database-connection/${database}/search`,
+            `${manager.apiUrl}/room/${canvas.roomId}/canvas/${canvas.canvasId}/database-connection/${fixture.sparqlConnectionId}/search`,
             {
               method: 'POST',
               headers: new Headers([
@@ -2174,35 +1835,20 @@ describe('/room/:roomId/canvas/:canvasId/database-connection/:databaseId', (suit
           ];
           for (const variant of variants) {
             // given
-            const owner: E2ETestApplicationUser =
-              await manager.registerUser(testContext);
-            const canvas: E2ETestCanvas = await manager.createCanvas(
-              owner,
-              testContext,
-              RoomVisibilityDto.private,
-            );
+            const fixture: FixtureContext =
+              await manager.setupFixture(testContext);
+            const canvas: E2ETestCanvas =
+              fixture.canvases[RoomVisibilityDto.private];
             const login: PostAuthResponseBodyDto = await manager.loginUser(
-              owner.username,
-              owner.password,
-              testContext,
-            );
-            const database: string = await manager.createPublishedDocument(
-              'api::database-connection.database-connection',
-              {
-                title: 'Test Database',
-                project: canvas.projectId,
-                databaseType: 'sparql',
-                connectionUrl: `${manager.getSparqlServer().getServerUrl()}/graph/${randomUUID()}`,
-                browserUrl: '',
-                database: '',
-              },
+              fixture.owner.username,
+              fixture.owner.password,
               testContext,
             );
             await manager.startCanvas(canvas, login.jwt, testContext);
 
             // when
             const response: Response = await fetch(
-              `${manager.apiUrl}/room/${canvas.roomId}/canvas/${canvas.canvasId}/database-connection/${database}/search`,
+              `${manager.apiUrl}/room/${canvas.roomId}/canvas/${canvas.canvasId}/database-connection/${fixture.sparqlConnectionId}/search`,
               {
                 method: 'POST',
                 headers: new Headers([
@@ -2239,30 +1885,14 @@ describe('/room/:roomId/canvas/:canvasId/database-connection/:databaseId', (suit
           ];
           for (const variant of variants) {
             // given
-            const owner: E2ETestApplicationUser =
-              await manager.registerUser(testContext);
-            const canvas: E2ETestCanvas = await manager.createCanvas(
-              owner,
-              testContext,
-              RoomVisibilityDto.private,
-            );
-
-            const database: string = await manager.createPublishedDocument(
-              'api::database-connection.database-connection',
-              {
-                title: 'Test Database',
-                project: canvas.projectId,
-                databaseType: 'sparql',
-                connectionUrl: `${manager.getSparqlServer().getServerUrl()}/graph/${randomUUID()}`,
-                browserUrl: '',
-                database: '',
-              },
-              testContext,
-            );
+            const fixture: FixtureContext =
+              await manager.setupFixture(testContext);
+            const canvas: E2ETestCanvas =
+              fixture.canvases[RoomVisibilityDto.private];
 
             // when
             const response: Response = await fetch(
-              `${manager.apiUrl}/room/${canvas.roomId}/canvas/${canvas.canvasId}/database-connection/${database}/search`,
+              `${manager.apiUrl}/room/${canvas.roomId}/canvas/${canvas.canvasId}/database-connection/${fixture.sparqlConnectionId}/search`,
               {
                 method: 'POST',
                 body: JSON.stringify({
@@ -2286,36 +1916,19 @@ describe('/room/:roomId/canvas/:canvasId/database-connection/:databaseId', (suit
       describe('403', (): void => {
         test('rejects an outsider in a private room', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const outsider: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const canvas: E2ETestCanvas = await manager.createCanvas(
-            owner,
-            testContext,
-            RoomVisibilityDto.private,
-          );
+          const fixture: FixtureContext =
+            await manager.setupFixture(testContext);
+          const canvas: E2ETestCanvas =
+            fixture.canvases[RoomVisibilityDto.private];
           const login: PostAuthResponseBodyDto = await manager.loginUser(
-            outsider.username,
-            outsider.password,
-            testContext,
-          );
-          const database: string = await manager.createPublishedDocument(
-            'api::database-connection.database-connection',
-            {
-              title: 'Test Database',
-              project: canvas.projectId,
-              databaseType: 'sparql',
-              connectionUrl: `${manager.getSparqlServer().getServerUrl()}/graph/${randomUUID()}`,
-              browserUrl: '',
-              database: '',
-            },
+            fixture.outsider.username,
+            fixture.outsider.password,
             testContext,
           );
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/room/${canvas.roomId}/canvas/${canvas.canvasId}/database-connection/${database}/search`,
+            `${manager.apiUrl}/room/${canvas.roomId}/canvas/${canvas.canvasId}/database-connection/${fixture.sparqlConnectionId}/search`,
             {
               method: 'POST',
               headers: new Headers([
@@ -2341,16 +1954,13 @@ describe('/room/:roomId/canvas/:canvasId/database-connection/:databaseId', (suit
       describe('404', (): void => {
         test('rejects an unknown database', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const canvas: E2ETestCanvas = await manager.createCanvas(
-            owner,
-            testContext,
-            RoomVisibilityDto.private,
-          );
+          const fixture: FixtureContext =
+            await manager.setupFixture(testContext);
+          const canvas: E2ETestCanvas =
+            fixture.canvases[RoomVisibilityDto.private];
           const login: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
+            fixture.owner.username,
+            fixture.owner.password,
             testContext,
           );
 
@@ -2491,35 +2101,20 @@ describe('/room/:roomId/canvas/:canvasId/database-connection/:databaseId', (suit
         });
         test('rejects an unknown canvas', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const canvas: E2ETestCanvas = await manager.createCanvas(
-            owner,
-            testContext,
-            RoomVisibilityDto.private,
-          );
+          const fixture: FixtureContext =
+            await manager.setupFixture(testContext);
+          const canvas: E2ETestCanvas =
+            fixture.canvases[RoomVisibilityDto.private];
           const login: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
-            testContext,
-          );
-          const database: string = await manager.createPublishedDocument(
-            'api::database-connection.database-connection',
-            {
-              title: 'Test Database',
-              project: canvas.projectId,
-              databaseType: 'sparql',
-              connectionUrl: `${manager.getSparqlServer().getServerUrl()}/graph/${randomUUID()}`,
-              browserUrl: '',
-              database: '',
-            },
+            fixture.owner.username,
+            fixture.owner.password,
             testContext,
           );
           canvas.canvasId = randomUUID();
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/room/${canvas.roomId}/canvas/${canvas.canvasId}/database-connection/${database}/search`,
+            `${manager.apiUrl}/room/${canvas.roomId}/canvas/${canvas.canvasId}/database-connection/${fixture.sparqlConnectionId}/search`,
             {
               method: 'POST',
               headers: new Headers([
@@ -2654,35 +2249,20 @@ describe('/room/:roomId/canvas/:canvasId/database-connection/:databaseId', (suit
         });
         test('rejects an unknown room', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const canvas: E2ETestCanvas = await manager.createCanvas(
-            owner,
-            testContext,
-            RoomVisibilityDto.private,
-          );
+          const fixture: FixtureContext =
+            await manager.setupFixture(testContext);
+          const canvas: E2ETestCanvas =
+            fixture.canvases[RoomVisibilityDto.private];
           const login: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
-            testContext,
-          );
-          const database: string = await manager.createPublishedDocument(
-            'api::database-connection.database-connection',
-            {
-              title: 'Test Database',
-              project: canvas.projectId,
-              databaseType: 'sparql',
-              connectionUrl: `${manager.getSparqlServer().getServerUrl()}/graph/${randomUUID()}`,
-              browserUrl: '',
-              database: '',
-            },
+            fixture.owner.username,
+            fixture.owner.password,
             testContext,
           );
           canvas.roomId = randomUUID();
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/room/${canvas.roomId}/canvas/${canvas.canvasId}/database-connection/${database}/search`,
+            `${manager.apiUrl}/room/${canvas.roomId}/canvas/${canvas.canvasId}/database-connection/${fixture.sparqlConnectionId}/search`,
             {
               method: 'POST',
               headers: new Headers([
@@ -2821,34 +2401,19 @@ describe('/room/:roomId/canvas/:canvasId/database-connection/:databaseId', (suit
       describe('409', (): void => {
         test('rejects a search before the canvas is active', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const canvas: E2ETestCanvas = await manager.createCanvas(
-            owner,
-            testContext,
-            RoomVisibilityDto.private,
-          );
+          const fixture: FixtureContext =
+            await manager.setupFixture(testContext);
+          const canvas: E2ETestCanvas =
+            fixture.canvases[RoomVisibilityDto.private];
           const login: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
-            testContext,
-          );
-          const database: string = await manager.createPublishedDocument(
-            'api::database-connection.database-connection',
-            {
-              title: 'Test Database',
-              project: canvas.projectId,
-              databaseType: 'sparql',
-              connectionUrl: `${manager.getSparqlServer().getServerUrl()}/graph/${randomUUID()}`,
-              browserUrl: '',
-              database: '',
-            },
+            fixture.owner.username,
+            fixture.owner.password,
             testContext,
           );
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/room/${canvas.roomId}/canvas/${canvas.canvasId}/database-connection/${database}/search`,
+            `${manager.apiUrl}/room/${canvas.roomId}/canvas/${canvas.canvasId}/database-connection/${fixture.sparqlConnectionId}/search`,
             {
               method: 'POST',
               headers: new Headers([
@@ -2932,28 +2497,13 @@ describe('/room/:roomId/canvas/:canvasId/database-connection/:databaseId', (suit
       describe('200', (): void => {
         test('returns counts for a loaded node', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const canvas: E2ETestCanvas = await manager.createCanvas(
-            owner,
-            testContext,
-            RoomVisibilityDto.private,
-          );
+          const fixture: FixtureContext =
+            await manager.setupFixture(testContext);
+          const canvas: E2ETestCanvas =
+            fixture.canvases[RoomVisibilityDto.private];
           const login: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
-            testContext,
-          );
-          const database: string = await manager.createPublishedDocument(
-            'api::database-connection.database-connection',
-            {
-              title: 'Test Database',
-              project: canvas.projectId,
-              databaseType: 'sparql',
-              connectionUrl: `${manager.getSparqlServer().getServerUrl()}/graph/${randomUUID()}`,
-              browserUrl: '',
-              database: '',
-            },
+            fixture.owner.username,
+            fixture.owner.password,
             testContext,
           );
           await manager.startCanvas(canvas, login.jwt, testContext);
@@ -2966,7 +2516,7 @@ describe('/room/:roomId/canvas/:canvasId/database-connection/:databaseId', (suit
                 ['Content-Type', 'application/json'],
               ]),
               body: JSON.stringify({
-                databaseId: database,
+                databaseId: fixture.sparqlConnectionId,
                 nativeNodeId: '<https://example.test/alice>',
               } satisfies LoadNodeRequestBodyDto),
               signal: testContext.signal,
@@ -2976,11 +2526,13 @@ describe('/room/:roomId/canvas/:canvasId/database-connection/:databaseId', (suit
           await loaded.body?.cancel();
           await manager.startCanvas(canvas, login.jwt, testContext);
           const nodeId: string =
-            database + '_' + IdHash.create('<https://example.test/alice>');
+            fixture.sparqlConnectionId +
+            '_' +
+            IdHash.create('<https://example.test/alice>');
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/room/${canvas.roomId}/canvas/${canvas.canvasId}/database-connection/${database}/expand-node-preview?nodeId=${encodeURIComponent(nodeId)}`,
+            `${manager.apiUrl}/room/${canvas.roomId}/canvas/${canvas.canvasId}/database-connection/${fixture.sparqlConnectionId}/expand-node-preview?nodeId=${encodeURIComponent(nodeId)}`,
             {
               method: 'GET',
               headers: new Headers([
@@ -3011,31 +2563,13 @@ describe('/room/:roomId/canvas/:canvasId/database-connection/:databaseId', (suit
         });
         test('collaborator can preview a loaded node', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const collaborator: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const canvas: E2ETestCanvas = await manager.createCanvas(
-            owner,
-            testContext,
-            RoomVisibilityDto.private,
-            [collaborator.documentId],
-          );
+          const fixture: FixtureContext =
+            await manager.setupFixture(testContext);
+          const canvas: E2ETestCanvas =
+            fixture.canvases[RoomVisibilityDto.private];
           const login: PostAuthResponseBodyDto = await manager.loginUser(
-            collaborator.username,
-            collaborator.password,
-            testContext,
-          );
-          const database: string = await manager.createPublishedDocument(
-            'api::database-connection.database-connection',
-            {
-              title: 'Test Database',
-              project: canvas.projectId,
-              databaseType: 'sparql',
-              connectionUrl: `${manager.getSparqlServer().getServerUrl()}/graph/${randomUUID()}`,
-              browserUrl: '',
-              database: '',
-            },
+            fixture.collaborator.username,
+            fixture.collaborator.password,
             testContext,
           );
           await manager.startCanvas(canvas, login.jwt, testContext);
@@ -3048,7 +2582,7 @@ describe('/room/:roomId/canvas/:canvasId/database-connection/:databaseId', (suit
                 ['Content-Type', 'application/json'],
               ]),
               body: JSON.stringify({
-                databaseId: database,
+                databaseId: fixture.sparqlConnectionId,
                 nativeNodeId: '<https://example.test/alice>',
               } satisfies LoadNodeRequestBodyDto),
               signal: testContext.signal,
@@ -3058,11 +2592,13 @@ describe('/room/:roomId/canvas/:canvasId/database-connection/:databaseId', (suit
           await loaded.body?.cancel();
           await manager.startCanvas(canvas, login.jwt, testContext);
           const nodeId: string =
-            database + '_' + IdHash.create('<https://example.test/alice>');
+            fixture.sparqlConnectionId +
+            '_' +
+            IdHash.create('<https://example.test/alice>');
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/room/${canvas.roomId}/canvas/${canvas.canvasId}/database-connection/${database}/expand-node-preview?nodeId=${encodeURIComponent(nodeId)}`,
+            `${manager.apiUrl}/room/${canvas.roomId}/canvas/${canvas.canvasId}/database-connection/${fixture.sparqlConnectionId}/expand-node-preview?nodeId=${encodeURIComponent(nodeId)}`,
             {
               method: 'GET',
               headers: new Headers([
@@ -3093,28 +2629,13 @@ describe('/room/:roomId/canvas/:canvasId/database-connection/:databaseId', (suit
         });
         test('anonymous can preview a loaded node in a public room', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const canvas: E2ETestCanvas = await manager.createCanvas(
-            owner,
-            testContext,
-            RoomVisibilityDto.public,
-          );
+          const fixture: FixtureContext =
+            await manager.setupFixture(testContext);
+          const canvas: E2ETestCanvas =
+            fixture.canvases[RoomVisibilityDto.public];
           const login: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
-            testContext,
-          );
-          const database: string = await manager.createPublishedDocument(
-            'api::database-connection.database-connection',
-            {
-              title: 'Test Database',
-              project: canvas.projectId,
-              databaseType: 'sparql',
-              connectionUrl: `${manager.getSparqlServer().getServerUrl()}/graph/${randomUUID()}`,
-              browserUrl: '',
-              database: '',
-            },
+            fixture.owner.username,
+            fixture.owner.password,
             testContext,
           );
           await manager.startCanvas(canvas, login.jwt, testContext);
@@ -3127,7 +2648,7 @@ describe('/room/:roomId/canvas/:canvasId/database-connection/:databaseId', (suit
                 ['Content-Type', 'application/json'],
               ]),
               body: JSON.stringify({
-                databaseId: database,
+                databaseId: fixture.sparqlConnectionId,
                 nativeNodeId: '<https://example.test/alice>',
               } satisfies LoadNodeRequestBodyDto),
               signal: testContext.signal,
@@ -3137,11 +2658,13 @@ describe('/room/:roomId/canvas/:canvasId/database-connection/:databaseId', (suit
           await loaded.body?.cancel();
           await manager.startCanvas(canvas, login.jwt, testContext);
           const nodeId: string =
-            database + '_' + IdHash.create('<https://example.test/alice>');
+            fixture.sparqlConnectionId +
+            '_' +
+            IdHash.create('<https://example.test/alice>');
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/room/${canvas.roomId}/canvas/${canvas.canvasId}/database-connection/${database}/expand-node-preview?nodeId=${encodeURIComponent(nodeId)}`,
+            `${manager.apiUrl}/room/${canvas.roomId}/canvas/${canvas.canvasId}/database-connection/${fixture.sparqlConnectionId}/expand-node-preview?nodeId=${encodeURIComponent(nodeId)}`,
             {
               method: 'GET',
               headers: new Headers([['Content-Type', 'application/json']]),
@@ -3189,35 +2712,20 @@ describe('/room/:roomId/canvas/:canvasId/database-connection/:databaseId', (suit
           ];
           for (const variant of variants) {
             // given
-            const owner: E2ETestApplicationUser =
-              await manager.registerUser(testContext);
-            const canvas: E2ETestCanvas = await manager.createCanvas(
-              owner,
-              testContext,
-              RoomVisibilityDto.private,
-            );
+            const fixture: FixtureContext =
+              await manager.setupFixture(testContext);
+            const canvas: E2ETestCanvas =
+              fixture.canvases[RoomVisibilityDto.private];
             const login: PostAuthResponseBodyDto = await manager.loginUser(
-              owner.username,
-              owner.password,
-              testContext,
-            );
-            const database: string = await manager.createPublishedDocument(
-              'api::database-connection.database-connection',
-              {
-                title: 'Test Database',
-                project: canvas.projectId,
-                databaseType: 'sparql',
-                connectionUrl: `${manager.getSparqlServer().getServerUrl()}/graph/${randomUUID()}`,
-                browserUrl: '',
-                database: '',
-              },
+              fixture.owner.username,
+              fixture.owner.password,
               testContext,
             );
             await manager.startCanvas(canvas, login.jwt, testContext);
 
             // when
             const response: Response = await fetch(
-              `${manager.apiUrl}/room/${canvas.roomId}/canvas/${canvas.canvasId}/database-connection/${database}/expand-node-preview${variant.query}`,
+              `${manager.apiUrl}/room/${canvas.roomId}/canvas/${canvas.canvasId}/database-connection/${fixture.sparqlConnectionId}/expand-node-preview${variant.query}`,
               {
                 method: 'GET',
                 headers: new Headers([
@@ -3253,30 +2761,14 @@ describe('/room/:roomId/canvas/:canvasId/database-connection/:databaseId', (suit
           ];
           for (const variant of variants) {
             // given
-            const owner: E2ETestApplicationUser =
-              await manager.registerUser(testContext);
-            const canvas: E2ETestCanvas = await manager.createCanvas(
-              owner,
-              testContext,
-              RoomVisibilityDto.private,
-            );
-
-            const database: string = await manager.createPublishedDocument(
-              'api::database-connection.database-connection',
-              {
-                title: 'Test Database',
-                project: canvas.projectId,
-                databaseType: 'sparql',
-                connectionUrl: `${manager.getSparqlServer().getServerUrl()}/graph/${randomUUID()}`,
-                browserUrl: '',
-                database: '',
-              },
-              testContext,
-            );
+            const fixture: FixtureContext =
+              await manager.setupFixture(testContext);
+            const canvas: E2ETestCanvas =
+              fixture.canvases[RoomVisibilityDto.private];
 
             // when
             const response: Response = await fetch(
-              `${manager.apiUrl}/room/${canvas.roomId}/canvas/${canvas.canvasId}/database-connection/${database}/expand-node-preview?nodeId=unknown`,
+              `${manager.apiUrl}/room/${canvas.roomId}/canvas/${canvas.canvasId}/database-connection/${fixture.sparqlConnectionId}/expand-node-preview?nodeId=unknown`,
               {
                 method: 'GET',
                 signal: testContext.signal,
@@ -3297,36 +2789,19 @@ describe('/room/:roomId/canvas/:canvasId/database-connection/:databaseId', (suit
       describe('403', (): void => {
         test('rejects an outsider in a private room', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const outsider: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const canvas: E2ETestCanvas = await manager.createCanvas(
-            owner,
-            testContext,
-            RoomVisibilityDto.private,
-          );
+          const fixture: FixtureContext =
+            await manager.setupFixture(testContext);
+          const canvas: E2ETestCanvas =
+            fixture.canvases[RoomVisibilityDto.private];
           const login: PostAuthResponseBodyDto = await manager.loginUser(
-            outsider.username,
-            outsider.password,
-            testContext,
-          );
-          const database: string = await manager.createPublishedDocument(
-            'api::database-connection.database-connection',
-            {
-              title: 'Test Database',
-              project: canvas.projectId,
-              databaseType: 'sparql',
-              connectionUrl: `${manager.getSparqlServer().getServerUrl()}/graph/${randomUUID()}`,
-              browserUrl: '',
-              database: '',
-            },
+            fixture.outsider.username,
+            fixture.outsider.password,
             testContext,
           );
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/room/${canvas.roomId}/canvas/${canvas.canvasId}/database-connection/${database}/expand-node-preview?nodeId=unknown`,
+            `${manager.apiUrl}/room/${canvas.roomId}/canvas/${canvas.canvasId}/database-connection/${fixture.sparqlConnectionId}/expand-node-preview?nodeId=unknown`,
             {
               method: 'GET',
               headers: new Headers([
@@ -3349,28 +2824,13 @@ describe('/room/:roomId/canvas/:canvasId/database-connection/:databaseId', (suit
       describe('404', (): void => {
         test('rejects an unknown node', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const canvas: E2ETestCanvas = await manager.createCanvas(
-            owner,
-            testContext,
-            RoomVisibilityDto.private,
-          );
+          const fixture: FixtureContext =
+            await manager.setupFixture(testContext);
+          const canvas: E2ETestCanvas =
+            fixture.canvases[RoomVisibilityDto.private];
           const login: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
-            testContext,
-          );
-          const database: string = await manager.createPublishedDocument(
-            'api::database-connection.database-connection',
-            {
-              title: 'Test Database',
-              project: canvas.projectId,
-              databaseType: 'sparql',
-              connectionUrl: `${manager.getSparqlServer().getServerUrl()}/graph/${randomUUID()}`,
-              browserUrl: '',
-              database: '',
-            },
+            fixture.owner.username,
+            fixture.owner.password,
             testContext,
           );
           await manager.startCanvas(canvas, login.jwt, testContext);
@@ -3378,7 +2838,7 @@ describe('/room/:roomId/canvas/:canvasId/database-connection/:databaseId', (suit
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/room/${canvas.roomId}/canvas/${canvas.canvasId}/database-connection/${database}/expand-node-preview?nodeId=${nodeId}`,
+            `${manager.apiUrl}/room/${canvas.roomId}/canvas/${canvas.canvasId}/database-connection/${fixture.sparqlConnectionId}/expand-node-preview?nodeId=${nodeId}`,
             {
               method: 'GET',
               headers: new Headers([
@@ -3478,16 +2938,13 @@ describe('/room/:roomId/canvas/:canvasId/database-connection/:databaseId', (suit
         });
         test('rejects an unknown database', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const canvas: E2ETestCanvas = await manager.createCanvas(
-            owner,
-            testContext,
-            RoomVisibilityDto.private,
-          );
+          const fixture: FixtureContext =
+            await manager.setupFixture(testContext);
+          const canvas: E2ETestCanvas =
+            fixture.canvases[RoomVisibilityDto.private];
           const login: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
+            fixture.owner.username,
+            fixture.owner.password,
             testContext,
           );
 
@@ -3619,35 +3076,20 @@ describe('/room/:roomId/canvas/:canvasId/database-connection/:databaseId', (suit
         });
         test('rejects an unknown canvas', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const canvas: E2ETestCanvas = await manager.createCanvas(
-            owner,
-            testContext,
-            RoomVisibilityDto.private,
-          );
+          const fixture: FixtureContext =
+            await manager.setupFixture(testContext);
+          const canvas: E2ETestCanvas =
+            fixture.canvases[RoomVisibilityDto.private];
           const login: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
-            testContext,
-          );
-          const database: string = await manager.createPublishedDocument(
-            'api::database-connection.database-connection',
-            {
-              title: 'Test Database',
-              project: canvas.projectId,
-              databaseType: 'sparql',
-              connectionUrl: `${manager.getSparqlServer().getServerUrl()}/graph/${randomUUID()}`,
-              browserUrl: '',
-              database: '',
-            },
+            fixture.owner.username,
+            fixture.owner.password,
             testContext,
           );
           canvas.canvasId = randomUUID();
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/room/${canvas.roomId}/canvas/${canvas.canvasId}/database-connection/${database}/expand-node-preview?nodeId=unknown`,
+            `${manager.apiUrl}/room/${canvas.roomId}/canvas/${canvas.canvasId}/database-connection/${fixture.sparqlConnectionId}/expand-node-preview?nodeId=unknown`,
             {
               method: 'GET',
               headers: new Headers([
@@ -3773,35 +3215,20 @@ describe('/room/:roomId/canvas/:canvasId/database-connection/:databaseId', (suit
         });
         test('rejects an unknown room', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const canvas: E2ETestCanvas = await manager.createCanvas(
-            owner,
-            testContext,
-            RoomVisibilityDto.private,
-          );
+          const fixture: FixtureContext =
+            await manager.setupFixture(testContext);
+          const canvas: E2ETestCanvas =
+            fixture.canvases[RoomVisibilityDto.private];
           const login: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
-            testContext,
-          );
-          const database: string = await manager.createPublishedDocument(
-            'api::database-connection.database-connection',
-            {
-              title: 'Test Database',
-              project: canvas.projectId,
-              databaseType: 'sparql',
-              connectionUrl: `${manager.getSparqlServer().getServerUrl()}/graph/${randomUUID()}`,
-              browserUrl: '',
-              database: '',
-            },
+            fixture.owner.username,
+            fixture.owner.password,
             testContext,
           );
           canvas.roomId = randomUUID();
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/room/${canvas.roomId}/canvas/${canvas.canvasId}/database-connection/${database}/expand-node-preview?nodeId=unknown`,
+            `${manager.apiUrl}/room/${canvas.roomId}/canvas/${canvas.canvasId}/database-connection/${fixture.sparqlConnectionId}/expand-node-preview?nodeId=unknown`,
             {
               method: 'GET',
               headers: new Headers([
@@ -3931,34 +3358,19 @@ describe('/room/:roomId/canvas/:canvasId/database-connection/:databaseId', (suit
       describe('409', (): void => {
         test('rejects a preview before the canvas is active', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const canvas: E2ETestCanvas = await manager.createCanvas(
-            owner,
-            testContext,
-            RoomVisibilityDto.private,
-          );
+          const fixture: FixtureContext =
+            await manager.setupFixture(testContext);
+          const canvas: E2ETestCanvas =
+            fixture.canvases[RoomVisibilityDto.private];
           const login: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
-            testContext,
-          );
-          const database: string = await manager.createPublishedDocument(
-            'api::database-connection.database-connection',
-            {
-              title: 'Test Database',
-              project: canvas.projectId,
-              databaseType: 'sparql',
-              connectionUrl: `${manager.getSparqlServer().getServerUrl()}/graph/${randomUUID()}`,
-              browserUrl: '',
-              database: '',
-            },
+            fixture.owner.username,
+            fixture.owner.password,
             testContext,
           );
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/room/${canvas.roomId}/canvas/${canvas.canvasId}/database-connection/${database}/expand-node-preview?nodeId=unknown`,
+            `${manager.apiUrl}/room/${canvas.roomId}/canvas/${canvas.canvasId}/database-connection/${fixture.sparqlConnectionId}/expand-node-preview?nodeId=unknown`,
             {
               method: 'GET',
               headers: new Headers([
@@ -3981,28 +3393,13 @@ describe('/room/:roomId/canvas/:canvasId/database-connection/:databaseId', (suit
       describe('502', (): void => {
         test('reports a failure while previewing an external node', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const canvas: E2ETestCanvas = await manager.createCanvas(
-            owner,
-            testContext,
-            RoomVisibilityDto.private,
-          );
+          const fixture: FixtureContext =
+            await manager.setupFixture(testContext);
+          const canvas: E2ETestCanvas =
+            fixture.canvases[RoomVisibilityDto.private];
           const login: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
-            testContext,
-          );
-          const database: string = await manager.createPublishedDocument(
-            'api::database-connection.database-connection',
-            {
-              title: 'Test Database',
-              project: canvas.projectId,
-              databaseType: 'sparql',
-              connectionUrl: `${manager.getSparqlServer().getServerUrl()}/graph/${randomUUID()}`,
-              browserUrl: '',
-              database: '',
-            },
+            fixture.owner.username,
+            fixture.owner.password,
             testContext,
           );
           await manager.startCanvas(canvas, login.jwt, testContext);
@@ -4015,7 +3412,7 @@ describe('/room/:roomId/canvas/:canvasId/database-connection/:databaseId', (suit
                 ['Content-Type', 'application/json'],
               ]),
               body: JSON.stringify({
-                databaseId: database,
+                databaseId: fixture.sparqlConnectionId,
                 nativeNodeId: '<https://example.test/alice>',
               } satisfies LoadNodeRequestBodyDto),
               signal: testContext.signal,
@@ -4025,10 +3422,12 @@ describe('/room/:roomId/canvas/:canvasId/database-connection/:databaseId', (suit
           await loaded.body?.cancel();
           await manager.startCanvas(canvas, login.jwt, testContext);
           const nodeId: string =
-            database + '_' + IdHash.create('<https://example.test/alice>');
+            fixture.sparqlConnectionId +
+            '_' +
+            IdHash.create('<https://example.test/alice>');
           const update: Response = await manager.publishDocument(
             'api::database-connection.database-connection',
-            database,
+            fixture.sparqlConnectionId,
             {
               connectionUrl: `${manager.getSparqlServer().getServerUrl()}/unavailable/${randomUUID()}`,
             },
@@ -4038,7 +3437,7 @@ describe('/room/:roomId/canvas/:canvasId/database-connection/:databaseId', (suit
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/room/${canvas.roomId}/canvas/${canvas.canvasId}/database-connection/${database}/expand-node-preview?nodeId=${encodeURIComponent(nodeId)}`,
+            `${manager.apiUrl}/room/${canvas.roomId}/canvas/${canvas.canvasId}/database-connection/${fixture.sparqlConnectionId}/expand-node-preview?nodeId=${encodeURIComponent(nodeId)}`,
             {
               method: 'GET',
               headers: new Headers([

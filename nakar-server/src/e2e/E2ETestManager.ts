@@ -19,6 +19,7 @@ import { E2ETestApplicationContext } from './E2ETestApplicationContext';
 import { E2ETestApplicationAdmin } from './E2ETestApplicationAdmin';
 import z from 'zod';
 import type { KeyConfig } from '../packages/encryption/KeyConfig';
+import type { FixtureContext } from './FixtureContext';
 
 export interface E2ETestCanvas {
   projectId: string;
@@ -395,6 +396,172 @@ export class E2ETestManager {
     return body.data.documentId;
   }
 
+  public async setupFixture(testContext: TestContext): Promise<FixtureContext> {
+    const owner: E2ETestApplicationUser = await this.registerUser(testContext);
+    const collaborator: E2ETestApplicationUser =
+      await this.registerUser(testContext);
+    const outsider: E2ETestApplicationUser =
+      await this.registerUser(testContext);
+    const projectId: string = await this.createPublishedDocument(
+      'api::project.project',
+      {
+        title: 'Test Project',
+        owner: owner.documentId,
+        collaborators: [collaborator.documentId],
+      },
+      testContext,
+    );
+    const canvases: FixtureContext['canvases'] = {
+      [RoomVisibilityDto.private]: await this._createRoomCanvas(
+        projectId,
+        'Private Room',
+        RoomVisibilityDto.private,
+        testContext,
+      ),
+      [RoomVisibilityDto.public]: await this._createRoomCanvas(
+        projectId,
+        'Public Room',
+        RoomVisibilityDto.public,
+        testContext,
+      ),
+      [RoomVisibilityDto.unlisted]: await this._createRoomCanvas(
+        projectId,
+        'Unlisted Room',
+        RoomVisibilityDto.unlisted,
+        testContext,
+      ),
+    };
+    const databaseConnectionId: string = await this.createPublishedDocument(
+      'api::database-connection.database-connection',
+      {
+        title: 'Original Database',
+        project: projectId,
+        databaseType: 'neo4j',
+        connectionUrl: '',
+        browserUrl: '',
+        database: '',
+      },
+      testContext,
+    );
+    const sparqlConnectionId: string = await this.createPublishedDocument(
+      'api::database-connection.database-connection',
+      {
+        title: 'Test Database',
+        project: projectId,
+        databaseType: 'sparql',
+        connectionUrl: `${this._sparqlServer.getServerUrl()}/graph/${randomUUID()}`,
+        browserUrl: '',
+        database: '',
+      },
+      testContext,
+    );
+    const nodeConfigurationId: string = await this.createPublishedDocument(
+      'api::node-configuration.node-configuration',
+      {
+        database: sparqlConnectionId,
+        type: 'link',
+        label: 'Original Label',
+        property: 'id',
+        linkTemplate: 'https://example.test/{value}',
+        urlEncode: false,
+        valueRegex: '.*',
+      },
+      testContext,
+    );
+    const commonPropertyId: string = await this.createPublishedDocument(
+      'api::common-property.common-property',
+      {
+        project: projectId,
+        leftLabel: 'Original Label',
+        leftProperty: 'original',
+        rightLabel: 'Other Label',
+        rightProperty: 'other',
+      },
+      testContext,
+    );
+    const scenarioGroupId: string = await this.createPublishedDocument(
+      'api::scenario-group.scenario-group',
+      { title: 'Original Group', project: projectId },
+      testContext,
+    );
+    const scenarioId: string = await this.createPublishedDocument(
+      'api::scenario.scenario',
+      {
+        title: 'Original Scenario',
+        description: 'Original description',
+        group: scenarioGroupId,
+      },
+      testContext,
+    );
+    const queryId: string = await this.createPublishedDocument(
+      'api::query.query',
+      {
+        scenario: scenarioId,
+        database: sparqlConnectionId,
+        query: 'CONSTRUCT WHERE { ?subject ?predicate ?object }',
+        isTableQuery: false,
+      },
+      testContext,
+    );
+    const queryParameterId: string = await this.createPublishedDocument(
+      'api::query-parameter.query-parameter',
+      {
+        scenario: scenarioId,
+        title: 'Original Parameter',
+        identifier: 'old',
+        defaultValue: 'old',
+        dataType: 'string',
+        allowedLabels: 'Person',
+      },
+      testContext,
+    );
+    const postScenarioActionId: string = await this.createPublishedDocument(
+      'api::post-scenario-action.post-scenario-action',
+      {
+        scenario: scenarioId,
+        type: 'layout',
+        label: 'Original Action',
+        layoutAlgorithm: 'circle',
+        colorIndex: 'c0',
+      },
+      testContext,
+    );
+    const noteId: string = await this.createPublishedDocument(
+      'api::note.note',
+      {
+        project: projectId,
+        content: 'Original note',
+        author: owner.documentId,
+      },
+      testContext,
+    );
+    const nodeId: string = randomUUID();
+    const nodeReferenceId: string = await this.createPublishedDocument(
+      'api::node-reference.node-reference',
+      { note: noteId, nodeId },
+      testContext,
+    );
+    return {
+      owner,
+      collaborator,
+      outsider,
+      projectId,
+      canvases,
+      databaseConnectionId,
+      sparqlConnectionId,
+      nodeConfigurationId,
+      commonPropertyId,
+      scenarioGroupId,
+      scenarioId,
+      queryId,
+      queryParameterId,
+      postScenarioActionId,
+      noteId,
+      nodeReferenceId,
+      nodeId,
+    };
+  }
+
   public async createCanvas(
     owner: E2ETestApplicationUser,
     testContext: TestContext,
@@ -406,17 +573,12 @@ export class E2ETestManager {
       { title: 'Canvas Project', owner: owner.documentId, collaborators },
       testContext,
     );
-    const roomId: string = await this.createPublishedDocument(
-      'api::room.room',
-      { title: 'Canvas Room', visibility, project: projectId },
+    return await this._createRoomCanvas(
+      projectId,
+      'Canvas Room',
+      visibility,
       testContext,
     );
-    const canvasId: string = await this.createPublishedDocument(
-      'api::canvas.canvas',
-      { title: 'Test Canvas', room: roomId },
-      testContext,
-    );
-    return { projectId, roomId, canvasId };
   }
 
   public async startCanvas(
@@ -438,6 +600,25 @@ export class E2ETestManager {
       .strictObject({ id: z.string().min(1), title: z.string() })
       .parse(await response.json());
     assert.notEqual(body.id, canvas.canvasId);
+  }
+
+  private async _createRoomCanvas(
+    projectId: string,
+    title: string,
+    visibility: RoomVisibilityDto,
+    testContext: TestContext,
+  ): Promise<E2ETestCanvas> {
+    const roomId: string = await this.createPublishedDocument(
+      'api::room.room',
+      { title, visibility, project: projectId },
+      testContext,
+    );
+    const canvasId: string = await this.createPublishedDocument(
+      'api::canvas.canvas',
+      { title: 'Test Canvas', room: roomId },
+      testContext,
+    );
+    return { projectId, roomId, canvasId };
   }
 
   private async _requestDocument(

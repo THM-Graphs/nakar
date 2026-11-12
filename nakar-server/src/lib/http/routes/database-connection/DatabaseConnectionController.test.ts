@@ -1,3 +1,4 @@
+import type { FixtureContext } from '../../../../e2e/FixtureContext';
 import type { UpdateDatabaseConnectionRequestBodyDto } from './dto/UpdateDatabaseConnectionRequestBodyDto';
 import type { TestDatabaseConnectionRequestBodyDto } from './dto/TestDatabaseConnectionRequestBodyDto';
 import { encryptionPayloadSchema } from '../../../encryption/encryptionPayloadSchema';
@@ -67,44 +68,20 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
     describe('201', (): void => {
       test('published collaborator retains access after draft removal', async (testContext: TestContext): Promise<void> => {
         // given
-        const owner: E2ETestApplicationUser =
-          await manager.registerUser(testContext);
-        const collaborator: E2ETestApplicationUser =
-          await manager.registerUser(testContext);
-        const project: string = await manager.createPublishedDocument(
-          'api::project.project',
-          {
-            title: 'Test Project',
-            owner: owner.documentId,
-            collaborators: [collaborator.documentId],
-          },
-          testContext,
-        );
-        const resource: string = await manager.createPublishedDocument(
-          'api::database-connection.database-connection',
-          {
-            title: 'Original Database',
-            project,
-            databaseType: 'neo4j',
-            connectionUrl: '',
-            browserUrl: '',
-            database: '',
-          },
-          testContext,
-        );
+        const fixture: FixtureContext = await manager.setupFixture(testContext);
         const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-          owner.username,
-          owner.password,
+          fixture.owner.username,
+          fixture.owner.password,
           testContext,
         );
         const login: PostAuthResponseBodyDto = await manager.loginUser(
-          collaborator.username,
-          collaborator.password,
+          fixture.collaborator.username,
+          fixture.collaborator.password,
           testContext,
         );
         const draftRemoval: Response = await manager.updateDocument(
           'api::project.project',
-          project,
+          fixture.projectId,
           { collaborators: [] },
           testContext,
         );
@@ -112,7 +89,7 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
 
         // when
         const response: Response = await fetch(
-          `${manager.apiUrl}/project/${project}/database-connection`,
+          `${manager.apiUrl}/project/${fixture.projectId}/database-connection`,
           {
             method: 'POST',
             headers: new Headers([['Authorization', `Bearer ${login.jwt}`]]),
@@ -125,7 +102,7 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
         const body: DatabaseConnectionDto = databaseSchema.parse(
           await response.json(),
         );
-        assert.notEqual(body.id, resource);
+        assert.notEqual(body.id, fixture.databaseConnectionId);
         assert.deepEqual(body, {
           id: body.id,
           title: 'Untitled Database Connection',
@@ -137,7 +114,7 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
           nodeConfigurations: [],
         });
         const projectResponse: Response = await fetch(
-          `${manager.apiUrl}/project/${project}`,
+          `${manager.apiUrl}/project/${fixture.projectId}`,
           {
             headers: new Headers([
               ['Authorization', `Bearer ${ownerLogin.jwt}`],
@@ -157,35 +134,16 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
       });
       test('owner can create a database connection', async (testContext: TestContext): Promise<void> => {
         // given
-        const owner: E2ETestApplicationUser =
-          await manager.registerUser(testContext);
-
-        const project: string = await manager.createPublishedDocument(
-          'api::project.project',
-          { title: 'Test Project', owner: owner.documentId, collaborators: [] },
-          testContext,
-        );
-        const resource: string = await manager.createPublishedDocument(
-          'api::database-connection.database-connection',
-          {
-            title: 'Original Database',
-            project,
-            databaseType: 'neo4j',
-            connectionUrl: '',
-            browserUrl: '',
-            database: '',
-          },
-          testContext,
-        );
+        const fixture: FixtureContext = await manager.setupFixture(testContext);
         const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-          owner.username,
-          owner.password,
+          fixture.owner.username,
+          fixture.owner.password,
           testContext,
         );
 
         // when
         const response: Response = await fetch(
-          `${manager.apiUrl}/project/${project}/database-connection`,
+          `${manager.apiUrl}/project/${fixture.projectId}/database-connection`,
           {
             method: 'POST',
             headers: new Headers([
@@ -200,7 +158,7 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
         const body: DatabaseConnectionDto = databaseSchema.parse(
           await response.json(),
         );
-        assert.notEqual(body.id, resource);
+        assert.notEqual(body.id, fixture.databaseConnectionId);
         assert.deepEqual(body, {
           id: body.id,
           title: 'Untitled Database Connection',
@@ -212,7 +170,7 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
           nodeConfigurations: [],
         });
         const projectResponse: Response = await fetch(
-          `${manager.apiUrl}/project/${project}`,
+          `${manager.apiUrl}/project/${fixture.projectId}`,
           {
             headers: new Headers([
               ['Authorization', `Bearer ${ownerLogin.jwt}`],
@@ -232,45 +190,21 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
       });
       test('collaborator can create a database connection', async (testContext: TestContext): Promise<void> => {
         // given
-        const owner: E2ETestApplicationUser =
-          await manager.registerUser(testContext);
-        const collaborator: E2ETestApplicationUser =
-          await manager.registerUser(testContext);
-        const project: string = await manager.createPublishedDocument(
-          'api::project.project',
-          {
-            title: 'Test Project',
-            owner: owner.documentId,
-            collaborators: [collaborator.documentId],
-          },
-          testContext,
-        );
-        const resource: string = await manager.createPublishedDocument(
-          'api::database-connection.database-connection',
-          {
-            title: 'Original Database',
-            project,
-            databaseType: 'neo4j',
-            connectionUrl: '',
-            browserUrl: '',
-            database: '',
-          },
-          testContext,
-        );
+        const fixture: FixtureContext = await manager.setupFixture(testContext);
         const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-          owner.username,
-          owner.password,
+          fixture.owner.username,
+          fixture.owner.password,
           testContext,
         );
         const login: PostAuthResponseBodyDto = await manager.loginUser(
-          collaborator.username,
-          collaborator.password,
+          fixture.collaborator.username,
+          fixture.collaborator.password,
           testContext,
         );
 
         // when
         const response: Response = await fetch(
-          `${manager.apiUrl}/project/${project}/database-connection`,
+          `${manager.apiUrl}/project/${fixture.projectId}/database-connection`,
           {
             method: 'POST',
             headers: new Headers([['Authorization', `Bearer ${login.jwt}`]]),
@@ -283,7 +217,7 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
         const body: DatabaseConnectionDto = databaseSchema.parse(
           await response.json(),
         );
-        assert.notEqual(body.id, resource);
+        assert.notEqual(body.id, fixture.databaseConnectionId);
         assert.deepEqual(body, {
           id: body.id,
           title: 'Untitled Database Connection',
@@ -295,7 +229,7 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
           nodeConfigurations: [],
         });
         const projectResponse: Response = await fetch(
-          `${manager.apiUrl}/project/${project}`,
+          `${manager.apiUrl}/project/${fixture.projectId}`,
           {
             headers: new Headers([
               ['Authorization', `Bearer ${ownerLogin.jwt}`],
@@ -324,32 +258,15 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
         ];
         for (const variant of variants) {
           // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
+          const fixture: FixtureContext =
+            await manager.setupFixture(testContext);
+          await manager.loginUser(
+            fixture.owner.username,
+            fixture.owner.password,
             testContext,
           );
-          const resource: string = await manager.createPublishedDocument(
-            'api::database-connection.database-connection',
-            {
-              title: 'Original Database',
-              project,
-              databaseType: 'neo4j',
-              connectionUrl: '',
-              browserUrl: '',
-              database: '',
-            },
-            testContext,
-          );
-          await manager.loginUser(owner.username, owner.password, testContext);
           const filters: Record<string, string> = {
-            [`filters[project][documentId][$eq]`]: project,
+            [`filters[project][documentId][$eq]`]: fixture.projectId,
             pageSize: '100',
             sort: 'documentId:asc',
           };
@@ -364,7 +281,7 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
           assert.ok(
             originalDraft.results.some(
               (item: { documentId: string }): boolean =>
-                item.documentId === resource,
+                item.documentId === fixture.databaseConnectionId,
             ),
           );
           const originalPublishedResponse: Response =
@@ -379,7 +296,7 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/database-connection`,
+            `${manager.apiUrl}/project/${fixture.projectId}/database-connection`,
             {
               method: 'POST',
               signal: testContext.signal,
@@ -421,35 +338,19 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
     describe('403', (): void => {
       test('rejects outsider access', async (testContext: TestContext): Promise<void> => {
         // given
-        const owner: E2ETestApplicationUser =
-          await manager.registerUser(testContext);
-        const outsider: E2ETestApplicationUser =
-          await manager.registerUser(testContext);
-        const project: string = await manager.createPublishedDocument(
-          'api::project.project',
-          { title: 'Test Project', owner: owner.documentId, collaborators: [] },
+        const fixture: FixtureContext = await manager.setupFixture(testContext);
+        await manager.loginUser(
+          fixture.owner.username,
+          fixture.owner.password,
           testContext,
         );
-        const resource: string = await manager.createPublishedDocument(
-          'api::database-connection.database-connection',
-          {
-            title: 'Original Database',
-            project,
-            databaseType: 'neo4j',
-            connectionUrl: '',
-            browserUrl: '',
-            database: '',
-          },
-          testContext,
-        );
-        await manager.loginUser(owner.username, owner.password, testContext);
         const login: PostAuthResponseBodyDto = await manager.loginUser(
-          outsider.username,
-          outsider.password,
+          fixture.outsider.username,
+          fixture.outsider.password,
           testContext,
         );
         const filters: Record<string, string> = {
-          [`filters[project][documentId][$eq]`]: project,
+          [`filters[project][documentId][$eq]`]: fixture.projectId,
           pageSize: '100',
           sort: 'documentId:asc',
         };
@@ -464,7 +365,7 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
         assert.ok(
           originalDraft.results.some(
             (item: { documentId: string }): boolean =>
-              item.documentId === resource,
+              item.documentId === fixture.databaseConnectionId,
           ),
         );
         const originalPublishedResponse: Response = await manager.readDocuments(
@@ -478,7 +379,7 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
 
         // when
         const response: Response = await fetch(
-          `${manager.apiUrl}/project/${project}/database-connection`,
+          `${manager.apiUrl}/project/${fixture.projectId}/database-connection`,
           {
             method: 'POST',
             headers: new Headers([['Authorization', `Bearer ${login.jwt}`]]),
@@ -517,46 +418,26 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
 
       test('rejects removed collaborator access', async (testContext: TestContext): Promise<void> => {
         // given
-        const owner: E2ETestApplicationUser =
-          await manager.registerUser(testContext);
-        const collaborator: E2ETestApplicationUser =
-          await manager.registerUser(testContext);
-        const project: string = await manager.createPublishedDocument(
-          'api::project.project',
-          {
-            title: 'Test Project',
-            owner: owner.documentId,
-            collaborators: [collaborator.documentId],
-          },
+        const fixture: FixtureContext = await manager.setupFixture(testContext);
+        await manager.loginUser(
+          fixture.owner.username,
+          fixture.owner.password,
           testContext,
         );
-        const resource: string = await manager.createPublishedDocument(
-          'api::database-connection.database-connection',
-          {
-            title: 'Original Database',
-            project,
-            databaseType: 'neo4j',
-            connectionUrl: '',
-            browserUrl: '',
-            database: '',
-          },
-          testContext,
-        );
-        await manager.loginUser(owner.username, owner.password, testContext);
         const login: PostAuthResponseBodyDto = await manager.loginUser(
-          collaborator.username,
-          collaborator.password,
+          fixture.collaborator.username,
+          fixture.collaborator.password,
           testContext,
         );
         const removal: Response = await manager.publishDocument(
           'api::project.project',
-          project,
+          fixture.projectId,
           { collaborators: [] },
           testContext,
         );
         assert.equal(removal.status, 200);
         const filters: Record<string, string> = {
-          [`filters[project][documentId][$eq]`]: project,
+          [`filters[project][documentId][$eq]`]: fixture.projectId,
           pageSize: '100',
           sort: 'documentId:asc',
         };
@@ -571,7 +452,7 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
         assert.ok(
           originalDraft.results.some(
             (item: { documentId: string }): boolean =>
-              item.documentId === resource,
+              item.documentId === fixture.databaseConnectionId,
           ),
         );
         const originalPublishedResponse: Response = await manager.readDocuments(
@@ -585,7 +466,7 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
 
         // when
         const response: Response = await fetch(
-          `${manager.apiUrl}/project/${project}/database-connection`,
+          `${manager.apiUrl}/project/${fixture.projectId}/database-connection`,
           {
             method: 'POST',
             headers: new Headers([['Authorization', `Bearer ${login.jwt}`]]),
@@ -938,36 +819,15 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
           const existingConnectionCases: boolean[] = [false, true];
           for (const hasExistingConnection of existingConnectionCases) {
             // given
-            const owner: E2ETestApplicationUser =
-              await manager.registerUser(testContext);
-            const project: string = await manager.createPublishedDocument(
-              'api::project.project',
-              {
-                title: 'Test Project',
-                owner: owner.documentId,
-                collaborators: [],
-              },
-              testContext,
-            );
-            const resource: string = await manager.createPublishedDocument(
-              'api::database-connection.database-connection',
-              {
-                title: 'Original Database',
-                project,
-                databaseType: 'neo4j',
-                connectionUrl: '',
-                browserUrl: '',
-                database: '',
-              },
-              testContext,
-            );
+            const fixture: FixtureContext =
+              await manager.setupFixture(testContext);
             const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-              owner.username,
-              owner.password,
+              fixture.owner.username,
+              fixture.owner.password,
               testContext,
             );
             const filters: Record<string, string> = {
-              [`filters[project][documentId][$eq]`]: project,
+              [`filters[project][documentId][$eq]`]: fixture.projectId,
               pageSize: '100',
               sort: 'documentId:asc',
             };
@@ -982,7 +842,7 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
             assert.ok(
               originalDraft.results.some(
                 (item: { documentId: string }): boolean =>
-                  item.documentId === resource,
+                  item.documentId === fixture.databaseConnectionId,
               ),
             );
             const originalPublishedResponse: Response =
@@ -997,7 +857,7 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
 
             // when
             const response: Response = await fetch(
-              `${manager.apiUrl}/project/${project}/database-connection/test`,
+              `${manager.apiUrl}/project/${fixture.projectId}/database-connection/test`,
               {
                 method: 'POST',
                 headers: new Headers([
@@ -1007,7 +867,9 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
                 body: JSON.stringify({
                   connectionUrl: `${manager.getSparqlServer().getServerUrl()}/${randomUUID()}`,
                   databaseType: DatabaseConnectionDatabaseType.sparql,
-                  id: hasExistingConnection ? resource : null,
+                  id: hasExistingConnection
+                    ? fixture.databaseConnectionId
+                    : null,
                   username: null,
                   password: null,
                   database: null,
@@ -1050,39 +912,20 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
         });
         test('collaborator can test a connection without persisting it', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const collaborator: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [collaborator.documentId],
-            },
+          const fixture: FixtureContext =
+            await manager.setupFixture(testContext);
+          await manager.loginUser(
+            fixture.owner.username,
+            fixture.owner.password,
             testContext,
           );
-          const resource: string = await manager.createPublishedDocument(
-            'api::database-connection.database-connection',
-            {
-              title: 'Original Database',
-              project,
-              databaseType: 'neo4j',
-              connectionUrl: '',
-              browserUrl: '',
-              database: '',
-            },
-            testContext,
-          );
-          await manager.loginUser(owner.username, owner.password, testContext);
           const login: PostAuthResponseBodyDto = await manager.loginUser(
-            collaborator.username,
-            collaborator.password,
+            fixture.collaborator.username,
+            fixture.collaborator.password,
             testContext,
           );
           const filters: Record<string, string> = {
-            [`filters[project][documentId][$eq]`]: project,
+            [`filters[project][documentId][$eq]`]: fixture.projectId,
             pageSize: '100',
             sort: 'documentId:asc',
           };
@@ -1097,7 +940,7 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
           assert.ok(
             originalDraft.results.some(
               (item: { documentId: string }): boolean =>
-                item.documentId === resource,
+                item.documentId === fixture.databaseConnectionId,
             ),
           );
           const originalPublishedResponse: Response =
@@ -1112,7 +955,7 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/database-connection/test`,
+            `${manager.apiUrl}/project/${fixture.projectId}/database-connection/test`,
             {
               method: 'POST',
               headers: new Headers([
@@ -1164,36 +1007,15 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
         });
         test('reports a connection error without changing stored data', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
-          const resource: string = await manager.createPublishedDocument(
-            'api::database-connection.database-connection',
-            {
-              title: 'Original Database',
-              project,
-              databaseType: 'neo4j',
-              connectionUrl: '',
-              browserUrl: '',
-              database: '',
-            },
-            testContext,
-          );
+          const fixture: FixtureContext =
+            await manager.setupFixture(testContext);
           const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
+            fixture.owner.username,
+            fixture.owner.password,
             testContext,
           );
           const filters: Record<string, string> = {
-            [`filters[project][documentId][$eq]`]: project,
+            [`filters[project][documentId][$eq]`]: fixture.projectId,
             pageSize: '100',
             sort: 'documentId:asc',
           };
@@ -1208,7 +1030,7 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
           assert.ok(
             originalDraft.results.some(
               (item: { documentId: string }): boolean =>
-                item.documentId === resource,
+                item.documentId === fixture.databaseConnectionId,
             ),
           );
           const originalPublishedResponse: Response =
@@ -1223,7 +1045,7 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/database-connection/test`,
+            `${manager.apiUrl}/project/${fixture.projectId}/database-connection/test`,
             {
               method: 'POST',
               headers: new Headers([
@@ -1289,36 +1111,15 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
           ];
           for (const variant of variants) {
             // given
-            const owner: E2ETestApplicationUser =
-              await manager.registerUser(testContext);
-            const project: string = await manager.createPublishedDocument(
-              'api::project.project',
-              {
-                title: 'Test Project',
-                owner: owner.documentId,
-                collaborators: [],
-              },
-              testContext,
-            );
-            const resource: string = await manager.createPublishedDocument(
-              'api::database-connection.database-connection',
-              {
-                title: 'Original Database',
-                project,
-                databaseType: 'neo4j',
-                connectionUrl: '',
-                browserUrl: '',
-                database: '',
-              },
-              testContext,
-            );
+            const fixture: FixtureContext =
+              await manager.setupFixture(testContext);
             const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-              owner.username,
-              owner.password,
+              fixture.owner.username,
+              fixture.owner.password,
               testContext,
             );
             const filters: Record<string, string> = {
-              [`filters[project][documentId][$eq]`]: project,
+              [`filters[project][documentId][$eq]`]: fixture.projectId,
               pageSize: '100',
               sort: 'documentId:asc',
             };
@@ -1333,7 +1134,7 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
             assert.ok(
               originalDraft.results.some(
                 (item: { documentId: string }): boolean =>
-                  item.documentId === resource,
+                  item.documentId === fixture.databaseConnectionId,
               ),
             );
             const originalPublishedResponse: Response =
@@ -1348,7 +1149,7 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
 
             // when
             const response: Response = await fetch(
-              `${manager.apiUrl}/project/${project}/database-connection/test`,
+              `${manager.apiUrl}/project/${fixture.projectId}/database-connection/test`,
               {
                 method: 'POST',
                 headers: new Headers([
@@ -1508,37 +1309,16 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
             ];
             for (const variant of variants) {
               // given
-              const owner: E2ETestApplicationUser =
-                await manager.registerUser(testContext);
-              const project: string = await manager.createPublishedDocument(
-                'api::project.project',
-                {
-                  title: 'Test Project',
-                  owner: owner.documentId,
-                  collaborators: [],
-                },
-                testContext,
-              );
-              const resource: string = await manager.createPublishedDocument(
-                'api::database-connection.database-connection',
-                {
-                  title: 'Original Database',
-                  project,
-                  databaseType: 'neo4j',
-                  connectionUrl: '',
-                  browserUrl: '',
-                  database: '',
-                },
-                testContext,
-              );
+              const fixture: FixtureContext =
+                await manager.setupFixture(testContext);
               const ownerLogin: PostAuthResponseBodyDto =
                 await manager.loginUser(
-                  owner.username,
-                  owner.password,
+                  fixture.owner.username,
+                  fixture.owner.password,
                   testContext,
                 );
               const filters: Record<string, string> = {
-                [`filters[project][documentId][$eq]`]: project,
+                [`filters[project][documentId][$eq]`]: fixture.projectId,
                 pageSize: '100',
                 sort: 'documentId:asc',
               };
@@ -1554,7 +1334,7 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
               assert.ok(
                 originalDraft.results.some(
                   (item: { documentId: string }): boolean =>
-                    item.documentId === resource,
+                    item.documentId === fixture.databaseConnectionId,
                 ),
               );
               const originalPublishedResponse: Response =
@@ -1569,7 +1349,7 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
 
               // when
               const response: Response = await fetch(
-                `${manager.apiUrl}/project/${project}/database-connection/test`,
+                `${manager.apiUrl}/project/${fixture.projectId}/database-connection/test`,
                 {
                   method: 'POST',
                   headers: new Headers([
@@ -1646,36 +1426,15 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
           ];
           for (const variant of variants) {
             // given
-            const owner: E2ETestApplicationUser =
-              await manager.registerUser(testContext);
-            const project: string = await manager.createPublishedDocument(
-              'api::project.project',
-              {
-                title: 'Test Project',
-                owner: owner.documentId,
-                collaborators: [],
-              },
-              testContext,
-            );
-            const resource: string = await manager.createPublishedDocument(
-              'api::database-connection.database-connection',
-              {
-                title: 'Original Database',
-                project,
-                databaseType: 'neo4j',
-                connectionUrl: '',
-                browserUrl: '',
-                database: '',
-              },
-              testContext,
-            );
+            const fixture: FixtureContext =
+              await manager.setupFixture(testContext);
             await manager.loginUser(
-              owner.username,
-              owner.password,
+              fixture.owner.username,
+              fixture.owner.password,
               testContext,
             );
             const filters: Record<string, string> = {
-              [`filters[project][documentId][$eq]`]: project,
+              [`filters[project][documentId][$eq]`]: fixture.projectId,
               pageSize: '100',
               sort: 'documentId:asc',
             };
@@ -1690,7 +1449,7 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
             assert.ok(
               originalDraft.results.some(
                 (item: { documentId: string }): boolean =>
-                  item.documentId === resource,
+                  item.documentId === fixture.databaseConnectionId,
               ),
             );
             const originalPublishedResponse: Response =
@@ -1705,7 +1464,7 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
 
             // when
             const response: Response = await fetch(
-              `${manager.apiUrl}/project/${project}/database-connection/test`,
+              `${manager.apiUrl}/project/${fixture.projectId}/database-connection/test`,
               {
                 method: 'POST',
                 body: JSON.stringify({
@@ -1756,39 +1515,20 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
       describe('403', (): void => {
         test('rejects outsider access', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const outsider: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
+          const fixture: FixtureContext =
+            await manager.setupFixture(testContext);
+          await manager.loginUser(
+            fixture.owner.username,
+            fixture.owner.password,
             testContext,
           );
-          const resource: string = await manager.createPublishedDocument(
-            'api::database-connection.database-connection',
-            {
-              title: 'Original Database',
-              project,
-              databaseType: 'neo4j',
-              connectionUrl: '',
-              browserUrl: '',
-              database: '',
-            },
-            testContext,
-          );
-          await manager.loginUser(owner.username, owner.password, testContext);
           const login: PostAuthResponseBodyDto = await manager.loginUser(
-            outsider.username,
-            outsider.password,
+            fixture.outsider.username,
+            fixture.outsider.password,
             testContext,
           );
           const filters: Record<string, string> = {
-            [`filters[project][documentId][$eq]`]: project,
+            [`filters[project][documentId][$eq]`]: fixture.projectId,
             pageSize: '100',
             sort: 'documentId:asc',
           };
@@ -1803,7 +1543,7 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
           assert.ok(
             originalDraft.results.some(
               (item: { documentId: string }): boolean =>
-                item.documentId === resource,
+                item.documentId === fixture.databaseConnectionId,
             ),
           );
           const originalPublishedResponse: Response =
@@ -1818,7 +1558,7 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/database-connection/test`,
+            `${manager.apiUrl}/project/${fixture.projectId}/database-connection/test`,
             {
               method: 'POST',
               headers: new Headers([
@@ -1869,46 +1609,27 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
 
         test('rejects removed collaborator access', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const collaborator: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [collaborator.documentId],
-            },
+          const fixture: FixtureContext =
+            await manager.setupFixture(testContext);
+          await manager.loginUser(
+            fixture.owner.username,
+            fixture.owner.password,
             testContext,
           );
-          const resource: string = await manager.createPublishedDocument(
-            'api::database-connection.database-connection',
-            {
-              title: 'Original Database',
-              project,
-              databaseType: 'neo4j',
-              connectionUrl: '',
-              browserUrl: '',
-              database: '',
-            },
-            testContext,
-          );
-          await manager.loginUser(owner.username, owner.password, testContext);
           const login: PostAuthResponseBodyDto = await manager.loginUser(
-            collaborator.username,
-            collaborator.password,
+            fixture.collaborator.username,
+            fixture.collaborator.password,
             testContext,
           );
           const removal: Response = await manager.publishDocument(
             'api::project.project',
-            project,
+            fixture.projectId,
             { collaborators: [] },
             testContext,
           );
           assert.equal(removal.status, 200);
           const filters: Record<string, string> = {
-            [`filters[project][documentId][$eq]`]: project,
+            [`filters[project][documentId][$eq]`]: fixture.projectId,
             pageSize: '100',
             sort: 'documentId:asc',
           };
@@ -1923,7 +1644,7 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
           assert.ok(
             originalDraft.results.some(
               (item: { documentId: string }): boolean =>
-                item.documentId === resource,
+                item.documentId === fixture.databaseConnectionId,
             ),
           );
           const originalPublishedResponse: Response =
@@ -1938,7 +1659,7 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/database-connection/test`,
+            `${manager.apiUrl}/project/${fixture.projectId}/database-connection/test`,
             {
               method: 'POST',
               headers: new Headers([
@@ -2553,44 +2274,21 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
 
         test('published collaborator retains access after draft removal', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const collaborator: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [collaborator.documentId],
-            },
-            testContext,
-          );
-          const resource: string = await manager.createPublishedDocument(
-            'api::database-connection.database-connection',
-            {
-              title: 'Original Database',
-              project,
-              databaseType: 'neo4j',
-              connectionUrl: '',
-              browserUrl: '',
-              database: '',
-            },
-            testContext,
-          );
+          const fixture: FixtureContext =
+            await manager.setupFixture(testContext);
           const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
+            fixture.owner.username,
+            fixture.owner.password,
             testContext,
           );
           const login: PostAuthResponseBodyDto = await manager.loginUser(
-            collaborator.username,
-            collaborator.password,
+            fixture.collaborator.username,
+            fixture.collaborator.password,
             testContext,
           );
           const draftRemoval: Response = await manager.updateDocument(
             'api::project.project',
-            project,
+            fixture.projectId,
             { collaborators: [] },
             testContext,
           );
@@ -2598,7 +2296,7 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/database-connection/${resource}`,
+            `${manager.apiUrl}/project/${fixture.projectId}/database-connection/${fixture.databaseConnectionId}`,
             {
               method: 'GET',
               headers: new Headers([['Authorization', `Bearer ${login.jwt}`]]),
@@ -2609,7 +2307,7 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
           // then
           assert.equal(response.status, 200);
           const projectResponse: Response = await fetch(
-            `${manager.apiUrl}/project/${project}`,
+            `${manager.apiUrl}/project/${fixture.projectId}`,
             {
               headers: new Headers([
                 ['Authorization', `Bearer ${ownerLogin.jwt}`],
@@ -2626,11 +2324,12 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
           const body: DatabaseConnectionDto = databaseSchema.parse(
             await response.json(),
           );
-          assert.equal(body.id, resource);
+          assert.equal(body.id, fixture.databaseConnectionId);
           assert.equal(body.title, 'Original Database');
           assert.deepEqual(
             items.find(
-              (item: DatabaseConnectionDto): boolean => item.id === resource,
+              (item: DatabaseConnectionDto): boolean =>
+                item.id === fixture.databaseConnectionId,
             ),
             body,
           );
@@ -2638,38 +2337,17 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
 
         test('owner can read a database connection', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
-          const resource: string = await manager.createPublishedDocument(
-            'api::database-connection.database-connection',
-            {
-              title: 'Original Database',
-              project,
-              databaseType: 'neo4j',
-              connectionUrl: '',
-              browserUrl: '',
-              database: '',
-            },
-            testContext,
-          );
+          const fixture: FixtureContext =
+            await manager.setupFixture(testContext);
           const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
+            fixture.owner.username,
+            fixture.owner.password,
             testContext,
           );
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/database-connection/${resource}`,
+            `${manager.apiUrl}/project/${fixture.projectId}/database-connection/${fixture.databaseConnectionId}`,
             {
               method: 'GET',
               headers: new Headers([
@@ -2682,7 +2360,7 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
           // then
           assert.equal(response.status, 200);
           const projectResponse: Response = await fetch(
-            `${manager.apiUrl}/project/${project}`,
+            `${manager.apiUrl}/project/${fixture.projectId}`,
             {
               headers: new Headers([
                 ['Authorization', `Bearer ${ownerLogin.jwt}`],
@@ -2698,11 +2376,12 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
           const body: DatabaseConnectionDto = databaseSchema.parse(
             await response.json(),
           );
-          assert.equal(body.id, resource);
+          assert.equal(body.id, fixture.databaseConnectionId);
           assert.equal(body.title, 'Original Database');
           assert.deepEqual(
             items.find(
-              (item: DatabaseConnectionDto): boolean => item.id === resource,
+              (item: DatabaseConnectionDto): boolean =>
+                item.id === fixture.databaseConnectionId,
             ),
             body,
           );
@@ -2710,45 +2389,22 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
 
         test('collaborator can read a database connection', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const collaborator: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [collaborator.documentId],
-            },
-            testContext,
-          );
-          const resource: string = await manager.createPublishedDocument(
-            'api::database-connection.database-connection',
-            {
-              title: 'Original Database',
-              project,
-              databaseType: 'neo4j',
-              connectionUrl: '',
-              browserUrl: '',
-              database: '',
-            },
-            testContext,
-          );
+          const fixture: FixtureContext =
+            await manager.setupFixture(testContext);
           const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
+            fixture.owner.username,
+            fixture.owner.password,
             testContext,
           );
           const login: PostAuthResponseBodyDto = await manager.loginUser(
-            collaborator.username,
-            collaborator.password,
+            fixture.collaborator.username,
+            fixture.collaborator.password,
             testContext,
           );
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/database-connection/${resource}`,
+            `${manager.apiUrl}/project/${fixture.projectId}/database-connection/${fixture.databaseConnectionId}`,
             {
               method: 'GET',
               headers: new Headers([['Authorization', `Bearer ${login.jwt}`]]),
@@ -2759,7 +2415,7 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
           // then
           assert.equal(response.status, 200);
           const projectResponse: Response = await fetch(
-            `${manager.apiUrl}/project/${project}`,
+            `${manager.apiUrl}/project/${fixture.projectId}`,
             {
               headers: new Headers([
                 ['Authorization', `Bearer ${ownerLogin.jwt}`],
@@ -2775,11 +2431,12 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
           const body: DatabaseConnectionDto = databaseSchema.parse(
             await response.json(),
           );
-          assert.equal(body.id, resource);
+          assert.equal(body.id, fixture.databaseConnectionId);
           assert.equal(body.title, 'Original Database');
           assert.deepEqual(
             items.find(
-              (item: DatabaseConnectionDto): boolean => item.id === resource,
+              (item: DatabaseConnectionDto): boolean =>
+                item.id === fixture.databaseConnectionId,
             ),
             body,
           );
@@ -2795,36 +2452,15 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
           ];
           for (const variant of variants) {
             // given
-            const owner: E2ETestApplicationUser =
-              await manager.registerUser(testContext);
-            const project: string = await manager.createPublishedDocument(
-              'api::project.project',
-              {
-                title: 'Test Project',
-                owner: owner.documentId,
-                collaborators: [],
-              },
-              testContext,
-            );
-            const resource: string = await manager.createPublishedDocument(
-              'api::database-connection.database-connection',
-              {
-                title: 'Original Database',
-                project,
-                databaseType: 'neo4j',
-                connectionUrl: '',
-                browserUrl: '',
-                database: '',
-              },
-              testContext,
-            );
+            const fixture: FixtureContext =
+              await manager.setupFixture(testContext);
             await manager.loginUser(
-              owner.username,
-              owner.password,
+              fixture.owner.username,
+              fixture.owner.password,
               testContext,
             );
             const filters: Record<string, string> = {
-              [`filters[project][documentId][$eq]`]: project,
+              [`filters[project][documentId][$eq]`]: fixture.projectId,
               pageSize: '100',
               sort: 'documentId:asc',
             };
@@ -2839,7 +2475,7 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
             assert.ok(
               originalDraft.results.some(
                 (item: { documentId: string }): boolean =>
-                  item.documentId === resource,
+                  item.documentId === fixture.databaseConnectionId,
               ),
             );
             const originalPublishedResponse: Response =
@@ -2854,7 +2490,7 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
 
             // when
             const response: Response = await fetch(
-              `${manager.apiUrl}/project/${project}/database-connection/${resource}`,
+              `${manager.apiUrl}/project/${fixture.projectId}/database-connection/${fixture.databaseConnectionId}`,
               {
                 method: 'GET',
                 signal: testContext.signal,
@@ -2896,39 +2532,20 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
       describe('403', (): void => {
         test('rejects outsider access', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const outsider: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
+          const fixture: FixtureContext =
+            await manager.setupFixture(testContext);
+          await manager.loginUser(
+            fixture.owner.username,
+            fixture.owner.password,
             testContext,
           );
-          const resource: string = await manager.createPublishedDocument(
-            'api::database-connection.database-connection',
-            {
-              title: 'Original Database',
-              project,
-              databaseType: 'neo4j',
-              connectionUrl: '',
-              browserUrl: '',
-              database: '',
-            },
-            testContext,
-          );
-          await manager.loginUser(owner.username, owner.password, testContext);
           const login: PostAuthResponseBodyDto = await manager.loginUser(
-            outsider.username,
-            outsider.password,
+            fixture.outsider.username,
+            fixture.outsider.password,
             testContext,
           );
           const filters: Record<string, string> = {
-            [`filters[project][documentId][$eq]`]: project,
+            [`filters[project][documentId][$eq]`]: fixture.projectId,
             pageSize: '100',
             sort: 'documentId:asc',
           };
@@ -2943,7 +2560,7 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
           assert.ok(
             originalDraft.results.some(
               (item: { documentId: string }): boolean =>
-                item.documentId === resource,
+                item.documentId === fixture.databaseConnectionId,
             ),
           );
           const originalPublishedResponse: Response =
@@ -2958,7 +2575,7 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/database-connection/${resource}`,
+            `${manager.apiUrl}/project/${fixture.projectId}/database-connection/${fixture.databaseConnectionId}`,
             {
               method: 'GET',
               headers: new Headers([['Authorization', `Bearer ${login.jwt}`]]),
@@ -2997,46 +2614,27 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
 
         test('rejects removed collaborator access', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const collaborator: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [collaborator.documentId],
-            },
+          const fixture: FixtureContext =
+            await manager.setupFixture(testContext);
+          await manager.loginUser(
+            fixture.owner.username,
+            fixture.owner.password,
             testContext,
           );
-          const resource: string = await manager.createPublishedDocument(
-            'api::database-connection.database-connection',
-            {
-              title: 'Original Database',
-              project,
-              databaseType: 'neo4j',
-              connectionUrl: '',
-              browserUrl: '',
-              database: '',
-            },
-            testContext,
-          );
-          await manager.loginUser(owner.username, owner.password, testContext);
           const login: PostAuthResponseBodyDto = await manager.loginUser(
-            collaborator.username,
-            collaborator.password,
+            fixture.collaborator.username,
+            fixture.collaborator.password,
             testContext,
           );
           const removal: Response = await manager.publishDocument(
             'api::project.project',
-            project,
+            fixture.projectId,
             { collaborators: [] },
             testContext,
           );
           assert.equal(removal.status, 200);
           const filters: Record<string, string> = {
-            [`filters[project][documentId][$eq]`]: project,
+            [`filters[project][documentId][$eq]`]: fixture.projectId,
             pageSize: '100',
             sort: 'documentId:asc',
           };
@@ -3051,7 +2649,7 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
           assert.ok(
             originalDraft.results.some(
               (item: { documentId: string }): boolean =>
-                item.documentId === resource,
+                item.documentId === fixture.databaseConnectionId,
             ),
           );
           const originalPublishedResponse: Response =
@@ -3066,7 +2664,7 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/database-connection/${resource}`,
+            `${manager.apiUrl}/project/${fixture.projectId}/database-connection/${fixture.databaseConnectionId}`,
             {
               method: 'GET',
               headers: new Headers([['Authorization', `Bearer ${login.jwt}`]]),
@@ -3428,36 +3026,15 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
 
         test('rejects an unknown database connection', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
-          const resource: string = await manager.createPublishedDocument(
-            'api::database-connection.database-connection',
-            {
-              title: 'Original Database',
-              project,
-              databaseType: 'neo4j',
-              connectionUrl: '',
-              browserUrl: '',
-              database: '',
-            },
-            testContext,
-          );
+          const fixture: FixtureContext =
+            await manager.setupFixture(testContext);
           const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
+            fixture.owner.username,
+            fixture.owner.password,
             testContext,
           );
           const filters: Record<string, string> = {
-            [`filters[project][documentId][$eq]`]: project,
+            [`filters[project][documentId][$eq]`]: fixture.projectId,
             pageSize: '100',
             sort: 'documentId:asc',
           };
@@ -3472,7 +3049,7 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
           assert.ok(
             originalDraft.results.some(
               (item: { documentId: string }): boolean =>
-                item.documentId === resource,
+                item.documentId === fixture.databaseConnectionId,
             ),
           );
           const originalPublishedResponse: Response =
@@ -3487,7 +3064,7 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/database-connection/${randomUUID()}`,
+            `${manager.apiUrl}/project/${fixture.projectId}/database-connection/${randomUUID()}`,
             {
               method: 'GET',
               headers: new Headers([
@@ -3857,44 +3434,21 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
 
         test('published collaborator retains access after draft removal', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const collaborator: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [collaborator.documentId],
-            },
-            testContext,
-          );
-          const resource: string = await manager.createPublishedDocument(
-            'api::database-connection.database-connection',
-            {
-              title: 'Original Database',
-              project,
-              databaseType: 'neo4j',
-              connectionUrl: '',
-              browserUrl: '',
-              database: '',
-            },
-            testContext,
-          );
+          const fixture: FixtureContext =
+            await manager.setupFixture(testContext);
           const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
+            fixture.owner.username,
+            fixture.owner.password,
             testContext,
           );
           const login: PostAuthResponseBodyDto = await manager.loginUser(
-            collaborator.username,
-            collaborator.password,
+            fixture.collaborator.username,
+            fixture.collaborator.password,
             testContext,
           );
           const draftRemoval: Response = await manager.updateDocument(
             'api::project.project',
-            project,
+            fixture.projectId,
             { collaborators: [] },
             testContext,
           );
@@ -3902,7 +3456,7 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/database-connection/${resource}`,
+            `${manager.apiUrl}/project/${fixture.projectId}/database-connection/${fixture.databaseConnectionId}`,
             {
               method: 'PUT',
               headers: new Headers([
@@ -3931,12 +3485,12 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
           const result: DatabaseConnectionDto = databaseSchema.parse(
             await response.json(),
           );
-          assert.equal(result.id, resource);
+          assert.equal(result.id, fixture.databaseConnectionId);
           assert.equal(result.title, 'Updated Database');
           assert.equal(result.connectionUrl, 'bolt://127.0.0.1:7687');
           assert.equal(result.databaseType, 'neo4j');
           const projectResponse: Response = await fetch(
-            `${manager.apiUrl}/project/${project}`,
+            `${manager.apiUrl}/project/${fixture.projectId}`,
             {
               headers: new Headers([
                 ['Authorization', `Bearer ${ownerLogin.jwt}`],
@@ -3951,7 +3505,8 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
             publishedState.databases;
 
           const persisted: DatabaseConnectionDto | undefined = items.find(
-            (item: DatabaseConnectionDto): boolean => item.id === resource,
+            (item: DatabaseConnectionDto): boolean =>
+              item.id === fixture.databaseConnectionId,
           );
           assert.ok(persisted);
           assert.equal(persisted.title, 'Updated Database');
@@ -3959,38 +3514,17 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
 
         test('stores credentials only after consent without exposing them in the response', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
-          const resource: string = await manager.createPublishedDocument(
-            'api::database-connection.database-connection',
-            {
-              title: 'Original Database',
-              project,
-              databaseType: 'neo4j',
-              connectionUrl: '',
-              browserUrl: '',
-              database: '',
-            },
-            testContext,
-          );
+          const fixture: FixtureContext =
+            await manager.setupFixture(testContext);
           const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
+            fixture.owner.username,
+            fixture.owner.password,
             testContext,
           );
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/database-connection/${resource}`,
+            `${manager.apiUrl}/project/${fixture.projectId}/database-connection/${fixture.databaseConnectionId}`,
             {
               method: 'PUT',
               headers: new Headers([
@@ -4018,12 +3552,12 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
           const result: DatabaseConnectionDto = databaseSchema.parse(
             await response.json(),
           );
-          assert.equal(result.id, resource);
+          assert.equal(result.id, fixture.databaseConnectionId);
           assert.equal(result.title, 'Updated Database');
           assert.equal(result.connectionUrl, 'bolt://127.0.0.1:7687');
           assert.equal(result.databaseType, 'neo4j');
           const projectResponse: Response = await fetch(
-            `${manager.apiUrl}/project/${project}`,
+            `${manager.apiUrl}/project/${fixture.projectId}`,
             {
               headers: new Headers([
                 ['Authorization', `Bearer ${ownerLogin.jwt}`],
@@ -4038,13 +3572,14 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
             publishedState.databases;
 
           const persisted: DatabaseConnectionDto | undefined = items.find(
-            (item: DatabaseConnectionDto): boolean => item.id === resource,
+            (item: DatabaseConnectionDto): boolean =>
+              item.id === fixture.databaseConnectionId,
           );
           assert.ok(persisted);
           assert.equal(persisted.title, 'Updated Database');
           const stored: Response = await manager.readDocument(
             'api::database-connection.database-connection',
-            resource,
+            fixture.databaseConnectionId,
             testContext,
           );
           assert.equal(stored.status, 200);
@@ -4072,36 +3607,15 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
 
         test('preserves omitted credentials without requiring renewed consent', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
-          const resource: string = await manager.createPublishedDocument(
-            'api::database-connection.database-connection',
-            {
-              title: 'Original Database',
-              project,
-              databaseType: 'neo4j',
-              connectionUrl: '',
-              browserUrl: '',
-              database: '',
-            },
-            testContext,
-          );
+          const fixture: FixtureContext =
+            await manager.setupFixture(testContext);
           const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
+            fixture.owner.username,
+            fixture.owner.password,
             testContext,
           );
           const credentialSetup: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/database-connection/${resource}`,
+            `${manager.apiUrl}/project/${fixture.projectId}/database-connection/${fixture.databaseConnectionId}`,
             {
               method: 'PUT',
               headers: new Headers([
@@ -4127,7 +3641,7 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
           const originalCredentialsResponse: Response =
             await manager.readDocument(
               'api::database-connection.database-connection',
-              resource,
+              fixture.databaseConnectionId,
               testContext,
             );
           assert.equal(originalCredentialsResponse.status, 200);
@@ -4141,7 +3655,7 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/database-connection/${resource}`,
+            `${manager.apiUrl}/project/${fixture.projectId}/database-connection/${fixture.databaseConnectionId}`,
             {
               method: 'PUT',
               headers: new Headers([
@@ -4170,12 +3684,12 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
           const result: DatabaseConnectionDto = databaseSchema.parse(
             await response.json(),
           );
-          assert.equal(result.id, resource);
+          assert.equal(result.id, fixture.databaseConnectionId);
           assert.equal(result.title, 'Updated Database');
           assert.equal(result.connectionUrl, 'bolt://127.0.0.1:7687');
           assert.equal(result.databaseType, 'neo4j');
           const projectResponse: Response = await fetch(
-            `${manager.apiUrl}/project/${project}`,
+            `${manager.apiUrl}/project/${fixture.projectId}`,
             {
               headers: new Headers([
                 ['Authorization', `Bearer ${ownerLogin.jwt}`],
@@ -4190,14 +3704,15 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
             publishedState.databases;
 
           const persisted: DatabaseConnectionDto | undefined = items.find(
-            (item: DatabaseConnectionDto): boolean => item.id === resource,
+            (item: DatabaseConnectionDto): boolean =>
+              item.id === fixture.databaseConnectionId,
           );
           assert.ok(persisted);
           assert.equal(persisted.title, 'Updated Database');
           const storedCredentialsResponse: Response =
             await manager.readDocument(
               'api::database-connection.database-connection',
-              resource,
+              fixture.databaseConnectionId,
               testContext,
             );
           assert.equal(storedCredentialsResponse.status, 200);
@@ -4213,36 +3728,15 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
 
         test('preserves null credentials without requiring renewed consent', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
-          const resource: string = await manager.createPublishedDocument(
-            'api::database-connection.database-connection',
-            {
-              title: 'Original Database',
-              project,
-              databaseType: 'neo4j',
-              connectionUrl: '',
-              browserUrl: '',
-              database: '',
-            },
-            testContext,
-          );
+          const fixture: FixtureContext =
+            await manager.setupFixture(testContext);
           const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
+            fixture.owner.username,
+            fixture.owner.password,
             testContext,
           );
           const credentialSetup: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/database-connection/${resource}`,
+            `${manager.apiUrl}/project/${fixture.projectId}/database-connection/${fixture.databaseConnectionId}`,
             {
               method: 'PUT',
               headers: new Headers([
@@ -4268,7 +3762,7 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
           const originalCredentialsResponse: Response =
             await manager.readDocument(
               'api::database-connection.database-connection',
-              resource,
+              fixture.databaseConnectionId,
               testContext,
             );
           assert.equal(originalCredentialsResponse.status, 200);
@@ -4282,7 +3776,7 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/database-connection/${resource}`,
+            `${manager.apiUrl}/project/${fixture.projectId}/database-connection/${fixture.databaseConnectionId}`,
             {
               method: 'PUT',
               headers: new Headers([
@@ -4310,12 +3804,12 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
           const result: DatabaseConnectionDto = databaseSchema.parse(
             await response.json(),
           );
-          assert.equal(result.id, resource);
+          assert.equal(result.id, fixture.databaseConnectionId);
           assert.equal(result.title, 'Updated Database');
           assert.equal(result.connectionUrl, 'bolt://127.0.0.1:7687');
           assert.equal(result.databaseType, 'neo4j');
           const projectResponse: Response = await fetch(
-            `${manager.apiUrl}/project/${project}`,
+            `${manager.apiUrl}/project/${fixture.projectId}`,
             {
               headers: new Headers([
                 ['Authorization', `Bearer ${ownerLogin.jwt}`],
@@ -4330,14 +3824,15 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
             publishedState.databases;
 
           const persisted: DatabaseConnectionDto | undefined = items.find(
-            (item: DatabaseConnectionDto): boolean => item.id === resource,
+            (item: DatabaseConnectionDto): boolean =>
+              item.id === fixture.databaseConnectionId,
           );
           assert.ok(persisted);
           assert.equal(persisted.title, 'Updated Database');
           const storedCredentialsResponse: Response =
             await manager.readDocument(
               'api::database-connection.database-connection',
-              resource,
+              fixture.databaseConnectionId,
               testContext,
             );
           assert.equal(storedCredentialsResponse.status, 200);
@@ -4353,36 +3848,15 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
 
         test('clears the password with explicit consent', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
-          const resource: string = await manager.createPublishedDocument(
-            'api::database-connection.database-connection',
-            {
-              title: 'Original Database',
-              project,
-              databaseType: 'neo4j',
-              connectionUrl: '',
-              browserUrl: '',
-              database: '',
-            },
-            testContext,
-          );
+          const fixture: FixtureContext =
+            await manager.setupFixture(testContext);
           const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
+            fixture.owner.username,
+            fixture.owner.password,
             testContext,
           );
           const credentialSetup: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/database-connection/${resource}`,
+            `${manager.apiUrl}/project/${fixture.projectId}/database-connection/${fixture.databaseConnectionId}`,
             {
               method: 'PUT',
               headers: new Headers([
@@ -4408,7 +3882,7 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
           const originalCredentialsResponse: Response =
             await manager.readDocument(
               'api::database-connection.database-connection',
-              resource,
+              fixture.databaseConnectionId,
               testContext,
             );
           assert.equal(originalCredentialsResponse.status, 200);
@@ -4422,7 +3896,7 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/database-connection/${resource}`,
+            `${manager.apiUrl}/project/${fixture.projectId}/database-connection/${fixture.databaseConnectionId}`,
             {
               method: 'PUT',
               headers: new Headers([
@@ -4452,12 +3926,12 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
           const result: DatabaseConnectionDto = databaseSchema.parse(
             await response.json(),
           );
-          assert.equal(result.id, resource);
+          assert.equal(result.id, fixture.databaseConnectionId);
           assert.equal(result.title, 'Updated Database');
           assert.equal(result.connectionUrl, 'bolt://127.0.0.1:7687');
           assert.equal(result.databaseType, 'neo4j');
           const projectResponse: Response = await fetch(
-            `${manager.apiUrl}/project/${project}`,
+            `${manager.apiUrl}/project/${fixture.projectId}`,
             {
               headers: new Headers([
                 ['Authorization', `Bearer ${ownerLogin.jwt}`],
@@ -4472,14 +3946,15 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
             publishedState.databases;
 
           const persisted: DatabaseConnectionDto | undefined = items.find(
-            (item: DatabaseConnectionDto): boolean => item.id === resource,
+            (item: DatabaseConnectionDto): boolean =>
+              item.id === fixture.databaseConnectionId,
           );
           assert.ok(persisted);
           assert.equal(persisted.title, 'Updated Database');
           const storedCredentialsResponse: Response =
             await manager.readDocument(
               'api::database-connection.database-connection',
-              resource,
+              fixture.databaseConnectionId,
               testContext,
             );
           assert.equal(storedCredentialsResponse.status, 200);
@@ -4502,38 +3977,17 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
 
         test('persists a new node configuration', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
-          const resource: string = await manager.createPublishedDocument(
-            'api::database-connection.database-connection',
-            {
-              title: 'Original Database',
-              project,
-              databaseType: 'neo4j',
-              connectionUrl: '',
-              browserUrl: '',
-              database: '',
-            },
-            testContext,
-          );
+          const fixture: FixtureContext =
+            await manager.setupFixture(testContext);
           const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
+            fixture.owner.username,
+            fixture.owner.password,
             testContext,
           );
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/database-connection/${resource}`,
+            `${manager.apiUrl}/project/${fixture.projectId}/database-connection/${fixture.databaseConnectionId}`,
             {
               method: 'PUT',
               headers: new Headers([
@@ -4572,12 +4026,12 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
           const result: DatabaseConnectionDto = databaseSchema.parse(
             await response.json(),
           );
-          assert.equal(result.id, resource);
+          assert.equal(result.id, fixture.databaseConnectionId);
           assert.equal(result.title, 'Updated Database');
           assert.equal(result.connectionUrl, 'bolt://127.0.0.1:7687');
           assert.equal(result.databaseType, 'neo4j');
           const projectResponse: Response = await fetch(
-            `${manager.apiUrl}/project/${project}`,
+            `${manager.apiUrl}/project/${fixture.projectId}`,
             {
               headers: new Headers([
                 ['Authorization', `Bearer ${ownerLogin.jwt}`],
@@ -4592,7 +4046,8 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
             publishedState.databases;
 
           const persisted: DatabaseConnectionDto | undefined = items.find(
-            (item: DatabaseConnectionDto): boolean => item.id === resource,
+            (item: DatabaseConnectionDto): boolean =>
+              item.id === fixture.databaseConnectionId,
           );
           assert.ok(persisted);
           assert.equal(persisted.title, 'Updated Database');
@@ -4607,38 +4062,17 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
 
         test('updates an existing node configuration without changing its identifier', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
-          const resource: string = await manager.createPublishedDocument(
-            'api::database-connection.database-connection',
-            {
-              title: 'Original Database',
-              project,
-              databaseType: 'neo4j',
-              connectionUrl: '',
-              browserUrl: '',
-              database: '',
-            },
-            testContext,
-          );
+          const fixture: FixtureContext =
+            await manager.setupFixture(testContext);
           const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
+            fixture.owner.username,
+            fixture.owner.password,
             testContext,
           );
           const child: string = await manager.createPublishedDocument(
             'api::node-configuration.node-configuration',
             {
-              database: resource,
+              database: fixture.databaseConnectionId,
               type: 'link',
               label: 'Original Label',
               property: 'id',
@@ -4651,7 +4085,7 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/database-connection/${resource}`,
+            `${manager.apiUrl}/project/${fixture.projectId}/database-connection/${fixture.databaseConnectionId}`,
             {
               method: 'PUT',
               headers: new Headers([
@@ -4690,12 +4124,12 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
           const result: DatabaseConnectionDto = databaseSchema.parse(
             await response.json(),
           );
-          assert.equal(result.id, resource);
+          assert.equal(result.id, fixture.databaseConnectionId);
           assert.equal(result.title, 'Updated Database');
           assert.equal(result.connectionUrl, 'bolt://127.0.0.1:7687');
           assert.equal(result.databaseType, 'neo4j');
           const projectResponse: Response = await fetch(
-            `${manager.apiUrl}/project/${project}`,
+            `${manager.apiUrl}/project/${fixture.projectId}`,
             {
               headers: new Headers([
                 ['Authorization', `Bearer ${ownerLogin.jwt}`],
@@ -4710,7 +4144,8 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
             publishedState.databases;
 
           const persisted: DatabaseConnectionDto | undefined = items.find(
-            (item: DatabaseConnectionDto): boolean => item.id === resource,
+            (item: DatabaseConnectionDto): boolean =>
+              item.id === fixture.databaseConnectionId,
           );
           assert.ok(persisted);
           assert.equal(persisted.title, 'Updated Database');
@@ -4725,38 +4160,17 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
 
         test('deletes node configurations omitted from the update', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
-          const resource: string = await manager.createPublishedDocument(
-            'api::database-connection.database-connection',
-            {
-              title: 'Original Database',
-              project,
-              databaseType: 'neo4j',
-              connectionUrl: '',
-              browserUrl: '',
-              database: '',
-            },
-            testContext,
-          );
+          const fixture: FixtureContext =
+            await manager.setupFixture(testContext);
           const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
+            fixture.owner.username,
+            fixture.owner.password,
             testContext,
           );
           const child: string = await manager.createPublishedDocument(
             'api::node-configuration.node-configuration',
             {
-              database: resource,
+              database: fixture.databaseConnectionId,
               type: 'link',
               label: 'Original Label',
               property: 'id',
@@ -4769,7 +4183,7 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/database-connection/${resource}`,
+            `${manager.apiUrl}/project/${fixture.projectId}/database-connection/${fixture.databaseConnectionId}`,
             {
               method: 'PUT',
               headers: new Headers([
@@ -4798,12 +4212,12 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
           const result: DatabaseConnectionDto = databaseSchema.parse(
             await response.json(),
           );
-          assert.equal(result.id, resource);
+          assert.equal(result.id, fixture.databaseConnectionId);
           assert.equal(result.title, 'Updated Database');
           assert.equal(result.connectionUrl, 'bolt://127.0.0.1:7687');
           assert.equal(result.databaseType, 'neo4j');
           const projectResponse: Response = await fetch(
-            `${manager.apiUrl}/project/${project}`,
+            `${manager.apiUrl}/project/${fixture.projectId}`,
             {
               headers: new Headers([
                 ['Authorization', `Bearer ${ownerLogin.jwt}`],
@@ -4818,7 +4232,8 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
             publishedState.databases;
 
           const persisted: DatabaseConnectionDto | undefined = items.find(
-            (item: DatabaseConnectionDto): boolean => item.id === resource,
+            (item: DatabaseConnectionDto): boolean =>
+              item.id === fixture.databaseConnectionId,
           );
           assert.ok(persisted);
           assert.equal(persisted.title, 'Updated Database');
@@ -4834,38 +4249,17 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
 
         test('owner can update a database connection', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
-          const resource: string = await manager.createPublishedDocument(
-            'api::database-connection.database-connection',
-            {
-              title: 'Original Database',
-              project,
-              databaseType: 'neo4j',
-              connectionUrl: '',
-              browserUrl: '',
-              database: '',
-            },
-            testContext,
-          );
+          const fixture: FixtureContext =
+            await manager.setupFixture(testContext);
           const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
+            fixture.owner.username,
+            fixture.owner.password,
             testContext,
           );
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/database-connection/${resource}`,
+            `${manager.apiUrl}/project/${fixture.projectId}/database-connection/${fixture.databaseConnectionId}`,
             {
               method: 'PUT',
               headers: new Headers([
@@ -4894,12 +4288,12 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
           const result: DatabaseConnectionDto = databaseSchema.parse(
             await response.json(),
           );
-          assert.equal(result.id, resource);
+          assert.equal(result.id, fixture.databaseConnectionId);
           assert.equal(result.title, 'Updated Database');
           assert.equal(result.connectionUrl, 'bolt://127.0.0.1:7687');
           assert.equal(result.databaseType, 'neo4j');
           const projectResponse: Response = await fetch(
-            `${manager.apiUrl}/project/${project}`,
+            `${manager.apiUrl}/project/${fixture.projectId}`,
             {
               headers: new Headers([
                 ['Authorization', `Bearer ${ownerLogin.jwt}`],
@@ -4913,7 +4307,8 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
           const items: DatabaseConnectionDto[] | undefined =
             publishedState.databases;
           const persisted: DatabaseConnectionDto | undefined = items.find(
-            (item: DatabaseConnectionDto): boolean => item.id === resource,
+            (item: DatabaseConnectionDto): boolean =>
+              item.id === fixture.databaseConnectionId,
           );
           assert.ok(persisted);
           assert.equal(persisted.title, 'Updated Database');
@@ -4921,45 +4316,22 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
 
         test('collaborator can update a database connection', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const collaborator: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [collaborator.documentId],
-            },
-            testContext,
-          );
-          const resource: string = await manager.createPublishedDocument(
-            'api::database-connection.database-connection',
-            {
-              title: 'Original Database',
-              project,
-              databaseType: 'neo4j',
-              connectionUrl: '',
-              browserUrl: '',
-              database: '',
-            },
-            testContext,
-          );
+          const fixture: FixtureContext =
+            await manager.setupFixture(testContext);
           const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
+            fixture.owner.username,
+            fixture.owner.password,
             testContext,
           );
           const login: PostAuthResponseBodyDto = await manager.loginUser(
-            collaborator.username,
-            collaborator.password,
+            fixture.collaborator.username,
+            fixture.collaborator.password,
             testContext,
           );
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/database-connection/${resource}`,
+            `${manager.apiUrl}/project/${fixture.projectId}/database-connection/${fixture.databaseConnectionId}`,
             {
               method: 'PUT',
               headers: new Headers([
@@ -4988,12 +4360,12 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
           const result: DatabaseConnectionDto = databaseSchema.parse(
             await response.json(),
           );
-          assert.equal(result.id, resource);
+          assert.equal(result.id, fixture.databaseConnectionId);
           assert.equal(result.title, 'Updated Database');
           assert.equal(result.connectionUrl, 'bolt://127.0.0.1:7687');
           assert.equal(result.databaseType, 'neo4j');
           const projectResponse: Response = await fetch(
-            `${manager.apiUrl}/project/${project}`,
+            `${manager.apiUrl}/project/${fixture.projectId}`,
             {
               headers: new Headers([
                 ['Authorization', `Bearer ${ownerLogin.jwt}`],
@@ -5007,7 +4379,8 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
           const items: DatabaseConnectionDto[] | undefined =
             publishedState.databases;
           const persisted: DatabaseConnectionDto | undefined = items.find(
-            (item: DatabaseConnectionDto): boolean => item.id === resource,
+            (item: DatabaseConnectionDto): boolean =>
+              item.id === fixture.databaseConnectionId,
           );
           assert.ok(persisted);
           assert.equal(persisted.title, 'Updated Database');
@@ -5015,38 +4388,17 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
 
         test('can change the database type to sparql', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
-          const resource: string = await manager.createPublishedDocument(
-            'api::database-connection.database-connection',
-            {
-              title: 'Original Database',
-              project,
-              databaseType: 'neo4j',
-              connectionUrl: '',
-              browserUrl: '',
-              database: '',
-            },
-            testContext,
-          );
+          const fixture: FixtureContext =
+            await manager.setupFixture(testContext);
           const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
+            fixture.owner.username,
+            fixture.owner.password,
             testContext,
           );
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/database-connection/${resource}`,
+            `${manager.apiUrl}/project/${fixture.projectId}/database-connection/${fixture.databaseConnectionId}`,
             {
               method: 'PUT',
               headers: new Headers([
@@ -5075,12 +4427,12 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
           const result: DatabaseConnectionDto = databaseSchema.parse(
             await response.json(),
           );
-          assert.equal(result.id, resource);
+          assert.equal(result.id, fixture.databaseConnectionId);
           assert.equal(result.title, 'Updated Database');
           assert.equal(result.connectionUrl, 'bolt://127.0.0.1:7687');
           assert.equal(result.databaseType, 'sparql');
           const projectResponse: Response = await fetch(
-            `${manager.apiUrl}/project/${project}`,
+            `${manager.apiUrl}/project/${fixture.projectId}`,
             {
               headers: new Headers([
                 ['Authorization', `Bearer ${ownerLogin.jwt}`],
@@ -5094,7 +4446,8 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
           const items: DatabaseConnectionDto[] | undefined =
             publishedState.databases;
           const persisted: DatabaseConnectionDto | undefined = items.find(
-            (item: DatabaseConnectionDto): boolean => item.id === resource,
+            (item: DatabaseConnectionDto): boolean =>
+              item.id === fixture.databaseConnectionId,
           );
           assert.ok(persisted);
           assert.equal(persisted.title, 'Updated Database');
@@ -5102,38 +4455,17 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
 
         test('can change the database type to wikidata', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
-          const resource: string = await manager.createPublishedDocument(
-            'api::database-connection.database-connection',
-            {
-              title: 'Original Database',
-              project,
-              databaseType: 'neo4j',
-              connectionUrl: '',
-              browserUrl: '',
-              database: '',
-            },
-            testContext,
-          );
+          const fixture: FixtureContext =
+            await manager.setupFixture(testContext);
           const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
+            fixture.owner.username,
+            fixture.owner.password,
             testContext,
           );
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/database-connection/${resource}`,
+            `${manager.apiUrl}/project/${fixture.projectId}/database-connection/${fixture.databaseConnectionId}`,
             {
               method: 'PUT',
               headers: new Headers([
@@ -5162,12 +4494,12 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
           const result: DatabaseConnectionDto = databaseSchema.parse(
             await response.json(),
           );
-          assert.equal(result.id, resource);
+          assert.equal(result.id, fixture.databaseConnectionId);
           assert.equal(result.title, 'Updated Database');
           assert.equal(result.connectionUrl, 'bolt://127.0.0.1:7687');
           assert.equal(result.databaseType, 'wikidata');
           const projectResponse: Response = await fetch(
-            `${manager.apiUrl}/project/${project}`,
+            `${manager.apiUrl}/project/${fixture.projectId}`,
             {
               headers: new Headers([
                 ['Authorization', `Bearer ${ownerLogin.jwt}`],
@@ -5181,7 +4513,8 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
           const items: DatabaseConnectionDto[] | undefined =
             publishedState.databases;
           const persisted: DatabaseConnectionDto | undefined = items.find(
-            (item: DatabaseConnectionDto): boolean => item.id === resource,
+            (item: DatabaseConnectionDto): boolean =>
+              item.id === fixture.databaseConnectionId,
           );
           assert.ok(persisted);
           assert.equal(persisted.title, 'Updated Database');
@@ -5315,37 +4648,16 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
             ];
             for (const variant of variants) {
               // given
-              const owner: E2ETestApplicationUser =
-                await manager.registerUser(testContext);
-              const project: string = await manager.createPublishedDocument(
-                'api::project.project',
-                {
-                  title: 'Test Project',
-                  owner: owner.documentId,
-                  collaborators: [],
-                },
-                testContext,
-              );
-              const resource: string = await manager.createPublishedDocument(
-                'api::database-connection.database-connection',
-                {
-                  title: 'Original Database',
-                  project,
-                  databaseType: 'neo4j',
-                  connectionUrl: '',
-                  browserUrl: '',
-                  database: '',
-                },
-                testContext,
-              );
+              const fixture: FixtureContext =
+                await manager.setupFixture(testContext);
               const ownerLogin: PostAuthResponseBodyDto =
                 await manager.loginUser(
-                  owner.username,
-                  owner.password,
+                  fixture.owner.username,
+                  fixture.owner.password,
                   testContext,
                 );
               const filters: Record<string, string> = {
-                [`filters[project][documentId][$eq]`]: project,
+                [`filters[project][documentId][$eq]`]: fixture.projectId,
                 pageSize: '100',
                 sort: 'documentId:asc',
               };
@@ -5361,7 +4673,7 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
               assert.ok(
                 originalDraft.results.some(
                   (item: { documentId: string }): boolean =>
-                    item.documentId === resource,
+                    item.documentId === fixture.databaseConnectionId,
                 ),
               );
               const originalPublishedResponse: Response =
@@ -5376,7 +4688,7 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
 
               // when
               const response: Response = await fetch(
-                `${manager.apiUrl}/project/${project}/database-connection/${resource}`,
+                `${manager.apiUrl}/project/${fixture.projectId}/database-connection/${fixture.databaseConnectionId}`,
                 {
                   method: 'PUT',
                   headers: new Headers([
@@ -5521,36 +4833,15 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
           ];
           for (const variant of variants) {
             // given
-            const owner: E2ETestApplicationUser =
-              await manager.registerUser(testContext);
-            const project: string = await manager.createPublishedDocument(
-              'api::project.project',
-              {
-                title: 'Test Project',
-                owner: owner.documentId,
-                collaborators: [],
-              },
-              testContext,
-            );
-            const resource: string = await manager.createPublishedDocument(
-              'api::database-connection.database-connection',
-              {
-                title: 'Original Database',
-                project,
-                databaseType: 'neo4j',
-                connectionUrl: '',
-                browserUrl: '',
-                database: '',
-              },
-              testContext,
-            );
+            const fixture: FixtureContext =
+              await manager.setupFixture(testContext);
             const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-              owner.username,
-              owner.password,
+              fixture.owner.username,
+              fixture.owner.password,
               testContext,
             );
             const filters: Record<string, string> = {
-              [`filters[project][documentId][$eq]`]: project,
+              [`filters[project][documentId][$eq]`]: fixture.projectId,
               pageSize: '100',
               sort: 'documentId:asc',
             };
@@ -5565,7 +4856,7 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
             assert.ok(
               originalDraft.results.some(
                 (item: { documentId: string }): boolean =>
-                  item.documentId === resource,
+                  item.documentId === fixture.databaseConnectionId,
               ),
             );
             const originalPublishedResponse: Response =
@@ -5580,7 +4871,7 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
 
             // when
             const response: Response = await fetch(
-              `${manager.apiUrl}/project/${project}/database-connection/${resource}`,
+              `${manager.apiUrl}/project/${fixture.projectId}/database-connection/${fixture.databaseConnectionId}`,
               {
                 method: 'PUT',
                 headers: new Headers([
@@ -5656,36 +4947,15 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
           ];
           for (const variant of variants) {
             // given
-            const owner: E2ETestApplicationUser =
-              await manager.registerUser(testContext);
-            const project: string = await manager.createPublishedDocument(
-              'api::project.project',
-              {
-                title: 'Test Project',
-                owner: owner.documentId,
-                collaborators: [],
-              },
-              testContext,
-            );
-            const resource: string = await manager.createPublishedDocument(
-              'api::database-connection.database-connection',
-              {
-                title: 'Original Database',
-                project,
-                databaseType: 'neo4j',
-                connectionUrl: '',
-                browserUrl: '',
-                database: '',
-              },
-              testContext,
-            );
+            const fixture: FixtureContext =
+              await manager.setupFixture(testContext);
             const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-              owner.username,
-              owner.password,
+              fixture.owner.username,
+              fixture.owner.password,
               testContext,
             );
             const filters: Record<string, string> = {
-              [`filters[project][documentId][$eq]`]: project,
+              [`filters[project][documentId][$eq]`]: fixture.projectId,
               pageSize: '100',
               sort: 'documentId:asc',
             };
@@ -5700,7 +4970,7 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
             assert.ok(
               originalDraft.results.some(
                 (item: { documentId: string }): boolean =>
-                  item.documentId === resource,
+                  item.documentId === fixture.databaseConnectionId,
               ),
             );
             const originalPublishedResponse: Response =
@@ -5715,7 +4985,7 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
 
             // when
             const response: Response = await fetch(
-              `${manager.apiUrl}/project/${project}/database-connection/${resource}`,
+              `${manager.apiUrl}/project/${fixture.projectId}/database-connection/${fixture.databaseConnectionId}`,
               {
                 method: 'PUT',
                 headers: new Headers([
@@ -5782,36 +5052,15 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
           ];
           for (const variant of variants) {
             // given
-            const owner: E2ETestApplicationUser =
-              await manager.registerUser(testContext);
-            const project: string = await manager.createPublishedDocument(
-              'api::project.project',
-              {
-                title: 'Test Project',
-                owner: owner.documentId,
-                collaborators: [],
-              },
-              testContext,
-            );
-            const resource: string = await manager.createPublishedDocument(
-              'api::database-connection.database-connection',
-              {
-                title: 'Original Database',
-                project,
-                databaseType: 'neo4j',
-                connectionUrl: '',
-                browserUrl: '',
-                database: '',
-              },
-              testContext,
-            );
+            const fixture: FixtureContext =
+              await manager.setupFixture(testContext);
             await manager.loginUser(
-              owner.username,
-              owner.password,
+              fixture.owner.username,
+              fixture.owner.password,
               testContext,
             );
             const filters: Record<string, string> = {
-              [`filters[project][documentId][$eq]`]: project,
+              [`filters[project][documentId][$eq]`]: fixture.projectId,
               pageSize: '100',
               sort: 'documentId:asc',
             };
@@ -5826,7 +5075,7 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
             assert.ok(
               originalDraft.results.some(
                 (item: { documentId: string }): boolean =>
-                  item.documentId === resource,
+                  item.documentId === fixture.databaseConnectionId,
               ),
             );
             const originalPublishedResponse: Response =
@@ -5841,7 +5090,7 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
 
             // when
             const response: Response = await fetch(
-              `${manager.apiUrl}/project/${project}/database-connection/${resource}`,
+              `${manager.apiUrl}/project/${fixture.projectId}/database-connection/${fixture.databaseConnectionId}`,
               {
                 method: 'PUT',
                 body: JSON.stringify({
@@ -5896,39 +5145,20 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
       describe('403', (): void => {
         test('rejects outsider access', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const outsider: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
+          const fixture: FixtureContext =
+            await manager.setupFixture(testContext);
+          await manager.loginUser(
+            fixture.owner.username,
+            fixture.owner.password,
             testContext,
           );
-          const resource: string = await manager.createPublishedDocument(
-            'api::database-connection.database-connection',
-            {
-              title: 'Original Database',
-              project,
-              databaseType: 'neo4j',
-              connectionUrl: '',
-              browserUrl: '',
-              database: '',
-            },
-            testContext,
-          );
-          await manager.loginUser(owner.username, owner.password, testContext);
           const login: PostAuthResponseBodyDto = await manager.loginUser(
-            outsider.username,
-            outsider.password,
+            fixture.outsider.username,
+            fixture.outsider.password,
             testContext,
           );
           const filters: Record<string, string> = {
-            [`filters[project][documentId][$eq]`]: project,
+            [`filters[project][documentId][$eq]`]: fixture.projectId,
             pageSize: '100',
             sort: 'documentId:asc',
           };
@@ -5943,7 +5173,7 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
           assert.ok(
             originalDraft.results.some(
               (item: { documentId: string }): boolean =>
-                item.documentId === resource,
+                item.documentId === fixture.databaseConnectionId,
             ),
           );
           const originalPublishedResponse: Response =
@@ -5958,7 +5188,7 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/database-connection/${resource}`,
+            `${manager.apiUrl}/project/${fixture.projectId}/database-connection/${fixture.databaseConnectionId}`,
             {
               method: 'PUT',
               headers: new Headers([
@@ -6013,46 +5243,27 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
 
         test('rejects removed collaborator access', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const collaborator: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [collaborator.documentId],
-            },
+          const fixture: FixtureContext =
+            await manager.setupFixture(testContext);
+          await manager.loginUser(
+            fixture.owner.username,
+            fixture.owner.password,
             testContext,
           );
-          const resource: string = await manager.createPublishedDocument(
-            'api::database-connection.database-connection',
-            {
-              title: 'Original Database',
-              project,
-              databaseType: 'neo4j',
-              connectionUrl: '',
-              browserUrl: '',
-              database: '',
-            },
-            testContext,
-          );
-          await manager.loginUser(owner.username, owner.password, testContext);
           const login: PostAuthResponseBodyDto = await manager.loginUser(
-            collaborator.username,
-            collaborator.password,
+            fixture.collaborator.username,
+            fixture.collaborator.password,
             testContext,
           );
           const removal: Response = await manager.publishDocument(
             'api::project.project',
-            project,
+            fixture.projectId,
             { collaborators: [] },
             testContext,
           );
           assert.equal(removal.status, 200);
           const filters: Record<string, string> = {
-            [`filters[project][documentId][$eq]`]: project,
+            [`filters[project][documentId][$eq]`]: fixture.projectId,
             pageSize: '100',
             sort: 'documentId:asc',
           };
@@ -6067,7 +5278,7 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
           assert.ok(
             originalDraft.results.some(
               (item: { documentId: string }): boolean =>
-                item.documentId === resource,
+                item.documentId === fixture.databaseConnectionId,
             ),
           );
           const originalPublishedResponse: Response =
@@ -6082,7 +5293,7 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/database-connection/${resource}`,
+            `${manager.apiUrl}/project/${fixture.projectId}/database-connection/${fixture.databaseConnectionId}`,
             {
               method: 'PUT',
               headers: new Headers([
@@ -6504,36 +5715,15 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
 
         test('rejects an unknown database connection', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
-          const resource: string = await manager.createPublishedDocument(
-            'api::database-connection.database-connection',
-            {
-              title: 'Original Database',
-              project,
-              databaseType: 'neo4j',
-              connectionUrl: '',
-              browserUrl: '',
-              database: '',
-            },
-            testContext,
-          );
+          const fixture: FixtureContext =
+            await manager.setupFixture(testContext);
           const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
+            fixture.owner.username,
+            fixture.owner.password,
             testContext,
           );
           const filters: Record<string, string> = {
-            [`filters[project][documentId][$eq]`]: project,
+            [`filters[project][documentId][$eq]`]: fixture.projectId,
             pageSize: '100',
             sort: 'documentId:asc',
           };
@@ -6548,7 +5738,7 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
           assert.ok(
             originalDraft.results.some(
               (item: { documentId: string }): boolean =>
-                item.documentId === resource,
+                item.documentId === fixture.databaseConnectionId,
             ),
           );
           const originalPublishedResponse: Response =
@@ -6563,7 +5753,7 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/database-connection/${randomUUID()}`,
+            `${manager.apiUrl}/project/${fixture.projectId}/database-connection/${randomUUID()}`,
             {
               method: 'PUT',
               headers: new Headers([
@@ -7072,44 +6262,21 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
 
         test('published collaborator retains access after draft removal', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const collaborator: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [collaborator.documentId],
-            },
-            testContext,
-          );
-          const resource: string = await manager.createPublishedDocument(
-            'api::database-connection.database-connection',
-            {
-              title: 'Original Database',
-              project,
-              databaseType: 'neo4j',
-              connectionUrl: '',
-              browserUrl: '',
-              database: '',
-            },
-            testContext,
-          );
+          const fixture: FixtureContext =
+            await manager.setupFixture(testContext);
           const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
+            fixture.owner.username,
+            fixture.owner.password,
             testContext,
           );
           const login: PostAuthResponseBodyDto = await manager.loginUser(
-            collaborator.username,
-            collaborator.password,
+            fixture.collaborator.username,
+            fixture.collaborator.password,
             testContext,
           );
           const draftRemoval: Response = await manager.updateDocument(
             'api::project.project',
-            project,
+            fixture.projectId,
             { collaborators: [] },
             testContext,
           );
@@ -7117,7 +6284,7 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/database-connection/${resource}`,
+            `${manager.apiUrl}/project/${fixture.projectId}/database-connection/${fixture.databaseConnectionId}`,
             {
               method: 'DELETE',
               headers: new Headers([['Authorization', `Bearer ${login.jwt}`]]),
@@ -7129,7 +6296,7 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
           assert.equal(response.status, 204);
           assert.equal(await response.text(), '');
           const projectResponse: Response = await fetch(
-            `${manager.apiUrl}/project/${project}`,
+            `${manager.apiUrl}/project/${fixture.projectId}`,
             {
               headers: new Headers([
                 ['Authorization', `Bearer ${ownerLogin.jwt}`],
@@ -7145,13 +6312,14 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
 
           assert.equal(
             items.some(
-              (item: DatabaseConnectionDto): boolean => item.id === resource,
+              (item: DatabaseConnectionDto): boolean =>
+                item.id === fixture.databaseConnectionId,
             ),
             false,
           );
           const stored: Response = await manager.readDocument(
             'api::database-connection.database-connection',
-            resource,
+            fixture.databaseConnectionId,
             testContext,
           );
           assert.equal(stored.status, 404);
@@ -7159,38 +6327,17 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
 
         test('owner can delete a database connection', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
-          const resource: string = await manager.createPublishedDocument(
-            'api::database-connection.database-connection',
-            {
-              title: 'Original Database',
-              project,
-              databaseType: 'neo4j',
-              connectionUrl: '',
-              browserUrl: '',
-              database: '',
-            },
-            testContext,
-          );
+          const fixture: FixtureContext =
+            await manager.setupFixture(testContext);
           const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
+            fixture.owner.username,
+            fixture.owner.password,
             testContext,
           );
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/database-connection/${resource}`,
+            `${manager.apiUrl}/project/${fixture.projectId}/database-connection/${fixture.databaseConnectionId}`,
             {
               method: 'DELETE',
               headers: new Headers([
@@ -7204,7 +6351,7 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
           assert.equal(response.status, 204);
           assert.equal(await response.text(), '');
           const projectResponse: Response = await fetch(
-            `${manager.apiUrl}/project/${project}`,
+            `${manager.apiUrl}/project/${fixture.projectId}`,
             {
               headers: new Headers([
                 ['Authorization', `Bearer ${ownerLogin.jwt}`],
@@ -7219,13 +6366,14 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
             publishedState.databases;
           assert.equal(
             items.some(
-              (item: DatabaseConnectionDto): boolean => item.id === resource,
+              (item: DatabaseConnectionDto): boolean =>
+                item.id === fixture.databaseConnectionId,
             ),
             false,
           );
           const stored: Response = await manager.readDocument(
             'api::database-connection.database-connection',
-            resource,
+            fixture.databaseConnectionId,
             testContext,
           );
           assert.equal(stored.status, 404);
@@ -7233,45 +6381,22 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
 
         test('collaborator can delete a database connection', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const collaborator: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [collaborator.documentId],
-            },
-            testContext,
-          );
-          const resource: string = await manager.createPublishedDocument(
-            'api::database-connection.database-connection',
-            {
-              title: 'Original Database',
-              project,
-              databaseType: 'neo4j',
-              connectionUrl: '',
-              browserUrl: '',
-              database: '',
-            },
-            testContext,
-          );
+          const fixture: FixtureContext =
+            await manager.setupFixture(testContext);
           const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
+            fixture.owner.username,
+            fixture.owner.password,
             testContext,
           );
           const login: PostAuthResponseBodyDto = await manager.loginUser(
-            collaborator.username,
-            collaborator.password,
+            fixture.collaborator.username,
+            fixture.collaborator.password,
             testContext,
           );
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/database-connection/${resource}`,
+            `${manager.apiUrl}/project/${fixture.projectId}/database-connection/${fixture.databaseConnectionId}`,
             {
               method: 'DELETE',
               headers: new Headers([['Authorization', `Bearer ${login.jwt}`]]),
@@ -7283,7 +6408,7 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
           assert.equal(response.status, 204);
           assert.equal(await response.text(), '');
           const projectResponse: Response = await fetch(
-            `${manager.apiUrl}/project/${project}`,
+            `${manager.apiUrl}/project/${fixture.projectId}`,
             {
               headers: new Headers([
                 ['Authorization', `Bearer ${ownerLogin.jwt}`],
@@ -7298,13 +6423,14 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
             publishedState.databases;
           assert.equal(
             items.some(
-              (item: DatabaseConnectionDto): boolean => item.id === resource,
+              (item: DatabaseConnectionDto): boolean =>
+                item.id === fixture.databaseConnectionId,
             ),
             false,
           );
           const stored: Response = await manager.readDocument(
             'api::database-connection.database-connection',
-            resource,
+            fixture.databaseConnectionId,
             testContext,
           );
           assert.equal(stored.status, 404);
@@ -7320,36 +6446,15 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
           ];
           for (const variant of variants) {
             // given
-            const owner: E2ETestApplicationUser =
-              await manager.registerUser(testContext);
-            const project: string = await manager.createPublishedDocument(
-              'api::project.project',
-              {
-                title: 'Test Project',
-                owner: owner.documentId,
-                collaborators: [],
-              },
-              testContext,
-            );
-            const resource: string = await manager.createPublishedDocument(
-              'api::database-connection.database-connection',
-              {
-                title: 'Original Database',
-                project,
-                databaseType: 'neo4j',
-                connectionUrl: '',
-                browserUrl: '',
-                database: '',
-              },
-              testContext,
-            );
+            const fixture: FixtureContext =
+              await manager.setupFixture(testContext);
             await manager.loginUser(
-              owner.username,
-              owner.password,
+              fixture.owner.username,
+              fixture.owner.password,
               testContext,
             );
             const filters: Record<string, string> = {
-              [`filters[project][documentId][$eq]`]: project,
+              [`filters[project][documentId][$eq]`]: fixture.projectId,
               pageSize: '100',
               sort: 'documentId:asc',
             };
@@ -7364,7 +6469,7 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
             assert.ok(
               originalDraft.results.some(
                 (item: { documentId: string }): boolean =>
-                  item.documentId === resource,
+                  item.documentId === fixture.databaseConnectionId,
               ),
             );
             const originalPublishedResponse: Response =
@@ -7379,7 +6484,7 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
 
             // when
             const response: Response = await fetch(
-              `${manager.apiUrl}/project/${project}/database-connection/${resource}`,
+              `${manager.apiUrl}/project/${fixture.projectId}/database-connection/${fixture.databaseConnectionId}`,
               {
                 method: 'DELETE',
                 signal: testContext.signal,
@@ -7421,39 +6526,20 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
       describe('403', (): void => {
         test('rejects outsider access', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const outsider: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
+          const fixture: FixtureContext =
+            await manager.setupFixture(testContext);
+          await manager.loginUser(
+            fixture.owner.username,
+            fixture.owner.password,
             testContext,
           );
-          const resource: string = await manager.createPublishedDocument(
-            'api::database-connection.database-connection',
-            {
-              title: 'Original Database',
-              project,
-              databaseType: 'neo4j',
-              connectionUrl: '',
-              browserUrl: '',
-              database: '',
-            },
-            testContext,
-          );
-          await manager.loginUser(owner.username, owner.password, testContext);
           const login: PostAuthResponseBodyDto = await manager.loginUser(
-            outsider.username,
-            outsider.password,
+            fixture.outsider.username,
+            fixture.outsider.password,
             testContext,
           );
           const filters: Record<string, string> = {
-            [`filters[project][documentId][$eq]`]: project,
+            [`filters[project][documentId][$eq]`]: fixture.projectId,
             pageSize: '100',
             sort: 'documentId:asc',
           };
@@ -7468,7 +6554,7 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
           assert.ok(
             originalDraft.results.some(
               (item: { documentId: string }): boolean =>
-                item.documentId === resource,
+                item.documentId === fixture.databaseConnectionId,
             ),
           );
           const originalPublishedResponse: Response =
@@ -7483,7 +6569,7 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/database-connection/${resource}`,
+            `${manager.apiUrl}/project/${fixture.projectId}/database-connection/${fixture.databaseConnectionId}`,
             {
               method: 'DELETE',
               headers: new Headers([['Authorization', `Bearer ${login.jwt}`]]),
@@ -7522,46 +6608,27 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
 
         test('rejects removed collaborator access', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const collaborator: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [collaborator.documentId],
-            },
+          const fixture: FixtureContext =
+            await manager.setupFixture(testContext);
+          await manager.loginUser(
+            fixture.owner.username,
+            fixture.owner.password,
             testContext,
           );
-          const resource: string = await manager.createPublishedDocument(
-            'api::database-connection.database-connection',
-            {
-              title: 'Original Database',
-              project,
-              databaseType: 'neo4j',
-              connectionUrl: '',
-              browserUrl: '',
-              database: '',
-            },
-            testContext,
-          );
-          await manager.loginUser(owner.username, owner.password, testContext);
           const login: PostAuthResponseBodyDto = await manager.loginUser(
-            collaborator.username,
-            collaborator.password,
+            fixture.collaborator.username,
+            fixture.collaborator.password,
             testContext,
           );
           const removal: Response = await manager.publishDocument(
             'api::project.project',
-            project,
+            fixture.projectId,
             { collaborators: [] },
             testContext,
           );
           assert.equal(removal.status, 200);
           const filters: Record<string, string> = {
-            [`filters[project][documentId][$eq]`]: project,
+            [`filters[project][documentId][$eq]`]: fixture.projectId,
             pageSize: '100',
             sort: 'documentId:asc',
           };
@@ -7576,7 +6643,7 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
           assert.ok(
             originalDraft.results.some(
               (item: { documentId: string }): boolean =>
-                item.documentId === resource,
+                item.documentId === fixture.databaseConnectionId,
             ),
           );
           const originalPublishedResponse: Response =
@@ -7591,7 +6658,7 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/database-connection/${resource}`,
+            `${manager.apiUrl}/project/${fixture.projectId}/database-connection/${fixture.databaseConnectionId}`,
             {
               method: 'DELETE',
               headers: new Headers([['Authorization', `Bearer ${login.jwt}`]]),
@@ -7953,36 +7020,15 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
 
         test('rejects an unknown database connection', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
-          const resource: string = await manager.createPublishedDocument(
-            'api::database-connection.database-connection',
-            {
-              title: 'Original Database',
-              project,
-              databaseType: 'neo4j',
-              connectionUrl: '',
-              browserUrl: '',
-              database: '',
-            },
-            testContext,
-          );
+          const fixture: FixtureContext =
+            await manager.setupFixture(testContext);
           const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
+            fixture.owner.username,
+            fixture.owner.password,
             testContext,
           );
           const filters: Record<string, string> = {
-            [`filters[project][documentId][$eq]`]: project,
+            [`filters[project][documentId][$eq]`]: fixture.projectId,
             pageSize: '100',
             sort: 'documentId:asc',
           };
@@ -7997,7 +7043,7 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
           assert.ok(
             originalDraft.results.some(
               (item: { documentId: string }): boolean =>
-                item.documentId === resource,
+                item.documentId === fixture.databaseConnectionId,
             ),
           );
           const originalPublishedResponse: Response =
@@ -8012,7 +7058,7 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/database-connection/${randomUUID()}`,
+            `${manager.apiUrl}/project/${fixture.projectId}/database-connection/${randomUUID()}`,
             {
               method: 'DELETE',
               headers: new Headers([

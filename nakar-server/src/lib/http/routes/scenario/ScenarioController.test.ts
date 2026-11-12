@@ -1,3 +1,4 @@
+import type { FixtureContext } from '../../../../e2e/FixtureContext';
 import type { UpdateScenarioRequestBodyDto } from './dto/UpdateScenarioRequestBodyDto';
 import { UpdateScenarioPostActionTypeDto } from './dto/UpdateScenarioPostActionTypeDto';
 import { UpdateScenarioPostActionLayoutAlgorithmDto } from './dto/UpdateScenarioPostActionLayoutAlgorithmDto';
@@ -213,46 +214,20 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
 
       test('published collaborator retains access after draft removal', async (testContext: TestContext): Promise<void> => {
         // given
-        const owner: E2ETestApplicationUser =
-          await manager.registerUser(testContext);
-        const collaborator: E2ETestApplicationUser =
-          await manager.registerUser(testContext);
-        const project: string = await manager.createPublishedDocument(
-          'api::project.project',
-          {
-            title: 'Test Project',
-            owner: owner.documentId,
-            collaborators: [collaborator.documentId],
-          },
-          testContext,
-        );
-        const group: string = await manager.createPublishedDocument(
-          'api::scenario-group.scenario-group',
-          { title: 'Scenario Group', project },
-          testContext,
-        );
-        const resource: string = await manager.createPublishedDocument(
-          'api::scenario.scenario',
-          {
-            title: 'Original Scenario',
-            description: 'Original description',
-            group,
-          },
-          testContext,
-        );
+        const fixture: FixtureContext = await manager.setupFixture(testContext);
         const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-          owner.username,
-          owner.password,
+          fixture.owner.username,
+          fixture.owner.password,
           testContext,
         );
         const login: PostAuthResponseBodyDto = await manager.loginUser(
-          collaborator.username,
-          collaborator.password,
+          fixture.collaborator.username,
+          fixture.collaborator.password,
           testContext,
         );
         const draftRemoval: Response = await manager.updateDocument(
           'api::project.project',
-          project,
+          fixture.projectId,
           { collaborators: [] },
           testContext,
         );
@@ -260,7 +235,7 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
 
         // when
         const response: Response = await fetch(
-          `${manager.apiUrl}/project/${project}/scenario-group/${group}/scenario`,
+          `${manager.apiUrl}/project/${fixture.projectId}/scenario-group/${fixture.scenarioGroupId}/scenario`,
           {
             method: 'POST',
             headers: new Headers([['Authorization', `Bearer ${login.jwt}`]]),
@@ -271,7 +246,7 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
         // then
         assert.equal(response.status, 201);
         const body: ScenarioDto = scenarioSchema.parse(await response.json());
-        assert.notEqual(body.id, resource);
+        assert.notEqual(body.id, fixture.scenarioId);
         assert.deepEqual(body, {
           id: body.id,
           title: 'Untitled Scenario',
@@ -282,7 +257,7 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
           postActionsDescription: [],
         });
         const projectResponse: Response = await fetch(
-          `${manager.apiUrl}/project/${project}`,
+          `${manager.apiUrl}/project/${fixture.projectId}`,
           {
             headers: new Headers([
               ['Authorization', `Bearer ${ownerLogin.jwt}`],
@@ -295,7 +270,8 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
           projectStateSchema.parse(await projectResponse.json());
         const items: ScenarioDto[] | undefined =
           publishedState.scenarioGroups.find(
-            (item: { id: string }): boolean => item.id === group,
+            (item: { id: string }): boolean =>
+              item.id === fixture.scenarioGroupId,
           )?.scenarios;
         assert.ok(items != null);
         assert.deepEqual(
@@ -306,36 +282,16 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
 
       test('owner can create a scenario', async (testContext: TestContext): Promise<void> => {
         // given
-        const owner: E2ETestApplicationUser =
-          await manager.registerUser(testContext);
-        const project: string = await manager.createPublishedDocument(
-          'api::project.project',
-          { title: 'Test Project', owner: owner.documentId, collaborators: [] },
-          testContext,
-        );
-        const group: string = await manager.createPublishedDocument(
-          'api::scenario-group.scenario-group',
-          { title: 'Scenario Group', project },
-          testContext,
-        );
-        const resource: string = await manager.createPublishedDocument(
-          'api::scenario.scenario',
-          {
-            title: 'Original Scenario',
-            description: 'Original description',
-            group,
-          },
-          testContext,
-        );
+        const fixture: FixtureContext = await manager.setupFixture(testContext);
         const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-          owner.username,
-          owner.password,
+          fixture.owner.username,
+          fixture.owner.password,
           testContext,
         );
 
         // when
         const response: Response = await fetch(
-          `${manager.apiUrl}/project/${project}/scenario-group/${group}/scenario`,
+          `${manager.apiUrl}/project/${fixture.projectId}/scenario-group/${fixture.scenarioGroupId}/scenario`,
           {
             method: 'POST',
             headers: new Headers([
@@ -348,7 +304,7 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
         // then
         assert.equal(response.status, 201);
         const body: ScenarioDto = scenarioSchema.parse(await response.json());
-        assert.notEqual(body.id, resource);
+        assert.notEqual(body.id, fixture.scenarioId);
         assert.deepEqual(body, {
           id: body.id,
           title: 'Untitled Scenario',
@@ -359,7 +315,7 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
           postActionsDescription: [],
         });
         const projectResponse: Response = await fetch(
-          `${manager.apiUrl}/project/${project}`,
+          `${manager.apiUrl}/project/${fixture.projectId}`,
           {
             headers: new Headers([
               ['Authorization', `Bearer ${ownerLogin.jwt}`],
@@ -372,7 +328,8 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
           projectStateSchema.parse(await projectResponse.json());
         const items: ScenarioDto[] | undefined =
           publishedState.scenarioGroups.find(
-            (item: { id: string }): boolean => item.id === group,
+            (item: { id: string }): boolean =>
+              item.id === fixture.scenarioGroupId,
           )?.scenarios;
         assert.ok(items != null);
         assert.deepEqual(
@@ -383,47 +340,21 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
 
       test('collaborator can create a scenario', async (testContext: TestContext): Promise<void> => {
         // given
-        const owner: E2ETestApplicationUser =
-          await manager.registerUser(testContext);
-        const collaborator: E2ETestApplicationUser =
-          await manager.registerUser(testContext);
-        const project: string = await manager.createPublishedDocument(
-          'api::project.project',
-          {
-            title: 'Test Project',
-            owner: owner.documentId,
-            collaborators: [collaborator.documentId],
-          },
-          testContext,
-        );
-        const group: string = await manager.createPublishedDocument(
-          'api::scenario-group.scenario-group',
-          { title: 'Scenario Group', project },
-          testContext,
-        );
-        const resource: string = await manager.createPublishedDocument(
-          'api::scenario.scenario',
-          {
-            title: 'Original Scenario',
-            description: 'Original description',
-            group,
-          },
-          testContext,
-        );
+        const fixture: FixtureContext = await manager.setupFixture(testContext);
         const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-          owner.username,
-          owner.password,
+          fixture.owner.username,
+          fixture.owner.password,
           testContext,
         );
         const login: PostAuthResponseBodyDto = await manager.loginUser(
-          collaborator.username,
-          collaborator.password,
+          fixture.collaborator.username,
+          fixture.collaborator.password,
           testContext,
         );
 
         // when
         const response: Response = await fetch(
-          `${manager.apiUrl}/project/${project}/scenario-group/${group}/scenario`,
+          `${manager.apiUrl}/project/${fixture.projectId}/scenario-group/${fixture.scenarioGroupId}/scenario`,
           {
             method: 'POST',
             headers: new Headers([['Authorization', `Bearer ${login.jwt}`]]),
@@ -434,7 +365,7 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
         // then
         assert.equal(response.status, 201);
         const body: ScenarioDto = scenarioSchema.parse(await response.json());
-        assert.notEqual(body.id, resource);
+        assert.notEqual(body.id, fixture.scenarioId);
         assert.deepEqual(body, {
           id: body.id,
           title: 'Untitled Scenario',
@@ -445,7 +376,7 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
           postActionsDescription: [],
         });
         const projectResponse: Response = await fetch(
-          `${manager.apiUrl}/project/${project}`,
+          `${manager.apiUrl}/project/${fixture.projectId}`,
           {
             headers: new Headers([
               ['Authorization', `Bearer ${ownerLogin.jwt}`],
@@ -458,7 +389,8 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
           projectStateSchema.parse(await projectResponse.json());
         const items: ScenarioDto[] | undefined =
           publishedState.scenarioGroups.find(
-            (item: { id: string }): boolean => item.id === group,
+            (item: { id: string }): boolean =>
+              item.id === fixture.scenarioGroupId,
           )?.scenarios;
         assert.ok(items != null);
         assert.deepEqual(
@@ -477,34 +409,15 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
         ];
         for (const variant of variants) {
           // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
+          const fixture: FixtureContext =
+            await manager.setupFixture(testContext);
+          await manager.loginUser(
+            fixture.owner.username,
+            fixture.owner.password,
             testContext,
           );
-          const group: string = await manager.createPublishedDocument(
-            'api::scenario-group.scenario-group',
-            { title: 'Scenario Group', project },
-            testContext,
-          );
-          const resource: string = await manager.createPublishedDocument(
-            'api::scenario.scenario',
-            {
-              title: 'Original Scenario',
-              description: 'Original description',
-              group,
-            },
-            testContext,
-          );
-          await manager.loginUser(owner.username, owner.password, testContext);
           const filters: Record<string, string> = {
-            [`filters[group][documentId][$eq]`]: group,
+            [`filters[group][documentId][$eq]`]: fixture.scenarioGroupId,
             pageSize: '100',
             sort: 'documentId:asc',
           };
@@ -519,7 +432,7 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
           assert.ok(
             originalDraft.results.some(
               (item: { documentId: string }): boolean =>
-                item.documentId === resource,
+                item.documentId === fixture.scenarioId,
             ),
           );
           const originalPublishedResponse: Response =
@@ -534,7 +447,7 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/scenario-group/${group}/scenario`,
+            `${manager.apiUrl}/project/${fixture.projectId}/scenario-group/${fixture.scenarioGroupId}/scenario`,
             {
               method: 'POST',
               signal: testContext.signal,
@@ -576,37 +489,19 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
     describe('403', (): void => {
       test('rejects outsider access', async (testContext: TestContext): Promise<void> => {
         // given
-        const owner: E2ETestApplicationUser =
-          await manager.registerUser(testContext);
-        const outsider: E2ETestApplicationUser =
-          await manager.registerUser(testContext);
-        const project: string = await manager.createPublishedDocument(
-          'api::project.project',
-          { title: 'Test Project', owner: owner.documentId, collaborators: [] },
+        const fixture: FixtureContext = await manager.setupFixture(testContext);
+        await manager.loginUser(
+          fixture.owner.username,
+          fixture.owner.password,
           testContext,
         );
-        const group: string = await manager.createPublishedDocument(
-          'api::scenario-group.scenario-group',
-          { title: 'Scenario Group', project },
-          testContext,
-        );
-        const resource: string = await manager.createPublishedDocument(
-          'api::scenario.scenario',
-          {
-            title: 'Original Scenario',
-            description: 'Original description',
-            group,
-          },
-          testContext,
-        );
-        await manager.loginUser(owner.username, owner.password, testContext);
         const login: PostAuthResponseBodyDto = await manager.loginUser(
-          outsider.username,
-          outsider.password,
+          fixture.outsider.username,
+          fixture.outsider.password,
           testContext,
         );
         const filters: Record<string, string> = {
-          [`filters[group][documentId][$eq]`]: group,
+          [`filters[group][documentId][$eq]`]: fixture.scenarioGroupId,
           pageSize: '100',
           sort: 'documentId:asc',
         };
@@ -621,7 +516,7 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
         assert.ok(
           originalDraft.results.some(
             (item: { documentId: string }): boolean =>
-              item.documentId === resource,
+              item.documentId === fixture.scenarioId,
           ),
         );
         const originalPublishedResponse: Response = await manager.readDocuments(
@@ -635,7 +530,7 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
 
         // when
         const response: Response = await fetch(
-          `${manager.apiUrl}/project/${project}/scenario-group/${group}/scenario`,
+          `${manager.apiUrl}/project/${fixture.projectId}/scenario-group/${fixture.scenarioGroupId}/scenario`,
           {
             method: 'POST',
             headers: new Headers([['Authorization', `Bearer ${login.jwt}`]]),
@@ -674,48 +569,26 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
 
       test('rejects removed collaborator access', async (testContext: TestContext): Promise<void> => {
         // given
-        const owner: E2ETestApplicationUser =
-          await manager.registerUser(testContext);
-        const collaborator: E2ETestApplicationUser =
-          await manager.registerUser(testContext);
-        const project: string = await manager.createPublishedDocument(
-          'api::project.project',
-          {
-            title: 'Test Project',
-            owner: owner.documentId,
-            collaborators: [collaborator.documentId],
-          },
+        const fixture: FixtureContext = await manager.setupFixture(testContext);
+        await manager.loginUser(
+          fixture.owner.username,
+          fixture.owner.password,
           testContext,
         );
-        const group: string = await manager.createPublishedDocument(
-          'api::scenario-group.scenario-group',
-          { title: 'Scenario Group', project },
-          testContext,
-        );
-        const resource: string = await manager.createPublishedDocument(
-          'api::scenario.scenario',
-          {
-            title: 'Original Scenario',
-            description: 'Original description',
-            group,
-          },
-          testContext,
-        );
-        await manager.loginUser(owner.username, owner.password, testContext);
         const login: PostAuthResponseBodyDto = await manager.loginUser(
-          collaborator.username,
-          collaborator.password,
+          fixture.collaborator.username,
+          fixture.collaborator.password,
           testContext,
         );
         const removal: Response = await manager.publishDocument(
           'api::project.project',
-          project,
+          fixture.projectId,
           { collaborators: [] },
           testContext,
         );
         assert.equal(removal.status, 200);
         const filters: Record<string, string> = {
-          [`filters[group][documentId][$eq]`]: group,
+          [`filters[group][documentId][$eq]`]: fixture.scenarioGroupId,
           pageSize: '100',
           sort: 'documentId:asc',
         };
@@ -730,7 +603,7 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
         assert.ok(
           originalDraft.results.some(
             (item: { documentId: string }): boolean =>
-              item.documentId === resource,
+              item.documentId === fixture.scenarioId,
           ),
         );
         const originalPublishedResponse: Response = await manager.readDocuments(
@@ -744,7 +617,7 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
 
         // when
         const response: Response = await fetch(
-          `${manager.apiUrl}/project/${project}/scenario-group/${group}/scenario`,
+          `${manager.apiUrl}/project/${fixture.projectId}/scenario-group/${fixture.scenarioGroupId}/scenario`,
           {
             method: 'POST',
             headers: new Headers([['Authorization', `Bearer ${login.jwt}`]]),
@@ -1097,34 +970,14 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
 
       test('rejects unknown scenario group', async (testContext: TestContext): Promise<void> => {
         // given
-        const owner: E2ETestApplicationUser =
-          await manager.registerUser(testContext);
-        const project: string = await manager.createPublishedDocument(
-          'api::project.project',
-          { title: 'Test Project', owner: owner.documentId, collaborators: [] },
-          testContext,
-        );
-        const group: string = await manager.createPublishedDocument(
-          'api::scenario-group.scenario-group',
-          { title: 'Scenario Group', project },
-          testContext,
-        );
-        const resource: string = await manager.createPublishedDocument(
-          'api::scenario.scenario',
-          {
-            title: 'Original Scenario',
-            description: 'Original description',
-            group,
-          },
-          testContext,
-        );
+        const fixture: FixtureContext = await manager.setupFixture(testContext);
         const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-          owner.username,
-          owner.password,
+          fixture.owner.username,
+          fixture.owner.password,
           testContext,
         );
         const filters: Record<string, string> = {
-          [`filters[group][documentId][$eq]`]: group,
+          [`filters[group][documentId][$eq]`]: fixture.scenarioGroupId,
           pageSize: '100',
           sort: 'documentId:asc',
         };
@@ -1139,7 +992,7 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
         assert.ok(
           originalDraft.results.some(
             (item: { documentId: string }): boolean =>
-              item.documentId === resource,
+              item.documentId === fixture.scenarioId,
           ),
         );
         const originalPublishedResponse: Response = await manager.readDocuments(
@@ -1153,7 +1006,7 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
 
         // when
         const response: Response = await fetch(
-          `${manager.apiUrl}/project/${project}/scenario-group/${randomUUID()}/scenario`,
+          `${manager.apiUrl}/project/${fixture.projectId}/scenario-group/${randomUUID()}/scenario`,
           {
             method: 'POST',
             headers: new Headers([
@@ -1505,46 +1358,21 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
 
         test('published collaborator retains access after draft removal', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const collaborator: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [collaborator.documentId],
-            },
-            testContext,
-          );
-          const group: string = await manager.createPublishedDocument(
-            'api::scenario-group.scenario-group',
-            { title: 'Scenario Group', project },
-            testContext,
-          );
-          const resource: string = await manager.createPublishedDocument(
-            'api::scenario.scenario',
-            {
-              title: 'Original Scenario',
-              description: 'Original description',
-              group,
-            },
-            testContext,
-          );
+          const fixture: FixtureContext =
+            await manager.setupFixture(testContext);
           const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
+            fixture.owner.username,
+            fixture.owner.password,
             testContext,
           );
           const login: PostAuthResponseBodyDto = await manager.loginUser(
-            collaborator.username,
-            collaborator.password,
+            fixture.collaborator.username,
+            fixture.collaborator.password,
             testContext,
           );
           const draftRemoval: Response = await manager.updateDocument(
             'api::project.project',
-            project,
+            fixture.projectId,
             { collaborators: [] },
             testContext,
           );
@@ -1552,7 +1380,7 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/scenario-group/${group}/scenario/${resource}`,
+            `${manager.apiUrl}/project/${fixture.projectId}/scenario-group/${fixture.scenarioGroupId}/scenario/${fixture.scenarioId}`,
             {
               method: 'PUT',
               headers: new Headers([
@@ -1575,11 +1403,11 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
           const result: ScenarioDto = scenarioSchema.parse(
             await response.json(),
           );
-          assert.equal(result.id, resource);
+          assert.equal(result.id, fixture.scenarioId);
           assert.equal(result.title, 'Updated Scenario');
           assert.equal(result.description, 'Updated description');
           const projectResponse: Response = await fetch(
-            `${manager.apiUrl}/project/${project}`,
+            `${manager.apiUrl}/project/${fixture.projectId}`,
             {
               headers: new Headers([
                 ['Authorization', `Bearer ${ownerLogin.jwt}`],
@@ -1592,11 +1420,12 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
             projectStateSchema.parse(await projectResponse.json());
           const items: ScenarioDto[] | undefined =
             publishedState.scenarioGroups.find(
-              (item: { id: string }): boolean => item.id === group,
+              (item: { id: string }): boolean =>
+                item.id === fixture.scenarioGroupId,
             )?.scenarios;
           assert.ok(items != null);
           const persisted: ScenarioDto | undefined = items.find(
-            (item: ScenarioDto): boolean => item.id === resource,
+            (item: ScenarioDto): boolean => item.id === fixture.scenarioId,
           );
           assert.ok(persisted);
           assert.equal(persisted.title, 'Updated Scenario');
@@ -1604,40 +1433,17 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
 
         test('persists a new query', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
-          const group: string = await manager.createPublishedDocument(
-            'api::scenario-group.scenario-group',
-            { title: 'Scenario Group', project },
-            testContext,
-          );
-          const resource: string = await manager.createPublishedDocument(
-            'api::scenario.scenario',
-            {
-              title: 'Original Scenario',
-              description: 'Original description',
-              group,
-            },
-            testContext,
-          );
+          const fixture: FixtureContext =
+            await manager.setupFixture(testContext);
           const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
+            fixture.owner.username,
+            fixture.owner.password,
             testContext,
           );
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/scenario-group/${group}/scenario/${resource}`,
+            `${manager.apiUrl}/project/${fixture.projectId}/scenario-group/${fixture.scenarioGroupId}/scenario/${fixture.scenarioId}`,
             {
               method: 'PUT',
               headers: new Headers([
@@ -1667,11 +1473,11 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
           const result: ScenarioDto = scenarioSchema.parse(
             await response.json(),
           );
-          assert.equal(result.id, resource);
+          assert.equal(result.id, fixture.scenarioId);
           assert.equal(result.title, 'Updated Scenario');
           assert.equal(result.description, 'Updated description');
           const projectResponse: Response = await fetch(
-            `${manager.apiUrl}/project/${project}`,
+            `${manager.apiUrl}/project/${fixture.projectId}`,
             {
               headers: new Headers([
                 ['Authorization', `Bearer ${ownerLogin.jwt}`],
@@ -1684,11 +1490,12 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
             projectStateSchema.parse(await projectResponse.json());
           const items: ScenarioDto[] | undefined =
             publishedState.scenarioGroups.find(
-              (item: { id: string }): boolean => item.id === group,
+              (item: { id: string }): boolean =>
+                item.id === fixture.scenarioGroupId,
             )?.scenarios;
           assert.ok(items != null);
           const persisted: ScenarioDto | undefined = items.find(
-            (item: ScenarioDto): boolean => item.id === resource,
+            (item: ScenarioDto): boolean => item.id === fixture.scenarioId,
           );
           assert.ok(persisted);
           assert.equal(persisted.title, 'Updated Scenario');
@@ -1704,40 +1511,17 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
 
         test('persists a new parameter', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
-          const group: string = await manager.createPublishedDocument(
-            'api::scenario-group.scenario-group',
-            { title: 'Scenario Group', project },
-            testContext,
-          );
-          const resource: string = await manager.createPublishedDocument(
-            'api::scenario.scenario',
-            {
-              title: 'Original Scenario',
-              description: 'Original description',
-              group,
-            },
-            testContext,
-          );
+          const fixture: FixtureContext =
+            await manager.setupFixture(testContext);
           const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
+            fixture.owner.username,
+            fixture.owner.password,
             testContext,
           );
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/scenario-group/${group}/scenario/${resource}`,
+            `${manager.apiUrl}/project/${fixture.projectId}/scenario-group/${fixture.scenarioGroupId}/scenario/${fixture.scenarioId}`,
             {
               method: 'PUT',
               headers: new Headers([
@@ -1769,11 +1553,11 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
           const result: ScenarioDto = scenarioSchema.parse(
             await response.json(),
           );
-          assert.equal(result.id, resource);
+          assert.equal(result.id, fixture.scenarioId);
           assert.equal(result.title, 'Updated Scenario');
           assert.equal(result.description, 'Updated description');
           const projectResponse: Response = await fetch(
-            `${manager.apiUrl}/project/${project}`,
+            `${manager.apiUrl}/project/${fixture.projectId}`,
             {
               headers: new Headers([
                 ['Authorization', `Bearer ${ownerLogin.jwt}`],
@@ -1786,11 +1570,12 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
             projectStateSchema.parse(await projectResponse.json());
           const items: ScenarioDto[] | undefined =
             publishedState.scenarioGroups.find(
-              (item: { id: string }): boolean => item.id === group,
+              (item: { id: string }): boolean =>
+                item.id === fixture.scenarioGroupId,
             )?.scenarios;
           assert.ok(items != null);
           const persisted: ScenarioDto | undefined = items.find(
-            (item: ScenarioDto): boolean => item.id === resource,
+            (item: ScenarioDto): boolean => item.id === fixture.scenarioId,
           );
           assert.ok(persisted);
           assert.equal(persisted.title, 'Updated Scenario');
@@ -1808,40 +1593,17 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
 
         test('persists a new post-action', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
-          const group: string = await manager.createPublishedDocument(
-            'api::scenario-group.scenario-group',
-            { title: 'Scenario Group', project },
-            testContext,
-          );
-          const resource: string = await manager.createPublishedDocument(
-            'api::scenario.scenario',
-            {
-              title: 'Original Scenario',
-              description: 'Original description',
-              group,
-            },
-            testContext,
-          );
+          const fixture: FixtureContext =
+            await manager.setupFixture(testContext);
           const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
+            fixture.owner.username,
+            fixture.owner.password,
             testContext,
           );
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/scenario-group/${group}/scenario/${resource}`,
+            `${manager.apiUrl}/project/${fixture.projectId}/scenario-group/${fixture.scenarioGroupId}/scenario/${fixture.scenarioId}`,
             {
               method: 'PUT',
               headers: new Headers([
@@ -1882,11 +1644,11 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
           const result: ScenarioDto = scenarioSchema.parse(
             await response.json(),
           );
-          assert.equal(result.id, resource);
+          assert.equal(result.id, fixture.scenarioId);
           assert.equal(result.title, 'Updated Scenario');
           assert.equal(result.description, 'Updated description');
           const projectResponse: Response = await fetch(
-            `${manager.apiUrl}/project/${project}`,
+            `${manager.apiUrl}/project/${fixture.projectId}`,
             {
               headers: new Headers([
                 ['Authorization', `Bearer ${ownerLogin.jwt}`],
@@ -1899,11 +1661,12 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
             projectStateSchema.parse(await projectResponse.json());
           const items: ScenarioDto[] | undefined =
             publishedState.scenarioGroups.find(
-              (item: { id: string }): boolean => item.id === group,
+              (item: { id: string }): boolean =>
+                item.id === fixture.scenarioGroupId,
             )?.scenarios;
           assert.ok(items != null);
           const persisted: ScenarioDto | undefined = items.find(
-            (item: ScenarioDto): boolean => item.id === resource,
+            (item: ScenarioDto): boolean => item.id === fixture.scenarioId,
           );
           assert.ok(persisted);
           assert.equal(persisted.title, 'Updated Scenario');
@@ -1918,49 +1681,17 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
 
         test('updates an existing query without changing its identifier', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
-          const group: string = await manager.createPublishedDocument(
-            'api::scenario-group.scenario-group',
-            { title: 'Scenario Group', project },
-            testContext,
-          );
-          const resource: string = await manager.createPublishedDocument(
-            'api::scenario.scenario',
-            {
-              title: 'Original Scenario',
-              description: 'Original description',
-              group,
-            },
-            testContext,
-          );
+          const fixture: FixtureContext =
+            await manager.setupFixture(testContext);
           const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
-            testContext,
-          );
-          const child: string = await manager.createPublishedDocument(
-            'api::query.query',
-            {
-              scenario: resource,
-              query: 'Original Query',
-              isTableQuery: false,
-            },
+            fixture.owner.username,
+            fixture.owner.password,
             testContext,
           );
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/scenario-group/${group}/scenario/${resource}`,
+            `${manager.apiUrl}/project/${fixture.projectId}/scenario-group/${fixture.scenarioGroupId}/scenario/${fixture.scenarioId}`,
             {
               method: 'PUT',
               headers: new Headers([
@@ -1972,7 +1703,7 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
                 description: 'Updated description',
                 queries: [
                   {
-                    id: child,
+                    id: fixture.queryId,
                     query: 'Updated Query',
                     databaseId: null,
                     isTableQuery: true,
@@ -1990,11 +1721,11 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
           const result: ScenarioDto = scenarioSchema.parse(
             await response.json(),
           );
-          assert.equal(result.id, resource);
+          assert.equal(result.id, fixture.scenarioId);
           assert.equal(result.title, 'Updated Scenario');
           assert.equal(result.description, 'Updated description');
           const projectResponse: Response = await fetch(
-            `${manager.apiUrl}/project/${project}`,
+            `${manager.apiUrl}/project/${fixture.projectId}`,
             {
               headers: new Headers([
                 ['Authorization', `Bearer ${ownerLogin.jwt}`],
@@ -2007,16 +1738,17 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
             projectStateSchema.parse(await projectResponse.json());
           const items: ScenarioDto[] | undefined =
             publishedState.scenarioGroups.find(
-              (item: { id: string }): boolean => item.id === group,
+              (item: { id: string }): boolean =>
+                item.id === fixture.scenarioGroupId,
             )?.scenarios;
           assert.ok(items != null);
           const persisted: ScenarioDto | undefined = items.find(
-            (item: ScenarioDto): boolean => item.id === resource,
+            (item: ScenarioDto): boolean => item.id === fixture.scenarioId,
           );
           assert.ok(persisted);
           assert.equal(persisted.title, 'Updated Scenario');
           assert.equal(result.queries.length, 1);
-          assert.equal(result.queries[0]?.id, child);
+          assert.equal(result.queries[0]?.id, fixture.queryId);
           assert.equal(result.queries[0]?.query, 'Updated Query');
           assert.equal(result.queries[0]?.isTableQuery, true);
           assert.deepEqual(persisted, result);
@@ -2024,49 +1756,17 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
 
         test('deletes a query omitted from the update', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
-          const group: string = await manager.createPublishedDocument(
-            'api::scenario-group.scenario-group',
-            { title: 'Scenario Group', project },
-            testContext,
-          );
-          const resource: string = await manager.createPublishedDocument(
-            'api::scenario.scenario',
-            {
-              title: 'Original Scenario',
-              description: 'Original description',
-              group,
-            },
-            testContext,
-          );
+          const fixture: FixtureContext =
+            await manager.setupFixture(testContext);
           const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
-            testContext,
-          );
-          const child: string = await manager.createPublishedDocument(
-            'api::query.query',
-            {
-              scenario: resource,
-              query: 'Original Query',
-              isTableQuery: false,
-            },
+            fixture.owner.username,
+            fixture.owner.password,
             testContext,
           );
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/scenario-group/${group}/scenario/${resource}`,
+            `${manager.apiUrl}/project/${fixture.projectId}/scenario-group/${fixture.scenarioGroupId}/scenario/${fixture.scenarioId}`,
             {
               method: 'PUT',
               headers: new Headers([
@@ -2089,11 +1789,11 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
           const result: ScenarioDto = scenarioSchema.parse(
             await response.json(),
           );
-          assert.equal(result.id, resource);
+          assert.equal(result.id, fixture.scenarioId);
           assert.equal(result.title, 'Updated Scenario');
           assert.equal(result.description, 'Updated description');
           const projectResponse: Response = await fetch(
-            `${manager.apiUrl}/project/${project}`,
+            `${manager.apiUrl}/project/${fixture.projectId}`,
             {
               headers: new Headers([
                 ['Authorization', `Bearer ${ownerLogin.jwt}`],
@@ -2106,18 +1806,19 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
             projectStateSchema.parse(await projectResponse.json());
           const items: ScenarioDto[] | undefined =
             publishedState.scenarioGroups.find(
-              (item: { id: string }): boolean => item.id === group,
+              (item: { id: string }): boolean =>
+                item.id === fixture.scenarioGroupId,
             )?.scenarios;
           assert.ok(items != null);
           const persisted: ScenarioDto | undefined = items.find(
-            (item: ScenarioDto): boolean => item.id === resource,
+            (item: ScenarioDto): boolean => item.id === fixture.scenarioId,
           );
           assert.ok(persisted);
           assert.equal(persisted.title, 'Updated Scenario');
           assert.deepEqual(result.queries, []);
           const removedChild: Response = await manager.readDocument(
             'api::query.query',
-            child,
+            fixture.queryId,
             testContext,
           );
           assert.equal(removedChild.status, 404);
@@ -2126,52 +1827,17 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
 
         test('updates an existing parameter without changing its identifier', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
-          const group: string = await manager.createPublishedDocument(
-            'api::scenario-group.scenario-group',
-            { title: 'Scenario Group', project },
-            testContext,
-          );
-          const resource: string = await manager.createPublishedDocument(
-            'api::scenario.scenario',
-            {
-              title: 'Original Scenario',
-              description: 'Original description',
-              group,
-            },
-            testContext,
-          );
+          const fixture: FixtureContext =
+            await manager.setupFixture(testContext);
           const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
-            testContext,
-          );
-          const child: string = await manager.createPublishedDocument(
-            'api::query-parameter.query-parameter',
-            {
-              scenario: resource,
-              title: 'Original Parameter',
-              identifier: 'old',
-              defaultValue: 'old',
-              dataType: 'string',
-              allowedLabels: 'Person',
-            },
+            fixture.owner.username,
+            fixture.owner.password,
             testContext,
           );
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/scenario-group/${group}/scenario/${resource}`,
+            `${manager.apiUrl}/project/${fixture.projectId}/scenario-group/${fixture.scenarioGroupId}/scenario/${fixture.scenarioId}`,
             {
               method: 'PUT',
               headers: new Headers([
@@ -2184,7 +1850,7 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
                 queries: [],
                 parameters: [
                   {
-                    id: child,
+                    id: fixture.queryParameterId,
                     identifier: 'updated',
                     title: 'Name',
                     defaultValue: 'Alice',
@@ -2203,11 +1869,11 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
           const result: ScenarioDto = scenarioSchema.parse(
             await response.json(),
           );
-          assert.equal(result.id, resource);
+          assert.equal(result.id, fixture.scenarioId);
           assert.equal(result.title, 'Updated Scenario');
           assert.equal(result.description, 'Updated description');
           const projectResponse: Response = await fetch(
-            `${manager.apiUrl}/project/${project}`,
+            `${manager.apiUrl}/project/${fixture.projectId}`,
             {
               headers: new Headers([
                 ['Authorization', `Bearer ${ownerLogin.jwt}`],
@@ -2220,68 +1886,34 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
             projectStateSchema.parse(await projectResponse.json());
           const items: ScenarioDto[] | undefined =
             publishedState.scenarioGroups.find(
-              (item: { id: string }): boolean => item.id === group,
+              (item: { id: string }): boolean =>
+                item.id === fixture.scenarioGroupId,
             )?.scenarios;
           assert.ok(items != null);
           const persisted: ScenarioDto | undefined = items.find(
-            (item: ScenarioDto): boolean => item.id === resource,
+            (item: ScenarioDto): boolean => item.id === fixture.scenarioId,
           );
           assert.ok(persisted);
           assert.equal(persisted.title, 'Updated Scenario');
           assert.equal(result.parameters.length, 1);
-          assert.equal(result.parameters[0]?.id, child);
+          assert.equal(result.parameters[0]?.id, fixture.queryParameterId);
           assert.equal(result.parameters[0]?.identifier, 'updated');
           assert.deepEqual(persisted, result);
         });
 
         test('deletes a parameter omitted from the update', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
-          const group: string = await manager.createPublishedDocument(
-            'api::scenario-group.scenario-group',
-            { title: 'Scenario Group', project },
-            testContext,
-          );
-          const resource: string = await manager.createPublishedDocument(
-            'api::scenario.scenario',
-            {
-              title: 'Original Scenario',
-              description: 'Original description',
-              group,
-            },
-            testContext,
-          );
+          const fixture: FixtureContext =
+            await manager.setupFixture(testContext);
           const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
-            testContext,
-          );
-          const child: string = await manager.createPublishedDocument(
-            'api::query-parameter.query-parameter',
-            {
-              scenario: resource,
-              title: 'Original Parameter',
-              identifier: 'old',
-              defaultValue: 'old',
-              dataType: 'string',
-              allowedLabels: 'Person',
-            },
+            fixture.owner.username,
+            fixture.owner.password,
             testContext,
           );
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/scenario-group/${group}/scenario/${resource}`,
+            `${manager.apiUrl}/project/${fixture.projectId}/scenario-group/${fixture.scenarioGroupId}/scenario/${fixture.scenarioId}`,
             {
               method: 'PUT',
               headers: new Headers([
@@ -2304,11 +1936,11 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
           const result: ScenarioDto = scenarioSchema.parse(
             await response.json(),
           );
-          assert.equal(result.id, resource);
+          assert.equal(result.id, fixture.scenarioId);
           assert.equal(result.title, 'Updated Scenario');
           assert.equal(result.description, 'Updated description');
           const projectResponse: Response = await fetch(
-            `${manager.apiUrl}/project/${project}`,
+            `${manager.apiUrl}/project/${fixture.projectId}`,
             {
               headers: new Headers([
                 ['Authorization', `Bearer ${ownerLogin.jwt}`],
@@ -2321,18 +1953,19 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
             projectStateSchema.parse(await projectResponse.json());
           const items: ScenarioDto[] | undefined =
             publishedState.scenarioGroups.find(
-              (item: { id: string }): boolean => item.id === group,
+              (item: { id: string }): boolean =>
+                item.id === fixture.scenarioGroupId,
             )?.scenarios;
           assert.ok(items != null);
           const persisted: ScenarioDto | undefined = items.find(
-            (item: ScenarioDto): boolean => item.id === resource,
+            (item: ScenarioDto): boolean => item.id === fixture.scenarioId,
           );
           assert.ok(persisted);
           assert.equal(persisted.title, 'Updated Scenario');
           assert.deepEqual(result.parameters, []);
           const removedChild: Response = await manager.readDocument(
             'api::query-parameter.query-parameter',
-            child,
+            fixture.queryParameterId,
             testContext,
           );
           assert.equal(removedChild.status, 404);
@@ -2341,51 +1974,17 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
 
         test('updates an existing post-action without changing its identifier', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
-          const group: string = await manager.createPublishedDocument(
-            'api::scenario-group.scenario-group',
-            { title: 'Scenario Group', project },
-            testContext,
-          );
-          const resource: string = await manager.createPublishedDocument(
-            'api::scenario.scenario',
-            {
-              title: 'Original Scenario',
-              description: 'Original description',
-              group,
-            },
-            testContext,
-          );
+          const fixture: FixtureContext =
+            await manager.setupFixture(testContext);
           const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
-            testContext,
-          );
-          const child: string = await manager.createPublishedDocument(
-            'api::post-scenario-action.post-scenario-action',
-            {
-              scenario: resource,
-              type: 'layout',
-              label: 'Original Action',
-              layoutAlgorithm: 'circle',
-              colorIndex: 'c0',
-            },
+            fixture.owner.username,
+            fixture.owner.password,
             testContext,
           );
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/scenario-group/${group}/scenario/${resource}`,
+            `${manager.apiUrl}/project/${fixture.projectId}/scenario-group/${fixture.scenarioGroupId}/scenario/${fixture.scenarioId}`,
             {
               method: 'PUT',
               headers: new Headers([
@@ -2399,7 +1998,7 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
                 parameters: [],
                 postScenarioActions: [
                   {
-                    id: child,
+                    id: fixture.postScenarioActionId,
                     type: UpdateScenarioPostActionTypeDto.layout,
                     label: 'Updated Action',
                     circleRadius: 2000,
@@ -2426,11 +2025,11 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
           const result: ScenarioDto = scenarioSchema.parse(
             await response.json(),
           );
-          assert.equal(result.id, resource);
+          assert.equal(result.id, fixture.scenarioId);
           assert.equal(result.title, 'Updated Scenario');
           assert.equal(result.description, 'Updated description');
           const projectResponse: Response = await fetch(
-            `${manager.apiUrl}/project/${project}`,
+            `${manager.apiUrl}/project/${fixture.projectId}`,
             {
               headers: new Headers([
                 ['Authorization', `Bearer ${ownerLogin.jwt}`],
@@ -2443,67 +2042,37 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
             projectStateSchema.parse(await projectResponse.json());
           const items: ScenarioDto[] | undefined =
             publishedState.scenarioGroups.find(
-              (item: { id: string }): boolean => item.id === group,
+              (item: { id: string }): boolean =>
+                item.id === fixture.scenarioGroupId,
             )?.scenarios;
           assert.ok(items != null);
           const persisted: ScenarioDto | undefined = items.find(
-            (item: ScenarioDto): boolean => item.id === resource,
+            (item: ScenarioDto): boolean => item.id === fixture.scenarioId,
           );
           assert.ok(persisted);
           assert.equal(persisted.title, 'Updated Scenario');
           assert.equal(result.postScenarioActions.length, 1);
-          assert.equal(result.postScenarioActions[0]?.id, child);
+          assert.equal(
+            result.postScenarioActions[0]?.id,
+            fixture.postScenarioActionId,
+          );
           assert.equal(result.postScenarioActions[0]?.label, 'Updated Action');
           assert.deepEqual(persisted, result);
         });
 
         test('deletes a post-action omitted from the update', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
-          const group: string = await manager.createPublishedDocument(
-            'api::scenario-group.scenario-group',
-            { title: 'Scenario Group', project },
-            testContext,
-          );
-          const resource: string = await manager.createPublishedDocument(
-            'api::scenario.scenario',
-            {
-              title: 'Original Scenario',
-              description: 'Original description',
-              group,
-            },
-            testContext,
-          );
+          const fixture: FixtureContext =
+            await manager.setupFixture(testContext);
           const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
-            testContext,
-          );
-          const child: string = await manager.createPublishedDocument(
-            'api::post-scenario-action.post-scenario-action',
-            {
-              scenario: resource,
-              type: 'layout',
-              label: 'Original Action',
-              layoutAlgorithm: 'circle',
-              colorIndex: 'c0',
-            },
+            fixture.owner.username,
+            fixture.owner.password,
             testContext,
           );
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/scenario-group/${group}/scenario/${resource}`,
+            `${manager.apiUrl}/project/${fixture.projectId}/scenario-group/${fixture.scenarioGroupId}/scenario/${fixture.scenarioId}`,
             {
               method: 'PUT',
               headers: new Headers([
@@ -2526,11 +2095,11 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
           const result: ScenarioDto = scenarioSchema.parse(
             await response.json(),
           );
-          assert.equal(result.id, resource);
+          assert.equal(result.id, fixture.scenarioId);
           assert.equal(result.title, 'Updated Scenario');
           assert.equal(result.description, 'Updated description');
           const projectResponse: Response = await fetch(
-            `${manager.apiUrl}/project/${project}`,
+            `${manager.apiUrl}/project/${fixture.projectId}`,
             {
               headers: new Headers([
                 ['Authorization', `Bearer ${ownerLogin.jwt}`],
@@ -2543,18 +2112,19 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
             projectStateSchema.parse(await projectResponse.json());
           const items: ScenarioDto[] | undefined =
             publishedState.scenarioGroups.find(
-              (item: { id: string }): boolean => item.id === group,
+              (item: { id: string }): boolean =>
+                item.id === fixture.scenarioGroupId,
             )?.scenarios;
           assert.ok(items != null);
           const persisted: ScenarioDto | undefined = items.find(
-            (item: ScenarioDto): boolean => item.id === resource,
+            (item: ScenarioDto): boolean => item.id === fixture.scenarioId,
           );
           assert.ok(persisted);
           assert.equal(persisted.title, 'Updated Scenario');
           assert.deepEqual(result.postScenarioActions, []);
           const removedChild: Response = await manager.readDocument(
             'api::post-scenario-action.post-scenario-action',
-            child,
+            fixture.postScenarioActionId,
             testContext,
           );
           assert.equal(removedChild.status, 404);
@@ -2563,40 +2133,17 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
 
         test('owner can update a scenario', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
-          const group: string = await manager.createPublishedDocument(
-            'api::scenario-group.scenario-group',
-            { title: 'Scenario Group', project },
-            testContext,
-          );
-          const resource: string = await manager.createPublishedDocument(
-            'api::scenario.scenario',
-            {
-              title: 'Original Scenario',
-              description: 'Original description',
-              group,
-            },
-            testContext,
-          );
+          const fixture: FixtureContext =
+            await manager.setupFixture(testContext);
           const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
+            fixture.owner.username,
+            fixture.owner.password,
             testContext,
           );
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/scenario-group/${group}/scenario/${resource}`,
+            `${manager.apiUrl}/project/${fixture.projectId}/scenario-group/${fixture.scenarioGroupId}/scenario/${fixture.scenarioId}`,
             {
               method: 'PUT',
               headers: new Headers([
@@ -2619,11 +2166,11 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
           const result: ScenarioDto = scenarioSchema.parse(
             await response.json(),
           );
-          assert.equal(result.id, resource);
+          assert.equal(result.id, fixture.scenarioId);
           assert.equal(result.title, 'Updated Scenario');
           assert.equal(result.description, 'Updated description');
           const projectResponse: Response = await fetch(
-            `${manager.apiUrl}/project/${project}`,
+            `${manager.apiUrl}/project/${fixture.projectId}`,
             {
               headers: new Headers([
                 ['Authorization', `Bearer ${ownerLogin.jwt}`],
@@ -2636,11 +2183,12 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
             projectStateSchema.parse(await projectResponse.json());
           const items: ScenarioDto[] | undefined =
             publishedState.scenarioGroups.find(
-              (item: { id: string }): boolean => item.id === group,
+              (item: { id: string }): boolean =>
+                item.id === fixture.scenarioGroupId,
             )?.scenarios;
           assert.ok(items != null);
           const persisted: ScenarioDto | undefined = items.find(
-            (item: ScenarioDto): boolean => item.id === resource,
+            (item: ScenarioDto): boolean => item.id === fixture.scenarioId,
           );
           assert.ok(persisted);
           assert.equal(persisted.title, 'Updated Scenario');
@@ -2648,47 +2196,22 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
 
         test('collaborator can update a scenario', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const collaborator: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [collaborator.documentId],
-            },
-            testContext,
-          );
-          const group: string = await manager.createPublishedDocument(
-            'api::scenario-group.scenario-group',
-            { title: 'Scenario Group', project },
-            testContext,
-          );
-          const resource: string = await manager.createPublishedDocument(
-            'api::scenario.scenario',
-            {
-              title: 'Original Scenario',
-              description: 'Original description',
-              group,
-            },
-            testContext,
-          );
+          const fixture: FixtureContext =
+            await manager.setupFixture(testContext);
           const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
+            fixture.owner.username,
+            fixture.owner.password,
             testContext,
           );
           const login: PostAuthResponseBodyDto = await manager.loginUser(
-            collaborator.username,
-            collaborator.password,
+            fixture.collaborator.username,
+            fixture.collaborator.password,
             testContext,
           );
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/scenario-group/${group}/scenario/${resource}`,
+            `${manager.apiUrl}/project/${fixture.projectId}/scenario-group/${fixture.scenarioGroupId}/scenario/${fixture.scenarioId}`,
             {
               method: 'PUT',
               headers: new Headers([
@@ -2711,11 +2234,11 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
           const result: ScenarioDto = scenarioSchema.parse(
             await response.json(),
           );
-          assert.equal(result.id, resource);
+          assert.equal(result.id, fixture.scenarioId);
           assert.equal(result.title, 'Updated Scenario');
           assert.equal(result.description, 'Updated description');
           const projectResponse: Response = await fetch(
-            `${manager.apiUrl}/project/${project}`,
+            `${manager.apiUrl}/project/${fixture.projectId}`,
             {
               headers: new Headers([
                 ['Authorization', `Bearer ${ownerLogin.jwt}`],
@@ -2728,11 +2251,12 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
             projectStateSchema.parse(await projectResponse.json());
           const items: ScenarioDto[] | undefined =
             publishedState.scenarioGroups.find(
-              (item: { id: string }): boolean => item.id === group,
+              (item: { id: string }): boolean =>
+                item.id === fixture.scenarioGroupId,
             )?.scenarios;
           assert.ok(items != null);
           const persisted: ScenarioDto | undefined = items.find(
-            (item: ScenarioDto): boolean => item.id === resource,
+            (item: ScenarioDto): boolean => item.id === fixture.scenarioId,
           );
           assert.ok(persisted);
           assert.equal(persisted.title, 'Updated Scenario');
@@ -2740,40 +2264,17 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
 
         test('accepts empty title and description', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
-          const group: string = await manager.createPublishedDocument(
-            'api::scenario-group.scenario-group',
-            { title: 'Scenario Group', project },
-            testContext,
-          );
-          const resource: string = await manager.createPublishedDocument(
-            'api::scenario.scenario',
-            {
-              title: 'Original Scenario',
-              description: 'Original description',
-              group,
-            },
-            testContext,
-          );
+          const fixture: FixtureContext =
+            await manager.setupFixture(testContext);
           const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
+            fixture.owner.username,
+            fixture.owner.password,
             testContext,
           );
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/scenario-group/${group}/scenario/${resource}`,
+            `${manager.apiUrl}/project/${fixture.projectId}/scenario-group/${fixture.scenarioGroupId}/scenario/${fixture.scenarioId}`,
             {
               method: 'PUT',
               headers: new Headers([
@@ -2796,11 +2297,11 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
           const result: ScenarioDto = scenarioSchema.parse(
             await response.json(),
           );
-          assert.equal(result.id, resource);
+          assert.equal(result.id, fixture.scenarioId);
           assert.equal(result.title, '');
           assert.equal(result.description, '');
           const projectResponse: Response = await fetch(
-            `${manager.apiUrl}/project/${project}`,
+            `${manager.apiUrl}/project/${fixture.projectId}`,
             {
               headers: new Headers([
                 ['Authorization', `Bearer ${ownerLogin.jwt}`],
@@ -2813,11 +2314,12 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
             projectStateSchema.parse(await projectResponse.json());
           const items: ScenarioDto[] | undefined =
             publishedState.scenarioGroups.find(
-              (item: { id: string }): boolean => item.id === group,
+              (item: { id: string }): boolean =>
+                item.id === fixture.scenarioGroupId,
             )?.scenarios;
           assert.ok(items != null);
           const persisted: ScenarioDto | undefined = items.find(
-            (item: ScenarioDto): boolean => item.id === resource,
+            (item: ScenarioDto): boolean => item.id === fixture.scenarioId,
           );
           assert.ok(persisted);
           assert.equal(persisted.title, '');
@@ -2899,39 +2401,16 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
             ];
             for (const variant of variants) {
               // given
-              const owner: E2ETestApplicationUser =
-                await manager.registerUser(testContext);
-              const project: string = await manager.createPublishedDocument(
-                'api::project.project',
-                {
-                  title: 'Test Project',
-                  owner: owner.documentId,
-                  collaborators: [],
-                },
-                testContext,
-              );
-              const group: string = await manager.createPublishedDocument(
-                'api::scenario-group.scenario-group',
-                { title: 'Scenario Group', project },
-                testContext,
-              );
-              const resource: string = await manager.createPublishedDocument(
-                'api::scenario.scenario',
-                {
-                  title: 'Original Scenario',
-                  description: 'Original description',
-                  group,
-                },
-                testContext,
-              );
+              const fixture: FixtureContext =
+                await manager.setupFixture(testContext);
               const ownerLogin: PostAuthResponseBodyDto =
                 await manager.loginUser(
-                  owner.username,
-                  owner.password,
+                  fixture.owner.username,
+                  fixture.owner.password,
                   testContext,
                 );
               const filters: Record<string, string> = {
-                [`filters[group][documentId][$eq]`]: group,
+                [`filters[group][documentId][$eq]`]: fixture.scenarioGroupId,
                 pageSize: '100',
                 sort: 'documentId:asc',
               };
@@ -2947,7 +2426,7 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
               assert.ok(
                 originalDraft.results.some(
                   (item: { documentId: string }): boolean =>
-                    item.documentId === resource,
+                    item.documentId === fixture.scenarioId,
                 ),
               );
               const originalPublishedResponse: Response =
@@ -2962,7 +2441,7 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
 
               // when
               const response: Response = await fetch(
-                `${manager.apiUrl}/project/${project}/scenario-group/${group}/scenario/${resource}`,
+                `${manager.apiUrl}/project/${fixture.projectId}/scenario-group/${fixture.scenarioGroupId}/scenario/${fixture.scenarioId}`,
                 {
                   method: 'PUT',
                   headers: new Headers([
@@ -3077,38 +2556,15 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
           ];
           for (const variant of variants) {
             // given
-            const owner: E2ETestApplicationUser =
-              await manager.registerUser(testContext);
-            const project: string = await manager.createPublishedDocument(
-              'api::project.project',
-              {
-                title: 'Test Project',
-                owner: owner.documentId,
-                collaborators: [],
-              },
-              testContext,
-            );
-            const group: string = await manager.createPublishedDocument(
-              'api::scenario-group.scenario-group',
-              { title: 'Scenario Group', project },
-              testContext,
-            );
-            const resource: string = await manager.createPublishedDocument(
-              'api::scenario.scenario',
-              {
-                title: 'Original Scenario',
-                description: 'Original description',
-                group,
-              },
-              testContext,
-            );
+            const fixture: FixtureContext =
+              await manager.setupFixture(testContext);
             const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-              owner.username,
-              owner.password,
+              fixture.owner.username,
+              fixture.owner.password,
               testContext,
             );
             const filters: Record<string, string> = {
-              [`filters[group][documentId][$eq]`]: group,
+              [`filters[group][documentId][$eq]`]: fixture.scenarioGroupId,
               pageSize: '100',
               sort: 'documentId:asc',
             };
@@ -3123,7 +2579,7 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
             assert.ok(
               originalDraft.results.some(
                 (item: { documentId: string }): boolean =>
-                  item.documentId === resource,
+                  item.documentId === fixture.scenarioId,
               ),
             );
             const originalPublishedResponse: Response =
@@ -3138,7 +2594,7 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
 
             // when
             const response: Response = await fetch(
-              `${manager.apiUrl}/project/${project}/scenario-group/${group}/scenario/${resource}`,
+              `${manager.apiUrl}/project/${fixture.projectId}/scenario-group/${fixture.scenarioGroupId}/scenario/${fixture.scenarioId}`,
               {
                 method: 'PUT',
                 headers: new Headers([
@@ -3287,38 +2743,15 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
           ];
           for (const variant of variants) {
             // given
-            const owner: E2ETestApplicationUser =
-              await manager.registerUser(testContext);
-            const project: string = await manager.createPublishedDocument(
-              'api::project.project',
-              {
-                title: 'Test Project',
-                owner: owner.documentId,
-                collaborators: [],
-              },
-              testContext,
-            );
-            const group: string = await manager.createPublishedDocument(
-              'api::scenario-group.scenario-group',
-              { title: 'Scenario Group', project },
-              testContext,
-            );
-            const resource: string = await manager.createPublishedDocument(
-              'api::scenario.scenario',
-              {
-                title: 'Original Scenario',
-                description: 'Original description',
-                group,
-              },
-              testContext,
-            );
+            const fixture: FixtureContext =
+              await manager.setupFixture(testContext);
             const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-              owner.username,
-              owner.password,
+              fixture.owner.username,
+              fixture.owner.password,
               testContext,
             );
             const filters: Record<string, string> = {
-              [`filters[group][documentId][$eq]`]: group,
+              [`filters[group][documentId][$eq]`]: fixture.scenarioGroupId,
               pageSize: '100',
               sort: 'documentId:asc',
             };
@@ -3333,7 +2766,7 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
             assert.ok(
               originalDraft.results.some(
                 (item: { documentId: string }): boolean =>
-                  item.documentId === resource,
+                  item.documentId === fixture.scenarioId,
               ),
             );
             const originalPublishedResponse: Response =
@@ -3348,7 +2781,7 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
 
             // when
             const response: Response = await fetch(
-              `${manager.apiUrl}/project/${project}/scenario-group/${group}/scenario/${resource}`,
+              `${manager.apiUrl}/project/${fixture.projectId}/scenario-group/${fixture.scenarioGroupId}/scenario/${fixture.scenarioId}`,
               {
                 method: 'PUT',
                 headers: new Headers([
@@ -3547,38 +2980,15 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
           ];
           for (const variant of variants) {
             // given
-            const owner: E2ETestApplicationUser =
-              await manager.registerUser(testContext);
-            const project: string = await manager.createPublishedDocument(
-              'api::project.project',
-              {
-                title: 'Test Project',
-                owner: owner.documentId,
-                collaborators: [],
-              },
-              testContext,
-            );
-            const group: string = await manager.createPublishedDocument(
-              'api::scenario-group.scenario-group',
-              { title: 'Scenario Group', project },
-              testContext,
-            );
-            const resource: string = await manager.createPublishedDocument(
-              'api::scenario.scenario',
-              {
-                title: 'Original Scenario',
-                description: 'Original description',
-                group,
-              },
-              testContext,
-            );
+            const fixture: FixtureContext =
+              await manager.setupFixture(testContext);
             const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-              owner.username,
-              owner.password,
+              fixture.owner.username,
+              fixture.owner.password,
               testContext,
             );
             const filters: Record<string, string> = {
-              [`filters[group][documentId][$eq]`]: group,
+              [`filters[group][documentId][$eq]`]: fixture.scenarioGroupId,
               pageSize: '100',
               sort: 'documentId:asc',
             };
@@ -3593,7 +3003,7 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
             assert.ok(
               originalDraft.results.some(
                 (item: { documentId: string }): boolean =>
-                  item.documentId === resource,
+                  item.documentId === fixture.scenarioId,
               ),
             );
             const originalPublishedResponse: Response =
@@ -3608,7 +3018,7 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
 
             // when
             const response: Response = await fetch(
-              `${manager.apiUrl}/project/${project}/scenario-group/${group}/scenario/${resource}`,
+              `${manager.apiUrl}/project/${fixture.projectId}/scenario-group/${fixture.scenarioGroupId}/scenario/${fixture.scenarioId}`,
               {
                 method: 'PUT',
                 headers: new Headers([
@@ -3682,38 +3092,15 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
           ];
           for (const variant of variants) {
             // given
-            const owner: E2ETestApplicationUser =
-              await manager.registerUser(testContext);
-            const project: string = await manager.createPublishedDocument(
-              'api::project.project',
-              {
-                title: 'Test Project',
-                owner: owner.documentId,
-                collaborators: [],
-              },
-              testContext,
-            );
-            const group: string = await manager.createPublishedDocument(
-              'api::scenario-group.scenario-group',
-              { title: 'Scenario Group', project },
-              testContext,
-            );
-            const resource: string = await manager.createPublishedDocument(
-              'api::scenario.scenario',
-              {
-                title: 'Original Scenario',
-                description: 'Original description',
-                group,
-              },
-              testContext,
-            );
+            const fixture: FixtureContext =
+              await manager.setupFixture(testContext);
             await manager.loginUser(
-              owner.username,
-              owner.password,
+              fixture.owner.username,
+              fixture.owner.password,
               testContext,
             );
             const filters: Record<string, string> = {
-              [`filters[group][documentId][$eq]`]: group,
+              [`filters[group][documentId][$eq]`]: fixture.scenarioGroupId,
               pageSize: '100',
               sort: 'documentId:asc',
             };
@@ -3728,7 +3115,7 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
             assert.ok(
               originalDraft.results.some(
                 (item: { documentId: string }): boolean =>
-                  item.documentId === resource,
+                  item.documentId === fixture.scenarioId,
               ),
             );
             const originalPublishedResponse: Response =
@@ -3743,7 +3130,7 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
 
             // when
             const response: Response = await fetch(
-              `${manager.apiUrl}/project/${project}/scenario-group/${group}/scenario/${resource}`,
+              `${manager.apiUrl}/project/${fixture.projectId}/scenario-group/${fixture.scenarioGroupId}/scenario/${fixture.scenarioId}`,
               {
                 method: 'PUT',
                 body: JSON.stringify({
@@ -3792,41 +3179,20 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
       describe('403', (): void => {
         test('rejects outsider access', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const outsider: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
+          const fixture: FixtureContext =
+            await manager.setupFixture(testContext);
+          await manager.loginUser(
+            fixture.owner.username,
+            fixture.owner.password,
             testContext,
           );
-          const group: string = await manager.createPublishedDocument(
-            'api::scenario-group.scenario-group',
-            { title: 'Scenario Group', project },
-            testContext,
-          );
-          const resource: string = await manager.createPublishedDocument(
-            'api::scenario.scenario',
-            {
-              title: 'Original Scenario',
-              description: 'Original description',
-              group,
-            },
-            testContext,
-          );
-          await manager.loginUser(owner.username, owner.password, testContext);
           const login: PostAuthResponseBodyDto = await manager.loginUser(
-            outsider.username,
-            outsider.password,
+            fixture.outsider.username,
+            fixture.outsider.password,
             testContext,
           );
           const filters: Record<string, string> = {
-            [`filters[group][documentId][$eq]`]: group,
+            [`filters[group][documentId][$eq]`]: fixture.scenarioGroupId,
             pageSize: '100',
             sort: 'documentId:asc',
           };
@@ -3841,7 +3207,7 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
           assert.ok(
             originalDraft.results.some(
               (item: { documentId: string }): boolean =>
-                item.documentId === resource,
+                item.documentId === fixture.scenarioId,
             ),
           );
           const originalPublishedResponse: Response =
@@ -3856,7 +3222,7 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/scenario-group/${group}/scenario/${resource}`,
+            `${manager.apiUrl}/project/${fixture.projectId}/scenario-group/${fixture.scenarioGroupId}/scenario/${fixture.scenarioId}`,
             {
               method: 'PUT',
               headers: new Headers([
@@ -3905,48 +3271,27 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
 
         test('rejects removed collaborator access', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const collaborator: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [collaborator.documentId],
-            },
+          const fixture: FixtureContext =
+            await manager.setupFixture(testContext);
+          await manager.loginUser(
+            fixture.owner.username,
+            fixture.owner.password,
             testContext,
           );
-          const group: string = await manager.createPublishedDocument(
-            'api::scenario-group.scenario-group',
-            { title: 'Scenario Group', project },
-            testContext,
-          );
-          const resource: string = await manager.createPublishedDocument(
-            'api::scenario.scenario',
-            {
-              title: 'Original Scenario',
-              description: 'Original description',
-              group,
-            },
-            testContext,
-          );
-          await manager.loginUser(owner.username, owner.password, testContext);
           const login: PostAuthResponseBodyDto = await manager.loginUser(
-            collaborator.username,
-            collaborator.password,
+            fixture.collaborator.username,
+            fixture.collaborator.password,
             testContext,
           );
           const removal: Response = await manager.publishDocument(
             'api::project.project',
-            project,
+            fixture.projectId,
             { collaborators: [] },
             testContext,
           );
           assert.equal(removal.status, 200);
           const filters: Record<string, string> = {
-            [`filters[group][documentId][$eq]`]: group,
+            [`filters[group][documentId][$eq]`]: fixture.scenarioGroupId,
             pageSize: '100',
             sort: 'documentId:asc',
           };
@@ -3961,7 +3306,7 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
           assert.ok(
             originalDraft.results.some(
               (item: { documentId: string }): boolean =>
-                item.documentId === resource,
+                item.documentId === fixture.scenarioId,
             ),
           );
           const originalPublishedResponse: Response =
@@ -3976,7 +3321,7 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/scenario-group/${group}/scenario/${resource}`,
+            `${manager.apiUrl}/project/${fixture.projectId}/scenario-group/${fixture.scenarioGroupId}/scenario/${fixture.scenarioId}`,
             {
               method: 'PUT',
               headers: new Headers([
@@ -4146,39 +3491,16 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
       describe('404', (): void => {
         test('rejects a query referencing an unknown database', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
-          const group: string = await manager.createPublishedDocument(
-            'api::scenario-group.scenario-group',
-            { title: 'Scenario Group', project },
-            testContext,
-          );
-          const resource: string = await manager.createPublishedDocument(
-            'api::scenario.scenario',
-            {
-              title: 'Original Scenario',
-              description: 'Original description',
-              group,
-            },
-            testContext,
-          );
+          const fixture: FixtureContext =
+            await manager.setupFixture(testContext);
           const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
+            fixture.owner.username,
+            fixture.owner.password,
             testContext,
           );
           const database: string = randomUUID();
           const filters: Record<string, string> = {
-            [`filters[group][documentId][$eq]`]: group,
+            [`filters[group][documentId][$eq]`]: fixture.scenarioGroupId,
             pageSize: '100',
             sort: 'documentId:asc',
           };
@@ -4193,7 +3515,7 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
           assert.ok(
             originalDraft.results.some(
               (item: { documentId: string }): boolean =>
-                item.documentId === resource,
+                item.documentId === fixture.scenarioId,
             ),
           );
           const originalPublishedResponse: Response =
@@ -4208,7 +3530,7 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/scenario-group/${group}/scenario/${resource}`,
+            `${manager.apiUrl}/project/${fixture.projectId}/scenario-group/${fixture.scenarioGroupId}/scenario/${fixture.scenarioId}`,
             {
               method: 'PUT',
               headers: new Headers([
@@ -4763,38 +4085,15 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
 
         test('rejects an unknown scenario', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
-          const group: string = await manager.createPublishedDocument(
-            'api::scenario-group.scenario-group',
-            { title: 'Scenario Group', project },
-            testContext,
-          );
-          const resource: string = await manager.createPublishedDocument(
-            'api::scenario.scenario',
-            {
-              title: 'Original Scenario',
-              description: 'Original description',
-              group,
-            },
-            testContext,
-          );
+          const fixture: FixtureContext =
+            await manager.setupFixture(testContext);
           const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
+            fixture.owner.username,
+            fixture.owner.password,
             testContext,
           );
           const filters: Record<string, string> = {
-            [`filters[group][documentId][$eq]`]: group,
+            [`filters[group][documentId][$eq]`]: fixture.scenarioGroupId,
             pageSize: '100',
             sort: 'documentId:asc',
           };
@@ -4809,7 +4108,7 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
           assert.ok(
             originalDraft.results.some(
               (item: { documentId: string }): boolean =>
-                item.documentId === resource,
+                item.documentId === fixture.scenarioId,
             ),
           );
           const originalPublishedResponse: Response =
@@ -4824,7 +4123,7 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/scenario-group/${group}/scenario/${randomUUID()}`,
+            `${manager.apiUrl}/project/${fixture.projectId}/scenario-group/${fixture.scenarioGroupId}/scenario/${randomUUID()}`,
             {
               method: 'PUT',
               headers: new Headers([
@@ -5115,38 +4414,15 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
 
         test('rejects unknown scenario group', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
-          const group: string = await manager.createPublishedDocument(
-            'api::scenario-group.scenario-group',
-            { title: 'Scenario Group', project },
-            testContext,
-          );
-          const resource: string = await manager.createPublishedDocument(
-            'api::scenario.scenario',
-            {
-              title: 'Original Scenario',
-              description: 'Original description',
-              group,
-            },
-            testContext,
-          );
+          const fixture: FixtureContext =
+            await manager.setupFixture(testContext);
           const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
+            fixture.owner.username,
+            fixture.owner.password,
             testContext,
           );
           const filters: Record<string, string> = {
-            [`filters[group][documentId][$eq]`]: group,
+            [`filters[group][documentId][$eq]`]: fixture.scenarioGroupId,
             pageSize: '100',
             sort: 'documentId:asc',
           };
@@ -5161,7 +4437,7 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
           assert.ok(
             originalDraft.results.some(
               (item: { documentId: string }): boolean =>
-                item.documentId === resource,
+                item.documentId === fixture.scenarioId,
             ),
           );
           const originalPublishedResponse: Response =
@@ -5176,7 +4452,7 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/scenario-group/${randomUUID()}/scenario/${resource}`,
+            `${manager.apiUrl}/project/${fixture.projectId}/scenario-group/${randomUUID()}/scenario/${fixture.scenarioId}`,
             {
               method: 'PUT',
               headers: new Headers([
@@ -5659,46 +4935,21 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
 
         test('published collaborator retains access after draft removal', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const collaborator: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [collaborator.documentId],
-            },
-            testContext,
-          );
-          const group: string = await manager.createPublishedDocument(
-            'api::scenario-group.scenario-group',
-            { title: 'Scenario Group', project },
-            testContext,
-          );
-          const resource: string = await manager.createPublishedDocument(
-            'api::scenario.scenario',
-            {
-              title: 'Original Scenario',
-              description: 'Original description',
-              group,
-            },
-            testContext,
-          );
+          const fixture: FixtureContext =
+            await manager.setupFixture(testContext);
           const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
+            fixture.owner.username,
+            fixture.owner.password,
             testContext,
           );
           const login: PostAuthResponseBodyDto = await manager.loginUser(
-            collaborator.username,
-            collaborator.password,
+            fixture.collaborator.username,
+            fixture.collaborator.password,
             testContext,
           );
           const draftRemoval: Response = await manager.updateDocument(
             'api::project.project',
-            project,
+            fixture.projectId,
             { collaborators: [] },
             testContext,
           );
@@ -5706,7 +4957,7 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/scenario-group/${group}/scenario/${resource}`,
+            `${manager.apiUrl}/project/${fixture.projectId}/scenario-group/${fixture.scenarioGroupId}/scenario/${fixture.scenarioId}`,
             {
               method: 'DELETE',
               headers: new Headers([['Authorization', `Bearer ${login.jwt}`]]),
@@ -5718,7 +4969,7 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
           assert.equal(response.status, 204);
           assert.equal(await response.text(), '');
           const projectResponse: Response = await fetch(
-            `${manager.apiUrl}/project/${project}`,
+            `${manager.apiUrl}/project/${fixture.projectId}`,
             {
               headers: new Headers([
                 ['Authorization', `Bearer ${ownerLogin.jwt}`],
@@ -5731,16 +4982,19 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
             projectStateSchema.parse(await projectResponse.json());
           const items: ScenarioDto[] | undefined =
             publishedState.scenarioGroups.find(
-              (item: { id: string }): boolean => item.id === group,
+              (item: { id: string }): boolean =>
+                item.id === fixture.scenarioGroupId,
             )?.scenarios;
           assert.ok(items != null);
           assert.equal(
-            items.some((item: ScenarioDto): boolean => item.id === resource),
+            items.some(
+              (item: ScenarioDto): boolean => item.id === fixture.scenarioId,
+            ),
             false,
           );
           const stored: Response = await manager.readDocument(
             'api::scenario.scenario',
-            resource,
+            fixture.scenarioId,
             testContext,
           );
           assert.equal(stored.status, 404);
@@ -5748,40 +5002,17 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
 
         test('owner can delete a scenario', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
-          const group: string = await manager.createPublishedDocument(
-            'api::scenario-group.scenario-group',
-            { title: 'Scenario Group', project },
-            testContext,
-          );
-          const resource: string = await manager.createPublishedDocument(
-            'api::scenario.scenario',
-            {
-              title: 'Original Scenario',
-              description: 'Original description',
-              group,
-            },
-            testContext,
-          );
+          const fixture: FixtureContext =
+            await manager.setupFixture(testContext);
           const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
+            fixture.owner.username,
+            fixture.owner.password,
             testContext,
           );
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/scenario-group/${group}/scenario/${resource}`,
+            `${manager.apiUrl}/project/${fixture.projectId}/scenario-group/${fixture.scenarioGroupId}/scenario/${fixture.scenarioId}`,
             {
               method: 'DELETE',
               headers: new Headers([
@@ -5795,7 +5026,7 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
           assert.equal(response.status, 204);
           assert.equal(await response.text(), '');
           const projectResponse: Response = await fetch(
-            `${manager.apiUrl}/project/${project}`,
+            `${manager.apiUrl}/project/${fixture.projectId}`,
             {
               headers: new Headers([
                 ['Authorization', `Bearer ${ownerLogin.jwt}`],
@@ -5808,16 +5039,19 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
             projectStateSchema.parse(await projectResponse.json());
           const items: ScenarioDto[] | undefined =
             publishedState.scenarioGroups.find(
-              (item: { id: string }): boolean => item.id === group,
+              (item: { id: string }): boolean =>
+                item.id === fixture.scenarioGroupId,
             )?.scenarios;
           assert.ok(items != null);
           assert.equal(
-            items.some((item: ScenarioDto): boolean => item.id === resource),
+            items.some(
+              (item: ScenarioDto): boolean => item.id === fixture.scenarioId,
+            ),
             false,
           );
           const stored: Response = await manager.readDocument(
             'api::scenario.scenario',
-            resource,
+            fixture.scenarioId,
             testContext,
           );
           assert.equal(stored.status, 404);
@@ -5825,47 +5059,22 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
 
         test('collaborator can delete a scenario', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const collaborator: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [collaborator.documentId],
-            },
-            testContext,
-          );
-          const group: string = await manager.createPublishedDocument(
-            'api::scenario-group.scenario-group',
-            { title: 'Scenario Group', project },
-            testContext,
-          );
-          const resource: string = await manager.createPublishedDocument(
-            'api::scenario.scenario',
-            {
-              title: 'Original Scenario',
-              description: 'Original description',
-              group,
-            },
-            testContext,
-          );
+          const fixture: FixtureContext =
+            await manager.setupFixture(testContext);
           const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
+            fixture.owner.username,
+            fixture.owner.password,
             testContext,
           );
           const login: PostAuthResponseBodyDto = await manager.loginUser(
-            collaborator.username,
-            collaborator.password,
+            fixture.collaborator.username,
+            fixture.collaborator.password,
             testContext,
           );
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/scenario-group/${group}/scenario/${resource}`,
+            `${manager.apiUrl}/project/${fixture.projectId}/scenario-group/${fixture.scenarioGroupId}/scenario/${fixture.scenarioId}`,
             {
               method: 'DELETE',
               headers: new Headers([['Authorization', `Bearer ${login.jwt}`]]),
@@ -5877,7 +5086,7 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
           assert.equal(response.status, 204);
           assert.equal(await response.text(), '');
           const projectResponse: Response = await fetch(
-            `${manager.apiUrl}/project/${project}`,
+            `${manager.apiUrl}/project/${fixture.projectId}`,
             {
               headers: new Headers([
                 ['Authorization', `Bearer ${ownerLogin.jwt}`],
@@ -5890,16 +5099,19 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
             projectStateSchema.parse(await projectResponse.json());
           const items: ScenarioDto[] | undefined =
             publishedState.scenarioGroups.find(
-              (item: { id: string }): boolean => item.id === group,
+              (item: { id: string }): boolean =>
+                item.id === fixture.scenarioGroupId,
             )?.scenarios;
           assert.ok(items != null);
           assert.equal(
-            items.some((item: ScenarioDto): boolean => item.id === resource),
+            items.some(
+              (item: ScenarioDto): boolean => item.id === fixture.scenarioId,
+            ),
             false,
           );
           const stored: Response = await manager.readDocument(
             'api::scenario.scenario',
-            resource,
+            fixture.scenarioId,
             testContext,
           );
           assert.equal(stored.status, 404);
@@ -5915,38 +5127,15 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
           ];
           for (const variant of variants) {
             // given
-            const owner: E2ETestApplicationUser =
-              await manager.registerUser(testContext);
-            const project: string = await manager.createPublishedDocument(
-              'api::project.project',
-              {
-                title: 'Test Project',
-                owner: owner.documentId,
-                collaborators: [],
-              },
-              testContext,
-            );
-            const group: string = await manager.createPublishedDocument(
-              'api::scenario-group.scenario-group',
-              { title: 'Scenario Group', project },
-              testContext,
-            );
-            const resource: string = await manager.createPublishedDocument(
-              'api::scenario.scenario',
-              {
-                title: 'Original Scenario',
-                description: 'Original description',
-                group,
-              },
-              testContext,
-            );
+            const fixture: FixtureContext =
+              await manager.setupFixture(testContext);
             await manager.loginUser(
-              owner.username,
-              owner.password,
+              fixture.owner.username,
+              fixture.owner.password,
               testContext,
             );
             const filters: Record<string, string> = {
-              [`filters[group][documentId][$eq]`]: group,
+              [`filters[group][documentId][$eq]`]: fixture.scenarioGroupId,
               pageSize: '100',
               sort: 'documentId:asc',
             };
@@ -5961,7 +5150,7 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
             assert.ok(
               originalDraft.results.some(
                 (item: { documentId: string }): boolean =>
-                  item.documentId === resource,
+                  item.documentId === fixture.scenarioId,
               ),
             );
             const originalPublishedResponse: Response =
@@ -5976,7 +5165,7 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
 
             // when
             const response: Response = await fetch(
-              `${manager.apiUrl}/project/${project}/scenario-group/${group}/scenario/${resource}`,
+              `${manager.apiUrl}/project/${fixture.projectId}/scenario-group/${fixture.scenarioGroupId}/scenario/${fixture.scenarioId}`,
               {
                 method: 'DELETE',
                 signal: testContext.signal,
@@ -6018,41 +5207,20 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
       describe('403', (): void => {
         test('rejects outsider access', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const outsider: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
+          const fixture: FixtureContext =
+            await manager.setupFixture(testContext);
+          await manager.loginUser(
+            fixture.owner.username,
+            fixture.owner.password,
             testContext,
           );
-          const group: string = await manager.createPublishedDocument(
-            'api::scenario-group.scenario-group',
-            { title: 'Scenario Group', project },
-            testContext,
-          );
-          const resource: string = await manager.createPublishedDocument(
-            'api::scenario.scenario',
-            {
-              title: 'Original Scenario',
-              description: 'Original description',
-              group,
-            },
-            testContext,
-          );
-          await manager.loginUser(owner.username, owner.password, testContext);
           const login: PostAuthResponseBodyDto = await manager.loginUser(
-            outsider.username,
-            outsider.password,
+            fixture.outsider.username,
+            fixture.outsider.password,
             testContext,
           );
           const filters: Record<string, string> = {
-            [`filters[group][documentId][$eq]`]: group,
+            [`filters[group][documentId][$eq]`]: fixture.scenarioGroupId,
             pageSize: '100',
             sort: 'documentId:asc',
           };
@@ -6067,7 +5235,7 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
           assert.ok(
             originalDraft.results.some(
               (item: { documentId: string }): boolean =>
-                item.documentId === resource,
+                item.documentId === fixture.scenarioId,
             ),
           );
           const originalPublishedResponse: Response =
@@ -6082,7 +5250,7 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/scenario-group/${group}/scenario/${resource}`,
+            `${manager.apiUrl}/project/${fixture.projectId}/scenario-group/${fixture.scenarioGroupId}/scenario/${fixture.scenarioId}`,
             {
               method: 'DELETE',
               headers: new Headers([['Authorization', `Bearer ${login.jwt}`]]),
@@ -6121,48 +5289,27 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
 
         test('rejects removed collaborator access', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const collaborator: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [collaborator.documentId],
-            },
+          const fixture: FixtureContext =
+            await manager.setupFixture(testContext);
+          await manager.loginUser(
+            fixture.owner.username,
+            fixture.owner.password,
             testContext,
           );
-          const group: string = await manager.createPublishedDocument(
-            'api::scenario-group.scenario-group',
-            { title: 'Scenario Group', project },
-            testContext,
-          );
-          const resource: string = await manager.createPublishedDocument(
-            'api::scenario.scenario',
-            {
-              title: 'Original Scenario',
-              description: 'Original description',
-              group,
-            },
-            testContext,
-          );
-          await manager.loginUser(owner.username, owner.password, testContext);
           const login: PostAuthResponseBodyDto = await manager.loginUser(
-            collaborator.username,
-            collaborator.password,
+            fixture.collaborator.username,
+            fixture.collaborator.password,
             testContext,
           );
           const removal: Response = await manager.publishDocument(
             'api::project.project',
-            project,
+            fixture.projectId,
             { collaborators: [] },
             testContext,
           );
           assert.equal(removal.status, 200);
           const filters: Record<string, string> = {
-            [`filters[group][documentId][$eq]`]: group,
+            [`filters[group][documentId][$eq]`]: fixture.scenarioGroupId,
             pageSize: '100',
             sort: 'documentId:asc',
           };
@@ -6177,7 +5324,7 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
           assert.ok(
             originalDraft.results.some(
               (item: { documentId: string }): boolean =>
-                item.documentId === resource,
+                item.documentId === fixture.scenarioId,
             ),
           );
           const originalPublishedResponse: Response =
@@ -6192,7 +5339,7 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/scenario-group/${group}/scenario/${resource}`,
+            `${manager.apiUrl}/project/${fixture.projectId}/scenario-group/${fixture.scenarioGroupId}/scenario/${fixture.scenarioId}`,
             {
               method: 'DELETE',
               headers: new Headers([['Authorization', `Bearer ${login.jwt}`]]),
@@ -6560,38 +5707,15 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
 
         test('rejects an unknown scenario', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
-          const group: string = await manager.createPublishedDocument(
-            'api::scenario-group.scenario-group',
-            { title: 'Scenario Group', project },
-            testContext,
-          );
-          const resource: string = await manager.createPublishedDocument(
-            'api::scenario.scenario',
-            {
-              title: 'Original Scenario',
-              description: 'Original description',
-              group,
-            },
-            testContext,
-          );
+          const fixture: FixtureContext =
+            await manager.setupFixture(testContext);
           const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
+            fixture.owner.username,
+            fixture.owner.password,
             testContext,
           );
           const filters: Record<string, string> = {
-            [`filters[group][documentId][$eq]`]: group,
+            [`filters[group][documentId][$eq]`]: fixture.scenarioGroupId,
             pageSize: '100',
             sort: 'documentId:asc',
           };
@@ -6606,7 +5730,7 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
           assert.ok(
             originalDraft.results.some(
               (item: { documentId: string }): boolean =>
-                item.documentId === resource,
+                item.documentId === fixture.scenarioId,
             ),
           );
           const originalPublishedResponse: Response =
@@ -6621,7 +5745,7 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/scenario-group/${group}/scenario/${randomUUID()}`,
+            `${manager.apiUrl}/project/${fixture.projectId}/scenario-group/${fixture.scenarioGroupId}/scenario/${randomUUID()}`,
             {
               method: 'DELETE',
               headers: new Headers([
@@ -6888,38 +6012,15 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
 
         test('rejects unknown scenario group', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
-          const group: string = await manager.createPublishedDocument(
-            'api::scenario-group.scenario-group',
-            { title: 'Scenario Group', project },
-            testContext,
-          );
-          const resource: string = await manager.createPublishedDocument(
-            'api::scenario.scenario',
-            {
-              title: 'Original Scenario',
-              description: 'Original description',
-              group,
-            },
-            testContext,
-          );
+          const fixture: FixtureContext =
+            await manager.setupFixture(testContext);
           const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
+            fixture.owner.username,
+            fixture.owner.password,
             testContext,
           );
           const filters: Record<string, string> = {
-            [`filters[group][documentId][$eq]`]: group,
+            [`filters[group][documentId][$eq]`]: fixture.scenarioGroupId,
             pageSize: '100',
             sort: 'documentId:asc',
           };
@@ -6934,7 +6035,7 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
           assert.ok(
             originalDraft.results.some(
               (item: { documentId: string }): boolean =>
-                item.documentId === resource,
+                item.documentId === fixture.scenarioId,
             ),
           );
           const originalPublishedResponse: Response =
@@ -6949,7 +6050,7 @@ describe('/project/:projectId/scenario-group/:scenarioGroupId/scenario', (suiteC
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/scenario-group/${randomUUID()}/scenario/${resource}`,
+            `${manager.apiUrl}/project/${fixture.projectId}/scenario-group/${randomUUID()}/scenario/${fixture.scenarioId}`,
             {
               method: 'DELETE',
               headers: new Headers([

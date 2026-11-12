@@ -1,3 +1,4 @@
+import type { FixtureContext } from '../../../../e2e/FixtureContext';
 import type { UpdateRoomRequestBodyDto } from './dto/UpdateRoomRequestBodyDto';
 import type { E2ETestApplicationUser } from '../../../../e2e/E2ETestApplicationUser';
 import assert from 'node:assert/strict';
@@ -112,23 +113,16 @@ describe('/project/:projectId/room', (suiteContext: SuiteContext): void => {
     describe('401', (): void => {
       test('rejects anonymous creation', async (testContext: TestContext): Promise<void> => {
         // given
-        const owner: E2ETestApplicationUser =
-          await manager.registerUser(testContext);
+        const fixture: FixtureContext = await manager.setupFixture(testContext);
 
-        const project: string = await manager.createPublishedDocument(
-          'api::project.project',
-          { title: 'Room Project', owner: owner.documentId, collaborators: [] },
-          testContext,
-        );
-
-        const url: string = `${manager.apiUrl}/project/${project}/room`;
+        const url: string = `${manager.apiUrl}/project/${fixture.projectId}/room`;
 
         const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-          owner.username,
-          owner.password,
+          fixture.owner.username,
+          fixture.owner.password,
           testContext,
         );
-        const projectUrl: string = `${manager.apiUrl}/project/${project}`;
+        const projectUrl: string = `${manager.apiUrl}/project/${fixture.projectId}`;
         const originalResponse: Response = await fetch(projectUrl, {
           headers: new Headers([['Authorization', `Bearer ${ownerLogin.jwt}`]]),
           signal: testContext.signal,
@@ -262,30 +256,21 @@ describe('/project/:projectId/room', (suiteContext: SuiteContext): void => {
 
       test('rejects outsider creation', async (testContext: TestContext): Promise<void> => {
         // given
-        const owner: E2ETestApplicationUser =
-          await manager.registerUser(testContext);
-
-        const outsider: E2ETestApplicationUser =
-          await manager.registerUser(testContext);
-        const project: string = await manager.createPublishedDocument(
-          'api::project.project',
-          { title: 'Room Project', owner: owner.documentId, collaborators: [] },
-          testContext,
-        );
+        const fixture: FixtureContext = await manager.setupFixture(testContext);
 
         const login: PostAuthResponseBodyDto = await manager.loginUser(
-          outsider.username,
-          outsider.password,
+          fixture.outsider.username,
+          fixture.outsider.password,
           testContext,
         );
-        const url: string = `${manager.apiUrl}/project/${project}/room`;
+        const url: string = `${manager.apiUrl}/project/${fixture.projectId}/room`;
 
         const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-          owner.username,
-          owner.password,
+          fixture.owner.username,
+          fixture.owner.password,
           testContext,
         );
-        const projectUrl: string = `${manager.apiUrl}/project/${project}`;
+        const projectUrl: string = `${manager.apiUrl}/project/${fixture.projectId}`;
         const originalResponse: Response = await fetch(projectUrl, {
           headers: new Headers([['Authorization', `Bearer ${ownerLogin.jwt}`]]),
           signal: testContext.signal,
@@ -557,30 +542,13 @@ describe('/project/:projectId/room', (suiteContext: SuiteContext): void => {
       describe('401', (): void => {
         test('rejects anonymous access even for a public room', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
+          const fixture: FixtureContext =
+            await manager.setupFixture(testContext);
 
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Room Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
+          const room: string =
+            fixture.canvases[RoomVisibilityDto.public].roomId;
 
-          const room: string = await manager.createPublishedDocument(
-            'api::room.room',
-            {
-              title: 'Original Room',
-              visibility: RoomVisibilityDto.public,
-              project: project,
-            },
-            testContext,
-          );
-
-          const url: string = `${manager.apiUrl}/project/${project}/room/${room}`;
+          const url: string = `${manager.apiUrl}/project/${fixture.projectId}/room/${room}`;
 
           // when
           const response: Response = await fetch(url, {
@@ -681,36 +649,17 @@ describe('/project/:projectId/room', (suiteContext: SuiteContext): void => {
 
         test('rejects outsider access even for a public room', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
+          const fixture: FixtureContext =
+            await manager.setupFixture(testContext);
 
-          const outsider: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Room Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
-
-          const room: string = await manager.createPublishedDocument(
-            'api::room.room',
-            {
-              title: 'Original Room',
-              visibility: RoomVisibilityDto.public,
-              project: project,
-            },
-            testContext,
-          );
+          const room: string =
+            fixture.canvases[RoomVisibilityDto.public].roomId;
           const login: PostAuthResponseBodyDto = await manager.loginUser(
-            outsider.username,
-            outsider.password,
+            fixture.outsider.username,
+            fixture.outsider.password,
             testContext,
           );
-          const url: string = `${manager.apiUrl}/project/${project}/room/${room}`;
+          const url: string = `${manager.apiUrl}/project/${fixture.projectId}/room/${room}`;
 
           // when
           const response: Response = await fetch(url, {
@@ -785,24 +734,14 @@ describe('/project/:projectId/room', (suiteContext: SuiteContext): void => {
 
         test('rejects an unknown room', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Room Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
+          const fixture: FixtureContext =
+            await manager.setupFixture(testContext);
           const login: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
+            fixture.owner.username,
+            fixture.owner.password,
             testContext,
           );
-          const url: string = `${manager.apiUrl}/project/${project}/room/${randomUUID()}`;
+          const url: string = `${manager.apiUrl}/project/${fixture.projectId}/room/${randomUUID()}`;
 
           // when
           const response: Response = await fetch(url, {
@@ -1355,30 +1294,13 @@ describe('/project/:projectId/room', (suiteContext: SuiteContext): void => {
       describe('401', (): void => {
         test('rejects anonymous access even for a public room', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
+          const fixture: FixtureContext =
+            await manager.setupFixture(testContext);
 
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Room Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
+          const room: string =
+            fixture.canvases[RoomVisibilityDto.public].roomId;
 
-          const room: string = await manager.createPublishedDocument(
-            'api::room.room',
-            {
-              title: 'Original Room',
-              visibility: RoomVisibilityDto.public,
-              project: project,
-            },
-            testContext,
-          );
-
-          const url: string = `${manager.apiUrl}/project/${project}/room/${room}`;
+          const url: string = `${manager.apiUrl}/project/${fixture.projectId}/room/${room}`;
 
           const originalResponse: Response = await manager.readDocument(
             'api::room.room',
@@ -1529,36 +1451,17 @@ describe('/project/:projectId/room', (suiteContext: SuiteContext): void => {
 
         test('rejects outsider access even for a public room', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
+          const fixture: FixtureContext =
+            await manager.setupFixture(testContext);
 
-          const outsider: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Room Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
-
-          const room: string = await manager.createPublishedDocument(
-            'api::room.room',
-            {
-              title: 'Original Room',
-              visibility: RoomVisibilityDto.public,
-              project: project,
-            },
-            testContext,
-          );
+          const room: string =
+            fixture.canvases[RoomVisibilityDto.public].roomId;
           const login: PostAuthResponseBodyDto = await manager.loginUser(
-            outsider.username,
-            outsider.password,
+            fixture.outsider.username,
+            fixture.outsider.password,
             testContext,
           );
-          const url: string = `${manager.apiUrl}/project/${project}/room/${room}`;
+          const url: string = `${manager.apiUrl}/project/${fixture.projectId}/room/${room}`;
 
           const originalResponse: Response = await manager.readDocument(
             'api::room.room',
@@ -1685,24 +1588,14 @@ describe('/project/:projectId/room', (suiteContext: SuiteContext): void => {
 
         test('rejects an unknown room', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Room Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
+          const fixture: FixtureContext =
+            await manager.setupFixture(testContext);
           const login: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
+            fixture.owner.username,
+            fixture.owner.password,
             testContext,
           );
-          const url: string = `${manager.apiUrl}/project/${project}/room/${randomUUID()}`;
+          const url: string = `${manager.apiUrl}/project/${fixture.projectId}/room/${randomUUID()}`;
 
           // when
           const response: Response = await fetch(url, {
@@ -2160,39 +2053,19 @@ describe('/project/:projectId/room', (suiteContext: SuiteContext): void => {
           const roles: ('owner' | 'collaborator')[] = ['owner', 'collaborator'];
           for (const role of roles) {
             // given
-            const owner: E2ETestApplicationUser =
-              await manager.registerUser(testContext);
+            const fixture: FixtureContext =
+              await manager.setupFixture(testContext);
             const actor: E2ETestApplicationUser =
-              role === 'owner'
-                ? owner
-                : await manager.registerUser(testContext);
+              role === 'owner' ? fixture.owner : fixture.collaborator;
 
-            const project: string = await manager.createPublishedDocument(
-              'api::project.project',
-              {
-                title: 'Room Project',
-                owner: owner.documentId,
-                collaborators:
-                  role === 'collaborator' ? [actor.documentId] : [],
-              },
-              testContext,
-            );
-
-            const room: string = await manager.createPublishedDocument(
-              'api::room.room',
-              {
-                title: 'Original Room',
-                visibility: RoomVisibilityDto.private,
-                project: project,
-              },
-              testContext,
-            );
+            const room: string =
+              fixture.canvases[RoomVisibilityDto.private].roomId;
             const login: PostAuthResponseBodyDto = await manager.loginUser(
               actor.username,
               actor.password,
               testContext,
             );
-            const url: string = `${manager.apiUrl}/project/${project}/room/${room}`;
+            const url: string = `${manager.apiUrl}/project/${fixture.projectId}/room/${room}`;
 
             // when
             const response: Response = await fetch(url, {
@@ -2216,30 +2089,13 @@ describe('/project/:projectId/room', (suiteContext: SuiteContext): void => {
       describe('401', (): void => {
         test('rejects anonymous access even for a public room', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
+          const fixture: FixtureContext =
+            await manager.setupFixture(testContext);
 
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Room Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
+          const room: string =
+            fixture.canvases[RoomVisibilityDto.public].roomId;
 
-          const room: string = await manager.createPublishedDocument(
-            'api::room.room',
-            {
-              title: 'Original Room',
-              visibility: RoomVisibilityDto.public,
-              project: project,
-            },
-            testContext,
-          );
-
-          const url: string = `${manager.apiUrl}/project/${project}/room/${room}`;
+          const url: string = `${manager.apiUrl}/project/${fixture.projectId}/room/${room}`;
 
           const originalResponse: Response = await manager.readDocument(
             'api::room.room',
@@ -2378,36 +2234,17 @@ describe('/project/:projectId/room', (suiteContext: SuiteContext): void => {
 
         test('rejects outsider access even for a public room', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
+          const fixture: FixtureContext =
+            await manager.setupFixture(testContext);
 
-          const outsider: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Room Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
-
-          const room: string = await manager.createPublishedDocument(
-            'api::room.room',
-            {
-              title: 'Original Room',
-              visibility: RoomVisibilityDto.public,
-              project: project,
-            },
-            testContext,
-          );
+          const room: string =
+            fixture.canvases[RoomVisibilityDto.public].roomId;
           const login: PostAuthResponseBodyDto = await manager.loginUser(
-            outsider.username,
-            outsider.password,
+            fixture.outsider.username,
+            fixture.outsider.password,
             testContext,
           );
-          const url: string = `${manager.apiUrl}/project/${project}/room/${room}`;
+          const url: string = `${manager.apiUrl}/project/${fixture.projectId}/room/${room}`;
 
           const originalResponse: Response = await manager.readDocument(
             'api::room.room',
@@ -2520,24 +2357,14 @@ describe('/project/:projectId/room', (suiteContext: SuiteContext): void => {
 
         test('rejects an unknown room', async (testContext: TestContext): Promise<void> => {
           // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Room Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
+          const fixture: FixtureContext =
+            await manager.setupFixture(testContext);
           const login: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
+            fixture.owner.username,
+            fixture.owner.password,
             testContext,
           );
-          const url: string = `${manager.apiUrl}/project/${project}/room/${randomUUID()}`;
+          const url: string = `${manager.apiUrl}/project/${fixture.projectId}/room/${randomUUID()}`;
 
           // when
           const response: Response = await fetch(url, {
