@@ -36,6 +36,7 @@ export class AuthController {
       },
     );
     if (result.status === 429) {
+      await result.body?.cancel();
       throw new TooManyRequests();
     }
     const json: unknown = await result.json();
