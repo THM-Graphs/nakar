@@ -44,17 +44,9 @@ Open http://localhost:1337 and create a local admin account for your development
 > | -------------- | -------------------- |
 > | admin@nakar.de | seuzgfesuz3672tUZGZU |
 
-#### 5. Configure role permissions
+#### 5. Strapi permissions
 
-To allow login and access to the current user endpoint, update the Users & Permissions roles in the admin UI:
-
-1. Open http://localhost:1337/admin/settings/users-permissions/roles.
-2. Select **Public**.
-3. Disable all permissions.
-4. Enable **User-permissions -> Auth -> Callback**.
-5. Go back and select **Authenticated**.
-6. Disable all permissions.
-7. Enable **User-permissions -> User -> me**.
+No action needed. On startup, NAKAR sets the Strapi Users & Permissions roles to prevent certain access.
 
 #### 6. Import data (optional)
 

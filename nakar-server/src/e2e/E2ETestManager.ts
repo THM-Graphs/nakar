@@ -183,6 +183,11 @@ export class E2ETestManager {
         signal,
         ports.strapiPort,
       );
+      const authenticatedRoleId: number = await this._getAuthenticatedRoleId(
+        ports.strapiPort,
+        admin.token,
+        signal,
+      );
       signal.throwIfAborted();
       this._context = new E2ETestApplicationContext(
         admin,
@@ -191,6 +196,7 @@ export class E2ETestManager {
         ports.apiPort,
         jwtSecret,
         encryptionKeys,
+        authenticatedRoleId,
       );
     } catch (error: unknown) {
       await this.destroy(testContext);
@@ -236,25 +242,23 @@ export class E2ETestManager {
   ): Promise<E2ETestApplicationUser> {
     const username: string = `e2e-${randomUUID()}`;
     const password: string = randomUUID();
-    const response: Response = await fetch(
-      `${this.strapiUrl}/api/auth/local/register`,
+    const response: Response = await this.createDocument(
+      'plugin::users-permissions.user',
       {
-        method: 'POST',
-        headers: new Headers([['Content-Type', 'application/json']]),
-        body: JSON.stringify({
-          username,
-          password,
-          email: `${username}@example.test`,
-        }),
-        signal: testContext.signal,
+        username,
+        password,
+        email: `${username}@example.test`,
+        confirmed: true,
+        role: this.context.authenticatedRoleId,
       },
+      testContext,
     );
     const json: unknown = await response.json();
-    assert.equal(response.status, 200, JSON.stringify(json));
-    const body: { user: { documentId: string } } = z
-      .object({ user: z.object({ documentId: z.string() }) })
+    assert.equal(response.status, 201, JSON.stringify(json));
+    const body: { documentId: string } = z
+      .object({ documentId: z.string().min(1) })
       .parse(json);
-    return new E2ETestApplicationUser(username, password, body.user.documentId);
+    return new E2ETestApplicationUser(username, password, body.documentId);
   }
 
   public async loginUser(
@@ -639,6 +643,33 @@ export class E2ETestManager {
         signal: testContext.signal,
       },
     );
+  }
+
+  private async _getAuthenticatedRoleId(
+    strapiPort: number,
+    token: string,
+    signal: AbortSignal,
+  ): Promise<number> {
+    const response: Response = await fetch(
+      `http://127.0.0.1:${strapiPort.toString()}/users-permissions/roles`,
+      {
+        headers: new Headers([['Authorization', `Bearer ${token}`]]),
+        signal,
+      },
+    );
+    const json: unknown = await response.json();
+    assert.equal(response.status, 200, JSON.stringify(json));
+    const body: { roles: { id: number; type: string }[] } = z
+      .object({
+        roles: z.array(z.object({ id: z.number(), type: z.string() })),
+      })
+      .parse(json);
+    const role: { id: number; type: string } | undefined = body.roles.find(
+      (entry: { id: number; type: string }): boolean =>
+        entry.type === 'authenticated',
+    );
+    assert.ok(role, 'Strapi Authenticated role was not found.');
+    return role.id;
   }
 
   private async _createAdmin(

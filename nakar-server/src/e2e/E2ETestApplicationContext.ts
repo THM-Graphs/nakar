@@ -9,5 +9,6 @@ export class E2ETestApplicationContext {
     public readonly websocketPort: number,
     public readonly jwtSecret: string,
     public readonly encryptionKeys: KeyConfig,
+    public readonly authenticatedRoleId: number,
   ) {}
 }

@@ -49,6 +49,8 @@ export async function bootstrapNest(): Promise<NestExpressApplication> {
     });
   nestApp = app;
 
+  await app.get<StrapiService>(StrapiService).setupStrapiPermissions();
+
   app.setGlobalPrefix('api');
   app.useGlobalInterceptors(new RouteLogger());
   app.useGlobalPipes(new ValidationPipe(validationPipelineOptions));
