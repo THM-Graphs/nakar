@@ -1,5 +1,10 @@
 import type { LiveCanvasArgument } from '../live-canvas/graph/LiveCanvasArgument';
-import { Injectable, OnModuleDestroy } from '@nestjs/common';
+import {
+  BadRequestException,
+  HttpException,
+  Injectable,
+  OnModuleDestroy,
+} from '@nestjs/common';
 import type { Modules } from '@strapi/types';
 import { SMap } from '../../packages/map/Map';
 import { SSet } from '../../packages/set/Set';
@@ -154,6 +159,53 @@ export class ExternalGraphDatabaseService implements OnModuleDestroy {
     await this._getAdapter(credentials.databaseType).testConnection(
       credentials,
     );
+  }
+
+  public validateDatabaseConnectionUrl(
+    connectionUrl: string | null,
+    databaseType: ExternalGraphDatabaseType,
+  ): void {
+    let url: URL;
+    try {
+      url = new URL(connectionUrl ?? '');
+    } catch {
+      throw new BadRequestException('Invalid connection URL.');
+    }
+    const supportedProtocols: string[] =
+      databaseType === ExternalGraphDatabaseType.neo4j
+        ? ['bolt:', 'bolt+s:', 'bolt+ssc:', 'neo4j:', 'neo4j+s:', 'neo4j+ssc:']
+        : ['http:', 'https:'];
+    if (url.hostname === '' || !supportedProtocols.includes(url.protocol)) {
+      throw new BadRequestException('Unsupported connection URL.');
+    }
+  }
+
+  public async testDatabaseConnection(
+    credentials: ExternalGraphDatabaseCredentials,
+  ): Promise<{ success: boolean; message: string }> {
+    this.validateDatabaseConnectionUrl(
+      credentials.connectionUrl,
+      credentials.databaseType,
+    );
+    try {
+      const stats: ExternalGraphDatabaseStats =
+        await this.getStats(credentials);
+      return {
+        success: true,
+        message: `Success: Nodes: ${stats.nodeCount}, Relationships: ${stats.relCount}.`,
+      };
+    } catch (error: unknown) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      return {
+        success: false,
+        message:
+          error instanceof Error
+            ? `${error.name}: ${error.message}`
+            : JSON.stringify(error),
+      };
+    }
   }
 
   public async getSearchCapabilities(

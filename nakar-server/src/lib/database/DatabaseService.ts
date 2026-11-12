@@ -188,6 +188,9 @@ export class DatabaseService {
 
   public async createDatabase(
     projectId: string,
+    data: Partial<
+      Modules.Documents.Params.Data.Input<'api::database-connection.database-connection'>
+    > = {},
   ): Promise<
     Modules.Documents.Result<'api::database-connection.database-connection'>
   > {
@@ -197,8 +200,9 @@ export class DatabaseService {
         status: 'published',
         data: {
           title: 'Untitled Database Connection',
+          ...this._encryptDatabasePassword(data),
+          databaseType: data.databaseType ?? 'neo4j',
           project: projectId,
-          databaseType: 'neo4j',
         } satisfies Modules.Documents.Params.Data.Input<'api::database-connection.database-connection'>,
       });
   }
@@ -233,21 +237,16 @@ export class DatabaseService {
     if (published == null) {
       return null;
     }
-    const encryptedData: Partial<
-      Modules.Documents.Params.Data.Input<'api::database-connection.database-connection'>
-    > = { ...data, project: published.project?.documentId ?? null };
-    if (encryptedData.password != null) {
-      encryptedData.password = this._encryptionService.encrypt(
-        encryptedData.password,
-      );
-    }
     const updatedDocument: Modules.Documents.Result<'api::database-connection.database-connection'> | null =
       await strapi
         .documents('api::database-connection.database-connection')
         .update({
           documentId: databaseId,
           status: 'published',
-          data: encryptedData,
+          data: {
+            ...this._encryptDatabasePassword(data),
+            project: published.project?.documentId ?? null,
+          },
         });
 
     if (updatedDocument == null) {
@@ -1438,6 +1437,18 @@ export class DatabaseService {
           .create({ data: documentData, status: 'published' });
       }
     }
+  }
+
+  private _encryptDatabasePassword(
+    data: Partial<
+      Modules.Documents.Params.Data.Input<'api::database-connection.database-connection'>
+    >,
+  ): Partial<
+    Modules.Documents.Params.Data.Input<'api::database-connection.database-connection'>
+  > {
+    return data.password == null
+      ? data
+      : { ...data, password: this._encryptionService.encrypt(data.password) };
   }
 
   private _sortByTitle(

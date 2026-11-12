@@ -11,11 +11,10 @@ import {
 import { CMSButton } from "./CMSButton.tsx";
 import { useState } from "react";
 import {
-  databaseConnectionControllerTestDatabaseConnection,
   DatabaseConnectionDto,
-  ProjectPageDto,
-  TestDatabaseConnectionResponseBodyDto,
   UpdateDatabaseConnectionRequestBodyDto,
+  projectControllerTestDatabaseConnection,
+  TestDatabaseConnectionResponseBodyDto,
 } from "api-client";
 import { resultOrThrow } from "../data/resultOrThrow.ts";
 import clsx from "clsx";
@@ -26,7 +25,7 @@ import { getDatabaseTypeDisplay } from "../data/getDatabaseTypeDisplay.ts";
 export function DatabaseConnectionEditor(props: {
   value: UpdateDatabaseConnectionRequestBodyDto;
   onChange: (newValue: UpdateDatabaseConnectionRequestBodyDto) => void;
-  project: ProjectPageDto;
+  projectId?: string;
   initialDatabase: DatabaseConnectionDto | null;
 }) {
   const [testResult, setTestResult] =
@@ -82,10 +81,19 @@ export function DatabaseConnectionEditor(props: {
                   id={"database-type"}
                   value={props.value.databaseType}
                   onChange={(e) => {
+                    const databaseType = e.target
+                      .value as UpdateDatabaseConnectionRequestBodyDto["databaseType"];
                     props.onChange({
                       ...props.value,
-                      databaseType: e.target
-                        .value as UpdateDatabaseConnectionRequestBodyDto["databaseType"],
+                      databaseType,
+                      ...(props.projectId == null && databaseType !== "neo4j"
+                        ? {
+                            username: null,
+                            password: null,
+                            database: "",
+                            credentialStoreConsent: false,
+                          }
+                        : {}),
                     });
                   }}
                 >
@@ -114,12 +122,13 @@ export function DatabaseConnectionEditor(props: {
             <Stack gap={3}>
               <Row>
                 <Col>
-                  <Form.Group>
+                  <Form.Group controlId={"connection-url"}>
                     <Form.Label>
                       Connection URL <span className={"text-danger"}>*</span>
                     </Form.Label>
                     <Form.Control
                       placeholder={"Example: neo4j+s://my-database.com:7687"}
+                      required={props.projectId == null}
                       value={props.value.connectionUrl}
                       onChange={(e) => {
                         props.onChange({
@@ -132,7 +141,7 @@ export function DatabaseConnectionEditor(props: {
                 </Col>
                 {props.value.databaseType === "wikidata" && (
                   <Col>
-                    <Form.Group>
+                    <Form.Group controlId={"database-language"}>
                       <Form.Label>Language</Form.Label>
                       <Form.Control
                         placeholder={
@@ -169,7 +178,7 @@ export function DatabaseConnectionEditor(props: {
                 {props.value.databaseType === "neo4j" && (
                   <>
                     <Col>
-                      <Form.Group>
+                      <Form.Group controlId={"database-username"}>
                         <Form.Label>Username</Form.Label>
                         <Stack
                           direction={"horizontal"}
@@ -177,7 +186,11 @@ export function DatabaseConnectionEditor(props: {
                           className={"position-relative"}
                         >
                           <Form.Control
-                            placeholder={"Leave empty if unchanged"}
+                            placeholder={
+                              props.initialDatabase
+                                ? "Leave empty if unchanged"
+                                : undefined
+                            }
                             value={props.value.username ?? ""}
                             autoComplete={"off"}
                             onChange={(e) => {
@@ -203,11 +216,15 @@ export function DatabaseConnectionEditor(props: {
                       </Form.Group>
                     </Col>
                     <Col>
-                      <Form.Group>
+                      <Form.Group controlId={"database-password"}>
                         <Form.Label>Password</Form.Label>
                         <Stack className={"position-relative"}>
                           <Form.Control
-                            placeholder={"Leave empty if unchanged"}
+                            placeholder={
+                              props.initialDatabase
+                                ? "Leave empty if unchanged"
+                                : undefined
+                            }
                             type={"password"}
                             autoComplete={"new-password"}
                             value={props.value.password ?? ""}
@@ -234,7 +251,7 @@ export function DatabaseConnectionEditor(props: {
                       </Form.Group>
                     </Col>
                     <Col>
-                      <Form.Group>
+                      <Form.Group controlId={"database-name"}>
                         <Form.Label>Database Name</Form.Label>
                         <Form.Control
                           placeholder={"Example: neo4j"}
@@ -260,14 +277,14 @@ export function DatabaseConnectionEditor(props: {
                     e.preventDefault();
                     setTestResult(null);
                     setTestResultLoading(true);
-                    databaseConnectionControllerTestDatabaseConnection({
-                      path: { projectId: props.project.id },
+                    projectControllerTestDatabaseConnection({
                       body: {
+                        projectId: props.projectId,
+                        databaseConnectionId: props.initialDatabase?.id,
                         databaseType: props.value.databaseType,
-                        id: props.initialDatabase?.id ?? null,
                         username: props.value.username,
                         password: props.value.password,
-                        database: props.value.database,
+                        database: props.value.database || null,
                         connectionUrl: props.value.connectionUrl,
                         language: props.value.language,
                       },
@@ -344,15 +361,14 @@ export function DatabaseConnectionEditor(props: {
           )}
         </Stack>
       </Stack>
-      <NodeConfigurationsEditor
-        value={props.value.nodeConfigurations}
-        onChange={(n) => {
-          props.onChange({
-            ...props.value,
-            nodeConfigurations: n,
-          });
-        }}
-      ></NodeConfigurationsEditor>
+      {props.projectId != null && (
+        <NodeConfigurationsEditor
+          value={props.value.nodeConfigurations}
+          onChange={(nodeConfigurations) => {
+            props.onChange({ ...props.value, nodeConfigurations });
+          }}
+        ></NodeConfigurationsEditor>
+      )}
     </>
   );
 }

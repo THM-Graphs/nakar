@@ -162,8 +162,49 @@ export type ProjectPageDto = {
     commonProperties: Array<CommonPropertyDto>;
 };
 
+export type UpdateNodeConfigurationRequestBodyDto = {
+    id: string;
+    type: 'link' | 'image';
+    label: string;
+    property: string;
+    linkTemplate: string;
+    urlEncode: boolean;
+    valueRegex: string;
+};
+
+export type UpdateDatabaseConnectionRequestBodyDto = {
+    title: string;
+    username: string | null;
+    password: string | null;
+    database: string;
+    connectionUrl: string;
+    browserUrl: string;
+    credentialStoreConsent: boolean;
+    databaseType: 'neo4j' | 'sparql' | 'wikidata';
+    nodeConfigurations: Array<UpdateNodeConfigurationRequestBodyDto>;
+    language: string | null;
+};
+
 export type CreateProjectRequestBodyDto = {
     title: string;
+    createDemoScenarios: boolean;
+    databaseConnection?: UpdateDatabaseConnectionRequestBodyDto;
+};
+
+export type TestDatabaseConnectionRequestBodyDto = {
+    projectId?: string | null;
+    databaseConnectionId?: string | null;
+    username?: string | null;
+    password?: string | null;
+    database?: string | null;
+    connectionUrl: string;
+    databaseType: 'neo4j' | 'sparql' | 'wikidata';
+    language?: string | null;
+};
+
+export type TestDatabaseConnectionResponseBodyDto = {
+    success: boolean;
+    message: string;
 };
 
 export type UpdateProjectRequestBodyDto = {
@@ -220,44 +261,6 @@ export type UpdateScenarioRequestBodyDto = {
 export type UpdateRoomRequestBodyDto = {
     title: string;
     visibility: 'private' | 'public' | 'unlisted';
-};
-
-export type TestDatabaseConnectionRequestBodyDto = {
-    id: string | null;
-    username: string | null;
-    password: string | null;
-    database: string | null;
-    connectionUrl: string;
-    databaseType: 'neo4j' | 'sparql' | 'wikidata';
-    language: string | null;
-};
-
-export type TestDatabaseConnectionResponseBodyDto = {
-    success: boolean;
-    message: string;
-};
-
-export type UpdateNodeConfigurationRequestBodyDto = {
-    id: string;
-    type: 'link' | 'image';
-    label: string;
-    property: string;
-    linkTemplate: string;
-    urlEncode: boolean;
-    valueRegex: string;
-};
-
-export type UpdateDatabaseConnectionRequestBodyDto = {
-    title: string;
-    username: string | null;
-    password: string | null;
-    database: string;
-    connectionUrl: string;
-    browserUrl: string;
-    credentialStoreConsent: boolean;
-    databaseType: 'neo4j' | 'sparql' | 'wikidata';
-    nodeConfigurations: Array<UpdateNodeConfigurationRequestBodyDto>;
-    language: string | null;
 };
 
 export type UpdateCommonPropertyRequestBodyDto = {
@@ -886,6 +889,19 @@ export type ProjectControllerCreateProjectResponses = {
 
 export type ProjectControllerCreateProjectResponse = ProjectControllerCreateProjectResponses[keyof ProjectControllerCreateProjectResponses];
 
+export type ProjectControllerTestDatabaseConnectionData = {
+    body: TestDatabaseConnectionRequestBodyDto;
+    path?: never;
+    query?: never;
+    url: '/api/project/database-connection/test';
+};
+
+export type ProjectControllerTestDatabaseConnectionResponses = {
+    default: TestDatabaseConnectionResponseBodyDto;
+};
+
+export type ProjectControllerTestDatabaseConnectionResponse = ProjectControllerTestDatabaseConnectionResponses[keyof ProjectControllerTestDatabaseConnectionResponses];
+
 export type ScenarioGroupControllerCreateScenarioGroupData = {
     body?: never;
     path: {
@@ -1060,21 +1076,6 @@ export type DatabaseConnectionControllerCreateDatabaseConnectionResponses = {
 };
 
 export type DatabaseConnectionControllerCreateDatabaseConnectionResponse = DatabaseConnectionControllerCreateDatabaseConnectionResponses[keyof DatabaseConnectionControllerCreateDatabaseConnectionResponses];
-
-export type DatabaseConnectionControllerTestDatabaseConnectionData = {
-    body: TestDatabaseConnectionRequestBodyDto;
-    path: {
-        projectId: string;
-    };
-    query?: never;
-    url: '/api/project/{projectId}/database-connection/test';
-};
-
-export type DatabaseConnectionControllerTestDatabaseConnectionResponses = {
-    default: TestDatabaseConnectionResponseBodyDto;
-};
-
-export type DatabaseConnectionControllerTestDatabaseConnectionResponse = DatabaseConnectionControllerTestDatabaseConnectionResponses[keyof DatabaseConnectionControllerTestDatabaseConnectionResponses];
 
 export type DatabaseConnectionControllerDeleteDatabaseConnectionData = {
     body?: never;

@@ -11,23 +11,14 @@ import {
   Put,
   UseGuards,
 } from '@nestjs/common';
-import { ApiBody, ApiParam, ApiResponse } from '@nestjs/swagger';
+import { ApiParam, ApiResponse } from '@nestjs/swagger';
 import { UserCanAccessProject } from '../../guards/UserCanAccessProject';
 import type { Modules } from '@strapi/types';
 import { SchemaFactoryService } from '../../../schema/SchemaFactoryService';
 import { DatabaseConnectionDto } from '../../../schema/dtos/DatabaseConnectionDto';
 import { DatabaseConnectionBelongsToProject } from '../../guards/DatabaseConnectionBelongsToProject';
 import { UpdateDatabaseConnectionRequestBodyDto } from './dto/UpdateDatabaseConnectionRequestBodyDto';
-import { TestDatabaseConnectionRequestBodyDto } from './dto/TestDatabaseConnectionRequestBodyDto';
-import { TestDatabaseConnectionResponseBodyDto } from './dto/TestDatabaseConnectionResponseBodyDto';
-import { ExternalGraphDatabaseService } from '../../../external-database/ExternalGraphDatabaseService';
-import type { ExternalGraphDatabaseStats } from '../../../external-database/data/ExternalGraphDatabaseStats';
-import { match, P } from 'ts-pattern';
 import { DatabaseService } from '../../../database/DatabaseService';
-import { databaseBelongsToProject } from '../../../policies/databaseBelongsToProject';
-import { DatabaseConnectionDatabaseType } from './dto/DatabaseConnectionDatabaseType';
-import { ExternalGraphDatabaseType } from '../../../external-database/data/ExternalGraphDatabaseType';
-import { HttpException } from '@nestjs/common/exceptions/http.exception';
 
 @Controller('/project/:projectId/database-connection')
 @ApiParam({
@@ -39,7 +30,6 @@ import { HttpException } from '@nestjs/common/exceptions/http.exception';
 export class DatabaseConnectionController {
   public constructor(
     private readonly _schemaFactory: SchemaFactoryService,
-    private readonly _externalGraphDatabase: ExternalGraphDatabaseService,
     private readonly _database: DatabaseService,
   ) {}
 
@@ -52,103 +42,6 @@ export class DatabaseConnectionController {
       await this._database.createDatabase(projectId);
 
     return await this._schemaFactory.createSchemaDatabase(databaseConnection);
-  }
-
-  @Post('test')
-  @ApiResponse({ type: TestDatabaseConnectionResponseBodyDto })
-  @ApiBody({ type: TestDatabaseConnectionRequestBodyDto })
-  @HttpCode(200)
-  public async testDatabaseConnection(
-    @Param('projectId') projectId: string,
-    @Body() body: TestDatabaseConnectionRequestBodyDto,
-  ): Promise<TestDatabaseConnectionResponseBodyDto> {
-    let connectionUrl: URL;
-    try {
-      connectionUrl = new URL(body.connectionUrl);
-    } catch {
-      throw new BadRequestException('Invalid connection URL.');
-    }
-    const supportedProtocols: string[] =
-      body.databaseType === DatabaseConnectionDatabaseType.neo4j
-        ? ['bolt:', 'bolt+s:', 'bolt+ssc:', 'neo4j:', 'neo4j+s:', 'neo4j+ssc:']
-        : ['http:', 'https:'];
-    if (
-      connectionUrl.hostname === '' ||
-      !supportedProtocols.includes(connectionUrl.protocol)
-    ) {
-      throw new BadRequestException('Unsupported connection URL.');
-    }
-
-    try {
-      const project: Modules.Documents.Result<'api::project.project'> =
-        await this._database.getProject(projectId);
-
-      const existingDatabase: Modules.Documents.Result<'api::database-connection.database-connection'> | null =
-        body.id != null
-          ? await this._database.getDatabaseOrNull(body.id)
-          : null;
-
-      if (
-        existingDatabase &&
-        !(await databaseBelongsToProject(
-          existingDatabase,
-          project,
-          this._database,
-        ))
-      ) {
-        throw new NotFoundException();
-      }
-
-      const dbInfo: ExternalGraphDatabaseStats =
-        await this._externalGraphDatabase.getStats({
-          connectionUrl: body.connectionUrl,
-          username: body.username ?? existingDatabase?.username ?? '',
-          password: body.password ?? existingDatabase?.password ?? '',
-          database: body.database,
-          nakarId: body.id ?? existingDatabase?.documentId ?? '',
-          nakarTitle: existingDatabase?.title ?? null,
-          databaseType: match(body.databaseType)
-            .with(
-              DatabaseConnectionDatabaseType.neo4j,
-              (): ExternalGraphDatabaseType => ExternalGraphDatabaseType.neo4j,
-            )
-            .with(
-              DatabaseConnectionDatabaseType.sparql,
-              (): ExternalGraphDatabaseType => ExternalGraphDatabaseType.sparql,
-            )
-            .with(
-              DatabaseConnectionDatabaseType.wikidata,
-              (): ExternalGraphDatabaseType =>
-                ExternalGraphDatabaseType.wikidata,
-            )
-            .exhaustive(),
-          language: body.language,
-        });
-
-      return new TestDatabaseConnectionResponseBodyDto({
-        success: true,
-        message: `Success: Nodes: ${dbInfo.nodeCount}, Relationships: ${dbInfo.relCount}.`,
-      });
-    } catch (error: unknown) {
-      return match(error)
-        .with(
-          P.instanceOf(HttpException),
-          (httpException: HttpException): never => {
-            throw httpException;
-          },
-        )
-        .otherwise((): TestDatabaseConnectionResponseBodyDto => {
-          return new TestDatabaseConnectionResponseBodyDto({
-            success: false,
-            message: match(error)
-              .with(
-                P.instanceOf(Error),
-                (e: Error): string => `${e.name}: ${e.message}`,
-              )
-              .otherwise((e: unknown): string => JSON.stringify(e)),
-          });
-        });
-    }
   }
 
   @Delete(':databaseConnectionId')

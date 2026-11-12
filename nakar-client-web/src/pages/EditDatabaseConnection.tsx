@@ -120,7 +120,7 @@ export function EditDatabaseConnection() {
             <DatabaseConnectionEditor
               value={databaseConnection}
               onChange={setDatabaseConnection}
-              project={loaderData.project}
+              projectId={loaderData.project.id}
               initialDatabase={loaderData.databaseConnection}
             ></DatabaseConnectionEditor>
           </CMSEditPageForm>

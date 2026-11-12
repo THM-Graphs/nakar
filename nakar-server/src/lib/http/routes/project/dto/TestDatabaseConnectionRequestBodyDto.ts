@@ -1,4 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
   IsEnum,
   IsOptional,
@@ -6,28 +6,34 @@ import {
   Matches,
   MinLength,
 } from 'class-validator';
-import { DatabaseConnectionDatabaseType } from './DatabaseConnectionDatabaseType';
+import { DatabaseConnectionDatabaseType } from '../../database-connection/dto/DatabaseConnectionDatabaseType';
 import { wikidataLanguagePattern } from '../../../../external-database/adapters/wikidata/WikidataLanguagePattern';
 
 export class TestDatabaseConnectionRequestBodyDto {
-  @ApiProperty({ nullable: true, type: String })
+  @ApiPropertyOptional({ nullable: true, type: String })
   @IsString()
   @MinLength(1)
   @IsOptional()
-  public id!: string | null;
+  public projectId?: string | null;
 
-  @ApiProperty({ nullable: true, type: String })
+  @ApiPropertyOptional({ nullable: true, type: String })
+  @IsString()
+  @MinLength(1)
+  @IsOptional()
+  public databaseConnectionId?: string | null;
+
+  @ApiPropertyOptional({ nullable: true, type: String })
   @IsString()
   @MinLength(1)
   @IsOptional()
   public username!: string | null;
 
-  @ApiProperty({ nullable: true, type: String })
+  @ApiPropertyOptional({ nullable: true, type: String })
   @IsString()
   @IsOptional()
   public password!: string | null;
 
-  @ApiProperty({ nullable: true, type: String })
+  @ApiPropertyOptional({ nullable: true, type: String })
   @IsString()
   @IsOptional()
   public database!: string | null;
@@ -41,7 +47,7 @@ export class TestDatabaseConnectionRequestBodyDto {
   @IsEnum(DatabaseConnectionDatabaseType)
   public databaseType!: DatabaseConnectionDatabaseType;
 
-  @ApiProperty({ nullable: true, type: String })
+  @ApiPropertyOptional({ nullable: true, type: String })
   @IsString()
   @Matches(wikidataLanguagePattern)
   @IsOptional()
