@@ -11,7 +11,7 @@ views:
     filters:
       and:
         - Hidden != true
-        - file.inFolder("ucd/User Stories")
+        - file.inFolder("docs/ucd/User Stories")
     groupBy:
       property: formula.Untitled
       direction: ASC
@@ -45,7 +45,7 @@ views:
     name: Personas
     filters:
       and:
-        - file.inFolder("ucd/Personas")
+        - file.inFolder("docs/ucd/Personas")
     order:
       - file.name
       - Common roles
@@ -58,12 +58,12 @@ views:
     name: Roles
     filters:
       and:
-        - file.inFolder("ucd/Roles")
+        - file.inFolder("docs/ucd/Roles")
   - type: table
     name: Unimplemented User Stories
     filters:
       and:
-        - file.folder.startsWith("ucd/User Stories")
+        - file.folder.startsWith("docs/ucd/User Stories")
         - Implemented == false
         - Hidden != true
     order:
