@@ -21,15 +21,12 @@ export default {
       `Environment: ${strapi.config.get<string>('environment')}`,
     );
 
-    // Do not start the nest application if strapi is started with maintenance flags
-    const maintenanceFlags: string[] = ['transfer', 'import', 'export'];
-    for (const maintenanceFlag of maintenanceFlags) {
-      if (process.argv.includes(maintenanceFlag)) {
-        strapi.log.info(
-          `Will not bootstrap nest application, because strapi is started with ${maintenanceFlag} flag.`,
-        );
-        return;
-      }
+    const command: string | undefined = process.argv[2];
+    if (command !== 'start' && command !== 'develop') {
+      strapi.log.debug(
+        "Will not bootstrap nest, because strapi was not started with 'start' or 'develop'.",
+      );
+      return;
     }
 
     await bootstrapNest();
