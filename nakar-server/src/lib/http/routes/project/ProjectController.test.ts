@@ -725,6 +725,10 @@ describe('/project', (suiteContext: SuiteContext): void => {
                 projectId: randomUUID(),
                 connectionUrl: `${manager.getSparqlServer().getServerUrl()}/${randomUUID()}`,
                 databaseType: DatabaseConnectionDatabaseType.sparql,
+                username: null,
+                password: null,
+                database: null,
+                language: null,
               } satisfies TestDatabaseConnectionRequestBodyDto),
               signal: testContext.signal,
             },
@@ -761,6 +765,10 @@ describe('/project', (suiteContext: SuiteContext): void => {
                 databaseConnectionId: randomUUID(),
                 connectionUrl: `${manager.getSparqlServer().getServerUrl()}/${randomUUID()}`,
                 databaseType: DatabaseConnectionDatabaseType.sparql,
+                username: null,
+                password: null,
+                database: null,
+                language: null,
               } satisfies TestDatabaseConnectionRequestBodyDto),
               signal: testContext.signal,
             },
@@ -1991,6 +1999,10 @@ describe('/project', (suiteContext: SuiteContext): void => {
                 databaseConnectionId: randomUUID(),
                 connectionUrl: `${manager.getSparqlServer().getServerUrl()}/${randomUUID()}`,
                 databaseType: DatabaseConnectionDatabaseType.sparql,
+                username: null,
+                password: null,
+                database: null,
+                language: null,
               } satisfies TestDatabaseConnectionRequestBodyDto),
               signal: testContext.signal,
             },
@@ -3905,6 +3917,79 @@ describe('/project', (suiteContext: SuiteContext): void => {
             id: owner.documentId,
             displayName: owner.username,
           });
+          const persisted: Response = await fetch(
+            `${manager.apiUrl}/project/${project}`,
+            {
+              headers: new Headers([['Authorization', `Bearer ${login.jwt}`]]),
+              signal: testContext.signal,
+            },
+          );
+          assert.equal(persisted.status, 200);
+          assert.deepEqual(projectSchema.parse(await persisted.json()), body);
+        });
+
+        test('uses the published collaborators despite draft reassignment', async (testContext: TestContext): Promise<void> => {
+          // given
+          const owner: E2ETestApplicationUser =
+            await manager.registerUser(testContext);
+          const publishedCollaborator: E2ETestApplicationUser =
+            await manager.registerUser(testContext);
+          const draftCollaborator: E2ETestApplicationUser =
+            await manager.registerUser(testContext);
+          const project: string = await manager.createPublishedDocument(
+            'api::project.project',
+            {
+              title: 'Published Project',
+              owner: owner.documentId,
+              collaborators: [publishedCollaborator.documentId],
+            },
+            testContext,
+          );
+          const draft: Response = await manager.updateDocument(
+            'api::project.project',
+            project,
+            {
+              title: 'Draft Project',
+              collaborators: [draftCollaborator.documentId],
+            },
+            testContext,
+          );
+          assert.equal(draft.status, 200);
+          const login: PostAuthResponseBodyDto = await manager.loginUser(
+            owner.username,
+            owner.password,
+            testContext,
+          );
+
+          // when
+          const response: Response = await fetch(
+            `${manager.apiUrl}/project/${project}`,
+            {
+              method: 'PUT',
+              headers: new Headers([
+                ['Authorization', `Bearer ${login.jwt}`],
+                ['Content-Type', 'application/json'],
+              ]),
+              body: JSON.stringify({
+                title: 'Updated Project',
+              } satisfies UpdateProjectRequestBodyDto),
+              signal: testContext.signal,
+            },
+          );
+
+          // then
+          assert.equal(response.status, 200);
+          const body: ProjectPageDto = projectSchema.parse(
+            await response.json(),
+          );
+          assert.equal(body.id, project);
+          assert.equal(body.title, 'Updated Project');
+          assert.deepEqual(body.collaborators, [
+            {
+              id: publishedCollaborator.documentId,
+              displayName: publishedCollaborator.username,
+            },
+          ]);
           const persisted: Response = await fetch(
             `${manager.apiUrl}/project/${project}`,
             {
