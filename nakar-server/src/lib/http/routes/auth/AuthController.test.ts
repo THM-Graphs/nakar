@@ -1,4 +1,5 @@
 import type { PostAuthRequestBodyDto } from './dto/PostAuthRequestBodyDto';
+import type { PostRegisterRequestBodyDto } from './dto/PostRegisterRequestBodyDto';
 import type { E2ETestApplicationUser } from '../../../../e2e/E2ETestApplicationUser';
 import assert from 'node:assert/strict';
 import { createHmac, randomUUID } from 'node:crypto';
@@ -195,6 +196,205 @@ describe('/auth', (suiteContext: SuiteContext): void => {
             message: variant.expectedMessages,
           });
         }
+      });
+    });
+  });
+
+  describe('/register', (): void => {
+    describe('POST', (): void => {
+      describe('201', (): void => {
+        test('creates a confirmed account with a usable JWT', async (testContext: TestContext): Promise<void> => {
+          // given
+          const username: string = `e2e-${randomUUID()}`;
+          const email: string = `${username}@example.test`;
+
+          // when
+          const response: Response = await fetch(
+            `${manager.apiUrl}/auth/register`,
+            {
+              method: 'POST',
+              headers: new Headers([['Content-Type', 'application/json']]),
+              body: JSON.stringify({
+                username,
+                email,
+                password: randomUUID(),
+              } satisfies PostRegisterRequestBodyDto),
+              signal: testContext.signal,
+            },
+          );
+
+          // then
+          const json: unknown = await response.json();
+          assert.equal(
+            response.status,
+            201,
+            response.ok ? undefined : JSON.stringify(json),
+          );
+          const session: PostAuthResponseBodyDto = z
+            .strictObject({
+              username: z.literal(username),
+              jwt: z.string().min(1),
+            })
+            .parse(json);
+          const identity: Response = await fetch(
+            `${manager.strapiUrl}/api/users/me`,
+            {
+              headers: new Headers([
+                ['Authorization', `Bearer ${session.jwt}`],
+              ]),
+              signal: testContext.signal,
+            },
+          );
+          assert.equal(identity.status, 200);
+          z.object({
+            username: z.literal(username),
+            email: z.literal(email),
+            confirmed: z.literal(true),
+          }).parse(await identity.json());
+          const currentUser: Response = await fetch(`${manager.apiUrl}/auth`, {
+            headers: new Headers([['Authorization', `Bearer ${session.jwt}`]]),
+            signal: testContext.signal,
+          });
+          assert.equal(currentUser.status, 200);
+          z.strictObject({ username: z.literal(username) }).parse(
+            await currentUser.json(),
+          );
+        });
+      });
+
+      describe('400', (): void => {
+        test('rejects an invalid email address', async (testContext: TestContext): Promise<void> => {
+          // when
+          const response: Response = await fetch(
+            `${manager.apiUrl}/auth/register`,
+            {
+              method: 'POST',
+              headers: new Headers([['Content-Type', 'application/json']]),
+              body: JSON.stringify({
+                username: `e2e-${randomUUID()}`,
+                email: 'invalid',
+                password: randomUUID(),
+              } satisfies PostRegisterRequestBodyDto),
+              signal: testContext.signal,
+            },
+          );
+
+          // then
+          assert.equal(response.status, 400);
+          z.object({ message: z.array(z.string()) }).parse(
+            await response.json(),
+          );
+        });
+
+        test('rejects a client-supplied role', async (testContext: TestContext): Promise<void> => {
+          // given
+          const username: string = `e2e-${randomUUID()}`;
+
+          // when
+          const response: Response = await fetch(
+            `${manager.apiUrl}/auth/register`,
+            {
+              method: 'POST',
+              headers: new Headers([['Content-Type', 'application/json']]),
+              body: JSON.stringify({
+                username,
+                email: `${username}@example.test`,
+                password: randomUUID(),
+                role: manager.context.authenticatedRoleId,
+              } satisfies PostRegisterRequestBodyDto & { role: number }),
+              signal: testContext.signal,
+            },
+          );
+
+          // then
+          assert.equal(response.status, 400);
+          z.object({
+            message: z
+              .array(z.string())
+              .refine((messages: string[]): boolean =>
+                messages.includes('property role should not exist'),
+              ),
+          }).parse(await response.json());
+        });
+      });
+
+      describe('409', (): void => {
+        test('rejects a username already in use', async (testContext: TestContext): Promise<void> => {
+          // given
+          const existing: E2ETestApplicationUser =
+            await manager.registerUser(testContext);
+
+          // when
+          const response: Response = await fetch(
+            `${manager.apiUrl}/auth/register`,
+            {
+              method: 'POST',
+              headers: new Headers([['Content-Type', 'application/json']]),
+              body: JSON.stringify({
+                username: existing.username,
+                email: `${randomUUID()}@example.test`,
+                password: randomUUID(),
+              } satisfies PostRegisterRequestBodyDto),
+              signal: testContext.signal,
+            },
+          );
+
+          // then
+          const json: unknown = await response.json();
+          assert.equal(
+            response.status,
+            409,
+            response.ok ? undefined : JSON.stringify(json),
+          );
+          z.object({
+            statusCode: z.literal(409),
+            message: z.string().min(1),
+          }).parse(json);
+        });
+
+        test('rejects an email address already in use regardless of case', async (testContext: TestContext): Promise<void> => {
+          // given
+          const email: string = `${randomUUID()}@example.test`;
+          const existing: Response = await manager.createDocument(
+            'plugin::users-permissions.user',
+            {
+              username: `e2e-${randomUUID()}`,
+              email,
+              password: randomUUID(),
+              confirmed: true,
+              role: manager.context.authenticatedRoleId,
+            },
+            testContext,
+          );
+          assert.equal(existing.status, 201);
+
+          // when
+          const response: Response = await fetch(
+            `${manager.apiUrl}/auth/register`,
+            {
+              method: 'POST',
+              headers: new Headers([['Content-Type', 'application/json']]),
+              body: JSON.stringify({
+                username: `e2e-${randomUUID()}`,
+                email: email.toUpperCase(),
+                password: randomUUID(),
+              } satisfies PostRegisterRequestBodyDto),
+              signal: testContext.signal,
+            },
+          );
+
+          // then
+          const json: unknown = await response.json();
+          assert.equal(
+            response.status,
+            409,
+            response.ok ? undefined : JSON.stringify(json),
+          );
+          z.object({
+            statusCode: z.literal(409),
+            message: z.string().min(1),
+          }).parse(json);
+        });
       });
     });
   });

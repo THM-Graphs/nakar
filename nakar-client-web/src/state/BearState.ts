@@ -36,10 +36,6 @@ export interface BearState {
       setUsername: (username: string | null) => void;
       loginWindow: {
         shown: boolean;
-        username: string;
-        setUsername: (username: string) => void;
-        password: string;
-        setPassword: (password: string) => void;
         show: () => void;
         hide: () => void;
       };

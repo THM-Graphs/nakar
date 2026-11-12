@@ -52,23 +52,9 @@ export const useBearStore = create<BearState>()(
                 });
               },
               loginWindow: {
-                password: "",
-                setPassword: (pw) => {
-                  set((s) => {
-                    s.global.auth.loginWindow.password = pw;
-                  });
-                },
-                username: "",
-                setUsername: (username) => {
-                  set((s) => {
-                    s.global.auth.loginWindow.username = username;
-                  });
-                },
                 hide: () => {
                   set((s) => {
                     s.global.auth.loginWindow.shown = false;
-                    s.global.auth.loginWindow.username = "";
-                    s.global.auth.loginWindow.password = "";
                   });
                 },
                 show: () => {

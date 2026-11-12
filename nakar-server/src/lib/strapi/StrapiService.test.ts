@@ -6,6 +6,7 @@ import z from 'zod';
 import type { E2ETestApplicationUser } from '../../e2e/E2ETestApplicationUser';
 import { E2ETestManager } from '../../e2e/E2ETestManager';
 import type { PostAuthResponseBodyDto } from '../http/routes/auth/dto/PostAuthResponseBodyDto';
+import type { PostRegisterRequestBodyDto } from '../http/routes/auth/dto/PostRegisterRequestBodyDto';
 
 type RolePermissions = Record<
   string,
@@ -85,8 +86,57 @@ describe('Strapi Users & Permissions', (suiteContext: SuiteContext): void => {
 
     describe('/register', (): void => {
       describe('POST', (): void => {
-        describe('403', (): void => {
-          test('rejects public registration', async (testContext: TestContext): Promise<void> => {
+        describe('200', (): void => {
+          test('registers a confirmed account with a usable JWT', async (testContext: TestContext): Promise<void> => {
+            // given
+            const username: string = `e2e-${randomUUID()}`;
+            const email: string = `${username}@example.test`;
+
+            // when
+            const response: Response = await fetch(
+              `${manager.strapiUrl}/api/auth/local/register`,
+              {
+                method: 'POST',
+                headers: new Headers([['Content-Type', 'application/json']]),
+                body: JSON.stringify({
+                  username,
+                  email,
+                  password: randomUUID(),
+                } satisfies PostRegisterRequestBodyDto),
+                signal: testContext.signal,
+              },
+            );
+
+            // then
+            assert.equal(response.status, 200);
+            const session: { jwt: string } = z
+              .object({
+                jwt: z.string().min(1),
+                user: z.object({
+                  username: z.literal(username),
+                  email: z.literal(email),
+                  confirmed: z.literal(true),
+                }),
+              })
+              .parse(await response.json());
+            const identity: Response = await fetch(
+              `${manager.strapiUrl}/api/users/me`,
+              {
+                headers: new Headers([
+                  ['Authorization', `Bearer ${session.jwt}`],
+                ]),
+                signal: testContext.signal,
+              },
+            );
+            assert.equal(identity.status, 200);
+            z.object({ username: z.literal(username) }).parse(
+              await identity.json(),
+            );
+          });
+        });
+
+        describe('400', (): void => {
+          test('rejects a client-supplied role', async (testContext: TestContext): Promise<void> => {
             // given
             const username: string = `e2e-${randomUUID()}`;
 
@@ -100,13 +150,19 @@ describe('Strapi Users & Permissions', (suiteContext: SuiteContext): void => {
                   username,
                   email: `${username}@example.test`,
                   password: randomUUID(),
-                }),
+                  role: manager.context.authenticatedRoleId,
+                } satisfies PostRegisterRequestBodyDto & { role: number }),
                 signal: testContext.signal,
               },
             );
 
             // then
-            assert.equal(response.status, 403);
+            assert.equal(response.status, 400);
+            z.object({
+              error: z.object({
+                message: z.literal('Invalid parameters: role'),
+              }),
+            }).parse(await response.json());
           });
         });
       });
@@ -431,7 +487,7 @@ describe('Strapi Users & Permissions', (suiteContext: SuiteContext): void => {
   describe('/users-permissions/roles/:id', (): void => {
     describe('GET', (): void => {
       describe('200', (): void => {
-        test('grants Public only the auth callback permission', async (testContext: TestContext): Promise<void> => {
+        test('grants Public the login and registration permissions', async (testContext: TestContext): Promise<void> => {
           // given
           const headers: Headers = new Headers([
             ['Authorization', `Bearer ${manager.context.admin.token}`],
@@ -470,6 +526,7 @@ describe('Strapi Users & Permissions', (suiteContext: SuiteContext): void => {
           ).role.permissions;
           assert.deepEqual(getEnabledActions(permissions), [
             'plugin::users-permissions.auth.callback',
+            'plugin::users-permissions.auth.register',
           ]);
         });
 

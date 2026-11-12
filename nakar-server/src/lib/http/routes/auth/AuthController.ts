@@ -4,13 +4,21 @@ import { PostAuthRequestBodyDto } from './dto/PostAuthRequestBodyDto';
 import { PostAuthResponseBodyDto } from './dto/PostAuthResponseBodyDto';
 import { ApiBody, ApiResponse } from '@nestjs/swagger';
 import * as undici from 'undici';
-import { TooManyRequests, Unauthorized } from 'http-errors';
+import {
+  BadGateway,
+  BadRequest,
+  Conflict,
+  ServiceUnavailable,
+  TooManyRequests,
+  Unauthorized,
+} from 'http-errors';
 import z from 'zod';
 import { GetAuthResponseBodyDto } from './dto/GetAuthResponseBodyDto';
 import type { Modules } from '@strapi/types';
 import { JWT } from '../../decorators/JWT';
 import { AuthService } from '../../../auth/AuthService';
 import { StrapiService } from '../../../strapi/StrapiService';
+import { PostRegisterRequestBodyDto } from './dto/PostRegisterRequestBodyDto';
 
 @Controller('/auth')
 export class AuthController {
@@ -68,6 +76,61 @@ export class AuthController {
     return new PostAuthResponseBodyDto({
       username: response.user.username,
       jwt: response.jwt,
+    });
+  }
+
+  @Post('/register')
+  @ApiBody({ type: PostRegisterRequestBodyDto })
+  @ApiResponse({ status: 201, type: PostAuthResponseBodyDto })
+  public async postRegister(
+    @Body() body: PostRegisterRequestBodyDto,
+  ): Promise<PostAuthResponseBodyDto> {
+    const result: undici.Response = await undici.fetch(
+      `${this._strapiService.strapiUrl}/api/auth/local/register`,
+      {
+        method: 'POST',
+        headers: new undici.Headers([['Content-Type', 'application/json']]),
+        body: JSON.stringify({
+          username: body.username,
+          email: body.email,
+          password: body.password,
+        }),
+      },
+    );
+    if (result.status === 400) {
+      const error: { error: { message: string } } | undefined = z
+        .object({ error: z.object({ message: z.string() }) })
+        .safeParse(await result.json()).data;
+      if (error?.error.message === 'Email or Username are already taken') {
+        throw new Conflict('Username or email address is already in use.');
+      }
+      if (error?.error.message === 'Register action is currently disabled') {
+        throw new ServiceUnavailable('Registration is unavailable.');
+      }
+      throw new BadRequest('Registration details are invalid.');
+    }
+    if (!result.ok) {
+      await result.body?.cancel();
+      if (result.status === 429) {
+        throw new TooManyRequests();
+      }
+      if (result.status === 403) {
+        throw new ServiceUnavailable('Registration is unavailable.');
+      }
+      throw new BadGateway('Strapi could not create the account.');
+    }
+    const session: { jwt: string; user: { username: string } } | undefined = z
+      .object({
+        jwt: z.string().min(1),
+        user: z.object({ username: z.string() }),
+      })
+      .safeParse(await result.json()).data;
+    if (session == null) {
+      throw new BadGateway('Strapi did not return a login token.');
+    }
+    return new PostAuthResponseBodyDto({
+      username: session.user.username,
+      jwt: session.jwt,
     });
   }
 

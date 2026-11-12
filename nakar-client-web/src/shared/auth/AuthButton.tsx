@@ -49,7 +49,7 @@ export function AuthButton() {
             }}
           >
             <i className={"bi bi-person me-2"}></i>
-            Login
+            Login / Register
           </Dropdown.Item>
         )}
       </DropdownButton>

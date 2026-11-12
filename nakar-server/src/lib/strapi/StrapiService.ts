@@ -3,6 +3,7 @@ import type { Logger } from '@strapi/logger';
 import type { AddressInfo } from 'node:net';
 import z from 'zod';
 import { createChildLogger } from '../logger/createChildLogger';
+import { SSet } from '../../packages/set/Set';
 
 @Injectable()
 export class StrapiService {
@@ -22,14 +23,17 @@ export class StrapiService {
   }
 
   public async setupStrapiPermissions(): Promise<void> {
-    const requiredPermissions: { roleType: string; action: string }[] = [
+    const requiredPermissions: { roleType: string; actions: string[] }[] = [
       {
         roleType: 'public',
-        action: 'plugin::users-permissions.auth.callback',
+        actions: [
+          'plugin::users-permissions.auth.callback',
+          'plugin::users-permissions.auth.register',
+        ],
       },
       {
         roleType: 'authenticated',
-        action: 'plugin::users-permissions.user.me',
+        actions: ['plugin::users-permissions.user.me'],
       },
     ];
 
@@ -69,14 +73,11 @@ export class StrapiService {
                 orderBy: { id: 'asc' },
               }),
             );
-          let hasRequiredPermission: boolean = false;
+          const missingActions: SSet<string> = new SSet<string>(
+            required.actions,
+          );
           for (const permission of assigned) {
-            if (
-              permission.action === required.action &&
-              !hasRequiredPermission
-            ) {
-              hasRequiredPermission = true;
-            } else {
+            if (!missingActions.delete(permission.action)) {
               await permissions.delete({ where: { id: permission.id } });
               hooks.onCommit((): void => {
                 this._logger.info(
@@ -85,16 +86,37 @@ export class StrapiService {
               });
             }
           }
-          if (!hasRequiredPermission) {
+          for (const action of missingActions) {
             await permissions.create({
-              data: { action: required.action, role: role.id },
+              data: { action, role: role.id },
             });
             hooks.onCommit((): void => {
               this._logger.info(
-                `Added permission "${required.action}" to Strapi role "${required.roleType}".`,
+                `Added permission "${action}" to Strapi role "${required.roleType}".`,
               );
             });
           }
+        }
+
+        const store: ReturnType<typeof strapi.store> = strapi.store({
+          type: 'plugin',
+          name: 'users-permissions',
+        });
+        const settings: Record<string, unknown> = z
+          .record(z.string(), z.unknown())
+          .parse(await store.get({ key: 'advanced' }));
+        if (
+          settings['allow_register'] !== true ||
+          settings['email_confirmation'] !== false ||
+          settings['default_role'] !== 'authenticated'
+        ) {
+          settings['allow_register'] = true;
+          settings['email_confirmation'] = false;
+          settings['default_role'] = 'authenticated';
+          await store.set({
+            key: 'advanced',
+            value: settings,
+          });
         }
       },
     );

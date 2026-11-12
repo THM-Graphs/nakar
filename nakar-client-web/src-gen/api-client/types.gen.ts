@@ -14,6 +14,12 @@ export type PostAuthResponseBodyDto = {
     username: string;
 };
 
+export type PostRegisterRequestBodyDto = {
+    username: string;
+    email: string;
+    password: string;
+};
+
 export type GetAuthResponseBodyDto = {
     username: string;
 };
@@ -793,6 +799,19 @@ export type AuthControllerPostAuthResponses = {
 };
 
 export type AuthControllerPostAuthResponse = AuthControllerPostAuthResponses[keyof AuthControllerPostAuthResponses];
+
+export type AuthControllerPostRegisterData = {
+    body: PostRegisterRequestBodyDto;
+    path?: never;
+    query?: never;
+    url: '/api/auth/register';
+};
+
+export type AuthControllerPostRegisterResponses = {
+    201: PostAuthResponseBodyDto;
+};
+
+export type AuthControllerPostRegisterResponse = AuthControllerPostRegisterResponses[keyof AuthControllerPostRegisterResponses];
 
 export type StartControllerGetStartData = {
     body?: never;

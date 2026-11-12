@@ -97,7 +97,7 @@ export function CMSNavbar(props: {
                     });
                   }}
                 >
-                  <span className={"small"}>Login</span>
+                  <span className={"small"}>Login / Register</span>
                 </NavDropdown.Item>
               )}
             </NavDropdown>
