@@ -278,6 +278,10 @@ export type PostNoteRequestBody = {
     content: string;
 };
 
+export type PostNoteResponseBodyDto = {
+    id: string;
+};
+
 export type UpdateNoteRequestBodyDto = {
     content: string;
 };
@@ -815,8 +819,10 @@ export type ProjectControllerDeleteProjectData = {
 };
 
 export type ProjectControllerDeleteProjectResponses = {
-    200: unknown;
+    204: void;
 };
+
+export type ProjectControllerDeleteProjectResponse = ProjectControllerDeleteProjectResponses[keyof ProjectControllerDeleteProjectResponses];
 
 export type ProjectControllerGetProjectData = {
     body?: never;
@@ -887,8 +893,10 @@ export type ScenarioGroupControllerDeleteScenarioGroupData = {
 };
 
 export type ScenarioGroupControllerDeleteScenarioGroupResponses = {
-    200: unknown;
+    204: void;
 };
+
+export type ScenarioGroupControllerDeleteScenarioGroupResponse = ScenarioGroupControllerDeleteScenarioGroupResponses[keyof ScenarioGroupControllerDeleteScenarioGroupResponses];
 
 export type ScenarioGroupControllerUpdateScenarioGroupData = {
     body: UpdateScenarioGroupRequestBodyDto;
@@ -901,8 +909,10 @@ export type ScenarioGroupControllerUpdateScenarioGroupData = {
 };
 
 export type ScenarioGroupControllerUpdateScenarioGroupResponses = {
-    200: unknown;
+    204: void;
 };
+
+export type ScenarioGroupControllerUpdateScenarioGroupResponse = ScenarioGroupControllerUpdateScenarioGroupResponses[keyof ScenarioGroupControllerUpdateScenarioGroupResponses];
 
 export type ScenarioControllerCreateScenarioData = {
     body?: never;
@@ -932,8 +942,10 @@ export type ScenarioControllerDeleteScenarioData = {
 };
 
 export type ScenarioControllerDeleteScenarioResponses = {
-    200: unknown;
+    204: void;
 };
+
+export type ScenarioControllerDeleteScenarioResponse = ScenarioControllerDeleteScenarioResponses[keyof ScenarioControllerDeleteScenarioResponses];
 
 export type ScenarioControllerUpdateScenarioData = {
     body: UpdateScenarioRequestBodyDto;
@@ -963,8 +975,10 @@ export type RoomControllerDeleteRoomData = {
 };
 
 export type RoomControllerDeleteRoomResponses = {
-    200: unknown;
+    204: void;
 };
+
+export type RoomControllerDeleteRoomResponse = RoomControllerDeleteRoomResponses[keyof RoomControllerDeleteRoomResponses];
 
 export type RoomControllerGetRoomData = {
     body?: never;
@@ -1054,8 +1068,10 @@ export type DatabaseConnectionControllerDeleteDatabaseConnectionData = {
 };
 
 export type DatabaseConnectionControllerDeleteDatabaseConnectionResponses = {
-    200: unknown;
+    204: void;
 };
+
+export type DatabaseConnectionControllerDeleteDatabaseConnectionResponse = DatabaseConnectionControllerDeleteDatabaseConnectionResponses[keyof DatabaseConnectionControllerDeleteDatabaseConnectionResponses];
 
 export type DatabaseConnectionControllerGetDatabaseConnectionData = {
     body?: never;
@@ -1115,8 +1131,10 @@ export type CommonPropertiesControllerDeleteCommonPropertyData = {
 };
 
 export type CommonPropertiesControllerDeleteCommonPropertyResponses = {
-    200: unknown;
+    204: void;
 };
+
+export type CommonPropertiesControllerDeleteCommonPropertyResponse = CommonPropertiesControllerDeleteCommonPropertyResponses[keyof CommonPropertiesControllerDeleteCommonPropertyResponses];
 
 export type CommonPropertiesControllerUpdateCommonPropertyData = {
     body: UpdateCommonPropertyRequestBodyDto;
@@ -1129,8 +1147,10 @@ export type CommonPropertiesControllerUpdateCommonPropertyData = {
 };
 
 export type CommonPropertiesControllerUpdateCommonPropertyResponses = {
-    200: unknown;
+    204: void;
 };
+
+export type CommonPropertiesControllerUpdateCommonPropertyResponse = CommonPropertiesControllerUpdateCommonPropertyResponses[keyof CommonPropertiesControllerUpdateCommonPropertyResponses];
 
 export type PublicRoomControllerGetRoomData = {
     body?: never;
@@ -1174,8 +1194,10 @@ export type CanvasNoteControllerPostNoteData = {
 };
 
 export type CanvasNoteControllerPostNoteResponses = {
-    201: unknown;
+    201: PostNoteResponseBodyDto;
 };
+
+export type CanvasNoteControllerPostNoteResponse = CanvasNoteControllerPostNoteResponses[keyof CanvasNoteControllerPostNoteResponses];
 
 export type CanvasNoteControllerDeleteNoteData = {
     body?: never;
@@ -1189,8 +1211,10 @@ export type CanvasNoteControllerDeleteNoteData = {
 };
 
 export type CanvasNoteControllerDeleteNoteResponses = {
-    200: unknown;
+    204: void;
 };
+
+export type CanvasNoteControllerDeleteNoteResponse = CanvasNoteControllerDeleteNoteResponses[keyof CanvasNoteControllerDeleteNoteResponses];
 
 export type CanvasNoteControllerUpdateNoteData = {
     body: UpdateNoteRequestBodyDto;
@@ -1204,8 +1228,10 @@ export type CanvasNoteControllerUpdateNoteData = {
 };
 
 export type CanvasNoteControllerUpdateNoteResponses = {
-    200: unknown;
+    204: void;
 };
+
+export type CanvasNoteControllerUpdateNoteResponse = CanvasNoteControllerUpdateNoteResponses[keyof CanvasNoteControllerUpdateNoteResponses];
 
 export type CanvasDatabaseConnectionControllerGetStatsData = {
     body?: never;
@@ -1262,8 +1288,8 @@ export type CanvasDatabaseConnectionControllerExpandNodePreviewData = {
     body?: never;
     path: {
         canvasId: string;
-        roomId: string;
         databaseId: string;
+        roomId: string;
     };
     query: {
         nodeId: string;
