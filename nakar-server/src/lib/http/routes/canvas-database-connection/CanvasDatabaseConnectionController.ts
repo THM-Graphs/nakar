@@ -1,5 +1,7 @@
 import {
+  BadGatewayException,
   Body,
+  ConflictException,
   Controller,
   Get,
   HttpCode,
@@ -76,9 +78,11 @@ export class CanvasDatabaseConnectionController {
     const database: Modules.Documents.Result<'api::database-connection.database-connection'> =
       await this._database.getDatabase(databaseId);
     const genericStats: ExternalGraphDatabaseStats =
-      await this._externalGraphDatabase.getStats(
-        this._externalGraphDatabase.parseCredentials(database),
-      );
+      await this._externalGraphDatabase
+        .getStats(this._externalGraphDatabase.parseCredentials(database))
+        .catch((): never => {
+          throw new BadGatewayException('External database request failed.');
+        });
 
     return new GetDatabaseStatsResponseBodyDto({
       relTypeCount: genericStats.relTypeCount,
@@ -115,15 +119,23 @@ export class CanvasDatabaseConnectionController {
     @Param('canvasId') canvasId: string,
     @Body() body: PostSearchRequestBodyDto,
   ): Promise<PostSearchResponseBodyDto> {
-    const liveCanvas: LiveCanvas =
-      this._liveCanvasService.getCanvasWithId(canvasId);
+    const liveCanvas: LiveCanvas | null =
+      this._liveCanvasService.getCanvasWithIdOrNull(canvasId);
     const database: Modules.Documents.Result<'api::database-connection.database-connection'> =
       await this._database.getDatabase(databaseId);
+
+    if (liveCanvas == null) {
+      throw new ConflictException('Canvas is not active.');
+    }
 
     const searchTerm: string = body.searchTerm;
 
     const result: ExternalGraphDatabaseNode[] =
-      await this._externalGraphDatabase.search(database, searchTerm);
+      await this._externalGraphDatabase
+        .search(database, searchTerm)
+        .catch((): never => {
+          throw new BadGatewayException('External database request failed.');
+        });
 
     const graph: LiveCanvasUndoableData = LiveCanvasUndoableData.empty();
     const databaseCache: DatabaseReferenceCache = new DatabaseReferenceCache(
@@ -220,13 +232,17 @@ export class CanvasDatabaseConnectionController {
   public async expandNodePreview(
     @Query() query: ExpandNodePreviewRequestQueryDto,
     @Param('canvasId') canvasId: string,
+    @Param('databaseId') databaseId: string,
   ): Promise<ExpandNodePreviewResponseBodyDto> {
-    const canvas: LiveCanvas =
-      this._liveCanvasService.getCanvasWithId(canvasId);
+    const canvas: LiveCanvas | null =
+      this._liveCanvasService.getCanvasWithIdOrNull(canvasId);
+    if (canvas == null) {
+      throw new ConflictException('Canvas is not active.');
+    }
     const node: GraphNode | null = canvas.data.undoableData.current.nodes.get(
       query.nodeId,
     );
-    if (node == null) {
+    if (node?.sourceId !== databaseId) {
       throw new NotFoundException(`Node ${query.nodeId} not found.`);
     }
 
@@ -234,10 +250,11 @@ export class CanvasDatabaseConnectionController {
       await this._database.getDatabase(node.sourceId);
 
     const expandNodePreview: ExternalGraphDatabaseExpandNodePreview =
-      await this._externalGraphDatabase.expandNodePreview(
-        database,
-        new SSet<string>([node.nativeId]),
-      );
+      await this._externalGraphDatabase
+        .expandNodePreview(database, new SSet<string>([node.nativeId]))
+        .catch((): never => {
+          throw new BadGatewayException('External database request failed.');
+        });
 
     return new ExpandNodePreviewResponseBodyDto({
       labels: expandNodePreview.labels.map(

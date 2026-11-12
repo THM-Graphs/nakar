@@ -1,3 +1,5 @@
+import type { Response } from 'express';
+import { Unauthorized } from 'http-errors';
 import {
   CanActivate,
   ExecutionContext,
@@ -22,6 +24,14 @@ export class UserCanAccessProject implements CanActivate {
 
     const user: Modules.Documents.Result<'plugin::users-permissions.user'> | null =
       await this._authService.getUserFromRequest(req);
+
+    if (user == null) {
+      context
+        .switchToHttp()
+        .getResponse<Response>()
+        .setHeader('WWW-Authenticate', 'Bearer');
+      throw new Unauthorized();
+    }
 
     const projectId: unknown = req.params['projectId'];
     if (typeof projectId !== 'string') {

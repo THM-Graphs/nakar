@@ -1,27 +1,33 @@
-import { Body, Controller, Get, Post } from '@nestjs/common';
+import type { Response } from 'express';
+import { Body, Controller, Get, HttpCode, Post, Res } from '@nestjs/common';
 import { PostAuthRequestBodyDto } from './dto/PostAuthRequestBodyDto';
 import { PostAuthResponseBodyDto } from './dto/PostAuthResponseBodyDto';
 import { ApiBody, ApiResponse } from '@nestjs/swagger';
 import * as undici from 'undici';
-import { Unauthorized } from 'http-errors';
+import { TooManyRequests, Unauthorized } from 'http-errors';
 import z from 'zod';
 import { GetAuthResponseBodyDto } from './dto/GetAuthResponseBodyDto';
 import type { Modules } from '@strapi/types';
 import { JWT } from '../../decorators/JWT';
 import { AuthService } from '../../../auth/AuthService';
+import { StrapiService } from '../../../strapi/StrapiService';
 
 @Controller('/auth')
 export class AuthController {
-  public constructor(private readonly _authService: AuthService) {}
+  public constructor(
+    private readonly _authService: AuthService,
+    private readonly _strapiService: StrapiService,
+  ) {}
 
   @Post()
+  @HttpCode(200)
   @ApiBody({ type: PostAuthRequestBodyDto })
   @ApiResponse({ type: PostAuthResponseBodyDto })
   public async postAuth(
     @Body() body: PostAuthRequestBodyDto,
   ): Promise<PostAuthResponseBodyDto> {
     const result: undici.Response = await undici.fetch(
-      `${this._authService.strapiUrl}/api/auth/local`,
+      `${this._strapiService.strapiUrl}/api/auth/local`,
       {
         method: 'POST',
         body: JSON.stringify({
@@ -31,6 +37,10 @@ export class AuthController {
         headers: new undici.Headers([['Content-Type', 'application/json']]),
       },
     );
+    if (result.status === 429) {
+      await result.body?.cancel();
+      throw new TooManyRequests();
+    }
     const json: unknown = await result.json();
     // eslint-disable-next-line @typescript-eslint/typedef
     const responseType = z.object({
@@ -65,10 +75,12 @@ export class AuthController {
   @ApiResponse({ type: GetAuthResponseBodyDto })
   public async getAuth(
     @JWT() jwt: string | null,
+    @Res({ passthrough: true }) response: Response,
   ): Promise<GetAuthResponseBodyDto> {
     const user: Modules.Documents.Result<'plugin::users-permissions.user'> | null =
       await this._authService.getUserByJWT(jwt);
     if (user == null) {
+      response.setHeader('WWW-Authenticate', 'Bearer');
       throw new Unauthorized();
     }
     return {

@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Delete,
+  HttpCode,
   NotFoundException,
   Param,
   Post,
@@ -16,6 +17,7 @@ import { ScenarioGroupBelongsToProject } from '../../guards/ScenarioGroupBelongs
 import type { Modules } from '@strapi/types';
 import { SchemaFactoryService } from '../../../schema/SchemaFactoryService';
 import { ScenarioBelongsToScenarioGroup } from '../../guards/ScenarioBelongsToScenarioGroup';
+import { databaseBelongsToProject } from '../../../policies/databaseBelongsToProject';
 import { UpdateScenarioRequestBodyDto } from './dto/UpdateScenarioRequestBodyDto';
 
 @Controller('/project/:projectId/scenario-group/:scenarioGroupId/scenario')
@@ -57,6 +59,7 @@ export class ScenarioController {
   }
 
   @Delete(':scenarioId')
+  @HttpCode(204)
   @UseGuards(ScenarioBelongsToScenarioGroup)
   public async deleteScenario(
     @Param('scenarioId') scenarioId: string,
@@ -75,10 +78,54 @@ export class ScenarioController {
     @Param('scenarioId') scenarioId: string,
     @Body() body: UpdateScenarioRequestBodyDto,
   ): Promise<ScenarioDto> {
+    const published: Modules.Documents.Result<
+      'api::scenario.scenario',
+      { populate: ['group'] }
+    > | null = await strapi.documents('api::scenario.scenario').findOne({
+      documentId: scenarioId,
+      status: 'published',
+      populate: ['group'],
+    });
+    if (published == null) {
+      throw new NotFoundException();
+    }
+
+    const group: Modules.Documents.Result<
+      'api::scenario-group.scenario-group',
+      { populate: ['project'] }
+    > | null = await strapi
+      .documents('api::scenario-group.scenario-group')
+      .findOne({
+        documentId: published.group?.documentId ?? '',
+        status: 'published',
+        populate: ['project'],
+      });
+    if (group?.project == null) {
+      throw new NotFoundException();
+    }
+    const project: Modules.Documents.Result<'api::project.project'> =
+      await this._databaseService.getProject(group.project.documentId);
+    for (const query of body.queries) {
+      if (query.databaseId != null && query.databaseId !== '') {
+        const database: Modules.Documents.Result<'api::database-connection.database-connection'> | null =
+          await this._databaseService.getDatabaseOrNull(query.databaseId);
+        if (
+          database == null ||
+          !(await databaseBelongsToProject(
+            database,
+            project,
+            this._databaseService,
+          ))
+        ) {
+          throw new NotFoundException();
+        }
+      }
+    }
     const updatedScenario: Modules.Documents.Result<'api::scenario.scenario'> | null =
       await strapi.documents('api::scenario.scenario').update({
         documentId: scenarioId,
         data: {
+          group: published.group?.documentId ?? null,
           title: body.title,
           description: body.description,
         } satisfies Modules.Documents.Params.Data.Input<'api::scenario.scenario'>,

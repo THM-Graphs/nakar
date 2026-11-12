@@ -21,16 +21,14 @@ export class CanvasBelongsToRoom implements CanActivate {
       throw new NotFoundException(`No canvas id provided.`);
     }
 
-    const canvas: Modules.Documents.Result<
-      'api::canvas.canvas',
-      { populate: { room: { populate: [] } } }
-    > | null = await strapi.documents('api::canvas.canvas').findOne({
-      documentId: canvasId,
-      populate: { room: { populate: [] } },
-    });
-
-    const isOkay: boolean = canvas?.room?.documentId === roomId;
-
-    return isOkay;
+    const canvas: Modules.Documents.Result<'api::canvas.canvas'> | null =
+      await strapi.documents('api::canvas.canvas').findFirst({
+        filters: { documentId: canvasId, room: { documentId: roomId } },
+        status: 'published',
+      });
+    if (canvas == null) {
+      throw new NotFoundException();
+    }
+    return true;
   }
 }

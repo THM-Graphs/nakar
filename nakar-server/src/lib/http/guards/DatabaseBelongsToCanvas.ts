@@ -7,7 +7,6 @@ import {
 import type { Modules } from '@strapi/types';
 import { Request } from 'express';
 import { DatabaseService } from '../../database/DatabaseService';
-import { databaseBelongsToCanvas } from '../../policies/databaseBelongsToCanvas';
 
 @Injectable()
 export class DatabaseBelongsToCanvas implements CanActivate {
@@ -20,9 +19,6 @@ export class DatabaseBelongsToCanvas implements CanActivate {
     if (typeof databaseId !== 'string') {
       throw new NotFoundException(`No database connection id provided.`);
     }
-    const database: Modules.Documents.Result<'api::database-connection.database-connection'> =
-      await this._databaseService.getDatabase(databaseId);
-
     const canvasId: unknown = req.params['canvasId'];
     if (typeof canvasId !== 'string') {
       throw new NotFoundException(`No canvas id provided.`);
@@ -30,10 +26,21 @@ export class DatabaseBelongsToCanvas implements CanActivate {
     const canvas: Modules.Documents.Result<'api::canvas.canvas'> =
       await this._databaseService.getCanvas(canvasId);
 
-    return await databaseBelongsToCanvas(
-      database,
-      canvas,
-      this._databaseService,
-    );
+    const project: Modules.Documents.Result<'api::project.project'> =
+      await this._databaseService.getProjectOfCanvas(canvas);
+    const matchingDatabase: Modules.Documents.Result<'api::database-connection.database-connection'> | null =
+      await strapi
+        .documents('api::database-connection.database-connection')
+        .findFirst({
+          status: 'published',
+          filters: {
+            documentId: databaseId,
+            project: { documentId: project.documentId },
+          },
+        });
+    if (matchingDatabase == null) {
+      throw new NotFoundException();
+    }
+    return true;
   }
 }

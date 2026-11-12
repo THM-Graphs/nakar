@@ -32,7 +32,7 @@ export class RedirectController {
 
     const redirect: Modules.Documents.Result<'api::redirect.redirect'> =
       foundRedirects[0];
-    if (redirect.targetUrl == null) {
+    if (redirect.targetUrl == null || redirect.targetUrl === '') {
       return new GetUrlResponseBodyDto({ url: null });
     }
 

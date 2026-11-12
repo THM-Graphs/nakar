@@ -1,14 +1,16 @@
+import { PostNoteResponseBodyDto } from './dto/PostNoteResponseBodyDto';
 import {
   Body,
   Controller,
   Delete,
+  HttpCode,
   Param,
   Post,
   Put,
   UseGuards,
 } from '@nestjs/common';
 import { PostNoteRequestBody } from './dto/PostNoteRequestBody';
-import { ApiBody, ApiParam } from '@nestjs/swagger';
+import { ApiBody, ApiParam, ApiResponse } from '@nestjs/swagger';
 import type { Modules } from '@strapi/types';
 import { DatabaseService } from '../../../database/DatabaseService';
 import { Logger } from '@strapi/logger';
@@ -43,13 +45,14 @@ export class CanvasNoteController {
   ) {}
 
   @Post()
+  @ApiResponse({ status: 201, type: PostNoteResponseBodyDto })
   @ApiBody({ type: PostNoteRequestBody })
   @UseGuards(UserIsLoggedIn)
   public async postNote(
     @Body() body: PostNoteRequestBody,
     @Param('canvasId') canvasId: string,
     @JWT() jwt: string | null,
-  ): Promise<void> {
+  ): Promise<PostNoteResponseBodyDto> {
     const canvas: Modules.Documents.Result<'api::canvas.canvas'> =
       await this._databaseService.getCanvas(canvasId);
     const project: Modules.Documents.Result<'api::project.project'> =
@@ -59,15 +62,18 @@ export class CanvasNoteController {
 
     this._logger.debug(JSON.stringify(body));
 
-    await this._databaseService.addNote({
-      content: body.content,
-      project: project,
-      nodes: [...body.nodeIds],
-      author: user,
-    });
+    const note: Modules.Documents.Result<'api::note.note'> =
+      await this._databaseService.addNote({
+        content: body.content,
+        project: project,
+        nodes: [...body.nodeIds],
+        author: user,
+      });
+    return new PostNoteResponseBodyDto({ id: note.documentId });
   }
 
   @Delete(':noteId')
+  @HttpCode(204)
   @UseGuards(UserIsLoggedIn)
   @UseGuards(NoteBelongsToCanvas)
   public async deleteNote(@Param('noteId') noteId: string): Promise<void> {
@@ -78,6 +84,7 @@ export class CanvasNoteController {
   }
 
   @Put(':noteId')
+  @HttpCode(204)
   @UseGuards(UserIsLoggedIn)
   @ApiBody({ type: UpdateNoteRequestBodyDto })
   @UseGuards(NoteBelongsToCanvas)

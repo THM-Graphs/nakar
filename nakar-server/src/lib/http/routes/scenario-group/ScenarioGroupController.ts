@@ -2,6 +2,8 @@ import {
   Body,
   Controller,
   Delete,
+  HttpCode,
+  NotFoundException,
   Param,
   Post,
   Put,
@@ -14,6 +16,7 @@ import { SchemaFactoryService } from '../../../schema/SchemaFactoryService';
 import { ScenarioGroupDto } from '../../../schema/dtos/ScenarioGroupDto';
 import { UpdateScenarioGroupRequestBodyDto } from './dto/UpdateScenarioGroupRequestBodyDto';
 import { ScenarioGroupBelongsToProject } from '../../guards/ScenarioGroupBelongsToProject';
+import { DatabaseService } from '../../../database/DatabaseService';
 
 @Controller('/project/:projectId/scenario-group')
 @ApiParam({
@@ -23,7 +26,10 @@ import { ScenarioGroupBelongsToProject } from '../../guards/ScenarioGroupBelongs
 })
 @UseGuards(UserCanAccessProject)
 export class ScenarioGroupController {
-  public constructor(private readonly _schemaFactory: SchemaFactoryService) {}
+  public constructor(
+    private readonly _schemaFactory: SchemaFactoryService,
+    private readonly _databaseService: DatabaseService,
+  ) {}
 
   @Post()
   @ApiResponse({ type: ScenarioGroupDto })
@@ -43,25 +49,44 @@ export class ScenarioGroupController {
   }
 
   @Delete(':scenarioGroupId')
+  @HttpCode(204)
   @UseGuards(ScenarioGroupBelongsToProject)
   public async deleteScenarioGroup(
     @Param('scenarioGroupId') scenarioGroupId: string,
   ): Promise<void> {
-    await strapi.documents('api::scenario-group.scenario-group').delete({
-      documentId: scenarioGroupId,
-    });
+    const deleted: boolean =
+      await this._databaseService.deleteScenarioGroup(scenarioGroupId);
+    if (!deleted) {
+      throw new NotFoundException();
+    }
   }
 
   @Put(':scenarioGroupId')
+  @HttpCode(204)
   @UseGuards(ScenarioGroupBelongsToProject)
   public async updateScenarioGroup(
     @Param('scenarioGroupId') scenarioGroupId: string,
     @Body() body: UpdateScenarioGroupRequestBodyDto,
   ): Promise<void> {
+    const published: Modules.Documents.Result<
+      'api::scenario-group.scenario-group',
+      { populate: ['project'] }
+    > | null = await strapi
+      .documents('api::scenario-group.scenario-group')
+      .findOne({
+        documentId: scenarioGroupId,
+        status: 'published',
+        populate: ['project'],
+      });
+    if (published == null) {
+      throw new NotFoundException();
+    }
+
     await strapi.documents('api::scenario-group.scenario-group').update({
       documentId: scenarioGroupId,
       status: 'published',
       data: {
+        project: published.project?.documentId ?? null,
         title: body.title,
       },
     });

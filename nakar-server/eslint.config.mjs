@@ -66,6 +66,12 @@ export default defineConfig([
         },
         {
           selector: 'memberLike',
+          modifiers: ['protected'],
+          format: ['camelCase'],
+          leadingUnderscore: 'require',
+        },
+        {
+          selector: 'memberLike',
           modifiers: ['public'],
           format: ['camelCase'],
           leadingUnderscore: 'forbid',

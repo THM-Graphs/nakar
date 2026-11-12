@@ -35,7 +35,7 @@ export class ExternalGraphDatabaseService implements OnModuleDestroy {
     );
     this._adapters.set(
       ExternalGraphDatabaseType.sparql,
-      new SparqlExternalDatabase(),
+      new SparqlExternalDatabase(null),
     );
     this._adapters.set(
       ExternalGraphDatabaseType.wikidata,

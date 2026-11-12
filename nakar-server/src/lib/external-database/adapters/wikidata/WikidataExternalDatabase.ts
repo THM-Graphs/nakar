@@ -1,12 +1,10 @@
 import type { LiveCanvasArgument } from '../../../live-canvas/graph/LiveCanvasArgument';
 import { SSet } from '../../../../packages/set/Set';
-import type { ExternalGraphDatabase } from '../../ExternalGraphDatabase';
 import type { ExternalGraphDatabaseCredentials } from '../../data/ExternalGraphDatabaseCredentials';
 import type { ExternalGraphDatabaseExpandNodePreview } from '../../data/ExternalGraphDatabaseExpandNodePreview';
 import { ExternalGraphDatabaseQueryLimitConfig } from '../../data/ExternalGraphDatabaseQueryLimitConfig';
 import type { ExternalGraphDatabaseQueryResult } from '../../data/ExternalGraphDatabaseQueryResult';
 import type { ExternalGraphDatabaseSearchCapabilities } from '../../data/ExternalGraphDatabaseSearchCapabilities';
-import type { ExternalGraphDatabaseStats } from '../../data/ExternalGraphDatabaseStats';
 import { SparqlExternalDatabase } from '../sparql/SparqlExternalDatabase';
 import type { ExternalGraphDatabaseNode } from '../../data/ExternalGraphDatabaseNode';
 import { SMap } from '../../../../packages/map/Map';
@@ -15,56 +13,55 @@ import type { BindingsStream } from '@comunica/types';
 import type { Term } from '@rdfjs/types';
 import toNT from '@rdfjs/to-ntriples';
 import type { ExternalGraphDatabaseRelationship } from '../../data/ExternalGraphDatabaseRelationship';
-import type { Logger } from '@strapi/logger';
-import { createChildLogger } from '../../../logger/createChildLogger';
 
-export class WikidataExternalDatabase implements ExternalGraphDatabase {
-  private readonly _sparqlAdapter: SparqlExternalDatabase;
-  private readonly _logger: Logger = createChildLogger(this);
-
+export class WikidataExternalDatabase extends SparqlExternalDatabase {
   public constructor() {
-    this._sparqlAdapter = new SparqlExternalDatabase(
-      this._postProcessNode.bind(this),
-    );
+    super((node: ExternalGraphDatabaseNode): void => {
+      const url: URL | null = URL.parse(node.nativeId.slice(1, -1));
+      const qid: string | undefined = url?.pathname.split('/').at(-1);
+      if (qid == null || qid.length === 0) {
+        return;
+      }
+      node.properties['qid'] = qid;
+    });
   }
 
-  public equalityHashKey(
-    credentials: ExternalGraphDatabaseCredentials,
-  ): string {
-    return this._sparqlAdapter.equalityHashKey(credentials);
-  }
-
-  public async executeQuery(
+  public override async executeQuery(
     credentials: ExternalGraphDatabaseCredentials,
     query: string,
     queryArguments: LiveCanvasArgument[],
     limitConfig: ExternalGraphDatabaseQueryLimitConfig,
   ): Promise<ExternalGraphDatabaseQueryResult> {
-    const result: ExternalGraphDatabaseQueryResult =
-      await this._sparqlAdapter.executeQuery(
-        credentials,
-        query,
-        queryArguments,
-        limitConfig,
-      );
-    await this._applyTitleToQueryResult(result, credentials);
-    return result;
+    try {
+      const result: ExternalGraphDatabaseQueryResult =
+        await super._executeQuery(
+          credentials,
+          query,
+          queryArguments,
+          limitConfig,
+        );
+      await this._applyTitleToQueryResult(result, credentials);
+      return result;
+    } catch (error) {
+      return this._logAndRethrow(error);
+    }
   }
 
-  public async loadConnectingRelationships(
+  public override async loadConnectingRelationships(
     credentials: ExternalGraphDatabaseCredentials,
     nodeIds: SSet<string>,
   ): Promise<ExternalGraphDatabaseQueryResult> {
-    const result: ExternalGraphDatabaseQueryResult =
-      await this._sparqlAdapter.loadConnectingRelationships(
-        credentials,
-        nodeIds,
-      );
-    await this._applyTitleToQueryResult(result, credentials);
-    return result;
+    try {
+      const result: ExternalGraphDatabaseQueryResult =
+        await super._loadConnectingRelationships(credentials, nodeIds);
+      await this._applyTitleToQueryResult(result, credentials);
+      return result;
+    } catch (error) {
+      return this._logAndRethrow(error);
+    }
   }
 
-  public async expandNode(
+  public override async expandNode(
     credentials: ExternalGraphDatabaseCredentials,
     nodeIds: SSet<string>,
     limit: {
@@ -72,74 +69,72 @@ export class WikidataExternalDatabase implements ExternalGraphDatabase {
       labels: SSet<string>;
     } | null,
   ): Promise<ExternalGraphDatabaseQueryResult> {
-    const result: ExternalGraphDatabaseQueryResult =
-      await this._sparqlAdapter.expandNode(credentials, nodeIds, limit);
-    await this._applyTitleToQueryResult(result, credentials);
-    return result;
+    try {
+      const result: ExternalGraphDatabaseQueryResult = await super._expandNode(
+        credentials,
+        nodeIds,
+        limit,
+      );
+      await this._applyTitleToQueryResult(result, credentials);
+      return result;
+    } catch (error) {
+      return this._logAndRethrow(error);
+    }
   }
 
-  public async expandNodePreview(
+  public override async expandNodePreview(
     credentials: ExternalGraphDatabaseCredentials,
     nodeIds: SSet<string>,
   ): Promise<ExternalGraphDatabaseExpandNodePreview> {
-    const result: ExternalGraphDatabaseExpandNodePreview =
-      await this._sparqlAdapter.expandNodePreview(credentials, nodeIds);
-    const nodeUrisToResolveTitle: SSet<string> = new SSet<string>(
-      result.relationships.map(
-        (r: ExternalGraphDatabaseExpandNodePreviewEntry): string =>
-          r.identificator,
-      ),
-    );
-    const resolvedTitles: SMap<string, string> = await this._resolveNodeTitles(
-      nodeUrisToResolveTitle,
-      credentials,
-    );
-    for (const entry of result.relationships) {
-      const title: string | null =
-        resolvedTitles.get(entry.identificator) ?? null;
-      if (title != null) {
-        entry.title = title;
+    try {
+      const result: ExternalGraphDatabaseExpandNodePreview =
+        await super._expandNodePreview(credentials, nodeIds);
+      const nodeUrisToResolveTitle: SSet<string> = new SSet<string>(
+        result.relationships.map(
+          (r: ExternalGraphDatabaseExpandNodePreviewEntry): string =>
+            r.identificator,
+        ),
+      );
+      const resolvedTitles: SMap<string, string> =
+        await this._resolveNodeTitles(nodeUrisToResolveTitle, credentials);
+      for (const entry of result.relationships) {
+        const title: string | null =
+          resolvedTitles.get(entry.identificator) ?? null;
+        if (title != null) {
+          entry.title = title;
+        }
       }
+
+      return result;
+    } catch (error) {
+      return this._logAndRethrow(error);
     }
-
-    return result;
   }
 
-  public async testConnection(
-    credentials: ExternalGraphDatabaseCredentials,
-  ): Promise<void> {
-    await this._sparqlAdapter.testConnection(credentials);
+  public override async getSearchCapabilities(): Promise<ExternalGraphDatabaseSearchCapabilities> {
+    try {
+      const base: ExternalGraphDatabaseSearchCapabilities =
+        await super._getSearchCapabilities();
+      base.special.add('Q-ID');
+      return base;
+    } catch (error) {
+      return this._logAndRethrow(error);
+    }
   }
 
-  public async getStats(
-    credentials: ExternalGraphDatabaseCredentials,
-  ): Promise<ExternalGraphDatabaseStats> {
-    return await this._sparqlAdapter.getStats(credentials);
-  }
-
-  public async getSearchCapabilities(): Promise<ExternalGraphDatabaseSearchCapabilities> {
-    return await Promise.resolve({
-      canExactMatchNativeId: true,
-      canExactMatchLabel: false,
-      exactMatchNodeProperties: new SMap(),
-      fuzzyMatchNodeProperties: new SMap(),
-      special: new SSet(['Q-ID']),
-    });
-  }
-
-  public async search(
+  public override async search(
     credentials: ExternalGraphDatabaseCredentials,
     searchTerm: string,
   ): Promise<ExternalGraphDatabaseNode[]> {
-    let url: URL | null = null;
     try {
-      url = new URL(searchTerm);
-    } catch {
-      /* ok */
-    }
+      let url: URL | null = null;
+      try {
+        url = new URL(searchTerm);
+      } catch {
+        /* ok */
+      }
 
-    const bindingsStream: BindingsStream =
-      await this._sparqlAdapter.runGenericSparqlQuery(
+      const bindingsStream: BindingsStream = await super._runGenericSparqlQuery(
         credentials,
         `
 SELECT ?node
@@ -157,78 +152,86 @@ LIMIT 1
       `,
       );
 
-    const nodes: SMap<string, ExternalGraphDatabaseNode> = new SMap<
-      string,
-      ExternalGraphDatabaseNode
-    >();
+      const nodes: SMap<string, ExternalGraphDatabaseNode> = new SMap<
+        string,
+        ExternalGraphDatabaseNode
+      >();
 
-    for (const line of await bindingsStream.toArray({
-      limit: ExternalGraphDatabaseQueryLimitConfig.maximalPreviewElements,
-    })) {
-      const node: Term | null = line.get('node') ?? null;
-      if (node == null) {
-        continue;
+      for (const line of await bindingsStream.toArray({
+        limit: ExternalGraphDatabaseQueryLimitConfig.maximalPreviewElements,
+      })) {
+        const node: Term | null = line.get('node') ?? null;
+        if (node == null) {
+          continue;
+        }
+        super._collectNode(node, null, nodes, credentials);
       }
-      this._sparqlAdapter.collectNode(node, null, nodes, credentials);
+
+      const result: ExternalGraphDatabaseNode[] = nodes.toValueArray();
+
+      await this._applyNodeTitlesToElementArray(result, credentials);
+
+      return result;
+    } catch (error) {
+      return this._logAndRethrow(error);
     }
-
-    const result: ExternalGraphDatabaseNode[] = nodes.toValueArray();
-
-    await this._applyNodeTitlesToElementArray(result, credentials);
-
-    return result;
   }
 
-  public async findNodeByNativeId(
+  public override async findNodeByNativeId(
     credentials: ExternalGraphDatabaseCredentials,
     nativeNodeId: string,
   ): Promise<ExternalGraphDatabaseQueryResult> {
-    const result: ExternalGraphDatabaseQueryResult =
-      await this._sparqlAdapter.findNodeByNativeId(credentials, nativeNodeId);
-    await this._applyTitleToQueryResult(result, credentials);
-    return result;
+    try {
+      const result: ExternalGraphDatabaseQueryResult =
+        await super._findNodeByNativeId(credentials, nativeNodeId);
+      await this._applyTitleToQueryResult(result, credentials);
+      return result;
+    } catch (error) {
+      return this._logAndRethrow(error);
+    }
   }
 
-  public async expandClusterNode(
+  public override async expandClusterNode(
     credentials: ExternalGraphDatabaseCredentials,
     nodeIds: SSet<string>,
     neighbors: SSet<string>,
   ): Promise<ExternalGraphDatabaseQueryResult> {
-    const result: ExternalGraphDatabaseQueryResult =
-      await this._sparqlAdapter.expandClusterNode(
-        credentials,
-        nodeIds,
-        neighbors,
-      );
-    await this._applyTitleToQueryResult(result, credentials);
-    return result;
+    try {
+      const result: ExternalGraphDatabaseQueryResult =
+        await super._expandClusterNode(credentials, nodeIds, neighbors);
+      await this._applyTitleToQueryResult(result, credentials);
+      return result;
+    } catch (error) {
+      return this._logAndRethrow(error);
+    }
   }
 
-  public async findRelationshipsByIds(
+  public override async findRelationshipsByIds(
     credentials: ExternalGraphDatabaseCredentials,
     relationshipIds: string[],
   ): Promise<ExternalGraphDatabaseQueryResult> {
-    const result: ExternalGraphDatabaseQueryResult =
-      await this._sparqlAdapter.findRelationshipsByIds(
-        credentials,
-        relationshipIds,
-      );
-    await this._applyTitleToQueryResult(result, credentials);
-    return result;
+    try {
+      const result: ExternalGraphDatabaseQueryResult =
+        await super._findRelationshipsByIds(credentials, relationshipIds);
+      await this._applyTitleToQueryResult(result, credentials);
+      return result;
+    } catch (error) {
+      return this._logAndRethrow(error);
+    }
   }
 
-  public async findShortestPath(
+  public override async findShortestPath(
     credentials: ExternalGraphDatabaseCredentials,
     nodeIds: SSet<string>,
   ): Promise<ExternalGraphDatabaseQueryResult> {
-    const result: ExternalGraphDatabaseQueryResult =
-      await this._sparqlAdapter.findShortestPath(credentials, nodeIds);
-    await this._applyTitleToQueryResult(result, credentials);
-    return result;
-  }
-
-  public async shutdown(): Promise<void> {
-    await this._sparqlAdapter.shutdown();
+    try {
+      const result: ExternalGraphDatabaseQueryResult =
+        await super._findShortestPath(credentials, nodeIds);
+      await this._applyTitleToQueryResult(result, credentials);
+      return result;
+    } catch (error) {
+      return this._logAndRethrow(error);
+    }
   }
 
   private async _resolveNodeTitles(
@@ -246,10 +249,9 @@ LIMIT 1
     }
     const language: string = configuredLanguage ?? 'en';
 
-    const bindingsStream: BindingsStream =
-      await this._sparqlAdapter.runGenericSparqlQuery(
-        credentials,
-        `
+    const bindingsStream: BindingsStream = await super._runGenericSparqlQuery(
+      credentials,
+      `
 SELECT ?input ?inputLabel
 WHERE {
   VALUES ?input { ${nodeUris.toArray().join(' ')} }
@@ -321,7 +323,7 @@ ORDER BY DESC (
   )
 )
     `,
-      );
+    );
 
     const result: SMap<string, string> = new SMap<string, string>();
 
@@ -390,14 +392,5 @@ ORDER BY DESC (
         }
       }
     }
-  }
-
-  private _postProcessNode(node: ExternalGraphDatabaseNode): void {
-    const url: URL | null = URL.parse(node.nativeId.slice(1, -1));
-    const qid: string | undefined = url?.pathname.split('/').at(-1);
-    if (qid == null || qid.length === 0) {
-      return;
-    }
-    node.properties['qid'] = qid;
   }
 }
