@@ -25,7 +25,7 @@ describe('/auth', (suiteContext: SuiteContext): void => {
   });
 
   describe('POST', (): void => {
-    describe('201', (): void => {
+    describe('200', (): void => {
       test('logs in the primary user', async (testContext: TestContext): Promise<void> => {
         // given
         const primaryUser: E2ETestApplicationUser =
@@ -45,7 +45,7 @@ describe('/auth', (suiteContext: SuiteContext): void => {
         });
 
         // then
-        assert.equal(response.status, 201);
+        assert.equal(response.status, 200);
         z.strictObject({
           username: z.literal(primaryUser.username),
           jwt: z.string().min(1),
@@ -70,7 +70,7 @@ describe('/auth', (suiteContext: SuiteContext): void => {
         });
 
         // then
-        assert.equal(response.status, 201);
+        assert.equal(response.status, 200);
         z.strictObject({
           username: z.literal(secondaryUser.username),
           jwt: z.string().min(1),
@@ -443,6 +443,7 @@ describe('/auth', (suiteContext: SuiteContext): void => {
 
         // then
         assert.equal(rejected.status, 401);
+        assert.equal(rejected.headers.get('www-authenticate'), 'Bearer');
         assert.deepEqual(await rejected.json(), {
           statusCode: 401,
           message: 'Unauthorized',
@@ -485,6 +486,7 @@ describe('/auth', (suiteContext: SuiteContext): void => {
 
         // then
         assert.equal(rejected.status, 401);
+        assert.equal(rejected.headers.get('www-authenticate'), 'Bearer');
         assert.deepEqual(await rejected.json(), {
           statusCode: 401,
           message: 'Unauthorized',
@@ -501,6 +503,7 @@ describe('/auth', (suiteContext: SuiteContext): void => {
 
         // then
         assert.equal(authenticated.status, 401);
+        assert.equal(authenticated.headers.get('www-authenticate'), 'Bearer');
         assert.deepEqual(await authenticated.json(), {
           message: 'Unauthorized',
           statusCode: 401,
@@ -516,6 +519,7 @@ describe('/auth', (suiteContext: SuiteContext): void => {
 
         // then
         assert.equal(authenticated.status, 401);
+        assert.equal(authenticated.headers.get('www-authenticate'), 'Bearer');
         assert.deepEqual(await authenticated.json(), {
           message: 'Unauthorized',
           statusCode: 401,
@@ -558,6 +562,7 @@ describe('/auth', (suiteContext: SuiteContext): void => {
 
         // then
         assert.equal(response.status, 401);
+        assert.equal(response.headers.get('www-authenticate'), 'Bearer');
         assert.deepEqual(await response.json(), {
           statusCode: 401,
           message: 'Unauthorized',
@@ -588,6 +593,7 @@ describe('/auth', (suiteContext: SuiteContext): void => {
 
         // then
         assert.equal(response.status, 401);
+        assert.equal(response.headers.get('www-authenticate'), 'Bearer');
         assert.deepEqual(await response.json(), {
           statusCode: 401,
           message: 'Unauthorized',
@@ -614,6 +620,7 @@ describe('/auth', (suiteContext: SuiteContext): void => {
 
         // then
         assert.equal(response.status, 401);
+        assert.equal(response.headers.get('www-authenticate'), 'Bearer');
         assert.deepEqual(await response.json(), {
           statusCode: 401,
           message: 'Unauthorized',
@@ -639,6 +646,7 @@ describe('/auth', (suiteContext: SuiteContext): void => {
 
         // then
         assert.equal(response.status, 401);
+        assert.equal(response.headers.get('www-authenticate'), 'Bearer');
         assert.deepEqual(await response.json(), {
           statusCode: 401,
           message: 'Unauthorized',

@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Delete,
+  HttpCode,
   NotFoundException,
   Param,
   Post,
@@ -48,6 +49,7 @@ export class CommonPropertiesController {
   }
 
   @Delete(':commonPropertyId')
+  @HttpCode(204)
   @UseGuards(CommonPropertyBelongsToProject)
   public async deleteCommonProperty(
     @Param('commonPropertyId') commonPropertyId: string,
@@ -58,6 +60,7 @@ export class CommonPropertiesController {
   }
 
   @Put(':commonPropertyId')
+  @HttpCode(204)
   @UseGuards(CommonPropertyBelongsToProject)
   public async updateCommonProperty(
     @Param('commonPropertyId') commonPropertyId: string,

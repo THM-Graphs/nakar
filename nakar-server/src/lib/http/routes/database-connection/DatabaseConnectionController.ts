@@ -62,6 +62,23 @@ export class DatabaseConnectionController {
     @Param('projectId') projectId: string,
     @Body() body: TestDatabaseConnectionRequestBodyDto,
   ): Promise<TestDatabaseConnectionResponseBodyDto> {
+    let connectionUrl: URL;
+    try {
+      connectionUrl = new URL(body.connectionUrl);
+    } catch {
+      throw new BadRequestException('Invalid connection URL.');
+    }
+    const supportedProtocols: string[] =
+      body.databaseType === DatabaseConnectionDatabaseType.neo4j
+        ? ['bolt:', 'bolt+s:', 'bolt+ssc:', 'neo4j:', 'neo4j+s:', 'neo4j+ssc:']
+        : ['http:', 'https:'];
+    if (
+      connectionUrl.hostname === '' ||
+      !supportedProtocols.includes(connectionUrl.protocol)
+    ) {
+      throw new BadRequestException('Unsupported connection URL.');
+    }
+
     try {
       const project: Modules.Documents.Result<'api::project.project'> =
         await this._database.getProject(projectId);
@@ -135,6 +152,7 @@ export class DatabaseConnectionController {
   }
 
   @Delete(':databaseConnectionId')
+  @HttpCode(204)
   @UseGuards(DatabaseConnectionBelongsToProject)
   public async deleteDatabaseConnection(
     @Param('databaseConnectionId') databaseConnectionId: string,

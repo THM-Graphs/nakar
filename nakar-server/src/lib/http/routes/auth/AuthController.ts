@@ -1,4 +1,5 @@
-import { Body, Controller, Get, Post } from '@nestjs/common';
+import type { Response } from 'express';
+import { Body, Controller, Get, HttpCode, Post, Res } from '@nestjs/common';
 import { PostAuthRequestBodyDto } from './dto/PostAuthRequestBodyDto';
 import { PostAuthResponseBodyDto } from './dto/PostAuthResponseBodyDto';
 import { ApiBody, ApiResponse } from '@nestjs/swagger';
@@ -19,6 +20,7 @@ export class AuthController {
   ) {}
 
   @Post()
+  @HttpCode(200)
   @ApiBody({ type: PostAuthRequestBodyDto })
   @ApiResponse({ type: PostAuthResponseBodyDto })
   public async postAuth(
@@ -73,10 +75,12 @@ export class AuthController {
   @ApiResponse({ type: GetAuthResponseBodyDto })
   public async getAuth(
     @JWT() jwt: string | null,
+    @Res({ passthrough: true }) response: Response,
   ): Promise<GetAuthResponseBodyDto> {
     const user: Modules.Documents.Result<'plugin::users-permissions.user'> | null =
       await this._authService.getUserByJWT(jwt);
     if (user == null) {
+      response.setHeader('WWW-Authenticate', 'Bearer');
       throw new Unauthorized();
     }
     return {

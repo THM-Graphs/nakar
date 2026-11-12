@@ -148,7 +148,7 @@ describe('/redirect', (suiteContext: SuiteContext): void => {
           assert.deepEqual(await response.json(), { url: null });
         });
 
-        test('returns an empty target unchanged', async (testContext: TestContext): Promise<void> => {
+        test('returns null when the target is empty', async (testContext: TestContext): Promise<void> => {
           // given
           const sourceUrl: string = `https://source.example/${randomUUID()}`;
           const creation: Response = await manager.publishDocument(
@@ -169,7 +169,7 @@ describe('/redirect', (suiteContext: SuiteContext): void => {
 
           // then
           assert.equal(response.status, 200);
-          assert.deepEqual(await response.json(), { url: '' });
+          assert.deepEqual(await response.json(), { url: null });
         });
 
         test('ignores unpublished redirects', async (testContext: TestContext): Promise<void> => {

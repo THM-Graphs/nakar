@@ -145,6 +145,59 @@ describe('/project/:projectId/room', (suiteContext: SuiteContext): void => {
         });
       });
     });
+    describe('401', (): void => {
+      test('rejects anonymous creation', async (testContext: TestContext): Promise<void> => {
+        // given
+        const owner: E2ETestApplicationUser =
+          await manager.registerUser(testContext);
+
+        const project: string = await manager.createPublishedDocument(
+          'api::project.project',
+          { title: 'Room Project', owner: owner.documentId, collaborators: [] },
+          testContext,
+        );
+
+        const url: string = `${manager.apiUrl}/project/${project}/room`;
+
+        const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
+          owner.username,
+          owner.password,
+          testContext,
+        );
+        const projectUrl: string = `${manager.apiUrl}/project/${project}`;
+        const originalResponse: Response = await fetch(projectUrl, {
+          headers: new Headers([['Authorization', `Bearer ${ownerLogin.jwt}`]]),
+          signal: testContext.signal,
+        });
+        assert.equal(originalResponse.status, 200);
+        const original: z.infer<typeof projectRoomsSchema> =
+          projectRoomsSchema.parse(await originalResponse.json());
+
+        // when
+        const response: Response = await fetch(url, {
+          method: 'POST',
+          signal: testContext.signal,
+        });
+
+        // then
+        assert.equal(response.status, 401);
+        assert.equal(response.headers.get('www-authenticate'), 'Bearer');
+        assert.deepEqual(await response.json(), {
+          statusCode: 401,
+          message: 'Unauthorized',
+        });
+        const persisted: Response = await fetch(projectUrl, {
+          headers: new Headers([['Authorization', `Bearer ${ownerLogin.jwt}`]]),
+          signal: testContext.signal,
+        });
+        assert.equal(persisted.status, 200);
+        assert.deepEqual(
+          projectRoomsSchema.parse(await persisted.json()),
+          original,
+        );
+      });
+    });
+
     describe('403', (): void => {
       test('rejects a removed collaborator with the same login', async (testContext: TestContext): Promise<void> => {
         // given
@@ -243,56 +296,6 @@ describe('/project/:projectId/room', (suiteContext: SuiteContext): void => {
         );
       });
 
-      test('rejects anonymous creation', async (testContext: TestContext): Promise<void> => {
-        // given
-        const owner: E2ETestApplicationUser =
-          await manager.registerUser(testContext);
-
-        const project: string = await manager.createPublishedDocument(
-          'api::project.project',
-          { title: 'Room Project', owner: owner.documentId, collaborators: [] },
-          testContext,
-        );
-
-        const url: string = `${manager.apiUrl}/project/${project}/room`;
-
-        const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-          owner.username,
-          owner.password,
-          testContext,
-        );
-        const projectUrl: string = `${manager.apiUrl}/project/${project}`;
-        const originalResponse: Response = await fetch(projectUrl, {
-          headers: new Headers([['Authorization', `Bearer ${ownerLogin.jwt}`]]),
-          signal: testContext.signal,
-        });
-        assert.equal(originalResponse.status, 200);
-        const original: z.infer<typeof projectRoomsSchema> =
-          projectRoomsSchema.parse(await originalResponse.json());
-
-        // when
-        const response: Response = await fetch(url, {
-          method: 'POST',
-          signal: testContext.signal,
-        });
-
-        // then
-        assert.equal(response.status, 403);
-        assert.deepEqual(await response.json(), {
-          statusCode: 403,
-          message: 'Forbidden resource',
-          error: 'Forbidden',
-        });
-        const persisted: Response = await fetch(projectUrl, {
-          headers: new Headers([['Authorization', `Bearer ${ownerLogin.jwt}`]]),
-          signal: testContext.signal,
-        });
-        assert.equal(persisted.status, 200);
-        assert.deepEqual(
-          projectRoomsSchema.parse(await persisted.json()),
-          original,
-        );
-      });
       test('rejects outsider creation', async (testContext: TestContext): Promise<void> => {
         // given
         const owner: E2ETestApplicationUser =
@@ -633,6 +636,50 @@ describe('/project/:projectId/room', (suiteContext: SuiteContext): void => {
           });
         });
       });
+      describe('401', (): void => {
+        test('rejects anonymous access even for a public room', async (testContext: TestContext): Promise<void> => {
+          // given
+          const owner: E2ETestApplicationUser =
+            await manager.registerUser(testContext);
+
+          const project: string = await manager.createPublishedDocument(
+            'api::project.project',
+            {
+              title: 'Room Project',
+              owner: owner.documentId,
+              collaborators: [],
+            },
+            testContext,
+          );
+
+          const room: string = await manager.createPublishedDocument(
+            'api::room.room',
+            {
+              title: 'Original Room',
+              visibility: RoomVisibilityDto.public,
+              project: project,
+            },
+            testContext,
+          );
+
+          const url: string = `${manager.apiUrl}/project/${project}/room/${room}`;
+
+          // when
+          const response: Response = await fetch(url, {
+            method: 'GET',
+            signal: testContext.signal,
+          });
+
+          // then
+          assert.equal(response.status, 401);
+          assert.equal(response.headers.get('www-authenticate'), 'Bearer');
+          assert.deepEqual(await response.json(), {
+            statusCode: 401,
+            message: 'Unauthorized',
+          });
+        });
+      });
+
       describe('403', (): void => {
         test('rejects a removed collaborator with the same login', async (testContext: TestContext): Promise<void> => {
           // given
@@ -714,47 +761,6 @@ describe('/project/:projectId/room', (suiteContext: SuiteContext): void => {
           });
         });
 
-        test('rejects anonymous access even for a public room', async (testContext: TestContext): Promise<void> => {
-          // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Room Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
-
-          const room: string = await manager.createPublishedDocument(
-            'api::room.room',
-            {
-              title: 'Original Room',
-              visibility: RoomVisibilityDto.public,
-              project: project,
-            },
-            testContext,
-          );
-
-          const url: string = `${manager.apiUrl}/project/${project}/room/${room}`;
-
-          // when
-          const response: Response = await fetch(url, {
-            method: 'GET',
-            signal: testContext.signal,
-          });
-
-          // then
-          assert.equal(response.status, 403);
-          assert.deepEqual(await response.json(), {
-            statusCode: 403,
-            message: 'Forbidden resource',
-            error: 'Forbidden',
-          });
-        });
         test('rejects outsider access even for a public room', async (testContext: TestContext): Promise<void> => {
           // given
           const owner: E2ETestApplicationUser =
@@ -1488,6 +1494,74 @@ describe('/project/:projectId/room', (suiteContext: SuiteContext): void => {
           });
         });
       });
+      describe('401', (): void => {
+        test('rejects anonymous access even for a public room', async (testContext: TestContext): Promise<void> => {
+          // given
+          const owner: E2ETestApplicationUser =
+            await manager.registerUser(testContext);
+
+          const project: string = await manager.createPublishedDocument(
+            'api::project.project',
+            {
+              title: 'Room Project',
+              owner: owner.documentId,
+              collaborators: [],
+            },
+            testContext,
+          );
+
+          const room: string = await manager.createPublishedDocument(
+            'api::room.room',
+            {
+              title: 'Original Room',
+              visibility: RoomVisibilityDto.public,
+              project: project,
+            },
+            testContext,
+          );
+
+          const url: string = `${manager.apiUrl}/project/${project}/room/${room}`;
+
+          const originalResponse: Response = await manager.readDocument(
+            'api::room.room',
+            room,
+            testContext,
+          );
+          assert.equal(originalResponse.status, 200);
+          const original: z.infer<typeof roomStateSchema> =
+            roomStateSchema.parse(await originalResponse.json());
+
+          // when
+          const response: Response = await fetch(url, {
+            method: 'PUT',
+            headers: new Headers([['Content-Type', 'application/json']]),
+            body: JSON.stringify({
+              title: 'Denied',
+              visibility: RoomVisibilityDto.private,
+            } satisfies UpdateRoomRequestBodyDto),
+            signal: testContext.signal,
+          });
+
+          // then
+          assert.equal(response.status, 401);
+          assert.equal(response.headers.get('www-authenticate'), 'Bearer');
+          assert.deepEqual(await response.json(), {
+            statusCode: 401,
+            message: 'Unauthorized',
+          });
+          const persisted: Response = await manager.readDocument(
+            'api::room.room',
+            room,
+            testContext,
+          );
+          assert.equal(persisted.status, 200);
+          assert.deepEqual(
+            roomStateSchema.parse(await persisted.json()),
+            original,
+          );
+        });
+      });
+
       describe('403', (): void => {
         test('rejects a removed collaborator with the same login', async (testContext: TestContext): Promise<void> => {
           // given
@@ -1595,71 +1669,6 @@ describe('/project/:projectId/room', (suiteContext: SuiteContext): void => {
           );
         });
 
-        test('rejects anonymous access even for a public room', async (testContext: TestContext): Promise<void> => {
-          // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Room Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
-
-          const room: string = await manager.createPublishedDocument(
-            'api::room.room',
-            {
-              title: 'Original Room',
-              visibility: RoomVisibilityDto.public,
-              project: project,
-            },
-            testContext,
-          );
-
-          const url: string = `${manager.apiUrl}/project/${project}/room/${room}`;
-
-          const originalResponse: Response = await manager.readDocument(
-            'api::room.room',
-            room,
-            testContext,
-          );
-          assert.equal(originalResponse.status, 200);
-          const original: z.infer<typeof roomStateSchema> =
-            roomStateSchema.parse(await originalResponse.json());
-
-          // when
-          const response: Response = await fetch(url, {
-            method: 'PUT',
-            headers: new Headers([['Content-Type', 'application/json']]),
-            body: JSON.stringify({
-              title: 'Denied',
-              visibility: RoomVisibilityDto.private,
-            } satisfies UpdateRoomRequestBodyDto),
-            signal: testContext.signal,
-          });
-
-          // then
-          assert.equal(response.status, 403);
-          assert.deepEqual(await response.json(), {
-            statusCode: 403,
-            message: 'Forbidden resource',
-            error: 'Forbidden',
-          });
-          const persisted: Response = await manager.readDocument(
-            'api::room.room',
-            room,
-            testContext,
-          );
-          assert.equal(persisted.status, 200);
-          assert.deepEqual(
-            roomStateSchema.parse(await persisted.json()),
-            original,
-          );
-        });
         test('rejects outsider access even for a public room', async (testContext: TestContext): Promise<void> => {
           // given
           const owner: E2ETestApplicationUser =
@@ -2588,7 +2597,7 @@ describe('/project/:projectId/room', (suiteContext: SuiteContext): void => {
       });
     });
     describe('DELETE', (): void => {
-      describe('200', (): void => {
+      describe('204', (): void => {
         test('uses the published assignment despite draft reassignment', async (testContext: TestContext): Promise<void> => {
           // given
           const owner: E2ETestApplicationUser =
@@ -2651,7 +2660,7 @@ describe('/project/:projectId/room', (suiteContext: SuiteContext): void => {
           );
 
           // then
-          assert.equal(response.status, 200);
+          assert.equal(response.status, 204);
           assert.equal(await response.text(), '');
           const persisted: Response = await manager.readDocument(
             'api::room.room',
@@ -2737,7 +2746,7 @@ describe('/project/:projectId/room', (suiteContext: SuiteContext): void => {
             room,
             testContext,
           );
-          assert.equal(response.status, 200);
+          assert.equal(response.status, 204);
           assert.equal(await response.text(), '');
           assert.equal(persisted.status, 404);
         });
@@ -2787,11 +2796,74 @@ describe('/project/:projectId/room', (suiteContext: SuiteContext): void => {
             room,
             testContext,
           );
-          assert.equal(response.status, 200);
+          assert.equal(response.status, 204);
           assert.equal(await response.text(), '');
           assert.equal(persisted.status, 404);
         });
       });
+      describe('401', (): void => {
+        test('rejects anonymous access even for a public room', async (testContext: TestContext): Promise<void> => {
+          // given
+          const owner: E2ETestApplicationUser =
+            await manager.registerUser(testContext);
+
+          const project: string = await manager.createPublishedDocument(
+            'api::project.project',
+            {
+              title: 'Room Project',
+              owner: owner.documentId,
+              collaborators: [],
+            },
+            testContext,
+          );
+
+          const room: string = await manager.createPublishedDocument(
+            'api::room.room',
+            {
+              title: 'Original Room',
+              visibility: RoomVisibilityDto.public,
+              project: project,
+            },
+            testContext,
+          );
+
+          const url: string = `${manager.apiUrl}/project/${project}/room/${room}`;
+
+          const originalResponse: Response = await manager.readDocument(
+            'api::room.room',
+            room,
+            testContext,
+          );
+          assert.equal(originalResponse.status, 200);
+          const original: z.infer<typeof roomStateSchema> =
+            roomStateSchema.parse(await originalResponse.json());
+
+          // when
+          const response: Response = await fetch(url, {
+            method: 'DELETE',
+            signal: testContext.signal,
+          });
+
+          // then
+          assert.equal(response.status, 401);
+          assert.equal(response.headers.get('www-authenticate'), 'Bearer');
+          assert.deepEqual(await response.json(), {
+            statusCode: 401,
+            message: 'Unauthorized',
+          });
+          const persisted: Response = await manager.readDocument(
+            'api::room.room',
+            room,
+            testContext,
+          );
+          assert.equal(persisted.status, 200);
+          assert.deepEqual(
+            roomStateSchema.parse(await persisted.json()),
+            original,
+          );
+        });
+      });
+
       describe('403', (): void => {
         test('rejects a removed collaborator with the same login', async (testContext: TestContext): Promise<void> => {
           // given
@@ -2892,66 +2964,6 @@ describe('/project/:projectId/room', (suiteContext: SuiteContext): void => {
           );
         });
 
-        test('rejects anonymous access even for a public room', async (testContext: TestContext): Promise<void> => {
-          // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Room Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
-
-          const room: string = await manager.createPublishedDocument(
-            'api::room.room',
-            {
-              title: 'Original Room',
-              visibility: RoomVisibilityDto.public,
-              project: project,
-            },
-            testContext,
-          );
-
-          const url: string = `${manager.apiUrl}/project/${project}/room/${room}`;
-
-          const originalResponse: Response = await manager.readDocument(
-            'api::room.room',
-            room,
-            testContext,
-          );
-          assert.equal(originalResponse.status, 200);
-          const original: z.infer<typeof roomStateSchema> =
-            roomStateSchema.parse(await originalResponse.json());
-
-          // when
-          const response: Response = await fetch(url, {
-            method: 'DELETE',
-            signal: testContext.signal,
-          });
-
-          // then
-          assert.equal(response.status, 403);
-          assert.deepEqual(await response.json(), {
-            statusCode: 403,
-            message: 'Forbidden resource',
-            error: 'Forbidden',
-          });
-          const persisted: Response = await manager.readDocument(
-            'api::room.room',
-            room,
-            testContext,
-          );
-          assert.equal(persisted.status, 200);
-          assert.deepEqual(
-            roomStateSchema.parse(await persisted.json()),
-            original,
-          );
-        });
         test('rejects outsider access even for a public room', async (testContext: TestContext): Promise<void> => {
           // given
           const owner: E2ETestApplicationUser =

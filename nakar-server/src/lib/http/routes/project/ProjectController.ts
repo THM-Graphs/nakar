@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Delete,
+  HttpCode,
   Get,
   NotFoundException,
   Param,
@@ -136,6 +137,7 @@ export class ProjectController {
   }
 
   @Delete(':projectId')
+  @HttpCode(204)
   @UseGuards(UserCanAccessProject)
   public async deleteProject(
     @Param('projectId') projectId: string,

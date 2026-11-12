@@ -8,6 +8,11 @@ export class E2ESparqlServer {
   private readonly _server: Server = createServer(
     (request: IncomingMessage, response: ServerResponse): void => {
       request.resume();
+      if (request.url?.startsWith('/unavailable') === true) {
+        response.writeHead(503);
+        response.end('Service Unavailable');
+        return;
+      }
       response.setHeader('Content-Type', 'application/sparql-results+json');
       response.writeHead(200);
       response.end(

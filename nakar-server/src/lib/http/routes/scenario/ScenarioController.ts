@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Delete,
+  HttpCode,
   NotFoundException,
   Param,
   Post,
@@ -58,6 +59,7 @@ export class ScenarioController {
   }
 
   @Delete(':scenarioId')
+  @HttpCode(204)
   @UseGuards(ScenarioBelongsToScenarioGroup)
   public async deleteScenario(
     @Param('scenarioId') scenarioId: string,

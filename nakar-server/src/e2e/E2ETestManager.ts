@@ -260,7 +260,7 @@ export class E2ETestManager {
       signal: testContext.signal,
     });
     const json: unknown = await response.json();
-    assert.equal(response.status, 201, JSON.stringify(json));
+    assert.equal(response.status, 200, JSON.stringify(json));
     return z
       .strictObject({ username: z.literal(username), jwt: z.string().min(1) })
       .parse(json);

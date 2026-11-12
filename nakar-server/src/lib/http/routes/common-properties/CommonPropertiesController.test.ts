@@ -317,6 +317,183 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
         );
       });
     });
+    describe('401', (): void => {
+      test('rejects anonymous access', async (testContext: TestContext): Promise<void> => {
+        // given
+        const owner: E2ETestApplicationUser =
+          await manager.registerUser(testContext);
+        const project: string = await manager.createPublishedDocument(
+          'api::project.project',
+          { title: 'Test Project', owner: owner.documentId, collaborators: [] },
+          testContext,
+        );
+        const resource: string = await manager.createPublishedDocument(
+          'api::common-property.common-property',
+          {
+            project,
+            leftLabel: 'Original Label',
+            leftProperty: 'original',
+            rightLabel: 'Other Label',
+            rightProperty: 'other',
+          },
+          testContext,
+        );
+        await manager.loginUser(owner.username, owner.password, testContext);
+        const filters: Record<string, string> = {
+          [`filters[project][documentId][$eq]`]: project,
+          pageSize: '100',
+          sort: 'documentId:asc',
+        };
+        const originalDraftResponse: Response = await manager.readDocuments(
+          'api::common-property.common-property',
+          { ...filters, status: 'draft' },
+          testContext,
+        );
+        assert.equal(originalDraftResponse.status, 200);
+        const originalDraft: z.infer<typeof listStateSchema> =
+          listStateSchema.parse(await originalDraftResponse.json());
+        assert.ok(
+          originalDraft.results.some(
+            (item: { documentId: string }): boolean =>
+              item.documentId === resource,
+          ),
+        );
+        const originalPublishedResponse: Response = await manager.readDocuments(
+          'api::common-property.common-property',
+          { ...filters, status: 'published' },
+          testContext,
+        );
+        assert.equal(originalPublishedResponse.status, 200);
+        const originalPublished: z.infer<typeof listStateSchema> =
+          listStateSchema.parse(await originalPublishedResponse.json());
+
+        // when
+        const response: Response = await fetch(
+          `${manager.apiUrl}/project/${project}/common-property`,
+          {
+            method: 'POST',
+            headers: new Headers([]),
+            signal: testContext.signal,
+          },
+        );
+
+        // then
+        assert.equal(response.status, 401);
+        assert.equal(response.headers.get('www-authenticate'), 'Bearer');
+        assert.deepEqual(await response.json(), {
+          statusCode: 401,
+          message: 'Unauthorized',
+        });
+        const draftResponse: Response = await manager.readDocuments(
+          'api::common-property.common-property',
+          { ...filters, status: 'draft' },
+          testContext,
+        );
+        assert.equal(draftResponse.status, 200);
+        assert.deepEqual(
+          listStateSchema.parse(await draftResponse.json()),
+          originalDraft,
+        );
+        const publishedResponse: Response = await manager.readDocuments(
+          'api::common-property.common-property',
+          { ...filters, status: 'published' },
+          testContext,
+        );
+        assert.equal(publishedResponse.status, 200);
+        assert.deepEqual(
+          listStateSchema.parse(await publishedResponse.json()),
+          originalPublished,
+        );
+      });
+      test('rejects invalid jwt access', async (testContext: TestContext): Promise<void> => {
+        // given
+        const owner: E2ETestApplicationUser =
+          await manager.registerUser(testContext);
+        const project: string = await manager.createPublishedDocument(
+          'api::project.project',
+          { title: 'Test Project', owner: owner.documentId, collaborators: [] },
+          testContext,
+        );
+        const resource: string = await manager.createPublishedDocument(
+          'api::common-property.common-property',
+          {
+            project,
+            leftLabel: 'Original Label',
+            leftProperty: 'original',
+            rightLabel: 'Other Label',
+            rightProperty: 'other',
+          },
+          testContext,
+        );
+        await manager.loginUser(owner.username, owner.password, testContext);
+        const filters: Record<string, string> = {
+          [`filters[project][documentId][$eq]`]: project,
+          pageSize: '100',
+          sort: 'documentId:asc',
+        };
+        const originalDraftResponse: Response = await manager.readDocuments(
+          'api::common-property.common-property',
+          { ...filters, status: 'draft' },
+          testContext,
+        );
+        assert.equal(originalDraftResponse.status, 200);
+        const originalDraft: z.infer<typeof listStateSchema> =
+          listStateSchema.parse(await originalDraftResponse.json());
+        assert.ok(
+          originalDraft.results.some(
+            (item: { documentId: string }): boolean =>
+              item.documentId === resource,
+          ),
+        );
+        const originalPublishedResponse: Response = await manager.readDocuments(
+          'api::common-property.common-property',
+          { ...filters, status: 'published' },
+          testContext,
+        );
+        assert.equal(originalPublishedResponse.status, 200);
+        const originalPublished: z.infer<typeof listStateSchema> =
+          listStateSchema.parse(await originalPublishedResponse.json());
+
+        // when
+        const response: Response = await fetch(
+          `${manager.apiUrl}/project/${project}/common-property`,
+          {
+            method: 'POST',
+            headers: new Headers([['Authorization', 'Bearer invalid-jwt']]),
+            signal: testContext.signal,
+          },
+        );
+
+        // then
+        assert.equal(response.status, 401);
+        assert.equal(response.headers.get('www-authenticate'), 'Bearer');
+        assert.deepEqual(await response.json(), {
+          statusCode: 401,
+          message: 'Unauthorized',
+        });
+        const draftResponse: Response = await manager.readDocuments(
+          'api::common-property.common-property',
+          { ...filters, status: 'draft' },
+          testContext,
+        );
+        assert.equal(draftResponse.status, 200);
+        assert.deepEqual(
+          listStateSchema.parse(await draftResponse.json()),
+          originalDraft,
+        );
+        const publishedResponse: Response = await manager.readDocuments(
+          'api::common-property.common-property',
+          { ...filters, status: 'published' },
+          testContext,
+        );
+        assert.equal(publishedResponse.status, 200);
+        assert.deepEqual(
+          listStateSchema.parse(await publishedResponse.json()),
+          originalPublished,
+        );
+      });
+    });
+
     describe('403', (): void => {
       test('rejects outsider access', async (testContext: TestContext): Promise<void> => {
         // given
@@ -380,182 +557,6 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
           {
             method: 'POST',
             headers: new Headers([['Authorization', `Bearer ${login.jwt}`]]),
-            signal: testContext.signal,
-          },
-        );
-
-        // then
-        assert.equal(response.status, 403);
-        assert.deepEqual(await response.json(), {
-          statusCode: 403,
-          message: 'Forbidden resource',
-          error: 'Forbidden',
-        });
-        const draftResponse: Response = await manager.readDocuments(
-          'api::common-property.common-property',
-          { ...filters, status: 'draft' },
-          testContext,
-        );
-        assert.equal(draftResponse.status, 200);
-        assert.deepEqual(
-          listStateSchema.parse(await draftResponse.json()),
-          originalDraft,
-        );
-        const publishedResponse: Response = await manager.readDocuments(
-          'api::common-property.common-property',
-          { ...filters, status: 'published' },
-          testContext,
-        );
-        assert.equal(publishedResponse.status, 200);
-        assert.deepEqual(
-          listStateSchema.parse(await publishedResponse.json()),
-          originalPublished,
-        );
-      });
-
-      test('rejects anonymous access', async (testContext: TestContext): Promise<void> => {
-        // given
-        const owner: E2ETestApplicationUser =
-          await manager.registerUser(testContext);
-        const project: string = await manager.createPublishedDocument(
-          'api::project.project',
-          { title: 'Test Project', owner: owner.documentId, collaborators: [] },
-          testContext,
-        );
-        const resource: string = await manager.createPublishedDocument(
-          'api::common-property.common-property',
-          {
-            project,
-            leftLabel: 'Original Label',
-            leftProperty: 'original',
-            rightLabel: 'Other Label',
-            rightProperty: 'other',
-          },
-          testContext,
-        );
-        await manager.loginUser(owner.username, owner.password, testContext);
-        const filters: Record<string, string> = {
-          [`filters[project][documentId][$eq]`]: project,
-          pageSize: '100',
-          sort: 'documentId:asc',
-        };
-        const originalDraftResponse: Response = await manager.readDocuments(
-          'api::common-property.common-property',
-          { ...filters, status: 'draft' },
-          testContext,
-        );
-        assert.equal(originalDraftResponse.status, 200);
-        const originalDraft: z.infer<typeof listStateSchema> =
-          listStateSchema.parse(await originalDraftResponse.json());
-        assert.ok(
-          originalDraft.results.some(
-            (item: { documentId: string }): boolean =>
-              item.documentId === resource,
-          ),
-        );
-        const originalPublishedResponse: Response = await manager.readDocuments(
-          'api::common-property.common-property',
-          { ...filters, status: 'published' },
-          testContext,
-        );
-        assert.equal(originalPublishedResponse.status, 200);
-        const originalPublished: z.infer<typeof listStateSchema> =
-          listStateSchema.parse(await originalPublishedResponse.json());
-
-        // when
-        const response: Response = await fetch(
-          `${manager.apiUrl}/project/${project}/common-property`,
-          {
-            method: 'POST',
-            headers: new Headers([]),
-            signal: testContext.signal,
-          },
-        );
-
-        // then
-        assert.equal(response.status, 403);
-        assert.deepEqual(await response.json(), {
-          statusCode: 403,
-          message: 'Forbidden resource',
-          error: 'Forbidden',
-        });
-        const draftResponse: Response = await manager.readDocuments(
-          'api::common-property.common-property',
-          { ...filters, status: 'draft' },
-          testContext,
-        );
-        assert.equal(draftResponse.status, 200);
-        assert.deepEqual(
-          listStateSchema.parse(await draftResponse.json()),
-          originalDraft,
-        );
-        const publishedResponse: Response = await manager.readDocuments(
-          'api::common-property.common-property',
-          { ...filters, status: 'published' },
-          testContext,
-        );
-        assert.equal(publishedResponse.status, 200);
-        assert.deepEqual(
-          listStateSchema.parse(await publishedResponse.json()),
-          originalPublished,
-        );
-      });
-
-      test('rejects invalid jwt access', async (testContext: TestContext): Promise<void> => {
-        // given
-        const owner: E2ETestApplicationUser =
-          await manager.registerUser(testContext);
-        const project: string = await manager.createPublishedDocument(
-          'api::project.project',
-          { title: 'Test Project', owner: owner.documentId, collaborators: [] },
-          testContext,
-        );
-        const resource: string = await manager.createPublishedDocument(
-          'api::common-property.common-property',
-          {
-            project,
-            leftLabel: 'Original Label',
-            leftProperty: 'original',
-            rightLabel: 'Other Label',
-            rightProperty: 'other',
-          },
-          testContext,
-        );
-        await manager.loginUser(owner.username, owner.password, testContext);
-        const filters: Record<string, string> = {
-          [`filters[project][documentId][$eq]`]: project,
-          pageSize: '100',
-          sort: 'documentId:asc',
-        };
-        const originalDraftResponse: Response = await manager.readDocuments(
-          'api::common-property.common-property',
-          { ...filters, status: 'draft' },
-          testContext,
-        );
-        assert.equal(originalDraftResponse.status, 200);
-        const originalDraft: z.infer<typeof listStateSchema> =
-          listStateSchema.parse(await originalDraftResponse.json());
-        assert.ok(
-          originalDraft.results.some(
-            (item: { documentId: string }): boolean =>
-              item.documentId === resource,
-          ),
-        );
-        const originalPublishedResponse: Response = await manager.readDocuments(
-          'api::common-property.common-property',
-          { ...filters, status: 'published' },
-          testContext,
-        );
-        assert.equal(originalPublishedResponse.status, 200);
-        const originalPublished: z.infer<typeof listStateSchema> =
-          listStateSchema.parse(await originalPublishedResponse.json());
-
-        // when
-        const response: Response = await fetch(
-          `${manager.apiUrl}/project/${project}/common-property`,
-          {
-            method: 'POST',
-            headers: new Headers([['Authorization', 'Bearer invalid-jwt']]),
             signal: testContext.signal,
           },
         );
@@ -1003,7 +1004,7 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
   });
   describe('/:commonPropertyId', (): void => {
     describe('PUT', (): void => {
-      describe('200', (): void => {
+      describe('204', (): void => {
         test('uses the published assignment despite draft reassignment', async (testContext: TestContext): Promise<void> => {
           // given
           const owner: E2ETestApplicationUser =
@@ -1072,7 +1073,7 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
           );
 
           // then
-          assert.equal(response.status, 200);
+          assert.equal(response.status, 204);
           assert.equal(await response.text(), '');
           const projectResponse: Response = await fetch(
             `${manager.apiUrl}/project/${project}`,
@@ -1165,7 +1166,7 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
           );
 
           // then
-          assert.equal(response.status, 200);
+          assert.equal(response.status, 204);
           assert.equal(await response.text(), '');
           const projectResponse: Response = await fetch(
             `${manager.apiUrl}/project/${project}`,
@@ -1254,7 +1255,7 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
           );
 
           // then
-          assert.equal(response.status, 200);
+          assert.equal(response.status, 204);
           assert.equal(await response.text(), '');
           const projectResponse: Response = await fetch(
             `${manager.apiUrl}/project/${project}`,
@@ -1352,7 +1353,7 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
           );
 
           // then
-          assert.equal(response.status, 200);
+          assert.equal(response.status, 204);
           assert.equal(await response.text(), '');
           const projectResponse: Response = await fetch(
             `${manager.apiUrl}/project/${project}`,
@@ -1433,7 +1434,7 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
           );
 
           // then
-          assert.equal(response.status, 200);
+          assert.equal(response.status, 204);
           assert.equal(await response.text(), '');
           const projectResponse: Response = await fetch(
             `${manager.apiUrl}/project/${project}`,
@@ -1518,7 +1519,7 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
           );
 
           // then
-          assert.equal(response.status, 200);
+          assert.equal(response.status, 204);
           assert.equal(await response.text(), '');
           const projectResponse: Response = await fetch(
             `${manager.apiUrl}/project/${project}`,
@@ -1596,7 +1597,7 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
           );
 
           // then
-          assert.equal(response.status, 200);
+          assert.equal(response.status, 204);
           assert.equal(await response.text(), '');
           const projectResponse: Response = await fetch(
             `${manager.apiUrl}/project/${project}`,
@@ -3943,118 +3944,7 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
           );
         });
       });
-      describe('403', (): void => {
-        test('rejects outsider access', async (testContext: TestContext): Promise<void> => {
-          // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const outsider: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
-          const resource: string = await manager.createPublishedDocument(
-            'api::common-property.common-property',
-            {
-              project,
-              leftLabel: 'Original Label',
-              leftProperty: 'original',
-              rightLabel: 'Other Label',
-              rightProperty: 'other',
-            },
-            testContext,
-          );
-          await manager.loginUser(owner.username, owner.password, testContext);
-          const login: PostAuthResponseBodyDto = await manager.loginUser(
-            outsider.username,
-            outsider.password,
-            testContext,
-          );
-          const filters: Record<string, string> = {
-            [`filters[project][documentId][$eq]`]: project,
-            pageSize: '100',
-            sort: 'documentId:asc',
-          };
-          const originalDraftResponse: Response = await manager.readDocuments(
-            'api::common-property.common-property',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(originalDraftResponse.status, 200);
-          const originalDraft: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalDraftResponse.json());
-          assert.ok(
-            originalDraft.results.some(
-              (item: { documentId: string }): boolean =>
-                item.documentId === resource,
-            ),
-          );
-          const originalPublishedResponse: Response =
-            await manager.readDocuments(
-              'api::common-property.common-property',
-              { ...filters, status: 'published' },
-              testContext,
-            );
-          assert.equal(originalPublishedResponse.status, 200);
-          const originalPublished: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalPublishedResponse.json());
-
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/common-property/${resource}`,
-            {
-              method: 'PUT',
-              headers: new Headers([
-                ['Authorization', `Bearer ${login.jwt}`],
-                ['Content-Type', 'application/json'],
-              ]),
-              body: JSON.stringify({
-                leftLabel: 'Person',
-                leftProperty: 'name',
-                rightLabel: 'Human',
-                rightProperty: 'label',
-                leftDatabaseId: '',
-                rightDatabaseId: '',
-              } satisfies UpdateCommonPropertyRequestBodyDto),
-              signal: testContext.signal,
-            },
-          );
-
-          // then
-          assert.equal(response.status, 403);
-          assert.deepEqual(await response.json(), {
-            statusCode: 403,
-            message: 'Forbidden resource',
-            error: 'Forbidden',
-          });
-          const draftResponse: Response = await manager.readDocuments(
-            'api::common-property.common-property',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(draftResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await draftResponse.json()),
-            originalDraft,
-          );
-          const publishedResponse: Response = await manager.readDocuments(
-            'api::common-property.common-property',
-            { ...filters, status: 'published' },
-            testContext,
-          );
-          assert.equal(publishedResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await publishedResponse.json()),
-            originalPublished,
-          );
-        });
-
+      describe('401', (): void => {
         test('rejects anonymous access', async (testContext: TestContext): Promise<void> => {
           // given
           const owner: E2ETestApplicationUser =
@@ -4128,11 +4018,11 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
           );
 
           // then
-          assert.equal(response.status, 403);
+          assert.equal(response.status, 401);
+          assert.equal(response.headers.get('www-authenticate'), 'Bearer');
           assert.deepEqual(await response.json(), {
-            statusCode: 403,
-            message: 'Forbidden resource',
-            error: 'Forbidden',
+            statusCode: 401,
+            message: 'Unauthorized',
           });
           const draftResponse: Response = await manager.readDocuments(
             'api::common-property.common-property',
@@ -4155,7 +4045,6 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
             originalPublished,
           );
         });
-
         test('rejects invalid jwt access', async (testContext: TestContext): Promise<void> => {
           // given
           const owner: E2ETestApplicationUser =
@@ -4217,6 +4106,119 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
               method: 'PUT',
               headers: new Headers([
                 ['Authorization', 'Bearer invalid-jwt'],
+                ['Content-Type', 'application/json'],
+              ]),
+              body: JSON.stringify({
+                leftLabel: 'Person',
+                leftProperty: 'name',
+                rightLabel: 'Human',
+                rightProperty: 'label',
+                leftDatabaseId: '',
+                rightDatabaseId: '',
+              } satisfies UpdateCommonPropertyRequestBodyDto),
+              signal: testContext.signal,
+            },
+          );
+
+          // then
+          assert.equal(response.status, 401);
+          assert.equal(response.headers.get('www-authenticate'), 'Bearer');
+          assert.deepEqual(await response.json(), {
+            statusCode: 401,
+            message: 'Unauthorized',
+          });
+          const draftResponse: Response = await manager.readDocuments(
+            'api::common-property.common-property',
+            { ...filters, status: 'draft' },
+            testContext,
+          );
+          assert.equal(draftResponse.status, 200);
+          assert.deepEqual(
+            listStateSchema.parse(await draftResponse.json()),
+            originalDraft,
+          );
+          const publishedResponse: Response = await manager.readDocuments(
+            'api::common-property.common-property',
+            { ...filters, status: 'published' },
+            testContext,
+          );
+          assert.equal(publishedResponse.status, 200);
+          assert.deepEqual(
+            listStateSchema.parse(await publishedResponse.json()),
+            originalPublished,
+          );
+        });
+      });
+
+      describe('403', (): void => {
+        test('rejects outsider access', async (testContext: TestContext): Promise<void> => {
+          // given
+          const owner: E2ETestApplicationUser =
+            await manager.registerUser(testContext);
+          const outsider: E2ETestApplicationUser =
+            await manager.registerUser(testContext);
+          const project: string = await manager.createPublishedDocument(
+            'api::project.project',
+            {
+              title: 'Test Project',
+              owner: owner.documentId,
+              collaborators: [],
+            },
+            testContext,
+          );
+          const resource: string = await manager.createPublishedDocument(
+            'api::common-property.common-property',
+            {
+              project,
+              leftLabel: 'Original Label',
+              leftProperty: 'original',
+              rightLabel: 'Other Label',
+              rightProperty: 'other',
+            },
+            testContext,
+          );
+          await manager.loginUser(owner.username, owner.password, testContext);
+          const login: PostAuthResponseBodyDto = await manager.loginUser(
+            outsider.username,
+            outsider.password,
+            testContext,
+          );
+          const filters: Record<string, string> = {
+            [`filters[project][documentId][$eq]`]: project,
+            pageSize: '100',
+            sort: 'documentId:asc',
+          };
+          const originalDraftResponse: Response = await manager.readDocuments(
+            'api::common-property.common-property',
+            { ...filters, status: 'draft' },
+            testContext,
+          );
+          assert.equal(originalDraftResponse.status, 200);
+          const originalDraft: z.infer<typeof listStateSchema> =
+            listStateSchema.parse(await originalDraftResponse.json());
+          assert.ok(
+            originalDraft.results.some(
+              (item: { documentId: string }): boolean =>
+                item.documentId === resource,
+            ),
+          );
+          const originalPublishedResponse: Response =
+            await manager.readDocuments(
+              'api::common-property.common-property',
+              { ...filters, status: 'published' },
+              testContext,
+            );
+          assert.equal(originalPublishedResponse.status, 200);
+          const originalPublished: z.infer<typeof listStateSchema> =
+            listStateSchema.parse(await originalPublishedResponse.json());
+
+          // when
+          const response: Response = await fetch(
+            `${manager.apiUrl}/project/${project}/common-property/${resource}`,
+            {
+              method: 'PUT',
+              headers: new Headers([
+                ['Authorization', `Bearer ${login.jwt}`],
                 ['Content-Type', 'application/json'],
               ]),
               body: JSON.stringify({
@@ -5789,7 +5791,7 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
       });
     });
     describe('DELETE', (): void => {
-      describe('200', (): void => {
+      describe('204', (): void => {
         test('uses the published assignment despite draft reassignment', async (testContext: TestContext): Promise<void> => {
           // given
           const owner: E2ETestApplicationUser =
@@ -5849,7 +5851,7 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
           );
 
           // then
-          assert.equal(response.status, 200);
+          assert.equal(response.status, 204);
           assert.equal(await response.text(), '');
           const projectResponse: Response = await fetch(
             `${manager.apiUrl}/project/${project}`,
@@ -5947,7 +5949,7 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
           );
 
           // then
-          assert.equal(response.status, 200);
+          assert.equal(response.status, 204);
           assert.equal(await response.text(), '');
           const projectResponse: Response = await fetch(
             `${manager.apiUrl}/project/${project}`,
@@ -6040,7 +6042,7 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
           );
 
           // then
-          assert.equal(response.status, 200);
+          assert.equal(response.status, 204);
           assert.equal(await response.text(), '');
           const projectResponse: Response = await fetch(
             `${manager.apiUrl}/project/${project}`,
@@ -6114,7 +6116,7 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
           );
 
           // then
-          assert.equal(response.status, 200);
+          assert.equal(response.status, 204);
           assert.equal(await response.text(), '');
           const projectResponse: Response = await fetch(
             `${manager.apiUrl}/project/${project}`,
@@ -6192,7 +6194,7 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
           );
 
           // then
-          assert.equal(response.status, 200);
+          assert.equal(response.status, 204);
           assert.equal(await response.text(), '');
           const projectResponse: Response = await fetch(
             `${manager.apiUrl}/project/${project}`,
@@ -6222,6 +6224,193 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
           assert.equal(stored.status, 404);
         });
       });
+      describe('401', (): void => {
+        test('rejects anonymous access', async (testContext: TestContext): Promise<void> => {
+          // given
+          const owner: E2ETestApplicationUser =
+            await manager.registerUser(testContext);
+          const project: string = await manager.createPublishedDocument(
+            'api::project.project',
+            {
+              title: 'Test Project',
+              owner: owner.documentId,
+              collaborators: [],
+            },
+            testContext,
+          );
+          const resource: string = await manager.createPublishedDocument(
+            'api::common-property.common-property',
+            {
+              project,
+              leftLabel: 'Original Label',
+              leftProperty: 'original',
+              rightLabel: 'Other Label',
+              rightProperty: 'other',
+            },
+            testContext,
+          );
+          await manager.loginUser(owner.username, owner.password, testContext);
+          const filters: Record<string, string> = {
+            [`filters[project][documentId][$eq]`]: project,
+            pageSize: '100',
+            sort: 'documentId:asc',
+          };
+          const originalDraftResponse: Response = await manager.readDocuments(
+            'api::common-property.common-property',
+            { ...filters, status: 'draft' },
+            testContext,
+          );
+          assert.equal(originalDraftResponse.status, 200);
+          const originalDraft: z.infer<typeof listStateSchema> =
+            listStateSchema.parse(await originalDraftResponse.json());
+          assert.ok(
+            originalDraft.results.some(
+              (item: { documentId: string }): boolean =>
+                item.documentId === resource,
+            ),
+          );
+          const originalPublishedResponse: Response =
+            await manager.readDocuments(
+              'api::common-property.common-property',
+              { ...filters, status: 'published' },
+              testContext,
+            );
+          assert.equal(originalPublishedResponse.status, 200);
+          const originalPublished: z.infer<typeof listStateSchema> =
+            listStateSchema.parse(await originalPublishedResponse.json());
+
+          // when
+          const response: Response = await fetch(
+            `${manager.apiUrl}/project/${project}/common-property/${resource}`,
+            {
+              method: 'DELETE',
+              headers: new Headers([]),
+              signal: testContext.signal,
+            },
+          );
+
+          // then
+          assert.equal(response.status, 401);
+          assert.equal(response.headers.get('www-authenticate'), 'Bearer');
+          assert.deepEqual(await response.json(), {
+            statusCode: 401,
+            message: 'Unauthorized',
+          });
+          const draftResponse: Response = await manager.readDocuments(
+            'api::common-property.common-property',
+            { ...filters, status: 'draft' },
+            testContext,
+          );
+          assert.equal(draftResponse.status, 200);
+          assert.deepEqual(
+            listStateSchema.parse(await draftResponse.json()),
+            originalDraft,
+          );
+          const publishedResponse: Response = await manager.readDocuments(
+            'api::common-property.common-property',
+            { ...filters, status: 'published' },
+            testContext,
+          );
+          assert.equal(publishedResponse.status, 200);
+          assert.deepEqual(
+            listStateSchema.parse(await publishedResponse.json()),
+            originalPublished,
+          );
+        });
+        test('rejects invalid jwt access', async (testContext: TestContext): Promise<void> => {
+          // given
+          const owner: E2ETestApplicationUser =
+            await manager.registerUser(testContext);
+          const project: string = await manager.createPublishedDocument(
+            'api::project.project',
+            {
+              title: 'Test Project',
+              owner: owner.documentId,
+              collaborators: [],
+            },
+            testContext,
+          );
+          const resource: string = await manager.createPublishedDocument(
+            'api::common-property.common-property',
+            {
+              project,
+              leftLabel: 'Original Label',
+              leftProperty: 'original',
+              rightLabel: 'Other Label',
+              rightProperty: 'other',
+            },
+            testContext,
+          );
+          await manager.loginUser(owner.username, owner.password, testContext);
+          const filters: Record<string, string> = {
+            [`filters[project][documentId][$eq]`]: project,
+            pageSize: '100',
+            sort: 'documentId:asc',
+          };
+          const originalDraftResponse: Response = await manager.readDocuments(
+            'api::common-property.common-property',
+            { ...filters, status: 'draft' },
+            testContext,
+          );
+          assert.equal(originalDraftResponse.status, 200);
+          const originalDraft: z.infer<typeof listStateSchema> =
+            listStateSchema.parse(await originalDraftResponse.json());
+          assert.ok(
+            originalDraft.results.some(
+              (item: { documentId: string }): boolean =>
+                item.documentId === resource,
+            ),
+          );
+          const originalPublishedResponse: Response =
+            await manager.readDocuments(
+              'api::common-property.common-property',
+              { ...filters, status: 'published' },
+              testContext,
+            );
+          assert.equal(originalPublishedResponse.status, 200);
+          const originalPublished: z.infer<typeof listStateSchema> =
+            listStateSchema.parse(await originalPublishedResponse.json());
+
+          // when
+          const response: Response = await fetch(
+            `${manager.apiUrl}/project/${project}/common-property/${resource}`,
+            {
+              method: 'DELETE',
+              headers: new Headers([['Authorization', 'Bearer invalid-jwt']]),
+              signal: testContext.signal,
+            },
+          );
+
+          // then
+          assert.equal(response.status, 401);
+          assert.equal(response.headers.get('www-authenticate'), 'Bearer');
+          assert.deepEqual(await response.json(), {
+            statusCode: 401,
+            message: 'Unauthorized',
+          });
+          const draftResponse: Response = await manager.readDocuments(
+            'api::common-property.common-property',
+            { ...filters, status: 'draft' },
+            testContext,
+          );
+          assert.equal(draftResponse.status, 200);
+          assert.deepEqual(
+            listStateSchema.parse(await draftResponse.json()),
+            originalDraft,
+          );
+          const publishedResponse: Response = await manager.readDocuments(
+            'api::common-property.common-property',
+            { ...filters, status: 'published' },
+            testContext,
+          );
+          assert.equal(publishedResponse.status, 200);
+          assert.deepEqual(
+            listStateSchema.parse(await publishedResponse.json()),
+            originalPublished,
+          );
+        });
+      });
+
       describe('403', (): void => {
         test('rejects outsider access', async (testContext: TestContext): Promise<void> => {
           // given
@@ -6290,192 +6479,6 @@ describe('/project/:projectId/common-property', (suiteContext: SuiteContext): vo
             {
               method: 'DELETE',
               headers: new Headers([['Authorization', `Bearer ${login.jwt}`]]),
-              signal: testContext.signal,
-            },
-          );
-
-          // then
-          assert.equal(response.status, 403);
-          assert.deepEqual(await response.json(), {
-            statusCode: 403,
-            message: 'Forbidden resource',
-            error: 'Forbidden',
-          });
-          const draftResponse: Response = await manager.readDocuments(
-            'api::common-property.common-property',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(draftResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await draftResponse.json()),
-            originalDraft,
-          );
-          const publishedResponse: Response = await manager.readDocuments(
-            'api::common-property.common-property',
-            { ...filters, status: 'published' },
-            testContext,
-          );
-          assert.equal(publishedResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await publishedResponse.json()),
-            originalPublished,
-          );
-        });
-
-        test('rejects anonymous access', async (testContext: TestContext): Promise<void> => {
-          // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
-          const resource: string = await manager.createPublishedDocument(
-            'api::common-property.common-property',
-            {
-              project,
-              leftLabel: 'Original Label',
-              leftProperty: 'original',
-              rightLabel: 'Other Label',
-              rightProperty: 'other',
-            },
-            testContext,
-          );
-          await manager.loginUser(owner.username, owner.password, testContext);
-          const filters: Record<string, string> = {
-            [`filters[project][documentId][$eq]`]: project,
-            pageSize: '100',
-            sort: 'documentId:asc',
-          };
-          const originalDraftResponse: Response = await manager.readDocuments(
-            'api::common-property.common-property',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(originalDraftResponse.status, 200);
-          const originalDraft: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalDraftResponse.json());
-          assert.ok(
-            originalDraft.results.some(
-              (item: { documentId: string }): boolean =>
-                item.documentId === resource,
-            ),
-          );
-          const originalPublishedResponse: Response =
-            await manager.readDocuments(
-              'api::common-property.common-property',
-              { ...filters, status: 'published' },
-              testContext,
-            );
-          assert.equal(originalPublishedResponse.status, 200);
-          const originalPublished: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalPublishedResponse.json());
-
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/common-property/${resource}`,
-            {
-              method: 'DELETE',
-              headers: new Headers([]),
-              signal: testContext.signal,
-            },
-          );
-
-          // then
-          assert.equal(response.status, 403);
-          assert.deepEqual(await response.json(), {
-            statusCode: 403,
-            message: 'Forbidden resource',
-            error: 'Forbidden',
-          });
-          const draftResponse: Response = await manager.readDocuments(
-            'api::common-property.common-property',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(draftResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await draftResponse.json()),
-            originalDraft,
-          );
-          const publishedResponse: Response = await manager.readDocuments(
-            'api::common-property.common-property',
-            { ...filters, status: 'published' },
-            testContext,
-          );
-          assert.equal(publishedResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await publishedResponse.json()),
-            originalPublished,
-          );
-        });
-
-        test('rejects invalid jwt access', async (testContext: TestContext): Promise<void> => {
-          // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
-          const resource: string = await manager.createPublishedDocument(
-            'api::common-property.common-property',
-            {
-              project,
-              leftLabel: 'Original Label',
-              leftProperty: 'original',
-              rightLabel: 'Other Label',
-              rightProperty: 'other',
-            },
-            testContext,
-          );
-          await manager.loginUser(owner.username, owner.password, testContext);
-          const filters: Record<string, string> = {
-            [`filters[project][documentId][$eq]`]: project,
-            pageSize: '100',
-            sort: 'documentId:asc',
-          };
-          const originalDraftResponse: Response = await manager.readDocuments(
-            'api::common-property.common-property',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(originalDraftResponse.status, 200);
-          const originalDraft: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalDraftResponse.json());
-          assert.ok(
-            originalDraft.results.some(
-              (item: { documentId: string }): boolean =>
-                item.documentId === resource,
-            ),
-          );
-          const originalPublishedResponse: Response =
-            await manager.readDocuments(
-              'api::common-property.common-property',
-              { ...filters, status: 'published' },
-              testContext,
-            );
-          assert.equal(originalPublishedResponse.status, 200);
-          const originalPublished: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalPublishedResponse.json());
-
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/common-property/${resource}`,
-            {
-              method: 'DELETE',
-              headers: new Headers([['Authorization', 'Bearer invalid-jwt']]),
               signal: testContext.signal,
             },
           );

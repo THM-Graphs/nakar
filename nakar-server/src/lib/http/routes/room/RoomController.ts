@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Delete,
+  HttpCode,
   ForbiddenException,
   Get,
   NotFoundException,
@@ -133,6 +134,7 @@ export class RoomController {
   }
 
   @Delete(':roomId')
+  @HttpCode(204)
   @UseGuards(RoomBelongsToProject)
   public async deleteRoom(@Param('roomId') roomId: string): Promise<void> {
     const deleted: boolean = await this._databaseService.deleteRoom(roomId);
