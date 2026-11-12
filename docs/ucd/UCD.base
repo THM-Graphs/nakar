@@ -1,5 +1,5 @@
 formulas:
-  Untitled: file.folder.slice(45).replace("/", " → ")
+  Untitled: file.folder.split("/").slice(-2).join(" → ")
 properties:
   formula.Untitled:
     displayName: Epic
@@ -11,7 +11,7 @@ views:
     filters:
       and:
         - Hidden != true
-        - file.inFolder("docs/ucd/User Stories")
+        - file.inFolder(this.file.folder + "/User Stories")
     groupBy:
       property: formula.Untitled
       direction: ASC
@@ -32,9 +32,7 @@ views:
       - property: Epic
         direction: ASC
     columnSize:
-      note.Priority: 56
-      note.Implemented: 43
-      note.Description: 477
+      note.description: 1136
       note.Notes: 337
     cardSize: 280
     imageAspectRatio: 1
@@ -45,7 +43,7 @@ views:
     name: Personas
     filters:
       and:
-        - file.inFolder("docs/ucd/Personas")
+        - file.inFolder(this.file.folder + "/Personas")
     order:
       - file.name
       - Common roles
@@ -58,14 +56,17 @@ views:
     name: Roles
     filters:
       and:
-        - file.inFolder("docs/ucd/Roles")
+        - file.inFolder(this.file.folder + "/Roles")
   - type: table
     name: Unimplemented User Stories
     filters:
       and:
-        - file.folder.startsWith("docs/ucd/User Stories")
+        - file.inFolder(this.file.folder + "/User Stories")
         - Implemented == false
         - Hidden != true
+    groupBy:
+      property: formula.Untitled
+      direction: ASC
     order:
       - file.name
       - Implemented
@@ -76,9 +77,9 @@ views:
       - property: Priority
         direction: DESC
     columnSize:
-      file.name: 258
-      note.Implemented: 52
-      note.Priority: 56
-      note.Description: 531
+      file.name: 348
+      note.Implemented: 124
+      note.Priority: 103
+      note.description: 1136
       note.Notes: 445
     rowHeight: medium
