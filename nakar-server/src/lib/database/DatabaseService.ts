@@ -550,7 +550,7 @@ export class DatabaseService {
     author: Modules.Documents.Result<'plugin::users-permissions.user'> | null;
     nodes: string[];
     content: string;
-  }): Promise<void> {
+  }): Promise<Modules.Documents.Result<'api::note.note'>> {
     const newNote: Modules.Documents.Result<'api::note.note'> = await strapi
       .documents('api::note.note')
       .create({
@@ -574,6 +574,7 @@ export class DatabaseService {
         status: 'published',
       });
     }
+    return newNote;
   }
 
   public async updateNote(
@@ -582,9 +583,30 @@ export class DatabaseService {
       content: string;
     },
   ): Promise<void> {
+    const published: Modules.Documents.Result<
+      'api::note.note',
+      { populate: ['project', 'author', 'nodes'] }
+    > | null = await strapi.documents('api::note.note').findOne({
+      documentId: note.documentId,
+      status: 'published',
+      populate: ['project', 'author', 'nodes'],
+    });
+    if (published == null) {
+      throw new Error(`Note ${note.documentId} not found.`);
+    }
     await strapi.documents('api::note.note').update({
       documentId: note.documentId,
-      data: { content: params.content },
+      data: {
+        content: params.content,
+        project: published.project?.documentId ?? null,
+        author: published.author?.documentId ?? null,
+        nodes:
+          published.nodes?.map(
+            (
+              node: Modules.Documents.Result<'api::node-reference.node-reference'>,
+            ): string => node.documentId,
+          ) ?? [],
+      },
       status: 'published',
     });
   }

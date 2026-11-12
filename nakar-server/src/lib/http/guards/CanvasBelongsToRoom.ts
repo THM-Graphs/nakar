@@ -24,6 +24,7 @@ export class CanvasBelongsToRoom implements CanActivate {
     const canvas: Modules.Documents.Result<'api::canvas.canvas'> | null =
       await strapi.documents('api::canvas.canvas').findFirst({
         filters: { documentId: canvasId, room: { documentId: roomId } },
+        status: 'published',
       });
     if (canvas == null) {
       throw new NotFoundException();

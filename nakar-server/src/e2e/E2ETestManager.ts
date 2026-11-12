@@ -1,3 +1,5 @@
+import { RoomVisibilityDto } from '../lib/schema/dtos/RoomVisibilityDto';
+import type { CanvasDto } from '../lib/schema/dtos/CanvasDto';
 import { E2ESparqlServer } from './E2ESparqlServer';
 import { E2ETestApplicationUser } from './E2ETestApplicationUser';
 import type { PostAuthResponseBodyDto } from '../lib/http/routes/auth/dto/PostAuthResponseBodyDto';
@@ -17,6 +19,12 @@ import { E2ETestApplicationContext } from './E2ETestApplicationContext';
 import { E2ETestApplicationAdmin } from './E2ETestApplicationAdmin';
 import z from 'zod';
 import type { KeyConfig } from '../packages/encryption/KeyConfig';
+
+export interface E2ETestCanvas {
+  projectId: string;
+  roomId: string;
+  canvasId: string;
+}
 
 interface E2ETestApplicationPorts {
   strapiPort: number;
@@ -357,6 +365,9 @@ export class E2ETestManager {
 
   public async createPublishedDocument(
     model:
+      | 'api::canvas.canvas'
+      | 'api::note.note'
+      | 'api::node-reference.node-reference'
       | 'api::project.project'
       | 'api::room.room'
       | 'api::scenario-group.scenario-group'
@@ -382,6 +393,51 @@ export class E2ETestManager {
       .object({ data: z.object({ documentId: z.string().min(1) }) })
       .parse(json);
     return body.data.documentId;
+  }
+
+  public async createCanvas(
+    owner: E2ETestApplicationUser,
+    testContext: TestContext,
+    visibility: RoomVisibilityDto = RoomVisibilityDto.private,
+    collaborators: string[] = [],
+  ): Promise<E2ETestCanvas> {
+    const projectId: string = await this.createPublishedDocument(
+      'api::project.project',
+      { title: 'Canvas Project', owner: owner.documentId, collaborators },
+      testContext,
+    );
+    const roomId: string = await this.createPublishedDocument(
+      'api::room.room',
+      { title: 'Canvas Room', visibility, project: projectId },
+      testContext,
+    );
+    const canvasId: string = await this.createPublishedDocument(
+      'api::canvas.canvas',
+      { title: 'Test Canvas', room: roomId },
+      testContext,
+    );
+    return { projectId, roomId, canvasId };
+  }
+
+  public async startCanvas(
+    canvas: E2ETestCanvas,
+    jwt: string,
+    testContext: TestContext,
+  ): Promise<void> {
+    // This action waits behind bootstrap and any queued node loads.
+    const response: Response = await fetch(
+      `${this.apiUrl}/room/${canvas.roomId}/canvas/${canvas.canvasId}/action/create-canvas`,
+      {
+        method: 'POST',
+        headers: new Headers([['Authorization', `Bearer ${jwt}`]]),
+        signal: testContext.signal,
+      },
+    );
+    assert.equal(response.status, 200);
+    const body: CanvasDto = z
+      .strictObject({ id: z.string().min(1), title: z.string() })
+      .parse(await response.json());
+    assert.notEqual(body.id, canvas.canvasId);
   }
 
   private async _requestDocument(

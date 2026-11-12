@@ -19,9 +19,6 @@ export class DatabaseBelongsToCanvas implements CanActivate {
     if (typeof databaseId !== 'string') {
       throw new NotFoundException(`No database connection id provided.`);
     }
-    const database: Modules.Documents.Result<'api::database-connection.database-connection'> =
-      await this._databaseService.getDatabase(databaseId);
-
     const canvasId: unknown = req.params['canvasId'];
     if (typeof canvasId !== 'string') {
       throw new NotFoundException(`No canvas id provided.`);
@@ -37,7 +34,7 @@ export class DatabaseBelongsToCanvas implements CanActivate {
         .findFirst({
           status: 'published',
           filters: {
-            documentId: database.documentId,
+            documentId: databaseId,
             project: { documentId: project.documentId },
           },
         });

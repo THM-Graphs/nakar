@@ -1,3 +1,5 @@
+import type { Response } from 'express';
+import { Unauthorized } from 'http-errors';
 import {
   CanActivate,
   ExecutionContext,
@@ -28,8 +30,17 @@ export class UserCanAccessRoom implements CanActivate {
       throw new NotFoundException(`No room id provided.`);
     }
 
-    const room: Modules.Documents.Result<'api::room.room'> =
-      await this._databaseService.getRoom(roomId);
+    const room: Modules.Documents.Result<
+      'api::room.room',
+      { populate: ['project'] }
+    > | null = await strapi.documents('api::room.room').findOne({
+      documentId: roomId,
+      status: 'published',
+      populate: ['project'],
+    });
+    if (room?.project == null) {
+      throw new NotFoundException();
+    }
 
     const allowed: boolean = await userCanSeeAndJoinRoom(
       user,
@@ -37,6 +48,13 @@ export class UserCanAccessRoom implements CanActivate {
       this._databaseService,
     );
 
+    if (!allowed && user == null) {
+      context
+        .switchToHttp()
+        .getResponse<Response>()
+        .setHeader('WWW-Authenticate', 'Bearer');
+      throw new Unauthorized();
+    }
     return allowed;
   }
 }

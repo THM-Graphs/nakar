@@ -19,9 +19,6 @@ export class NoteBelongsToCanvas implements CanActivate {
     if (typeof noteId !== 'string') {
       throw new NotFoundException(`No note id provided.`);
     }
-    const note: Modules.Documents.Result<'api::note.note'> =
-      await this._databaseService.getNote(noteId);
-
     const canvasId: unknown = req.params['canvasId'];
     if (typeof canvasId !== 'string') {
       throw new NotFoundException(`No canvas id provided.`);
@@ -36,7 +33,7 @@ export class NoteBelongsToCanvas implements CanActivate {
       await strapi.documents('api::note.note').findFirst({
         status: 'published',
         filters: {
-          documentId: note.documentId,
+          documentId: noteId,
           project: { documentId: projectOfRoom.documentId },
         },
       });
