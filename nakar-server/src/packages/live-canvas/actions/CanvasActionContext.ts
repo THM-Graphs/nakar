@@ -1,0 +1,133 @@
+import { ForbiddenError } from '../error/ForbiddenError';
+import type { CanvasData } from '../data/CanvasData';
+import type { QueryResult } from '../data/QueryResult';
+import type { RoomData } from '../data/RoomData';
+import type { CanvasDelegates } from '../delegates/CanvasDelegates';
+import type { GraphRequest } from '../delegates/GraphRequest';
+import { CanvasGraph } from '../graph/CanvasGraph';
+import { CanvasViewSettings } from '../view-settings/CanvasViewSettings';
+import type { NodeData } from '../data/NodeData';
+import type { Position } from '../data/Position';
+
+/**
+ * Holds one isolated action draft. LiveCanvas publishes the draft only after successful execution and postprocessing.
+ */
+export class CanvasActionContext {
+  /**
+   * Graph model referencing the isolated draft.
+   */
+  public readonly graph: CanvasGraph;
+
+  /**
+   * Returned element counts for source operations that reached a limit.
+   */
+  public readonly limits: number[] = [];
+
+  /**
+   * Optional canvas title proposed by this action.
+   */
+  public title: string | null = null;
+
+  /**
+   * Validated visualization model for the current draft.
+   */
+  public settings: CanvasViewSettings;
+  /** Original node positions and locks used to distinguish action edits from incoming physics. */
+  private readonly _originalNodes: NodeData[];
+
+  /**
+   * References an isolated canvas draft and its delegates.
+   * @param data - Data object or snapshot used to initialize the operation.
+   * @param room - Current room access and project membership data.
+   * @param delegates - Host implementations of the external canvas boundaries.
+   * @param grabbedNodeIds - Node identities temporarily held by user sessions.
+   * @param _liveNodes - Referenced live nodes whose positions may change while this draft awaits delegates.
+   */
+  public constructor(
+    public readonly data: CanvasData,
+    public readonly room: RoomData,
+    public readonly delegates: CanvasDelegates,
+    public readonly grabbedNodeIds: readonly string[] = [],
+    private readonly _liveNodes: readonly NodeData[] = [],
+  ) {
+    this._originalNodes = structuredClone(data.graph.nodes);
+    this.graph = new CanvasGraph(data.graph);
+    this.settings = new CanvasViewSettings(data.viewSettings);
+  }
+
+  /**
+   * Returns a detached current live position, falling back to the draft for nodes without a live reference.
+   * @param nodeId - Canonical identity of the origin node.
+   * @returns The latest position available to this action.
+   * @throws {@link error/NotFoundError!NotFoundError | NotFoundError} When the node is absent from both the live references and the draft.
+   */
+  public getPosition(nodeId: string): Position {
+    const node: NodeData | undefined = this._liveNodes.find(
+      (entry: NodeData): boolean => entry.id === nodeId,
+    );
+    return {
+      ...(node?.position ?? this.graph.getNode(nodeId).toData().position),
+    };
+  }
+
+  /**
+   * Checks source membership and delegates a detached normalized graph request.
+   * @param sourceId - Identity of the graph source used for the operation.
+   * @param request - Normalized operation forwarded to the source.
+   * @returns The normalized graph-source result after the membership check succeeds.
+   * @throws {@link error/CanvasError!CanvasError | CanvasError} When the input, lifecycle state or permissions do not satisfy this operation’s requirements.
+   */
+  public async request(
+    sourceId: string,
+    request: GraphRequest,
+  ): Promise<QueryResult> {
+    if (!this.room.sourceIds.includes(sourceId)) {
+      throw new ForbiddenError('Graph source does not belong to the project.');
+    }
+    return await this.delegates.source.execute(
+      sourceId,
+      structuredClone(request),
+    );
+  }
+
+  /**
+   * Validates view settings and returns the completed draft snapshot.
+   * @returns A detached graph and visualization snapshot of the validated draft.
+   */
+  public finish(): CanvasData {
+    this.settings.validate();
+    return { graph: this.graph.toData(), viewSettings: this.settings.toData() };
+  }
+
+  /**
+   * Preserves newer physics positions for unchanged nodes and live positions and locks for nodes touched by interactions.
+   * @param nodes - Current canvas nodes after asynchronous delegate work.
+   * @param interactedNodeIds - Nodes grabbed, moved or released since this draft was created; their live state takes precedence over draft edits.
+   */
+  public preservePositions(
+    nodes: readonly NodeData[],
+    interactedNodeIds: readonly string[] = [],
+  ): void {
+    for (const node of this.data.graph.nodes) {
+      const original: NodeData | undefined = this._originalNodes.find(
+        (entry: NodeData): boolean => entry.id === node.id,
+      );
+      const current: NodeData | undefined = nodes.find(
+        (entry: NodeData): boolean => entry.id === node.id,
+      );
+      if (original === undefined || current === undefined) {
+        continue;
+      }
+      if (interactedNodeIds.includes(node.id)) {
+        node.position = { ...current.position };
+        node.locked = current.locked;
+      } else if (
+        node.position.x === original.position.x &&
+        node.position.y === original.position.y &&
+        node.locked === original.locked
+      ) {
+        node.position = { ...current.position };
+      }
+    }
+  }
+}

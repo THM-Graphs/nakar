@@ -1,0 +1,12 @@
+{
+  "$schema": "https://typedoc.org/schema.json",
+  "name": "Live Canvas",
+  "entryPoints": ["src/packages/live-canvas"],
+  "entryPointStrategy": "expand",
+  "basePath": "src/packages/live-canvas",
+  "tsconfig": "tsconfig.json",
+  "readme": "src/packages/live-canvas/README.md",
+  "exclude": ["**/*.test.ts", "**/testing/**"],
+  "excludePrivate": false,
+  "out": "docs"
+}
