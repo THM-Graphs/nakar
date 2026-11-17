@@ -1,10 +1,12 @@
 ---
-Description: As a 🛠️ KG Builder, I want to define which property is used for the node's title.
+Description: I want to define which property is used for the node's title.
 Priority: ❕
 Implemented: false
 Roles:
   - "[[👔 Owner]]"
   - "[[🧑‍💻 Collaborator]]"
+Persona:
+  - "[[🛠️ KG Builder]]"
 ---
 
 ## Acceptance criteria

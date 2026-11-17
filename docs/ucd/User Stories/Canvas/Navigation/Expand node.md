@@ -1,12 +1,14 @@
 ---
 Priority: ❗❗
-Description: As a 👤 KG Consumer, I want to navigate the graph by expanding a relevant node using relevant target labels and relationship types so I can explore the knowledge graph.
+Description: I want to navigate the graph by expanding a relevant node using relevant target labels and relationship types so I can explore the knowledge graph.
 Implemented: true
 Roles:
   - "[[👔 Owner]]"
   - "[[🧑‍💻 Collaborator]]"
-  - "[[👤 Outsider]]"
-  - "[[🥷 Anonymous]]"
+  - "[[🥷 Outsider]]"
+  - "[[🌐 Anonymous]]"
+Persona:
+  - "[[👁️ KG Consumer]]"
 ---
 
 ## Acceptance criteria

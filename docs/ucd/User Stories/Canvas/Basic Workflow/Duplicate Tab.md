@@ -1,12 +1,14 @@
 ---
 Priority: ❕
-Description: As a 👤 KG Consumer, I want to duplicate the current tab in order to run some custom actions on one version and compare it to the other.
+Description: I want to duplicate the current tab in order to run some custom actions on one version and compare it to the other.
 Implemented: true
 Roles:
   - "[[👔 Owner]]"
   - "[[🧑‍💻 Collaborator]]"
-  - "[[👤 Outsider]]"
-  - "[[🥷 Anonymous]]"
+  - "[[🥷 Outsider]]"
+  - "[[🌐 Anonymous]]"
+Persona:
+  - "[[👁️ KG Consumer]]"
 ---
 
 ## Acceptance criteria

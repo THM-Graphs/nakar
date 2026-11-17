@@ -1,12 +1,14 @@
 ---
 Priority: ❕
-Description: As a 👤 KG Consumer, I want to sort the search results to find the most relevant nodes.
+Description: I want to sort the search results to find the most relevant nodes.
 Implemented: false
 Roles:
   - "[[👔 Owner]]"
   - "[[🧑‍💻 Collaborator]]"
-  - "[[👤 Outsider]]"
-  - "[[🥷 Anonymous]]"
+  - "[[🥷 Outsider]]"
+  - "[[🌐 Anonymous]]"
+Persona:
+  - "[[👁️ KG Consumer]]"
 ---
 
 ## Acceptance criteria

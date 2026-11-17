@@ -1,9 +1,11 @@
 ---
-Description: As a 🛠️ KG Builder, I want to leave projects to which I have been invited as a collaborator so I can decide for myself which projects are relevant to me.
+Description: I want to leave projects to which I have been invited as a collaborator so I can decide for myself which projects are relevant to me.
 Priority: ❕
 Implemented: false
 Roles:
   - "[[🧑‍💻 Collaborator]]"
+Persona:
+  - "[[🛠️ KG Builder]]"
 ---
 
 ## Acceptance criteria

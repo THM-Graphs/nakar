@@ -1,12 +1,14 @@
 ---
 Priority: ❗
-Description: As a 👤 KG Consumer, I want to cluster all nodes of a given label that have exactly the same neighbors to make the graph more readable and make connections more visible.
+Description: I want to cluster all nodes of a given label that have exactly the same neighbors to make the graph more readable and make connections more visible.
 Implemented: true
 Roles:
   - "[[👔 Owner]]"
   - "[[🧑‍💻 Collaborator]]"
-  - "[[👤 Outsider]]"
-  - "[[🥷 Anonymous]]"
+  - "[[🥷 Outsider]]"
+  - "[[🌐 Anonymous]]"
+Persona:
+  - "[[👁️ KG Consumer]]"
 ---
 
 ## Acceptance criteria

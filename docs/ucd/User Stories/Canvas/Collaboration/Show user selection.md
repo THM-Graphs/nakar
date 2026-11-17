@@ -1,12 +1,14 @@
 ---
 Priority: ❗
 Implemented: false
-Description: As a 👤 KG Consumer, I want to see what elements are selected by other team members so I can avoid working on them.
+Description: I want to see what elements are selected by other team members so I can avoid working on them.
 Roles:
   - "[[👔 Owner]]"
   - "[[🧑‍💻 Collaborator]]"
-  - "[[👤 Outsider]]"
-  - "[[🥷 Anonymous]]"
+  - "[[🥷 Outsider]]"
+  - "[[🌐 Anonymous]]"
+Persona:
+  - "[[👁️ KG Consumer]]"
 ---
 
 ## Acceptance criteria

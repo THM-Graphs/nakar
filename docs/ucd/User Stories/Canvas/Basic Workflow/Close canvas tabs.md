@@ -1,12 +1,14 @@
 ---
-Description: "As a 👤 KG Consumer, I want to close an unused canvas tab or close all other tabs so that the shared room stays organized."
+Description: I want to close an unused canvas tab or close all other tabs so that the shared room stays organized.
 Priority: ❕
 Implemented: true
 Roles:
   - "[[👔 Owner]]"
   - "[[🧑‍💻 Collaborator]]"
-  - "[[👤 Outsider]]"
-  - "[[🥷 Anonymous]]"
+  - "[[🥷 Outsider]]"
+  - "[[🌐 Anonymous]]"
+Persona:
+  - "[[👁️ KG Consumer]]"
 ---
 
 ## Acceptance criteria

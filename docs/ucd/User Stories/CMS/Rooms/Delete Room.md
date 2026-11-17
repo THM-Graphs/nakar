@@ -1,10 +1,12 @@
 ---
-Description: As a 🛠️ KG Builder, I want to delete a room if it is no longer needed.
+Description: I want to delete a room if it is no longer needed.
 Priority: ❗
 Implemented: false
 Roles:
   - "[[👔 Owner]]"
   - "[[🧑‍💻 Collaborator]]"
+Persona:
+  - "[[🛠️ KG Builder]]"
 ---
 
 ## Acceptance criteria

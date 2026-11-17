@@ -1,12 +1,14 @@
 ---
 Priority: ❕
-Description: As a 🔍 KG Analyst, I want to see which information is searchable in the database.
+Description: I want to see which information is searchable in the database.
 Implemented: true
 Roles:
   - "[[👔 Owner]]"
   - "[[🧑‍💻 Collaborator]]"
-  - "[[👤 Outsider]]"
-  - "[[🥷 Anonymous]]"
+  - "[[🥷 Outsider]]"
+  - "[[🌐 Anonymous]]"
+Persona:
+  - "[[🔍 KG Analyst]]"
 ---
 
 ## Acceptance criteria

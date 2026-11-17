@@ -1,10 +1,12 @@
 ---
-Description: As a 🛠️ KG Builder, I want to create a room so that the team can collaborate on a common canvas.
+Description: I want to create a room so that the team can collaborate on a common canvas.
 Priority: ❗
 Implemented: false
 Roles:
   - "[[👔 Owner]]"
   - "[[🧑‍💻 Collaborator]]"
+Persona:
+  - "[[🛠️ KG Builder]]"
 ---
 
 ## Acceptance criteria

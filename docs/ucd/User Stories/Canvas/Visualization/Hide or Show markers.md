@@ -1,12 +1,14 @@
 ---
 Priority: ❗
-Description: As a 👤 KG Consumer, I want to simplify the graph view if there are too many elements by hiding the labels of graph elements because then the visualization is more readable and the performance is better.
+Description: I want to simplify the graph view if there are too many elements by hiding the labels of graph elements because then the visualization is more readable and the performance is better.
 Implemented: false
 Roles:
   - "[[👔 Owner]]"
   - "[[🧑‍💻 Collaborator]]"
-  - "[[👤 Outsider]]"
-  - "[[🥷 Anonymous]]"
+  - "[[🥷 Outsider]]"
+  - "[[🌐 Anonymous]]"
+Persona:
+  - "[[👁️ KG Consumer]]"
 ---
 
 ## Acceptance criteria

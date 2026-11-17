@@ -1,12 +1,14 @@
 ---
 Priority: ❕
-Description: As a 👤 KG Consumer, I want to export the current graph view as SVG because I want to include it in a presentation.
+Description: I want to export the current graph view as SVG because I want to include it in a presentation.
 Implemented: true
 Roles:
   - "[[👔 Owner]]"
   - "[[🧑‍💻 Collaborator]]"
-  - "[[👤 Outsider]]"
-  - "[[🥷 Anonymous]]"
+  - "[[🥷 Outsider]]"
+  - "[[🌐 Anonymous]]"
+Persona:
+  - "[[👁️ KG Consumer]]"
 ---
 
 ## Acceptance criteria

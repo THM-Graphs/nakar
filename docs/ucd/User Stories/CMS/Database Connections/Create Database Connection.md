@@ -1,10 +1,12 @@
 ---
-Description: As a 🛠️ KG Builder, I want to create custom database connections so that my scenarios can run queries in my own database.
+Description: I want to create custom database connections so that my scenarios can run queries in my own database.
 Priority: ❗
 Implemented: false
 Roles:
   - "[[👔 Owner]]"
   - "[[🧑‍💻 Collaborator]]"
+Persona:
+  - "[[🛠️ KG Builder]]"
 ---
 
 ## Acceptance criteria

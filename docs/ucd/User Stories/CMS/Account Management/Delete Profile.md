@@ -1,11 +1,13 @@
 ---
-Description: As any user, I want to delete all my data to protect my privacy.
+Description: I want to delete all my data to protect my privacy.
 Priority: ❕
 Implemented: false
 Roles:
   - "[[👔 Owner]]"
   - "[[🧑‍💻 Collaborator]]"
-  - "[[👤 Outsider]]"
+  - "[[🥷 Outsider]]"
+Persona:
+  - "[[👤 Any User]]"
 ---
 
 ## Acceptance criteria

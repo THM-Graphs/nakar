@@ -1,12 +1,14 @@
 ---
 Priority: ❗
-Description: As a 👤 KG Consumer, I want nodes to be larger if they have a high degree so I can identify important nodes in the graph.
+Description: I want nodes to be larger if they have a high degree so I can identify important nodes in the graph.
 Implemented: false
 Roles:
   - "[[👔 Owner]]"
   - "[[🧑‍💻 Collaborator]]"
-  - "[[👤 Outsider]]"
-  - "[[🥷 Anonymous]]"
+  - "[[🥷 Outsider]]"
+  - "[[🌐 Anonymous]]"
+Persona:
+  - "[[👁️ KG Consumer]]"
 ---
 
 ## Acceptance criteria

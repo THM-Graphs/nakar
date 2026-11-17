@@ -1,12 +1,14 @@
 ---
 Priority: ❕
-Description: As a 👤 KG Consumer, I want to sort notes so that I can find the most relevant notes for my use case.
+Description: I want to sort notes so that I can find the most relevant notes for my use case.
 Implemented: false
 Roles:
   - "[[👔 Owner]]"
   - "[[🧑‍💻 Collaborator]]"
-  - "[[👤 Outsider]]"
-  - "[[🥷 Anonymous]]"
+  - "[[🥷 Outsider]]"
+  - "[[🌐 Anonymous]]"
+Persona:
+  - "[[👁️ KG Consumer]]"
 ---
 
 ## Acceptance criteria

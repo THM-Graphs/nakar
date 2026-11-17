@@ -1,12 +1,14 @@
 ---
 Priority: ❕
-Description: As a 👤 KG Consumer, I want to see that the system is processing tasks so that I know that something is happening.
+Description: I want to see that the system is processing tasks so that I know that something is happening.
 Implemented: true
 Roles:
   - "[[👔 Owner]]"
   - "[[🧑‍💻 Collaborator]]"
-  - "[[👤 Outsider]]"
-  - "[[🥷 Anonymous]]"
+  - "[[🥷 Outsider]]"
+  - "[[🌐 Anonymous]]"
+Persona:
+  - "[[👁️ KG Consumer]]"
 ---
 
 ## Acceptance criteria

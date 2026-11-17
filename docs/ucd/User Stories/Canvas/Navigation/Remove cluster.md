@@ -1,12 +1,14 @@
 ---
 Priority: ❗
-Description: As a 👤 KG Consumer, I want to remove all selected clusters because they are no longer relevant.
+Description: I want to remove all selected clusters because they are no longer relevant.
 Implemented: true
 Roles:
   - "[[👔 Owner]]"
   - "[[🧑‍💻 Collaborator]]"
-  - "[[👤 Outsider]]"
-  - "[[🥷 Anonymous]]"
+  - "[[🥷 Outsider]]"
+  - "[[🌐 Anonymous]]"
+Persona:
+  - "[[👁️ KG Consumer]]"
 ---
 
 ## Acceptance criteria

@@ -1,12 +1,14 @@
 ---
 Priority: ❗
-Description: As a 👤 KG Consumer, I want to organize my workflow in tabs so that I can work on multiple canvases or temporary graphs.
+Description: I want to organize my workflow in tabs so that I can work on multiple canvases or temporary graphs.
 Implemented: true
 Roles:
   - "[[👔 Owner]]"
   - "[[🧑‍💻 Collaborator]]"
-  - "[[👤 Outsider]]"
-  - "[[🥷 Anonymous]]"
+  - "[[🥷 Outsider]]"
+  - "[[🌐 Anonymous]]"
+Persona:
+  - "[[👁️ KG Consumer]]"
 ---
 
 ## Acceptance criteria

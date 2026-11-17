@@ -19,6 +19,7 @@ views:
       - file.name
       - Priority
       - Implemented
+      - Persona
       - Description
       - Roles
     sort:
@@ -31,13 +32,11 @@ views:
       - property: Epic
         direction: ASC
     columnSize:
-      note.description: 1136
-      note.Notes: 337
-    cardSize: 280
+      note.Description: 810
+    cardSize: 380
     imageAspectRatio: 1
     markers: number
     indentProperties: false
-    rowHeight: medium
   - type: table
     name: Personas
     filters:

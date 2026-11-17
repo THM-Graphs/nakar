@@ -1,11 +1,13 @@
 ---
 Priority: ❕
-Description: As a 🔍 KG Analyst, I want to query the database schema with a simple press of a button to gain a better understanding of the database and its structure.
+Description: I want to query the database schema with a simple press of a button to gain a better understanding of the database and its structure.
 Implemented: false
 Roles:
   - "[[👔 Owner]]"
   - "[[🧑‍💻 Collaborator]]"
-  - "[[👤 Outsider]]"
+  - "[[🥷 Outsider]]"
+Persona:
+  - "[[🔍 KG Analyst]]"
 ---
 
 ## Acceptance criteria

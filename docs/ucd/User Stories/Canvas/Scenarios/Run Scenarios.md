@@ -1,12 +1,14 @@
 ---
 Priority: ❗❗
-Description: As a 👤 KG Consumer, I want to run scenarios so I can start exploring the graph.
+Description: I want to run scenarios so I can start exploring the graph.
 Implemented: true
 Roles:
   - "[[👔 Owner]]"
   - "[[🧑‍💻 Collaborator]]"
-  - "[[👤 Outsider]]"
-  - "[[🥷 Anonymous]]"
+  - "[[🥷 Outsider]]"
+  - "[[🌐 Anonymous]]"
+Persona:
+  - "[[👁️ KG Consumer]]"
 ---
 
 ## Acceptance criteria

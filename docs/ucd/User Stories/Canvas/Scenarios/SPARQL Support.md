@@ -1,10 +1,12 @@
 ---
 Priority: ❗❗
 Implemented: false
-Description: As a 🔍 KG Analyst, I want to create scenarios that query SPARQL-based RDF databases so that I can directly access up-to-date knowledge graphs like Wikidata without relying on outdated Neo4j instances.
+Description: I want to create scenarios that query SPARQL-based RDF databases so that I can directly access up-to-date knowledge graphs like Wikidata without relying on outdated Neo4j instances.
 Roles:
   - "[[👔 Owner]]"
   - "[[🧑‍💻 Collaborator]]"
+Persona:
+  - "[[🔍 KG Analyst]]"
 ---
 
 ## Acceptance criteria

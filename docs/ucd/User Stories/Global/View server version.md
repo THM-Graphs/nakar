@@ -1,12 +1,14 @@
 ---
-Description: "As any user, I want to see the server version in the application menu so that I can include it when reporting a problem."
+Description: I want to see the server version in the application menu so that I can include it when reporting a problem.
 Priority: ❕
 Implemented: true
 Roles:
   - "[[👔 Owner]]"
   - "[[🧑‍💻 Collaborator]]"
-  - "[[👤 Outsider]]"
-  - "[[🥷 Anonymous]]"
+  - "[[🥷 Outsider]]"
+  - "[[🌐 Anonymous]]"
+Persona:
+  - "[[👤 Any User]]"
 ---
 
 ## Acceptance criteria

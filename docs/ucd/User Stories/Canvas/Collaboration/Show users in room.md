@@ -1,12 +1,14 @@
 ---
 Priority: ❗❗
 Implemented: false
-Description: As a 👤 KG Consumer, I want to see which users are currently in the room and canvas tab so I can talk about the current state of the graph.
+Description: I want to see which users are currently in the room and canvas tab so I can talk about the current state of the graph.
 Roles:
   - "[[👔 Owner]]"
   - "[[🧑‍💻 Collaborator]]"
-  - "[[👤 Outsider]]"
-  - "[[🥷 Anonymous]]"
+  - "[[🥷 Outsider]]"
+  - "[[🌐 Anonymous]]"
+Persona:
+  - "[[👁️ KG Consumer]]"
 ---
 
 ## Acceptance criteria

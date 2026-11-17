@@ -1,12 +1,14 @@
 ---
 Priority: ❗❗
-Description: As a 👤 KG Consumer, I want to see the knowledge card of a given graph element (node, relationship) by clicking on it.
+Description: I want to see the knowledge card of a given graph element (node, relationship) by clicking on it.
 Implemented: false
 Roles:
   - "[[👔 Owner]]"
   - "[[🧑‍💻 Collaborator]]"
-  - "[[👤 Outsider]]"
-  - "[[🥷 Anonymous]]"
+  - "[[🥷 Outsider]]"
+  - "[[🌐 Anonymous]]"
+Persona:
+  - "[[👁️ KG Consumer]]"
 ---
 
 ## Acceptance criteria

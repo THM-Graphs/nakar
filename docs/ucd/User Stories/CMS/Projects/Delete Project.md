@@ -1,10 +1,12 @@
 ---
-Description: "As a 🛠️ KG Builder, I want to delete my projects if they are no longer needed to reduce clutter."
+Description: "I want to delete my projects if they are no longer needed to reduce clutter."
 Priority: ❕
 Implemented: false
 Roles:
   - "[[👔 Owner]]"
   - "[[🧑‍💻 Collaborator]]"
+Persona:
+  - "[[🛠️ KG Builder]]"
 ---
 
 ## Acceptance criteria

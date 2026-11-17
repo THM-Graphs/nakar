@@ -1,11 +1,13 @@
 ---
-Description: As a 🛠️ KG Builder, I want to create a project with the option to generate a demo scenario so that I can explore a knowledge graph before writing my own scenarios.
+Description: I want to create a project with the option to generate a demo scenario so that I can explore a knowledge graph before writing my own scenarios.
 Priority: ❗
 Implemented: true
 Roles:
   - "[[👔 Owner]]"
   - "[[🧑‍💻 Collaborator]]"
-  - "[[👤 Outsider]]"
+  - "[[🥷 Outsider]]"
+Persona:
+  - "[[🛠️ KG Builder]]"
 ---
 
 ## Acceptance criteria

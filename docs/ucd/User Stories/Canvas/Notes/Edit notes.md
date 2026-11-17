@@ -1,11 +1,13 @@
 ---
 Priority: ❗
-Description: As a 🔍 KG Analyst, I want to edit the contents of notes to clean up information.
+Description: I want to edit the contents of notes to clean up information.
 Implemented: true
 Roles:
   - "[[👔 Owner]]"
   - "[[🧑‍💻 Collaborator]]"
-  - "[[👤 Outsider]]"
+  - "[[🥷 Outsider]]"
+Persona:
+  - "[[🔍 KG Analyst]]"
 ---
 
 ## Acceptance criteria

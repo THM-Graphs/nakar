@@ -1,10 +1,12 @@
 ---
-Description: As a 🛠️ KG Builder, I want to edit project properties to make changes to the selected scenarios and collaborating users.
+Description: I want to edit project properties to make changes to the selected scenarios and collaborating users.
 Priority: ❗
 Implemented: false
 Roles:
   - "[[👔 Owner]]"
   - "[[🧑‍💻 Collaborator]]"
+Persona:
+  - "[[🛠️ KG Builder]]"
 ---
 
 ## Acceptance criteria

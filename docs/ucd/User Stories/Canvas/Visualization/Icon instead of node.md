@@ -1,12 +1,14 @@
 ---
 Implemented: false
 Priority: ❕
-Description: As a 👤 KG Consumer, I want to set the icon of a given node label so that the icon is shown instead of the node because it helps with the visualization of the graph.
+Description: I want to set the icon of a given node label so that the icon is shown instead of the node because it helps with the visualization of the graph.
 Roles:
   - "[[👔 Owner]]"
   - "[[🧑‍💻 Collaborator]]"
-  - "[[👤 Outsider]]"
-  - "[[🥷 Anonymous]]"
+  - "[[🥷 Outsider]]"
+  - "[[🌐 Anonymous]]"
+Persona:
+  - "[[👁️ KG Consumer]]"
 ---
 
 ## Acceptance criteria

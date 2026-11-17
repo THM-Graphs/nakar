@@ -1,12 +1,14 @@
 ---
 Priority: ❗❗
-Description: As a 👤 KG Consumer, I want to remove all nodes of a given label because the label is not relevant.
+Description: I want to remove all nodes of a given label because the label is not relevant.
 Implemented: true
 Roles:
   - "[[👔 Owner]]"
   - "[[🧑‍💻 Collaborator]]"
-  - "[[👤 Outsider]]"
-  - "[[🥷 Anonymous]]"
+  - "[[🥷 Outsider]]"
+  - "[[🌐 Anonymous]]"
+Persona:
+  - "[[👁️ KG Consumer]]"
 ---
 
 ## Acceptance criteria

@@ -1,11 +1,13 @@
 ---
 Priority: ❕
-Description: As a 🔍 KG Analyst, I want to quickly run a custom query in the current canvas to have a custom entry point into the graph.
+Description: I want to quickly run a custom query in the current canvas to have a custom entry point into the graph.
 Implemented: true
 Roles:
   - "[[👔 Owner]]"
   - "[[🧑‍💻 Collaborator]]"
-  - "[[👤 Outsider]]"
+  - "[[🥷 Outsider]]"
+Persona:
+  - "[[🔍 KG Analyst]]"
 ---
 
 ## Acceptance criteria

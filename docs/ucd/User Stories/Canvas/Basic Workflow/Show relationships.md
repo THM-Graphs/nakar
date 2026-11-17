@@ -1,12 +1,14 @@
 ---
 Priority: ❗❗
-Description: As a 👤 KG Consumer, I want to see the relationships of the graph on the canvas to start my workflow and work with the graph.
+Description: I want to see the relationships of the graph on the canvas to start my workflow and work with the graph.
 Implemented: false
 Roles:
   - "[[👔 Owner]]"
   - "[[🧑‍💻 Collaborator]]"
-  - "[[👤 Outsider]]"
-  - "[[🥷 Anonymous]]"
+  - "[[🥷 Outsider]]"
+  - "[[🌐 Anonymous]]"
+Persona:
+  - "[[👁️ KG Consumer]]"
 ---
 
 ## Acceptance criteria

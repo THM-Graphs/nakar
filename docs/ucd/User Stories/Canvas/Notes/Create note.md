@@ -1,11 +1,13 @@
 ---
 Priority: ❗
-Description: As a 🔍 KG Analyst, I want to create notes to save information about nodes and the data and share it with collaborators.
+Description: I want to create notes to save information about nodes and the data and share it with collaborators.
 Implemented: false
 Roles:
   - "[[👔 Owner]]"
   - "[[🧑‍💻 Collaborator]]"
-  - "[[👤 Outsider]]"
+  - "[[🥷 Outsider]]"
+Persona:
+  - "[[🔍 KG Analyst]]"
 ---
 
 ## Acceptance criteria

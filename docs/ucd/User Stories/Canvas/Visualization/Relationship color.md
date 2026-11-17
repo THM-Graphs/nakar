@@ -1,12 +1,14 @@
 ---
 Implemented: true
 Priority: ❗
-Description: As a 👤 KG Consumer, I want to define the color of a relationship type.
+Description: I want to define the color of a relationship type.
 Roles:
   - "[[👔 Owner]]"
   - "[[🧑‍💻 Collaborator]]"
-  - "[[👤 Outsider]]"
-  - "[[🥷 Anonymous]]"
+  - "[[🥷 Outsider]]"
+  - "[[🌐 Anonymous]]"
+Persona:
+  - "[[👁️ KG Consumer]]"
 ---
 
 ## Acceptance criteria

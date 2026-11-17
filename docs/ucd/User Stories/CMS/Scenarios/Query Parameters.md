@@ -1,10 +1,12 @@
 ---
-Description: As a 🛠️ KG Builder, I want to define query parameters so that the scenario can be run with a given node or by entering data when it is run.
+Description: I want to define query parameters so that the scenario can be run with a given node or by entering data when it is run.
 Priority: ❗
 Implemented: false
 Roles:
   - "[[👔 Owner]]"
   - "[[🧑‍💻 Collaborator]]"
+Persona:
+  - "[[🛠️ KG Builder]]"
 ---
 
 ## Acceptance criteria

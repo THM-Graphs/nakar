@@ -1,12 +1,14 @@
 ---
 Priority: ❕
 Implemented: true
-Description: As a 👤 KG Consumer, I want the layout physics simulation to continue for a short time to let the graph form a more natural layout.
+Description: I want the layout physics simulation to continue for a short time to let the graph form a more natural layout.
 Roles:
   - "[[👔 Owner]]"
   - "[[🧑‍💻 Collaborator]]"
-  - "[[👤 Outsider]]"
-  - "[[🥷 Anonymous]]"
+  - "[[🥷 Outsider]]"
+  - "[[🌐 Anonymous]]"
+Persona:
+  - "[[👁️ KG Consumer]]"
 ---
 
 ## Acceptance criteria

@@ -1,12 +1,14 @@
 ---
 Priority: ❗❗
 Implemented: true
-Description: As a 👤 KG Consumer, I want others to see my cursor so I can use it as a laser pointer for presentations.
+Description: I want others to see my cursor so I can use it as a laser pointer for presentations.
 Roles:
   - "[[👔 Owner]]"
   - "[[🧑‍💻 Collaborator]]"
-  - "[[👤 Outsider]]"
-  - "[[🥷 Anonymous]]"
+  - "[[🥷 Outsider]]"
+  - "[[🌐 Anonymous]]"
+Persona:
+  - "[[👁️ KG Consumer]]"
 ---
 
 ## Acceptance criteria

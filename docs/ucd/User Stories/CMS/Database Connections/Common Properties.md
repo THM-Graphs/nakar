@@ -1,10 +1,12 @@
 ---
-Description: As a 🛠️ KG Builder, I want to define common properties between two databases so that the canvas can create inter-database connections.
+Description: I want to define common properties between two databases so that the canvas can create inter-database connections.
 Priority: ❗
 Implemented: false
 Roles:
   - "[[👔 Owner]]"
   - "[[🧑‍💻 Collaborator]]"
+Persona:
+  - "[[🛠️ KG Builder]]"
 ---
 
 ## Acceptance criteria

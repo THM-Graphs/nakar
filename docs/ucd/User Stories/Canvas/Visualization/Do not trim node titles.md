@@ -1,12 +1,14 @@
 ---
 Implemented: false
 Priority: ❗❗
-Description: As a 👤 KG Consumer, I want to see all node titles without truncation so I have a better overview.
+Description: I want to see all node titles without truncation so I have a better overview.
 Roles:
   - "[[👔 Owner]]"
   - "[[🧑‍💻 Collaborator]]"
-  - "[[👤 Outsider]]"
-  - "[[🥷 Anonymous]]"
+  - "[[🥷 Outsider]]"
+  - "[[🌐 Anonymous]]"
+Persona:
+  - "[[👁️ KG Consumer]]"
 ---
 
 ## Acceptance criteria

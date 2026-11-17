@@ -1,12 +1,14 @@
 ---
-Description: "As a 👤 KG Consumer, I want to find and enter public rooms from the start page so that I can explore a published graph without already having its link."
+Description: I want to find and enter public rooms from the start page so that I can explore a published graph without already having its link.
 Priority: ❗
 Implemented: true
 Roles:
   - "[[👔 Owner]]"
   - "[[🧑‍💻 Collaborator]]"
-  - "[[👤 Outsider]]"
-  - "[[🥷 Anonymous]]"
+  - "[[🥷 Outsider]]"
+  - "[[🌐 Anonymous]]"
+Persona:
+  - "[[👁️ KG Consumer]]"
 ---
 
 ## Acceptance criteria

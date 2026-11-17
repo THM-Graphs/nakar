@@ -1,12 +1,14 @@
 ---
-Description: "As a 👤 KG Consumer, I want to focus on specific relationships or relationship types so that I can examine them without the other edges cluttering the graph."
+Description: I want to focus on specific relationships or relationship types so that I can examine them without the other edges cluttering the graph.
 Priority: ❕
 Implemented: true
 Roles:
   - "[[👔 Owner]]"
   - "[[🧑‍💻 Collaborator]]"
-  - "[[👤 Outsider]]"
-  - "[[🥷 Anonymous]]"
+  - "[[🥷 Outsider]]"
+  - "[[🌐 Anonymous]]"
+Persona:
+  - "[[👁️ KG Consumer]]"
 ---
 
 ## Acceptance criteria

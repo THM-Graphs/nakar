@@ -1,9 +1,11 @@
 ---
-Description: "As a new user, I want to register an account so that I can create my own projects and use features that require a login."
+Description: I want to register an account so that I can create my own projects and use features that require a login.
 Priority: ❗
 Implemented: true
 Roles:
-  - "[[🥷 Anonymous]]"
+  - "[[🌐 Anonymous]]"
+Persona:
+  - "[[👤 Any User]]"
 ---
 
 ## Acceptance criteria

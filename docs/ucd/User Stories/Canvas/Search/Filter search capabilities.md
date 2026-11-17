@@ -1,12 +1,14 @@
 ---
 Priority: ❕
-Description: As a 🔍 KG Analyst, I want to select the fields that are searched to improve the search results.
+Description: I want to select the fields that are searched to improve the search results.
 Implemented: false
 Roles:
   - "[[👔 Owner]]"
   - "[[🧑‍💻 Collaborator]]"
-  - "[[👤 Outsider]]"
-  - "[[🥷 Anonymous]]"
+  - "[[🥷 Outsider]]"
+  - "[[🌐 Anonymous]]"
+Persona:
+  - "[[🔍 KG Analyst]]"
 ---
 
 ## Acceptance criteria

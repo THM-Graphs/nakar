@@ -1,11 +1,13 @@
 ---
 Priority: ❗
-Description: As a 🔍 KG Analyst, I want to create a note using the currently selected nodes so that I don't have to add the nodes by hand.
+Description: I want to create a note using the currently selected nodes so that I don't have to add the nodes by hand.
 Implemented: true
 Roles:
   - "[[👔 Owner]]"
   - "[[🧑‍💻 Collaborator]]"
-  - "[[👤 Outsider]]"
+  - "[[🥷 Outsider]]"
+Persona:
+  - "[[🔍 KG Analyst]]"
 ---
 
 ## Acceptance criteria

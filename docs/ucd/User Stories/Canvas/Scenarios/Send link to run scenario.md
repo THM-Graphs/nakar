@@ -1,12 +1,14 @@
 ---
 Implemented: true
 Priority: ❗❗
-Description: As a 🛠️ KG Builder, I want to generate a shareable link to a specific room that includes a scenario trigger (e.g., via URL parameters) so that users coming from external websites can directly enter NAKAR and start a predefined scenario without manual interaction.
+Description: I want to generate a shareable link to a specific room that includes a scenario trigger (e.g., via URL parameters) so that users coming from external websites can directly enter NAKAR and start a predefined scenario without manual interaction.
 Roles:
   - "[[👔 Owner]]"
   - "[[🧑‍💻 Collaborator]]"
-  - "[[👤 Outsider]]"
-  - "[[🥷 Anonymous]]"
+  - "[[🥷 Outsider]]"
+  - "[[🌐 Anonymous]]"
+Persona:
+  - "[[🛠️ KG Builder]]"
 ---
 
 ## Acceptance criteria

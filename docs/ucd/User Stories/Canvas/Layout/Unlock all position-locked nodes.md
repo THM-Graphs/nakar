@@ -1,12 +1,14 @@
 ---
 Priority: ❗❗
 Implemented: true
-Description: As a 👤 KG Consumer, I want to unlock all position-locked nodes so that the default force-directed layout will be used.
+Description: I want to unlock all position-locked nodes so that the default force-directed layout will be used.
 Roles:
   - "[[👔 Owner]]"
   - "[[🧑‍💻 Collaborator]]"
-  - "[[👤 Outsider]]"
-  - "[[🥷 Anonymous]]"
+  - "[[🥷 Outsider]]"
+  - "[[🌐 Anonymous]]"
+Persona:
+  - "[[👁️ KG Consumer]]"
 ---
 
 ## Acceptance criteria

@@ -1,12 +1,14 @@
 ---
 Priority: ❕
 Implemented: false
-Description: As a 👤 KG Consumer, I want to follow a specific user so that the camera always matches their position and zoom level while I listen to their presentation.
+Description: I want to follow a specific user so that the camera always matches their position and zoom level while I listen to their presentation.
 Roles:
   - "[[👔 Owner]]"
   - "[[🧑‍💻 Collaborator]]"
-  - "[[👤 Outsider]]"
-  - "[[🥷 Anonymous]]"
+  - "[[🥷 Outsider]]"
+  - "[[🌐 Anonymous]]"
+Persona:
+  - "[[👁️ KG Consumer]]"
 ---
 
 ## Acceptance criteria

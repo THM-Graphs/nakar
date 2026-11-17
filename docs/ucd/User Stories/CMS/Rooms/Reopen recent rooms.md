@@ -1,12 +1,14 @@
 ---
-Description: "As a 👤 KG Consumer, I want to reopen recently visited rooms from the start page so that I can resume my work without looking up each link again."
+Description: I want to reopen recently visited rooms from the start page so that I can resume my work without looking up each link again.
 Priority: ❕
 Implemented: true
 Roles:
   - "[[👔 Owner]]"
   - "[[🧑‍💻 Collaborator]]"
-  - "[[👤 Outsider]]"
-  - "[[🥷 Anonymous]]"
+  - "[[🥷 Outsider]]"
+  - "[[🌐 Anonymous]]"
+Persona:
+  - "[[👁️ KG Consumer]]"
 ---
 
 ## Acceptance criteria

@@ -1,12 +1,14 @@
 ---
-Description: "As a 👤 KG Consumer, I want to open a room from a direct link so that I can join a shared workspace without searching for it."
+Description: I want to open a room from a direct link so that I can join a shared workspace without searching for it.
 Priority: ❗
 Implemented: true
 Roles:
   - "[[👔 Owner]]"
   - "[[🧑‍💻 Collaborator]]"
-  - "[[👤 Outsider]]"
-  - "[[🥷 Anonymous]]"
+  - "[[🥷 Outsider]]"
+  - "[[🌐 Anonymous]]"
+Persona:
+  - "[[👁️ KG Consumer]]"
 ---
 
 ## Acceptance criteria

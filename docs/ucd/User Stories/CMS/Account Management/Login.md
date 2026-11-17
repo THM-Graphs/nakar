@@ -1,9 +1,11 @@
 ---
 Priority: ❗❗
-Description: As any user, I want to log into the application so I can continue to work on my library and projects.
+Description: I want to log into the application so I can continue to work on my library and projects.
 Implemented: true
 Roles:
-  - "[[🥷 Anonymous]]"
+  - "[[🌐 Anonymous]]"
+Persona:
+  - "[[👤 Any User]]"
 ---
 
 ## Acceptance criteria

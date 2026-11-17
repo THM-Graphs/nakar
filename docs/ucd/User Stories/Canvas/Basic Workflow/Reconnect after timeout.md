@@ -1,12 +1,14 @@
 ---
 Implemented: false
 Priority: ❗
-Description: As a 👤 KG Consumer, I want to be able to indicate to the application that I am still working and want to continue.
+Description: I want to be able to indicate to the application that I am still working and want to continue.
 Roles:
   - "[[👔 Owner]]"
   - "[[🧑‍💻 Collaborator]]"
-  - "[[👤 Outsider]]"
-  - "[[🥷 Anonymous]]"
+  - "[[🥷 Outsider]]"
+  - "[[🌐 Anonymous]]"
+Persona:
+  - "[[👁️ KG Consumer]]"
 ---
 
 ## Acceptance criteria

@@ -1,12 +1,14 @@
 ---
 Priority: ❕
 Implemented: false
-Description: As a 👤 KG Consumer, I want to apply one of the available layout algorithms to all nodes of a given label to create a more readable graph overview.
+Description: I want to apply one of the available layout algorithms to all nodes of a given label to create a more readable graph overview.
 Roles:
   - "[[👔 Owner]]"
   - "[[🧑‍💻 Collaborator]]"
-  - "[[👤 Outsider]]"
-  - "[[🥷 Anonymous]]"
+  - "[[🥷 Outsider]]"
+  - "[[🌐 Anonymous]]"
+Persona:
+  - "[[👁️ KG Consumer]]"
 ---
 
 ## Acceptance criteria

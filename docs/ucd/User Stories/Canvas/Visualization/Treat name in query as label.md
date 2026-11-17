@@ -1,13 +1,15 @@
 ---
 Priority: ❕
-Description: As a 👤 KG Consumer, I want nodes to be colored by their name in the scenario's query so I can identify their role.
+Description: I want nodes to be colored by their name in the scenario's query so I can identify their role.
 Implemented: false
 Hidden: true
 Roles:
   - "[[👔 Owner]]"
   - "[[🧑‍💻 Collaborator]]"
-  - "[[👤 Outsider]]"
-  - "[[🥷 Anonymous]]"
+  - "[[🥷 Outsider]]"
+  - "[[🌐 Anonymous]]"
+Persona:
+  - "[[👁️ KG Consumer]]"
 ---
 
 ## Acceptance criteria

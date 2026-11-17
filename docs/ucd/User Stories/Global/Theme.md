@@ -1,12 +1,14 @@
 ---
 Priority: ❗
-Description: As any user, I want to switch between dark and light mode so that the application is not too bright.
+Description: I want to switch between dark and light mode so that the application is not too bright.
 Implemented: true
 Roles:
   - "[[👔 Owner]]"
   - "[[🧑‍💻 Collaborator]]"
-  - "[[👤 Outsider]]"
-  - "[[🥷 Anonymous]]"
+  - "[[🥷 Outsider]]"
+  - "[[🌐 Anonymous]]"
+Persona:
+  - "[[👤 Any User]]"
 ---
 
 ## Acceptance criteria

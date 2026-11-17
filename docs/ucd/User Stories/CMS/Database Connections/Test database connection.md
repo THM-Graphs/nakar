@@ -1,11 +1,13 @@
 ---
-Description: "As a 🛠️ KG Builder, I want to test a database connection before saving so that I can correct the URL or login details without changing the project."
+Description: I want to test a database connection before saving so that I can correct the URL or login details without changing the project.
 Priority: ❗
 Implemented: true
 Roles:
   - "[[👔 Owner]]"
   - "[[🧑‍💻 Collaborator]]"
-  - "[[👤 Outsider]]"
+  - "[[🥷 Outsider]]"
+Persona:
+  - "[[🛠️ KG Builder]]"
 ---
 
 ## Acceptance criteria

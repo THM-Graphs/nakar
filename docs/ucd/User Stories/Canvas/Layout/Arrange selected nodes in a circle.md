@@ -1,12 +1,14 @@
 ---
-Description: "As a 👤 KG Consumer, I want to arrange selected nodes in a circle with a radius I choose so that I can inspect their connections in a regular layout."
+Description: I want to arrange selected nodes in a circle with a radius I choose so that I can inspect their connections in a regular layout.
 Priority: ❕
 Implemented: true
 Roles:
   - "[[👔 Owner]]"
   - "[[🧑‍💻 Collaborator]]"
-  - "[[👤 Outsider]]"
-  - "[[🥷 Anonymous]]"
+  - "[[🥷 Outsider]]"
+  - "[[🌐 Anonymous]]"
+Persona:
+  - "[[👁️ KG Consumer]]"
 ---
 
 ## Acceptance criteria

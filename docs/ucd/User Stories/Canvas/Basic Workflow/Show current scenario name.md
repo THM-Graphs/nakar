@@ -1,12 +1,14 @@
 ---
 Implemented: true
 Priority: ❗❗
-Description: As a 👤 KG Consumer, I want to see which scenario is currently active because I might have started it using the share link and I do not know which scenario is linked.
+Description: I want to see which scenario is currently active because I might have started it using the share link and I do not know which scenario is linked.
 Roles:
   - "[[👔 Owner]]"
   - "[[🧑‍💻 Collaborator]]"
-  - "[[👤 Outsider]]"
-  - "[[🥷 Anonymous]]"
+  - "[[🥷 Outsider]]"
+  - "[[🌐 Anonymous]]"
+Persona:
+  - "[[👁️ KG Consumer]]"
 ---
 
 ## Acceptance criteria

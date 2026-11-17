@@ -1,12 +1,14 @@
 ---
 Implemented: false
 Priority: ❕
-Description: As a 👤 KG Consumer, I want to place the nodes on a map based on selected properties so I have a better overview of the data.
+Description: I want to place the nodes on a map based on selected properties so I have a better overview of the data.
 Roles:
   - "[[👔 Owner]]"
   - "[[🧑‍💻 Collaborator]]"
-  - "[[👤 Outsider]]"
-  - "[[🥷 Anonymous]]"
+  - "[[🥷 Outsider]]"
+  - "[[🌐 Anonymous]]"
+Persona:
+  - "[[👁️ KG Consumer]]"
 ---
 
 ## Acceptance criteria

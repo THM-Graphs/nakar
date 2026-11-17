@@ -1,10 +1,12 @@
 ---
-Description: As a 🛠️ KG Builder, I want to define multiple queries per scenario to fetch data from multiple databases.
+Description: I want to define multiple queries per scenario to fetch data from multiple databases.
 Priority: ❗
 Implemented: false
 Roles:
   - "[[👔 Owner]]"
   - "[[🧑‍💻 Collaborator]]"
+Persona:
+  - "[[🛠️ KG Builder]]"
 ---
 
 ## Acceptance criteria

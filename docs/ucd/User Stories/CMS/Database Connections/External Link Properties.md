@@ -1,10 +1,12 @@
 ---
 Priority: ❗
-Description: As a 🛠️ KG Builder, I want to define label properties that can act as links in the knowledge card so I can enable users to open links to external websites.
+Description: I want to define label properties that can act as links in the knowledge card so I can enable users to open links to external websites.
 Implemented: true
 Roles:
   - "[[👔 Owner]]"
   - "[[🧑‍💻 Collaborator]]"
+Persona:
+  - "[[🛠️ KG Builder]]"
 ---
 
 ## Acceptance criteria

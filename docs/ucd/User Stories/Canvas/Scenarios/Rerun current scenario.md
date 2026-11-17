@@ -1,12 +1,14 @@
 ---
-Description: "As a 👤 KG Consumer, I want to run the current scenario again with the previous arguments so that I can refresh its results without re-entering the inputs."
+Description: I want to run the current scenario again with the previous arguments so that I can refresh its results without re-entering the inputs.
 Priority: ❕
 Implemented: true
 Roles:
   - "[[👔 Owner]]"
   - "[[🧑‍💻 Collaborator]]"
-  - "[[👤 Outsider]]"
-  - "[[🥷 Anonymous]]"
+  - "[[🥷 Outsider]]"
+  - "[[🌐 Anonymous]]"
+Persona:
+  - "[[👁️ KG Consumer]]"
 ---
 
 ## Acceptance criteria

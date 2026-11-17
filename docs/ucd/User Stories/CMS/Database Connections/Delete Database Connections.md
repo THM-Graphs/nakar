@@ -1,10 +1,12 @@
 ---
-Description: As a 🛠️ KG Builder, I want to delete database connections to clean up unused databases.
+Description: I want to delete database connections to clean up unused databases.
 Priority: ❗
 Implemented: false
 Roles:
   - "[[👔 Owner]]"
   - "[[🧑‍💻 Collaborator]]"
+Persona:
+  - "[[🛠️ KG Builder]]"
 ---
 
 ## Acceptance criteria

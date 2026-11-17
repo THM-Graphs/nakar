@@ -1,12 +1,14 @@
 ---
 Priority: ❗❗
 Implemented: true
-Description: As a 👤 KG Consumer, I want to unlock a position-locked node so that it will float with other nodes in the force-directed layout because I am no longer interested in the node and I don't care about its position.
+Description: I want to unlock a position-locked node so that it will float with other nodes in the force-directed layout because I am no longer interested in the node and I don't care about its position.
 Roles:
   - "[[👔 Owner]]"
   - "[[🧑‍💻 Collaborator]]"
-  - "[[👤 Outsider]]"
-  - "[[🥷 Anonymous]]"
+  - "[[🥷 Outsider]]"
+  - "[[🌐 Anonymous]]"
+Persona:
+  - "[[👁️ KG Consumer]]"
 ---
 
 ## Acceptance criteria
