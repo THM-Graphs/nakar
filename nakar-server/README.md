@@ -7,6 +7,53 @@
 - **NestJS** implements the application logic and exposes the REST API for the NAKAR client.
 - **Socket.IO** handles WebSocket connections and synchronizes changes in real time for users collaborating on the same live canvas.
 
+## Data model
+
+```mermaid
+flowchart TB
+    Role["Role"]
+    User["User"]
+    Project["Project"]
+    Room["Room"]
+    Canvas["Canvas"]
+    UploadFile["Upload File"]
+    Note["Note"]
+    NodeReference["Node Reference"]
+    DatabaseConnection["Database Connection"]
+    CommonProperty["Common Property"]
+    NodeConfiguration["Node Configuration"]
+    ScenarioGroup["Scenario Group"]
+    Scenario["Scenario"]
+    Query["Query"]
+    QueryParameter["Query Parameter"]
+    PostScenarioAction["Post Scenario Action"]
+    Redirect["Redirect"]
+
+    Role ---|1| RoleAssignment{"references"} ---|n| User
+    User ---|1| Ownership{"Owner"} ---|n| Project
+    User ---|n| Collaboration{"Collaborator"} ---|m| Project
+    User ---|1| Authorship{"Author"} ---|n| Note
+
+    Project ---|1| ProjectRooms{"contains"} ---|n| Room
+    Room ---|1| RoomCanvases{"contains"} ---|n| Canvas
+    UploadFile ---|1| CanvasData{"references"} ---|1| Canvas
+    Project ---|1| ProjectNotes{"contains"} ---|n| Note
+    Note ---|1| NoteNodes{"contains"} ---|n| NodeReference
+
+    Project ---|1| ProjectDatabases{"contains"} ---|n| DatabaseConnection
+    Project ---|1| ProjectProperties{"contains"} ---|n| CommonProperty
+    DatabaseConnection ---|1| LeftDatabase{"references (left)"} ---|n| CommonProperty
+    DatabaseConnection ---|1| RightDatabase{"references (right)"} ---|n| CommonProperty
+    DatabaseConnection ---|1| DatabaseNodes{"contains"} ---|n| NodeConfiguration
+
+    Project ---|1| ProjectGroups{"contains"} ---|n| ScenarioGroup
+    ScenarioGroup ---|1| GroupScenarios{"contains"} ---|n| Scenario
+    Scenario ---|1| ScenarioQueries{"contains"} ---|n| Query
+    DatabaseConnection ---|1| DatabaseQueries{"references"} ---|n| Query
+    Scenario ---|1| ScenarioParameters{"contains"} ---|n| QueryParameter
+    Scenario ---|1| ScenarioActions{"contains"} ---|n| PostScenarioAction
+```
+
 ## Local setup
 
 #### 1. Install dependencies
