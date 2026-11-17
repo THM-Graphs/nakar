@@ -96,10 +96,10 @@ describe('/system', (): void => {
       describe('200', (): void => {
         test('version without authentication', async (): Promise<void> => {
           // when
-          // Call GET /system/version directly.
-          
+          const result = await fetch();
+
           // then
-          // Assert the status and returned version.
+          assert.equal(result, { message: 'okay' });
         });
       });
     });
@@ -114,13 +114,13 @@ describe('ExampleService', (): void => {
   describe('parse', (): void => {
     test('rejects an empty string', (): void => {
       // given
-      // Prepare the service and input.
-      
+      await database.addDocument();
+
       // when
-      // Call the method being tested.
-      
+      const result = await fetch();
+
       // then
-      // Assert the result or captured error.
+      assert.equal(result, { message: 'okay' });
     });
   });
 });
@@ -129,14 +129,17 @@ describe('ExampleService', (): void => {
 Each test covers one aspect and is declared explicitly. Do not generate tests using loops. Use descriptive test names without repeating information already provided by the surrounding suites.
 
 Divide each test into these phases: `// given`, `// when` and `// then`. Separate consecutive phases with exactly one blank line before the next phase comment. Do not add a blank line between a phase comment and its code.
+
 ##### `// given`
 
 Prepare the input and required test data. E2E tests may use public `E2ETestManager` helpers here, including registration, login, and project or room creation. Assertions may verify that the preparation succeeded. Omit this comment when no preparation is needed.
 
 E2E tests must create their own required data in the `given` phase. Tests do not need to clean up application data; do not add data cleanup hooks.
+
 ##### `// when`
 
 Perform the operation being tested. In E2E tests, call the API directly with `fetch`; do not hide the tested request behind a manager helper.
+
 ##### `// then`
 
 Inspect and assert the results. Reading the response body and validating its schema belong here. Additional read-only API requests or database reads are allowed to verify the effects of the `when` phase, including persisted changes or the absence of changes after a rejected operation. Do not create data or change application state in this phase.
@@ -149,6 +152,3 @@ Every test must assume that arbitrary unrelated data already exists in the appli
 - Write request bodies as literals directly in the `fetch` call and use `satisfies`, for example `body: JSON.stringify({ title: 'Updated Project' } satisfies UpdateProjectRequestBodyDto)`.
 - For negative tests, use `Omit` for intentionally missing fields and intersections (`&`) for additional fields or, together with `Omit`, deliberately invalid field types.
 - Avoid broad types such as `Record<string, unknown>` or type assertions that bypass these checks. Response bodies still require runtime validation, for example with Zod; DTO types alone do not validate JSON.
-
- 
-
