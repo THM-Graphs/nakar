@@ -1,0 +1,10 @@
+---
+Description: "As a 👤 KG Consumer, I want to reset the shared visualization settings to their defaults so that I can start over after experimenting with styles."
+Priority: ❕
+Implemented: true
+Roles:
+  - "[[👔 Owner]]"
+  - "[[🧑‍💻 Collaborator]]"
+  - "[[👤 Outsider]]"
+  - "[[🥷 Anonymous]]"
+---

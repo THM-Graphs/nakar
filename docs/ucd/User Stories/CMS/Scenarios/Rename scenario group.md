@@ -1,0 +1,8 @@
+---
+Description: "As a 🛠️ KG Builder, I want to rename a scenario group so that users can recognize what its scenarios are for."
+Priority: ❕
+Implemented: true
+Roles:
+  - "[[👔 Owner]]"
+  - "[[🧑‍💻 Collaborator]]"
+---
