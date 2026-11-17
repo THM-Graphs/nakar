@@ -5,4 +5,8 @@ Implemented: false
 Notes:
   - Data created by the user will be deleted.
   - The user will leave all collaboration projects.
+Roles:
+  - "[[👔 Owner]]"
+  - "[[🧑‍💻 Collaborator]]"
+  - "[[👤 Outsider]]"
 ---

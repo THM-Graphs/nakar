@@ -4,4 +4,9 @@ Description: As a 👤 KG Consumer, I want to load all relationships between the
 Notes:
   - Similar to Neo4j's "Connect Result Nodes" feature
 Implemented: true
+Roles:
+  - "[[👔 Owner]]"
+  - "[[🧑‍💻 Collaborator]]"
+  - "[[👤 Outsider]]"
+  - "[[🥷 Anonymous]]"
 ---

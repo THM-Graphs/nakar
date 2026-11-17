@@ -5,4 +5,9 @@ Description: As a 👤 KG Consumer, I want to see all node titles without trunca
 Notes:
   - Do not truncate node labels on hover.
   - View Setting
+Roles:
+  - "[[👔 Owner]]"
+  - "[[🧑‍💻 Collaborator]]"
+  - "[[👤 Outsider]]"
+  - "[[🥷 Anonymous]]"
 ---

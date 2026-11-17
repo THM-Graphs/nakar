@@ -5,4 +5,9 @@ Description: As a 👤 KG Consumer, I want to apply one of the available layout 
 Notes:
   - "[[Layout Algorithm]]"
   - Should we implement all label features by using "Select Nodes of Label" + any node action?
+Roles:
+  - "[[👔 Owner]]"
+  - "[[🧑‍💻 Collaborator]]"
+  - "[[👤 Outsider]]"
+  - "[[🥷 Anonymous]]"
 ---

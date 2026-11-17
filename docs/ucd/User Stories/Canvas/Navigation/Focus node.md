@@ -5,4 +5,9 @@ Notes:
   - "Alternative: Invert Selection feature."
   - Should we implement an "Invert Selection" feature to get rid of this feature?
 Implemented: true
+Roles:
+  - "[[👔 Owner]]"
+  - "[[🧑‍💻 Collaborator]]"
+  - "[[👤 Outsider]]"
+  - "[[🥷 Anonymous]]"
 ---

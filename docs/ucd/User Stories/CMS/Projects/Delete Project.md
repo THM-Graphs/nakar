@@ -4,6 +4,7 @@ Priority: ❕
 Implemented: false
 Roles:
   - "[[👔 Owner]]"
+  - "[[🧑‍💻 Collaborator]]"
 Notes:
 - I can only delete my own projects.
 - If collaborators have been invited to the project, a warning will be displayed stating that the project will be deleted for everyone.

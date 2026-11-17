@@ -5,4 +5,9 @@ Notes:
   - Do we need to be able to set the radius for a single node?
   - "Default: 40"
 Implemented: true
+Roles:
+  - "[[👔 Owner]]"
+  - "[[🧑‍💻 Collaborator]]"
+  - "[[👤 Outsider]]"
+  - "[[🥷 Anonymous]]"
 ---

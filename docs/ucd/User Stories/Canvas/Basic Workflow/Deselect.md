@@ -4,4 +4,9 @@ Description: As a 👤 KG Consumer, I want to deselect the current selection to 
 Notes:
   - Ctrl + D
 Implemented: true
+Roles:
+  - "[[👔 Owner]]"
+  - "[[🧑‍💻 Collaborator]]"
+  - "[[👤 Outsider]]"
+  - "[[🥷 Anonymous]]"
 ---

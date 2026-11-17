@@ -7,4 +7,9 @@ Notes:
   - Dark
   - Auto (System)
   - Saved on the device
+Roles:
+  - "[[👔 Owner]]"
+  - "[[🧑‍💻 Collaborator]]"
+  - "[[👤 Outsider]]"
+  - "[[🥷 Anonymous]]"
 ---

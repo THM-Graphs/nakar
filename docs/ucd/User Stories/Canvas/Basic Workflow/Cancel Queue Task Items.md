@@ -4,4 +4,9 @@ Description: As a 👤 KG Consumer, I want to cancel a task if it takes too long
 Notes:
   - We have to make sure that queries are cancelable.
 Implemented: false
+Roles:
+  - "[[👔 Owner]]"
+  - "[[🧑‍💻 Collaborator]]"
+  - "[[👤 Outsider]]"
+  - "[[🥷 Anonymous]]"
 ---

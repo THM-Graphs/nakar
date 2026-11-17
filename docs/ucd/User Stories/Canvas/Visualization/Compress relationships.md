@@ -4,4 +4,9 @@ Description: As a 👤 KG Consumer, I want to compress all duplicate relationshi
 Notes:
   - Should the relationships still be visible in the inspector of the cluster?
 Implemented: true
+Roles:
+  - "[[👔 Owner]]"
+  - "[[🧑‍💻 Collaborator]]"
+  - "[[👤 Outsider]]"
+  - "[[🥷 Anonymous]]"
 ---

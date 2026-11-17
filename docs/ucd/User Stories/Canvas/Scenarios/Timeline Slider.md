@@ -5,4 +5,9 @@ Notes:
   - It is hard to make out the actual change in the data because locked nodes might be removed and shown again.
   - Selecting the correct date is difficult because there are no markers for months or years.
 Implemented: true
+Roles:
+  - "[[👔 Owner]]"
+  - "[[🧑‍💻 Collaborator]]"
+  - "[[👤 Outsider]]"
+  - "[[🥷 Anonymous]]"
 ---

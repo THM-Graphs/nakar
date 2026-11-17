@@ -4,4 +4,9 @@ Description: As a 👤 KG Consumer, I want to see a list of all nodes by label w
 Notes:
   - Discussion needed.
 Priority: ❕
+Roles:
+  - "[[👔 Owner]]"
+  - "[[🧑‍💻 Collaborator]]"
+  - "[[👤 Outsider]]"
+  - "[[🥷 Anonymous]]"
 ---

@@ -4,4 +4,9 @@ Description: As a 👤 KG Consumer, I want to select all nodes of a given label 
 Notes:
   - How should this feature be presented to the user?
 Implemented: true
+Roles:
+  - "[[👔 Owner]]"
+  - "[[🧑‍💻 Collaborator]]"
+  - "[[👤 Outsider]]"
+  - "[[🥷 Anonymous]]"
 ---

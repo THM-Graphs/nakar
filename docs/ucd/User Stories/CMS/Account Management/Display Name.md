@@ -5,4 +5,8 @@ Implemented: false
 Notes:
   - Default to the part of the email address before the @.
   - Users can change their name later.
+Roles:
+  - "[[👔 Owner]]"
+  - "[[🧑‍💻 Collaborator]]"
+  - "[[👤 Outsider]]"
 ---

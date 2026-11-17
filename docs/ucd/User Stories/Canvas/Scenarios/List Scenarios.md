@@ -4,4 +4,9 @@ Description: As a 👤 KG Consumer, I want to see a structured list of scenarios
 Notes:
   - Only show the title and play button.
 Implemented: true
+Roles:
+  - "[[👔 Owner]]"
+  - "[[🧑‍💻 Collaborator]]"
+  - "[[👤 Outsider]]"
+  - "[[🥷 Anonymous]]"
 ---

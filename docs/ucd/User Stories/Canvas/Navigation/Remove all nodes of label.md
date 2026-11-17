@@ -4,4 +4,9 @@ Description: As a 👤 KG Consumer, I want to remove all nodes of a given label 
 Notes:
   - Should we implement all label features by using "Select Nodes of Label" + any node action?
 Implemented: true
+Roles:
+  - "[[👔 Owner]]"
+  - "[[🧑‍💻 Collaborator]]"
+  - "[[👤 Outsider]]"
+  - "[[🥷 Anonymous]]"
 ---

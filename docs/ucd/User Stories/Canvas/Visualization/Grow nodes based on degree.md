@@ -6,4 +6,9 @@ Notes:
   - "[[Scale Factor]]"
   - "[[Node radius]]"
 Implemented: true
+Roles:
+  - "[[👔 Owner]]"
+  - "[[🧑‍💻 Collaborator]]"
+  - "[[👤 Outsider]]"
+  - "[[🥷 Anonymous]]"
 ---

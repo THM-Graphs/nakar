@@ -4,4 +4,9 @@ Description: As a 👤 KG Consumer, I want to enter values for parameters while 
 Notes:
   - Validate while typing.
 Implemented: true
+Roles:
+  - "[[👔 Owner]]"
+  - "[[🧑‍💻 Collaborator]]"
+  - "[[👤 Outsider]]"
+  - "[[🥷 Anonymous]]"
 ---

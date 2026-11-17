@@ -5,4 +5,9 @@ Notes:
   - Make sure to only search provided indexes.
   - NAKAR uses LOOKUP and RANGE indexes for equality (=) matches and TEXT indexes for CONTAINS matches.
 Implemented: true
+Roles:
+  - "[[👔 Owner]]"
+  - "[[🧑‍💻 Collaborator]]"
+  - "[[👤 Outsider]]"
+  - "[[🥷 Anonymous]]"
 ---

@@ -4,4 +4,9 @@ Description: As a 👤 KG Consumer, I want to see all notes that link to nodes i
 Notes:
   - "Filter: Show only notes in the visible graph."
 Implemented: false
+Roles:
+  - "[[👔 Owner]]"
+  - "[[🧑‍💻 Collaborator]]"
+  - "[[👤 Outsider]]"
+  - "[[🥷 Anonymous]]"
 ---

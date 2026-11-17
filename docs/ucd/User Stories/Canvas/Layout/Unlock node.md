@@ -6,4 +6,9 @@ Notes:
   - "After unlocking: Run the physics simulation for 1 second so that the node will find its position."
   - This feature is very unintuitive.
   - Even Neo4j Browser does not do it right because after unlocking there is no physics simulation and it looks like "unlocking" does nothing.
+Roles:
+  - "[[👔 Owner]]"
+  - "[[🧑‍💻 Collaborator]]"
+  - "[[👤 Outsider]]"
+  - "[[🥷 Anonymous]]"
 ---

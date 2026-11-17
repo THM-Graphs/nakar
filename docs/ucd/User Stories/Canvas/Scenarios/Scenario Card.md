@@ -4,4 +4,9 @@ Description: As a 👤 KG Consumer, I want to expand a scenario entry to see the
 Notes:
   - Display everything about the scenario and its queries.
 Implemented: true
+Roles:
+  - "[[👔 Owner]]"
+  - "[[🧑‍💻 Collaborator]]"
+  - "[[👤 Outsider]]"
+  - "[[🥷 Anonymous]]"
 ---

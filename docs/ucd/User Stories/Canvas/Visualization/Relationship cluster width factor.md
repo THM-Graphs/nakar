@@ -5,4 +5,9 @@ Notes:
   - Support multiple scale factors
   - "[[Scale Factor]]"
 Implemented: true
+Roles:
+  - "[[👔 Owner]]"
+  - "[[🧑‍💻 Collaborator]]"
+  - "[[👤 Outsider]]"
+  - "[[🥷 Anonymous]]"
 ---

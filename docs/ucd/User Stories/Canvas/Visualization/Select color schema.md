@@ -5,4 +5,9 @@ Notes:
   - "Per tab: Users can change the canvas color scheme for everyone (shared color scheme)."
   - Color-blind-friendly color scheme
 Implemented: true
+Roles:
+  - "[[👔 Owner]]"
+  - "[[🧑‍💻 Collaborator]]"
+  - "[[👤 Outsider]]"
+  - "[[🥷 Anonymous]]"
 ---

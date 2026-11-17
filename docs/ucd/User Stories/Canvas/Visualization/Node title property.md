@@ -6,4 +6,9 @@ Notes:
   - "Default: label, name, title, type, id, slug"
   - Save in the database for generic search.
 Implemented: true
+Roles:
+  - "[[👔 Owner]]"
+  - "[[🧑‍💻 Collaborator]]"
+  - "[[👤 Outsider]]"
+  - "[[🥷 Anonymous]]"
 ---

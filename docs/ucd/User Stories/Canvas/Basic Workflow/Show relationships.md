@@ -4,6 +4,11 @@ Description: As a 👤 KG Consumer, I want to see the relationships of the graph
 Notes:
   - Handle various relationship states
 Implemented: true
+Roles:
+  - "[[👔 Owner]]"
+  - "[[🧑‍💻 Collaborator]]"
+  - "[[👤 Outsider]]"
+  - "[[🥷 Anonymous]]"
 ---
 - Relationship States:
 	- Selected

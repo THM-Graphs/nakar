@@ -6,4 +6,9 @@ Notes:
   - "30 fps for 1 second: show popover."
   - Client only. Do not sync.
 Implemented: false
+Roles:
+  - "[[👔 Owner]]"
+  - "[[🧑‍💻 Collaborator]]"
+  - "[[👤 Outsider]]"
+  - "[[🥷 Anonymous]]"
 ---

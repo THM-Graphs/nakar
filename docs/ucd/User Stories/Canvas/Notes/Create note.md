@@ -9,6 +9,7 @@ Implemented: true
 Roles:
   - "[[👔 Owner]]"
   - "[[🧑‍💻 Collaborator]]"
+  - "[[👤 Outsider]]"
 ---
 - Fields:
 	- Content (Markdown)

@@ -3,6 +3,11 @@ Priority: ❗❗
 Description: As a 👤 KG Consumer, I want to remove all relationships of a given type because they are no longer relevant.
 Notes:
 Implemented: true
+Roles:
+  - "[[👔 Owner]]"
+  - "[[🧑‍💻 Collaborator]]"
+  - "[[👤 Outsider]]"
+  - "[[🥷 Anonymous]]"
 ---
 
 ## Bugs:

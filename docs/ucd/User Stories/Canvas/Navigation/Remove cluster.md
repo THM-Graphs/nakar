@@ -4,4 +4,9 @@ Description: As a 👤 KG Consumer, I want to remove all selected clusters becau
 Notes:
   - All connected relationships will be removed.
 Implemented: true
+Roles:
+  - "[[👔 Owner]]"
+  - "[[🧑‍💻 Collaborator]]"
+  - "[[👤 Outsider]]"
+  - "[[🥷 Anonymous]]"
 ---

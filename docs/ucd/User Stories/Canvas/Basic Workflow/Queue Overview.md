@@ -5,4 +5,9 @@ Notes:
   - This will be relevant when we run scenarios on multiple nodes. Each node will trigger a new instance of a scenario task.
   - Queue per tab
 Implemented: false
+Roles:
+  - "[[👔 Owner]]"
+  - "[[🧑‍💻 Collaborator]]"
+  - "[[👤 Outsider]]"
+  - "[[🥷 Anonymous]]"
 ---

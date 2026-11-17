@@ -6,4 +6,9 @@ Notes:
   - 4 seconds
   - What should this feature be called and how can it be presented to the user?
   - "Suggestion: Stabilize Layout"
+Roles:
+  - "[[👔 Owner]]"
+  - "[[🧑‍💻 Collaborator]]"
+  - "[[👤 Outsider]]"
+  - "[[🥷 Anonymous]]"
 ---

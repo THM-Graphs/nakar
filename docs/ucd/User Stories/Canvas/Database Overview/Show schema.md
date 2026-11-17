@@ -5,4 +5,8 @@ Notes:
   - CALL db.schema.visualization();
   - Should the schema be shown in the current canvas or a new tab?
 Implemented: true
+Roles:
+  - "[[👔 Owner]]"
+  - "[[🧑‍💻 Collaborator]]"
+  - "[[👤 Outsider]]"
 ---

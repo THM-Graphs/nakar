@@ -5,4 +5,9 @@ Notes:
   - How should this feature be presented to the user?
   - Are the individual nodes still visible in the inspector?
 Implemented: true
+Roles:
+  - "[[👔 Owner]]"
+  - "[[🧑‍💻 Collaborator]]"
+  - "[[👤 Outsider]]"
+  - "[[🥷 Anonymous]]"
 ---

@@ -5,4 +5,9 @@ Notes:
   - Show a message if no shortest path can be found.
   - Select all elements of the shortest path.
 Implemented: true
+Roles:
+  - "[[👔 Owner]]"
+  - "[[🧑‍💻 Collaborator]]"
+  - "[[👤 Outsider]]"
+  - "[[🥷 Anonymous]]"
 ---

@@ -4,4 +4,9 @@ Description: As a 👤 KG Consumer, I want to see the table result for each tabl
 Notes:
   - "Tab Title: Data"
 Implemented: true
+Roles:
+  - "[[👔 Owner]]"
+  - "[[🧑‍💻 Collaborator]]"
+  - "[[👤 Outsider]]"
+  - "[[🥷 Anonymous]]"
 ---

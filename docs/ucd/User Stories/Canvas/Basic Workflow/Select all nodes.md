@@ -4,4 +4,9 @@ Description: As a 👤 KG Consumer, I want to select all nodes so I can deselect
 Notes:
   - Ctrl + A
 Implemented: true
+Roles:
+  - "[[👔 Owner]]"
+  - "[[🧑‍💻 Collaborator]]"
+  - "[[👤 Outsider]]"
+  - "[[🥷 Anonymous]]"
 ---

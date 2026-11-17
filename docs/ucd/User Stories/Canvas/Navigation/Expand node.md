@@ -6,4 +6,9 @@ Notes:
   - Show a "Select All" checkbox.
   - Execute on double-click.
 Implemented: true
+Roles:
+  - "[[👔 Owner]]"
+  - "[[🧑‍💻 Collaborator]]"
+  - "[[👤 Outsider]]"
+  - "[[🥷 Anonymous]]"
 ---

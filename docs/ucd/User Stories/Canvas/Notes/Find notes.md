@@ -4,6 +4,11 @@ Description: As a 👤 KG Consumer, I want to find notes using search to find re
 Notes:
   - See fields.
 Implemented: false
+Roles:
+  - "[[👔 Owner]]"
+  - "[[🧑‍💻 Collaborator]]"
+  - "[[👤 Outsider]]"
+  - "[[🥷 Anonymous]]"
 ---
 - Searchable:
 	- Author

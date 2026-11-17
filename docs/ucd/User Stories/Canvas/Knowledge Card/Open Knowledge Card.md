@@ -4,6 +4,11 @@ Description: As a 👤 KG Consumer, I want to see the knowledge card of a given 
 Notes:
   - See discussion.
 Implemented: true
+Roles:
+  - "[[👔 Owner]]"
+  - "[[🧑‍💻 Collaborator]]"
+  - "[[👤 Outsider]]"
+  - "[[🥷 Anonymous]]"
 ---
 - Fields:
 	- Node Title

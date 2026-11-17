@@ -5,4 +5,9 @@ Notes:
   - How should this feature be presented to the user?
   - "[[Select all nodes of label]]"
 Implemented: true
+Roles:
+  - "[[👔 Owner]]"
+  - "[[🧑‍💻 Collaborator]]"
+  - "[[👤 Outsider]]"
+  - "[[🥷 Anonymous]]"
 ---

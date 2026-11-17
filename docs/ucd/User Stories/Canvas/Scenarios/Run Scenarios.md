@@ -4,4 +4,9 @@ Description: As a 👤 KG Consumer, I want to run scenarios so I can start explo
 Notes:
   - Use the database ID and node ID as the NAKAR ID.
 Implemented: true
+Roles:
+  - "[[👔 Owner]]"
+  - "[[🧑‍💻 Collaborator]]"
+  - "[[👤 Outsider]]"
+  - "[[🥷 Anonymous]]"
 ---

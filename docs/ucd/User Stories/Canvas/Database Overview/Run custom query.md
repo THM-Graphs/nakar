@@ -7,4 +7,5 @@ Implemented: true
 Roles:
   - "[[👔 Owner]]"
   - "[[🧑‍💻 Collaborator]]"
+  - "[[👤 Outsider]]"
 ---

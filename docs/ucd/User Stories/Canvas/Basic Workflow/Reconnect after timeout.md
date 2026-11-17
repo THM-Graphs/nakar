@@ -6,4 +6,9 @@ Notes:
   - Disconnect inactive clients with the reason "are_you_still_there"?
   - Same as Netflix
   - Needed to prevent ghost users
+Roles:
+  - "[[👔 Owner]]"
+  - "[[🧑‍💻 Collaborator]]"
+  - "[[👤 Outsider]]"
+  - "[[🥷 Anonymous]]"
 ---

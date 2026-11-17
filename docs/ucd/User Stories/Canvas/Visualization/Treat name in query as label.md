@@ -6,4 +6,9 @@ Notes:
   - Do not treat names as labels when expanding nodes or loading search results.
 Implemented: false
 Hidden: true
+Roles:
+  - "[[👔 Owner]]"
+  - "[[🧑‍💻 Collaborator]]"
+  - "[[👤 Outsider]]"
+  - "[[🥷 Anonymous]]"
 ---

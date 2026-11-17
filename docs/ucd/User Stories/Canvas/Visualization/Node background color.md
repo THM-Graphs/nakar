@@ -4,4 +4,9 @@ Description: As a 👤 KG Consumer, I want to change the background color of a g
 Notes:
   - Do we need to be able to set a background color for a single node?
 Implemented: true
+Roles:
+  - "[[👔 Owner]]"
+  - "[[🧑‍💻 Collaborator]]"
+  - "[[👤 Outsider]]"
+  - "[[🥷 Anonymous]]"
 ---

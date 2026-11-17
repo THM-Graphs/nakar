@@ -4,4 +4,9 @@ Description: As a 👤 KG Consumer, I want to select one or multiple (+Ctrl) gra
 Notes:
   - Show how many nodes, relationships and elements are selected.
 Implemented: true
+Roles:
+  - "[[👔 Owner]]"
+  - "[[🧑‍💻 Collaborator]]"
+  - "[[👤 Outsider]]"
+  - "[[🥷 Anonymous]]"
 ---

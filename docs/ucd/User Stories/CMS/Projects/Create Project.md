@@ -4,6 +4,8 @@ Priority: ❗
 Implemented: true
 Roles:
   - "[[👔 Owner]]"
+  - "[[🧑‍💻 Collaborator]]"
+  - "[[👤 Outsider]]"
 Notes:
   - Create a project using only a project name.
   - The user will be redirected to the project edit view.

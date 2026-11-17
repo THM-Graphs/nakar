@@ -5,4 +5,9 @@ Notes:
   - Scenario preview + two buttons ("Replace" / "Add").
   - Highlight the graph delta.
 Implemented: true
+Roles:
+  - "[[👔 Owner]]"
+  - "[[🧑‍💻 Collaborator]]"
+  - "[[👤 Outsider]]"
+  - "[[🥷 Anonymous]]"
 ---

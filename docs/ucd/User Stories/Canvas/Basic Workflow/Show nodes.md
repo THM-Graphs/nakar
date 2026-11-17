@@ -5,6 +5,11 @@ Notes:
   - Various node states
   - Multiple labels shown as a gradient
 Implemented: true
+Roles:
+  - "[[👔 Owner]]"
+  - "[[🧑‍💻 Collaborator]]"
+  - "[[👤 Outsider]]"
+  - "[[🥷 Anonymous]]"
 ---
 - Node States:
 	- Locked

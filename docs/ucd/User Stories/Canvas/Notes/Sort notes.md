@@ -4,6 +4,11 @@ Description: As a 👤 KG Consumer, I want to sort notes so that I can find the 
 Notes:
   - See fields.
 Implemented: false
+Roles:
+  - "[[👔 Owner]]"
+  - "[[🧑‍💻 Collaborator]]"
+  - "[[👤 Outsider]]"
+  - "[[🥷 Anonymous]]"
 ---
 - Sortable:
 	- Author

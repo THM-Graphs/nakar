@@ -4,6 +4,8 @@ Description: As any user, I want to log into the application so I can continue t
 Implemented: true
 Notes:
   - See discussion.
+Roles:
+  - "[[🥷 Anonymous]]"
 ---
 
 > [!note]

@@ -5,4 +5,9 @@ Notes:
   - How should this feature be presented to the user?
   - Spawn in a new tab?
 Implemented: true
+Roles:
+  - "[[👔 Owner]]"
+  - "[[🧑‍💻 Collaborator]]"
+  - "[[👤 Outsider]]"
+  - "[[🥷 Anonymous]]"
 ---
