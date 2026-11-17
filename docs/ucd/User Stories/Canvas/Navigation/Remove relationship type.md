@@ -1,7 +1,6 @@
 ---
 Priority: ❗❗
 Description: As a 👤 KG Consumer, I want to remove all relationships of a given type because they are no longer relevant.
-Notes:
 Implemented: true
 Roles:
   - "[[👔 Owner]]"
@@ -10,6 +9,7 @@ Roles:
   - "[[🥷 Anonymous]]"
 ---
 
-## Bugs:
+## Acceptance criteria
 
-- Currently, all relationship IDs of the type are sent to the server. Create or use a new HTTP route to provide only the relationship type.
+- [x] The user can remove all canvas relationships with a chosen type.
+- [x] The client sends the relationship type to the server without collecting individual relationship IDs.

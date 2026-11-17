@@ -1,7 +1,6 @@
 ---
 Priority: ❕
 Description: As a 👤 KG Consumer, I want to see a list of scenarios that can be run on the given node so I don't have to find the scenario in the scenario list.
-Notes:
 Implemented: true
 Roles:
   - "[[👔 Owner]]"
@@ -9,3 +8,7 @@ Roles:
   - "[[👤 Outsider]]"
   - "[[🥷 Anonymous]]"
 ---
+
+## Acceptance criteria
+
+- [x] A node shows the applicable scenarios that can use it as an argument.

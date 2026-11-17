@@ -5,11 +5,12 @@ Implemented: true
 Roles:
   - "[[👔 Owner]]"
   - "[[🧑‍💻 Collaborator]]"
-Notes:
-  - Title
-  - "Visibility: Private, Unlisted, Public"
-  - "Public: Show and promote on the start page"
-  - "Unlisted: Guests or non-collaborators can join using a direct link"
-  - "Private: Only owners and collaborators can enter the room"
 ---
 
+## Acceptance criteria
+
+- [x] An owner or collaborator can edit a room's title.
+- [x] The editor supports Private, Unlisted and Public visibility.
+- [x] Public rooms appear on the start page.
+- [x] Visitors can join unlisted rooms using a direct link.
+- [x] Private rooms only admit owners and collaborators.

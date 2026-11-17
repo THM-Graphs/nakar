@@ -4,7 +4,10 @@ Priority: ❗
 Implemented: true
 Roles:
   - "[[🥷 Anonymous]]"
-Notes:
-  - "Register with a username, email address and password."
-  - "A successful registration signs me in. If my username or email address is already in use, I can correct it and try again."
 ---
+
+## Acceptance criteria
+
+- [x] A signed-out user can register with a username, email address and password.
+- [x] Successful registration signs the user in.
+- [x] The user can correct a duplicate username or email address and retry.

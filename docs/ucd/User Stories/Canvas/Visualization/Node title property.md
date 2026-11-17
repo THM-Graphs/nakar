@@ -1,14 +1,20 @@
 ---
 Priority: ❗❗
 Description: As a 👤 KG Consumer, I want to define which node property is used for a node title per label because the database might be misconfigured or multiple properties are interesting.
-Notes:
-  - "Evaluate: Use a visual template editor?"
-  - "Default: label, name, title, type, id, slug"
-  - Save in the database for generic search.
-Implemented: true
+Implemented: false
 Roles:
   - "[[👔 Owner]]"
   - "[[🧑‍💻 Collaborator]]"
   - "[[👤 Outsider]]"
   - "[[🥷 Anonymous]]"
 ---
+
+## Acceptance criteria
+
+- [x] The user can select a node title property for a label.
+- [ ] The default property preference is label, name, title, type, id, then slug.
+- [ ] The title property is stored in the database configuration and used for generic search.
+
+## Context
+
+Design option: Evaluate a visual template editor.

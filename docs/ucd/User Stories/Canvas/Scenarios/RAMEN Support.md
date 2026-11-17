@@ -6,3 +6,8 @@ Roles:
   - "[[👔 Owner]]"
   - "[[🧑‍💻 Collaborator]]"
 ---
+
+## Acceptance criteria
+
+- [ ] The user can create scenarios that query RAMEN-based databases.
+- [ ] The graph visualization omits RAMEN annotation nodes.

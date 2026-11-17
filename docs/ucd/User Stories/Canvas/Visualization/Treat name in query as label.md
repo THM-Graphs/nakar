@@ -1,9 +1,6 @@
 ---
 Priority: ❕
 Description: As a 👤 KG Consumer, I want nodes to be colored by their name in the scenario's query so I can identify their role.
-Notes:
-  - Only treat names as labels in scenario queries and manual queries.
-  - Do not treat names as labels when expanding nodes or loading search results.
 Implemented: false
 Hidden: true
 Roles:
@@ -12,3 +9,8 @@ Roles:
   - "[[👤 Outsider]]"
   - "[[🥷 Anonymous]]"
 ---
+
+## Acceptance criteria
+
+- [ ] Scenario and manual query results can use node variable names as labels for coloring.
+- [ ] Node expansion and search imports are excluded from this name-to-label rule.

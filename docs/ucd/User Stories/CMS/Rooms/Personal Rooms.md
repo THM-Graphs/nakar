@@ -10,3 +10,9 @@ Roles:
   - "[[👤 Outsider]]"
   - "[[🥷 Anonymous]]"
 ---
+
+## Acceptance criteria
+
+- [ ] A user can work in their own personal room without other users.
+- [ ] The user can opt into letting everyone enter their personal room.
+- [ ] Opting in warns that everyone can see the room name and run scenarios.

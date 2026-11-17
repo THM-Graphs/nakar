@@ -7,7 +7,10 @@ Roles:
   - "[[🧑‍💻 Collaborator]]"
   - "[[👤 Outsider]]"
   - "[[🥷 Anonymous]]"
-Notes:
-  - "Public and unlisted rooms accept visitors without a login."
-  - "Private rooms require project membership. A room link opens the room's entry canvas."
 ---
+
+## Acceptance criteria
+
+- [x] A room link opens its entry canvas.
+- [x] Public and unlisted rooms accept visitors without a login.
+- [x] Private room access requires project membership.

@@ -7,7 +7,10 @@ Roles:
   - "[[🧑‍💻 Collaborator]]"
   - "[[👤 Outsider]]"
   - "[[🥷 Anonymous]]"
-Notes:
-  - "Show only rooms I can still access."
-  - "I can remove a room from my recent list on this device."
 ---
+
+## Acceptance criteria
+
+- [x] The user can reopen a recently visited room from the start page.
+- [x] The list only includes rooms the user can still access.
+- [x] The user can remove a room from their local recent list.

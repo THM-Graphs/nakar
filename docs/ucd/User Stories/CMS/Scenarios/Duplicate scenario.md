@@ -6,3 +6,7 @@ Roles:
   - "[[👔 Owner]]"
   - "[[🧑‍💻 Collaborator]]"
 ---
+
+## Acceptance criteria
+
+- [ ] A project member can duplicate an existing scenario and edit the copy independently.

@@ -7,7 +7,9 @@ Roles:
   - "[[🧑‍💻 Collaborator]]"
   - "[[👤 Outsider]]"
   - "[[🥷 Anonymous]]"
-Notes:
-  - "Focusing selected relationships keeps those relationships and their endpoints."
-  - "Focusing by relationship type filters the relationships and keeps the nodes."
 ---
+
+## Acceptance criteria
+
+- [x] Focusing on selected relationships keeps those relationships and their endpoints.
+- [x] Focusing by type removes relationships of other types while keeping the nodes.

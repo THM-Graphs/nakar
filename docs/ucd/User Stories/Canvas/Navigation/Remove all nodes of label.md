@@ -1,8 +1,6 @@
 ---
 Priority: ❗❗
 Description: As a 👤 KG Consumer, I want to remove all nodes of a given label because the label is not relevant.
-Notes:
-  - Should we implement all label features by using "Select Nodes of Label" + any node action?
 Implemented: true
 Roles:
   - "[[👔 Owner]]"
@@ -10,3 +8,11 @@ Roles:
   - "[[👤 Outsider]]"
   - "[[🥷 Anonymous]]"
 ---
+
+## Acceptance criteria
+
+- [x] The user can remove all canvas nodes with a chosen label in one action.
+
+## Context
+
+Open question: Should label-level actions use Select Nodes of Label followed by an action on the selection?

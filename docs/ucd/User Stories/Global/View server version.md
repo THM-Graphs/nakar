@@ -8,3 +8,7 @@ Roles:
   - "[[👤 Outsider]]"
   - "[[🥷 Anonymous]]"
 ---
+
+## Acceptance criteria
+
+- [x] Users can see the server version in the application menu.

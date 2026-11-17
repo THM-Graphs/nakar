@@ -5,7 +5,10 @@ Implemented: false
 Roles:
   - "[[👔 Owner]]"
   - "[[🧑‍💻 Collaborator]]"
-Notes:
-  - Remove everyone from the room.
-  - Delete canvases.
 ---
+
+## Acceptance criteria
+
+- [x] An owner or collaborator can delete a room.
+- [ ] Deleting a room removes all users from its live canvases.
+- [ ] Deleting a room deletes its canvases.

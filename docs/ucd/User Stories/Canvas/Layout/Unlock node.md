@@ -2,13 +2,18 @@
 Priority: ❗❗
 Implemented: true
 Description: As a 👤 KG Consumer, I want to unlock a position-locked node so that it will float with other nodes in the force-directed layout because I am no longer interested in the node and I don't care about its position.
-Notes:
-  - "After unlocking: Run the physics simulation for 1 second so that the node will find its position."
-  - This feature is very unintuitive.
-  - Even Neo4j Browser does not do it right because after unlocking there is no physics simulation and it looks like "unlocking" does nothing.
 Roles:
   - "[[👔 Owner]]"
   - "[[🧑‍💻 Collaborator]]"
   - "[[👤 Outsider]]"
   - "[[🥷 Anonymous]]"
 ---
+
+## Acceptance criteria
+
+- [x] The user can unlock a position-locked node.
+- [x] The force-directed layout runs for one second after unlocking.
+
+## Context
+
+Design concern: Unlocking should produce a visible layout change. In Neo4j Browser it can appear to have no effect when the simulation does not resume.

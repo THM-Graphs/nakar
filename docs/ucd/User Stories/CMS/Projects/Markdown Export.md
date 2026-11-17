@@ -6,3 +6,7 @@ Roles:
   - "[[👔 Owner]]"
   - "[[🧑‍💻 Collaborator]]"
 ---
+
+## Acceptance criteria
+
+- [ ] A project member can export all project scenarios and queries in a Markdown file.

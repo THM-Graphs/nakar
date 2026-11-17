@@ -6,3 +6,7 @@ Roles:
   - "[[👔 Owner]]"
   - "[[🧑‍💻 Collaborator]]"
 ---
+
+## Acceptance criteria
+
+- [x] A project member can create a scenario group.

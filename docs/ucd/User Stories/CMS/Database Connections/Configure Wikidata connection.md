@@ -5,7 +5,9 @@ Implemented: true
 Roles:
   - "[[👔 Owner]]"
   - "[[🧑‍💻 Collaborator]]"
-Notes:
-  - "Choose Wikidata over SPARQL as the connection type."
-  - "NAKAR resolves Wikidata labels using the configured language, with multilingual and English labels as fallbacks."
 ---
+
+## Acceptance criteria
+
+- [x] A project member can choose Wikidata over SPARQL as the connection type and set the preferred label language.
+- [x] Wikidata resolves labels in the configured language with multilingual and English fallbacks.

@@ -1,10 +1,14 @@
 ---
 Priority: ❗
 Description: As a 👤 KG Consumer, I want to load an example set of relationships of a given relationship type by clicking on the type in the relationship type overview to find another entry point into the graph.
-Notes:
-Implemented: true
+Implemented: false
 Roles:
   - "[[👔 Owner]]"
   - "[[🧑‍💻 Collaborator]]"
   - "[[👤 Outsider]]"
 ---
+
+## Acceptance criteria
+
+- [x] The relationship-type overview provides a sample query for the selected type.
+- [ ] Clicking the type runs the query and loads the example relationships onto the canvas.

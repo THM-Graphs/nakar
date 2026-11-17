@@ -1,9 +1,6 @@
 ---
 Priority: ❗
 Description: As a 👤 KG Consumer, I want to bring specific search results into the graph to explore the nodes.
-Notes:
-  - How should this feature be presented to the user?
-  - Spawn in a new tab?
 Implemented: true
 Roles:
   - "[[👔 Owner]]"
@@ -11,3 +8,11 @@ Roles:
   - "[[👤 Outsider]]"
   - "[[🥷 Anonymous]]"
 ---
+
+## Acceptance criteria
+
+- [x] The user can load a chosen search result into the current canvas.
+
+## Context
+
+Open question: How should the action be presented, and should it offer to load the result into a new tab?

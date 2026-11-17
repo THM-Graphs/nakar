@@ -1,8 +1,6 @@
 ---
 Priority: ❗
 Description: As a 👤 KG Consumer, I want to compress all duplicate relationships between nodes into a cluster.
-Notes:
-  - Should the relationships still be visible in the inspector of the cluster?
 Implemented: true
 Roles:
   - "[[👔 Owner]]"
@@ -10,3 +8,11 @@ Roles:
   - "[[👤 Outsider]]"
   - "[[🥷 Anonymous]]"
 ---
+
+## Acceptance criteria
+
+- [x] The user can compress duplicate relationships into clusters.
+
+## Context
+
+Open question: Should the inspector list the individual relationships in a cluster?

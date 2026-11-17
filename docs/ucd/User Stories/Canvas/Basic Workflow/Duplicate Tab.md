@@ -1,11 +1,15 @@
 ---
 Priority: ❕
 Description: As a 👤 KG Consumer, I want to duplicate the current tab in order to run some custom actions on one version and compare it to the other.
-Notes:
-Implemented: false
+Implemented: true
 Roles:
   - "[[👔 Owner]]"
   - "[[🧑‍💻 Collaborator]]"
   - "[[👤 Outsider]]"
   - "[[🥷 Anonymous]]"
 ---
+
+## Acceptance criteria
+
+- [x] The user can duplicate the current tab with its canvas state.
+- [x] Changes to the duplicate can be made independently of the original.

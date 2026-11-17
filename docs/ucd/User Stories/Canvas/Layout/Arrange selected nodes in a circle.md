@@ -7,6 +7,9 @@ Roles:
   - "[[🧑‍💻 Collaborator]]"
   - "[[👤 Outsider]]"
   - "[[🥷 Anonymous]]"
-Notes:
-  - "Select at least two nodes. The nodes placed on the circle are position-locked."
 ---
+
+## Acceptance criteria
+
+- [x] The user can arrange at least two selected nodes in a circle of a chosen radius.
+- [x] The arranged nodes are position-locked.

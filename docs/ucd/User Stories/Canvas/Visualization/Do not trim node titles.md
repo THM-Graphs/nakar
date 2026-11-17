@@ -2,12 +2,15 @@
 Implemented: false
 Priority: ❗❗
 Description: As a 👤 KG Consumer, I want to see all node titles without truncation so I have a better overview.
-Notes:
-  - Do not truncate node labels on hover.
-  - View Setting
 Roles:
   - "[[👔 Owner]]"
   - "[[🧑‍💻 Collaborator]]"
   - "[[👤 Outsider]]"
   - "[[🥷 Anonymous]]"
 ---
+
+## Acceptance criteria
+
+- [ ] A view setting can show node titles without truncation.
+- [x] In WebGL, the title is unmasked on hover.
+- [ ] In SVG, the full title is visible on hover.

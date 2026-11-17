@@ -4,6 +4,9 @@ Priority: ❕
 Implemented: false
 Roles:
   - "[[🧑‍💻 Collaborator]]"
-Notes:
-- I cannot leave my own projects.
 ---
+
+## Acceptance criteria
+
+- [ ] A collaborator can remove themselves from an invited project.
+- [ ] A project owner cannot use this workflow to leave their own project.

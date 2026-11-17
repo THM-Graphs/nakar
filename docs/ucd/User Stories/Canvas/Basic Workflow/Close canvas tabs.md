@@ -7,7 +7,10 @@ Roles:
   - "[[🧑‍💻 Collaborator]]"
   - "[[👤 Outsider]]"
   - "[[🥷 Anonymous]]"
-Notes:
-  - "Closing a tab removes its canvas from the room for everyone."
-  - "Keep at least one canvas in the room."
 ---
+
+## Acceptance criteria
+
+- [x] The user can close a canvas tab or close all other tabs.
+- [x] A closed canvas is removed for everyone in the room.
+- [x] The room always retains at least one canvas.

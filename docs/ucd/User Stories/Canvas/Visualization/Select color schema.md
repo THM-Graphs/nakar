@@ -1,13 +1,16 @@
 ---
 Priority: ❕
 Description: As a 👤 KG Consumer, I want to change the color scheme to customize the display to fit certain requirements such as black-and-white figures or to have a more readable graph.
-Notes:
-  - "Per tab: Users can change the canvas color scheme for everyone (shared color scheme)."
-  - Color-blind-friendly color scheme
-Implemented: true
+Implemented: false
 Roles:
   - "[[👔 Owner]]"
   - "[[🧑‍💻 Collaborator]]"
   - "[[👤 Outsider]]"
   - "[[🥷 Anonymous]]"
 ---
+
+## Acceptance criteria
+
+- [x] The user can change the color scheme and choose a monochrome palette.
+- [ ] A palette change is shared with everyone on the canvas tab.
+- [ ] A color-blind-friendly palette is available.

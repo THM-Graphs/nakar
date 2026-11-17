@@ -5,6 +5,12 @@ Implemented: true
 Roles:
   - "[[👔 Owner]]"
   - "[[🧑‍💻 Collaborator]]"
-Notes:
-  - "[[Create Database Connection]]"
 ---
+
+## Acceptance criteria
+
+- [x] A project member can edit an existing database connection and update its credentials.
+
+## Context
+
+Related story: [[Create Database Connection]].

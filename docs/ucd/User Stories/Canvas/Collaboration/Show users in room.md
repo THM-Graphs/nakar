@@ -1,12 +1,16 @@
 ---
 Priority: ❗❗
-Implemented: true
+Implemented: false
 Description: As a 👤 KG Consumer, I want to see which users are currently in the room and canvas tab so I can talk about the current state of the graph.
-Notes:
-  - Show icons for each user in the canvas tabs and the room list in the project view.
 Roles:
   - "[[👔 Owner]]"
   - "[[🧑‍💻 Collaborator]]"
   - "[[👤 Outsider]]"
   - "[[🥷 Anonymous]]"
 ---
+
+## Acceptance criteria
+
+- [x] The canvas shows the users currently active on it.
+- [x] Project members can see user icons in the project view's room list.
+- [ ] Each canvas tab shows icons for the users active on that tab.

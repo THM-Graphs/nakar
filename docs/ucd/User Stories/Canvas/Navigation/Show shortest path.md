@@ -1,13 +1,16 @@
 ---
 Priority: ❕
 Description: As a 👤 KG Consumer, I want to know how two nodes are connected by spawning their shortest path.
-Notes:
-  - Show a message if no shortest path can be found.
-  - Select all elements of the shortest path.
-Implemented: true
+Implemented: false
 Roles:
   - "[[👔 Owner]]"
   - "[[🧑‍💻 Collaborator]]"
   - "[[👤 Outsider]]"
   - "[[🥷 Anonymous]]"
 ---
+
+## Acceptance criteria
+
+- [x] The user can load a shortest path between two selected nodes from a supported database.
+- [ ] The canvas shows a message when no shortest path exists.
+- [ ] The canvas selects all elements of a loaded shortest path.

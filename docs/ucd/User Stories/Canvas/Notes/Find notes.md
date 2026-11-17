@@ -1,8 +1,6 @@
 ---
 Priority: ❕
 Description: As a 👤 KG Consumer, I want to find notes using search to find relevant notes.
-Notes:
-  - See fields.
 Implemented: false
 Roles:
   - "[[👔 Owner]]"
@@ -10,7 +8,9 @@ Roles:
   - "[[👤 Outsider]]"
   - "[[🥷 Anonymous]]"
 ---
-- Searchable:
-	- Author
-	- Content
-	- Connected Nodes
+
+## Acceptance criteria
+
+- [ ] Notes can be searched by author.
+- [ ] Notes can be searched by content.
+- [ ] Notes can be searched by linked node.

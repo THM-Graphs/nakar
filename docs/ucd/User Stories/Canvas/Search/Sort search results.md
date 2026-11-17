@@ -1,8 +1,6 @@
 ---
 Priority: ❕
 Description: As a 👤 KG Consumer, I want to sort the search results to find the most relevant nodes.
-Notes:
-  - See fields.
 Implemented: false
 Roles:
   - "[[👔 Owner]]"
@@ -10,6 +8,8 @@ Roles:
   - "[[👤 Outsider]]"
   - "[[🥷 Anonymous]]"
 ---
-- Sort:
-	- By title
-	- By degree
+
+## Acceptance criteria
+
+- [ ] The user can sort database search results by node title.
+- [ ] The user can sort database search results by node degree.

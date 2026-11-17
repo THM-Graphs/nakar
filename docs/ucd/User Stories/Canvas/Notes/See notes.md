@@ -1,11 +1,15 @@
 ---
 Priority: ❗
 Description: As a 👤 KG Consumer, I want to see an overview of all notes in the project to find or clean up information.
-Notes:
-Implemented: true
+Implemented: false
 Roles:
   - "[[👔 Owner]]"
   - "[[🧑‍💻 Collaborator]]"
   - "[[👤 Outsider]]"
   - "[[🥷 Anonymous]]"
 ---
+
+## Acceptance criteria
+
+- [x] Users can open a notes overview on the canvas.
+- [ ] The overview includes every note in the project, even when its linked nodes are outside the visible graph.

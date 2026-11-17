@@ -6,3 +6,8 @@ Roles:
   - "[[👔 Owner]]"
   - "[[🧑‍💻 Collaborator]]"
 ---
+
+## Acceptance criteria
+
+- [x] A project member can mark a query as producing table data.
+- [x] The query results are available as table data on the canvas.

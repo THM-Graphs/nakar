@@ -1,12 +1,15 @@
 ---
 Priority: ❗❗
 Description: As a 👤 KG Consumer, I want to see a structured list of scenarios and folders that are available to run in this room to have a basic overview and run scenarios with a single click.
-Notes:
-  - Only show the title and play button.
-Implemented: true
+Implemented: false
 Roles:
   - "[[👔 Owner]]"
   - "[[🧑‍💻 Collaborator]]"
   - "[[👤 Outsider]]"
   - "[[🥷 Anonymous]]"
 ---
+
+## Acceptance criteria
+
+- [x] The canvas lists available scenarios by group and offers a play action.
+- [ ] The compact list shows only the title and play button for each scenario.

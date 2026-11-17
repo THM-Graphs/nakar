@@ -1,12 +1,19 @@
 ---
 Description: As a 🛠️ KG Builder, I want to define which property is used for the node's title.
 Priority: ❕
-Implemented: true
-Notes:
-  - Change epic?
-  - Consider a visual template editor. Alternatively, use a fixed property per label.
-  - Also allow the title property to be set using the knowledge card.
+Implemented: false
 Roles:
   - "[[👔 Owner]]"
   - "[[🧑‍💻 Collaborator]]"
 ---
+
+## Acceptance criteria
+
+- [x] The user can select a fixed title property per label.
+- [ ] The title property can also be set from the knowledge card.
+
+## Context
+
+Design alternatives: A visual template editor or a fixed property per label.
+
+Open question: Does this story belong in a different epic?

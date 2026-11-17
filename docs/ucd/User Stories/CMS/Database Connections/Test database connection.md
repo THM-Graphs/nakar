@@ -6,7 +6,10 @@ Roles:
   - "[[👔 Owner]]"
   - "[[🧑‍💻 Collaborator]]"
   - "[[👤 Outsider]]"
-Notes:
-  - "Show the connection result in the editor without saving the changes."
-  - "When editing a connection in my project, the test can reuse stored login details for fields I leave unchanged."
 ---
+
+## Acceptance criteria
+
+- [x] A signed-in user can test a new database connection without saving it.
+- [x] The editor displays the test result.
+- [x] When testing an existing project connection, a project member can reuse stored credentials for fields they leave unchanged.

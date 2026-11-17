@@ -2,13 +2,17 @@
 Priority: ❕
 Implemented: true
 Description: As a 👤 KG Consumer, I want the layout physics simulation to continue for a short time to let the graph form a more natural layout.
-Notes:
-  - 4 seconds
-  - What should this feature be called and how can it be presented to the user?
-  - "Suggestion: Stabilize Layout"
 Roles:
   - "[[👔 Owner]]"
   - "[[🧑‍💻 Collaborator]]"
   - "[[👤 Outsider]]"
   - "[[🥷 Anonymous]]"
 ---
+
+## Acceptance criteria
+
+- [x] The user can trigger four seconds of force-directed layout calculation.
+
+## Context
+
+Open question: How should the action be presented? “Stabilize Layout” was suggested as a name.

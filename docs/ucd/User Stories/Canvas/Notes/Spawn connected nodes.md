@@ -1,7 +1,6 @@
 ---
 Priority: ❕
 Description: As a 👤 KG Consumer, I want to spawn all or some nodes connected to the note because I want to start navigation and discovery.
-Notes:
 Implemented: false
 Roles:
   - "[[👔 Owner]]"
@@ -9,3 +8,8 @@ Roles:
   - "[[👤 Outsider]]"
   - "[[🥷 Anonymous]]"
 ---
+
+## Acceptance criteria
+
+- [ ] The user can load all nodes linked to a note into the canvas.
+- [ ] The user can select and load a subset of the linked nodes.

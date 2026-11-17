@@ -6,8 +6,12 @@ Roles:
   - "[[👔 Owner]]"
   - "[[🧑‍💻 Collaborator]]"
   - "[[👤 Outsider]]"
-Notes:
-  - Create a project with just a name or enable demo setup and supply a database connection.
-  - Demo setup creates a private room and a Database Tools scenario group. The example visualizes the schema for Neo4j or loads sample triples for SPARQL and Wikidata.
-  - After creation, the project overview opens.
 ---
+
+## Acceptance criteria
+
+- [x] A signed-in user can create a project with just a name.
+- [x] The user can enable demo setup and supply a database connection.
+- [x] The demo setup creates a private room and a Database Tools scenario group.
+- [x] The demo visualizes the Neo4j schema or loads sample triples from SPARQL or Wikidata.
+- [x] The project overview opens after creation.

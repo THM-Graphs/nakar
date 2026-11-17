@@ -7,6 +7,9 @@ Roles:
   - "[[🧑‍💻 Collaborator]]"
   - "[[👤 Outsider]]"
   - "[[🥷 Anonymous]]"
-Notes:
-  - "The server saves the canvas state when an idle canvas is shut down and restores it when the canvas is opened again."
 ---
+
+## Acceptance criteria
+
+- [x] The server saves graph state and view settings when an idle canvas is shut down.
+- [x] Reopening the canvas restores the saved graph and view settings.

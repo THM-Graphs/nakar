@@ -1,13 +1,16 @@
 ---
 Priority: ❕
 Description: As a 👤 KG Consumer, I want to see that the system is processing tasks so that I know that something is happening.
-Notes:
-  - This will be relevant when we run scenarios on multiple nodes. Each node will trigger a new instance of a scenario task.
-  - Queue per tab
-Implemented: false
+Implemented: true
 Roles:
   - "[[👔 Owner]]"
   - "[[🧑‍💻 Collaborator]]"
   - "[[👤 Outsider]]"
   - "[[🥷 Anonymous]]"
 ---
+
+## Acceptance criteria
+
+- [x] The canvas shows progress while a task is processing.
+- [x] Individual canvas tabs have separate queues.
+- [x] Running a scenario on multiple selected nodes creates one task per node.

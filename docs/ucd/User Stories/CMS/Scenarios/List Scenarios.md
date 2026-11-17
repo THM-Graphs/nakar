@@ -6,3 +6,7 @@ Roles:
   - "[[👔 Owner]]"
   - "[[🧑‍💻 Collaborator]]"
 ---
+
+## Acceptance criteria
+
+- [x] A project member can see the scenario groups and the order of the scenarios in each group.

@@ -5,8 +5,11 @@ Implemented: false
 Roles:
   - "[[👔 Owner]]"
   - "[[🧑‍💻 Collaborator]]"
-Notes:
-- I can only delete my own projects.
-- If collaborators have been invited to the project, a warning will be displayed stating that the project will be deleted for everyone.
-- Delete content recursively.
 ---
+
+## Acceptance criteria
+
+- [x] The owner can delete a project.
+- [ ] Only the owner can delete the project.
+- [ ] If the project has collaborators, the confirmation warns that it will be deleted for everyone.
+- [ ] Deleting a project recursively removes its content, including its rooms' canvases.

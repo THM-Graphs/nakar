@@ -1,7 +1,6 @@
 ---
 Priority: ❗❗
 Description: As a 👤 KG Consumer, I want to remove all selected relationships because they are no longer relevant.
-Notes:
 Implemented: true
 Roles:
   - "[[👔 Owner]]"
@@ -9,3 +8,7 @@ Roles:
   - "[[👤 Outsider]]"
   - "[[🥷 Anonymous]]"
 ---
+
+## Acceptance criteria
+
+- [x] The user can remove selected relationships from the canvas.

@@ -6,3 +6,8 @@ Roles:
   - "[[👔 Owner]]"
   - "[[🧑‍💻 Collaborator]]"
 ---
+
+## Acceptance criteria
+
+- [x] A project member can delete a scenario group.
+- [x] Deleting the group deletes its scenarios.

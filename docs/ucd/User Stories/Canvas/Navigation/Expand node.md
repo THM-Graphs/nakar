@@ -1,10 +1,6 @@
 ---
 Priority: ❗❗
 Description: As a 👤 KG Consumer, I want to navigate the graph by expanding a relevant node using relevant target labels and relationship types so I can explore the knowledge graph.
-Notes:
-  - Load connected nodes and relationship types and present them to the user for selection.
-  - Show a "Select All" checkbox.
-  - Execute on double-click.
 Implemented: true
 Roles:
   - "[[👔 Owner]]"
@@ -12,3 +8,9 @@ Roles:
   - "[[👤 Outsider]]"
   - "[[🥷 Anonymous]]"
 ---
+
+## Acceptance criteria
+
+- [x] The expansion preview lets the user choose target labels and relationship types.
+- [x] The preview has a checkbox to select every item in each category.
+- [x] Double-clicking a node starts its expansion workflow.

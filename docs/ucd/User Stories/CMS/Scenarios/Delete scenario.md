@@ -6,3 +6,8 @@ Roles:
   - "[[👔 Owner]]"
   - "[[🧑‍💻 Collaborator]]"
 ---
+
+## Acceptance criteria
+
+- [x] A project member can delete a scenario.
+- [x] The deleted scenario is absent when the scenario list is loaded again.

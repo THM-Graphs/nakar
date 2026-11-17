@@ -1,16 +1,21 @@
 ---
 Priority: ❗❗
 Description: As a 👤 KG Consumer, I want to see the relationships of the graph on the canvas to start my workflow and work with the graph.
-Notes:
-  - Handle various relationship states
-Implemented: true
+Implemented: false
 Roles:
   - "[[👔 Owner]]"
   - "[[🧑‍💻 Collaborator]]"
   - "[[👤 Outsider]]"
   - "[[🥷 Anonymous]]"
 ---
-- Relationship States:
-	- Selected
-	- Selected by another user (+ Username/Image?)
-	- Is a Cluster (+ Count)
+
+## Acceptance criteria
+
+- [x] The canvas renders graph relationships.
+- [x] Locally selected relationships have a visible indicator.
+- [ ] The canvas identifies relationships selected by other users.
+- [x] Relationship clusters show their member count.
+
+## Context
+
+Open question: Should another user's selection show their name, avatar, or both? See [[Show user selection]].

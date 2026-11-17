@@ -8,3 +8,7 @@ Roles:
   - "[[👤 Outsider]]"
   - "[[🥷 Anonymous]]"
 ---
+
+## Acceptance criteria
+
+- [x] The user can restore the shared visualization settings to their defaults.

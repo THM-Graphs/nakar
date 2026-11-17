@@ -8,3 +8,7 @@ Roles:
   - "[[👤 Outsider]]"
   - "[[🥷 Anonymous]]"
 ---
+
+## Acceptance criteria
+
+- [ ] The histogram lists table columns and the occurrence count of each value.

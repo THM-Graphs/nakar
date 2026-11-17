@@ -5,9 +5,10 @@ Implemented: true
 Roles:
   - "[[👔 Owner]]"
   - "[[🧑‍💻 Collaborator]]"
-Notes:
-- Connect Result Nodes
-- Compress Relationships
-- Compress Nodes (List)
-- Layout (List)
 ---
+
+## Acceptance criteria
+
+- [x] A project member can define an ordered list of actions to run after a scenario.
+- [x] The actions include connecting result nodes and compressing relationships.
+- [x] The actions include compressing nodes by label and applying a layout.

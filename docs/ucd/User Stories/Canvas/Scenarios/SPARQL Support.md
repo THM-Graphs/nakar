@@ -9,21 +9,11 @@ Roles:
 
 ## Acceptance criteria
 
-- SPARQL endpoint integration
-    - Configuration of external SPARQL endpoint URLs (e.g., Wikidata, NFDI4Culture)
-    - Support for optional authentication
-- SPARQL query definition
-    - Creation and storage of SPARQL queries in the scenario editor
-    - Syntax highlighting and validation
-- Data retrieval and transformation
-    - SPARQL SELECT queries return correctly structured results
-    - RDF data is automatically converted into an internal graph model
-- Visualization in the existing graph viewer
-    - Representation as a labeled property graph
-    - Interactive exploration as with Neo4j data
-- Configurable schema mapping
-    - Configurable mapping of RDF predicates to labels and properties
-
-## Approach
-
-Use CONSTRUCT queries.
+- [x] The user can configure an external SPARQL endpoint such as Wikidata or NFDI4Culture.
+- [ ] The connection supports optional endpoint authentication through configured credentials.
+- [x] The scenario editor accepts and saves queries for SPARQL connections.
+- [ ] The editor provides SPARQL-specific syntax highlighting and validation.
+- [x] SPARQL SELECT queries configured as table queries return structured rows.
+- [x] CONSTRUCT results are converted to a labeled property graph.
+- [x] The user can interactively explore RDF-derived graphs in the canvas viewer.
+- [ ] The user can configure mappings from RDF predicates to labels and properties.

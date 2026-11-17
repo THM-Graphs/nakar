@@ -7,6 +7,9 @@ Roles:
   - "[[🧑‍💻 Collaborator]]"
   - "[[👤 Outsider]]"
   - "[[🥷 Anonymous]]"
-Notes:
-  - "Rerunning replaces the current results on the canvas."
 ---
+
+## Acceptance criteria
+
+- [x] The user can rerun the active scenario with its previous arguments.
+- [x] Rerunning replaces the current canvas results.

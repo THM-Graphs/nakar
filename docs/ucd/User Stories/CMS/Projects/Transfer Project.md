@@ -4,6 +4,9 @@ Priority: ❕
 Implemented: false
 Roles:
   - "[[👔 Owner]]"
-Notes:
-- Implement a transfer request.
 ---
+
+## Acceptance criteria
+
+- [ ] The current owner can initiate a transfer request.
+- [ ] Accepting a transfer request makes the recipient the project owner.

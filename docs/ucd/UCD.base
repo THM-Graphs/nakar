@@ -20,7 +20,6 @@ views:
       - Priority
       - Implemented
       - Description
-      - Notes
       - Roles
     sort:
       - property: Priority

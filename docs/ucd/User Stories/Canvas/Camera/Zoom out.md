@@ -1,7 +1,6 @@
 ---
 Priority: ❗❗
 Description: As a 👤 KG Consumer, I want to zoom out of the canvas to gain a better overview and start the exploration process.
-Notes:
 Implemented: true
 Roles:
   - "[[👔 Owner]]"
@@ -9,3 +8,7 @@ Roles:
   - "[[👤 Outsider]]"
   - "[[🥷 Anonymous]]"
 ---
+
+## Acceptance criteria
+
+- [x] The user can zoom out to see more of the canvas.

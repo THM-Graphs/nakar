@@ -1,11 +1,15 @@
 ---
 Description: As a 🛠️ KG Builder, I want to delete database connections to clean up unused databases.
 Priority: ❗
-Implemented: true
+Implemented: false
 Roles:
   - "[[👔 Owner]]"
   - "[[🧑‍💻 Collaborator]]"
-Notes:
-  - If any queries in the project's scenarios use the database connection, a warning will be displayed with an overview of which scenarios use it.
-  - The warning should state that the scenarios will be deleted as well.
 ---
+
+## Acceptance criteria
+
+- [x] A project member can delete a database connection.
+- [ ] Before confirmation, the interface lists scenarios that use the connection.
+- [ ] The confirmation warns that affected scenarios will also be deleted.
+- [ ] Deleting the connection also deletes those scenarios.

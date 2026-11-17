@@ -7,3 +7,7 @@ Roles:
   - "[[🧑‍💻 Collaborator]]"
   - "[[👤 Outsider]]"
 ---
+
+## Acceptance criteria
+
+- [x] A signed-in user can sign out and the application clears local access to their account.

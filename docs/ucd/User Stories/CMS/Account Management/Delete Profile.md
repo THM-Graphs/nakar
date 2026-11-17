@@ -2,11 +2,14 @@
 Description: As any user, I want to delete all my data to protect my privacy.
 Priority: ❕
 Implemented: false
-Notes:
-  - Data created by the user will be deleted.
-  - The user will leave all collaboration projects.
 Roles:
   - "[[👔 Owner]]"
   - "[[🧑‍💻 Collaborator]]"
   - "[[👤 Outsider]]"
 ---
+
+## Acceptance criteria
+
+- [ ] A signed-in user can delete their profile and associated data.
+- [ ] Content created by that user is deleted.
+- [ ] The user is removed from all collaboration projects.

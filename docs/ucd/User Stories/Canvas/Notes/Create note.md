@@ -1,17 +1,16 @@
 ---
 Priority: ❗
 Description: As a 🔍 KG Analyst, I want to create notes to save information about nodes and the data and share it with collaborators.
-Notes:
-  - While writing the note, the canvas, especially the knowledge cards, should still be accessible and navigable.
-  - Use Markdown for content.
-  - See fields.
-Implemented: true
+Implemented: false
 Roles:
   - "[[👔 Owner]]"
   - "[[🧑‍💻 Collaborator]]"
   - "[[👤 Outsider]]"
 ---
-- Fields:
-	- Content (Markdown)
-	- Linked Nodes
-	- Color
+
+## Acceptance criteria
+
+- [x] A signed-in user with room access can create a note shared on the canvas.
+- [x] The note supports Markdown content and links to selected nodes.
+- [ ] The user can assign a color to the note.
+- [ ] The canvas and knowledge cards remain accessible and navigable while the user writes the note.

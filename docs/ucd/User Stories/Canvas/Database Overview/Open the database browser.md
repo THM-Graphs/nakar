@@ -7,6 +7,9 @@ Roles:
   - "[[🧑‍💻 Collaborator]]"
   - "[[👤 Outsider]]"
   - "[[🥷 Anonymous]]"
-Notes:
-  - "The link appears in the Query panel and alongside scenario queries when the connection has a browser URL."
 ---
+
+## Acceptance criteria
+
+- [x] A configured database browser URL can be opened from the Query panel.
+- [x] The link also appears alongside scenario queries for that database.

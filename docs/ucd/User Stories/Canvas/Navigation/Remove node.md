@@ -1,8 +1,6 @@
 ---
 Priority: ❗❗
 Description: As a 👤 KG Consumer, I want to remove all selected nodes because they are no longer relevant.
-Notes:
-  - All connected relationships will be removed.
 Implemented: true
 Roles:
   - "[[👔 Owner]]"
@@ -10,3 +8,8 @@ Roles:
   - "[[👤 Outsider]]"
   - "[[🥷 Anonymous]]"
 ---
+
+## Acceptance criteria
+
+- [x] The user can remove all selected nodes.
+- [x] Relationships connected to the removed nodes are also removed.

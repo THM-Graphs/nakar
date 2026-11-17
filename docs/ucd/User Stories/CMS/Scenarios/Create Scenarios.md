@@ -1,12 +1,14 @@
 ---
 Description: As a 🛠️ KG Builder, I want to create scenarios for a project and organize them in groups.
 Priority: ❗
-Implemented: true
+Implemented: false
 Roles:
   - "[[👔 Owner]]"
   - "[[🧑‍💻 Collaborator]]"
-Notes:
-- Title
-- Description (Markdown)
-- Enabled
 ---
+
+## Acceptance criteria
+
+- [x] A project member can create a scenario inside a project group.
+- [x] The scenario supports a title and a Markdown description.
+- [ ] The scenario can be enabled or disabled.
