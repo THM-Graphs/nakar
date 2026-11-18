@@ -1,0 +1,3 @@
+- A registered and logged-in with a username.
+- This did not create the project ist no collaborator.
+- This joined a public or unlisted room.

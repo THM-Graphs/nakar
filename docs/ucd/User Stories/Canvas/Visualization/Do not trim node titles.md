@@ -14,5 +14,3 @@ Persona:
 ## Acceptance criteria
 
 - [ ] A view setting can show node titles without truncation.
-- [x] In WebGL, the title is unmasked on hover.
-- [ ] In SVG, the full title is visible on hover.

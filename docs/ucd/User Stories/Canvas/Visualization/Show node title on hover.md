@@ -13,5 +13,5 @@ Persona:
 
 ## Acceptance criteria
 
-- [x] In WebGL, hovering over a titled node reveals the full title.
+- [ ] In WebGL, hovering over a titled node reveals the full title.
 - [ ] In SVG, hovering over a titled node reveals the full title.

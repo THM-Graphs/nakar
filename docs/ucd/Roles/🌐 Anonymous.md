@@ -1,0 +1,1 @@
+- A logged out public user without a usernamen.

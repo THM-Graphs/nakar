@@ -1,0 +1,2 @@
+- A registered and logged-in with a username.
+- This user created the project in question.

@@ -12,6 +12,5 @@ Persona:
 
 ## Acceptance criteria
 
-- [ ] A signed-in user can delete their profile and associated data.
-- [ ] Content created by that user is deleted.
+- [ ] A signed-in user can delete their profile and associated data (personal projects).
 - [ ] The user is removed from all collaboration projects.

@@ -15,3 +15,4 @@ Persona:
 
 - [x] Users can open a notes overview on the canvas.
 - [ ] The overview includes every note in the project, even when its linked nodes are outside the visible graph.
+- [x] Notes belong to the project and are shared between rooms.

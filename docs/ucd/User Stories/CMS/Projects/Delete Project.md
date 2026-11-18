@@ -4,7 +4,6 @@ Priority: ❕
 Implemented: false
 Roles:
   - "[[👔 Owner]]"
-  - "[[🧑‍💻 Collaborator]]"
 Persona:
   - "[[🛠️ KG Builder]]"
 ---
