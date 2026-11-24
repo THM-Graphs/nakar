@@ -13,6 +13,7 @@ import { UpdateScenarioQueryEntryDto } from '../http/routes/scenario/dto/UpdateS
 import { UpdateScenarioQueryParameterEntryDto } from '../http/routes/scenario/dto/UpdateScenarioQueryParameterEntryDto';
 import { UpdateScenarioPostActionEntryDto } from '../http/routes/scenario/dto/UpdateScenarioPostActionEntryDto';
 import { UpdateNodeConfigurationRequestBodyDto } from '../http/routes/database-connection/dto/UpdateNodeConfigurationRequestBodyDto';
+import type { RamenEdgeTitleRuleDto } from '../http/routes/database-connection/dto/RamenEdgeTitleRuleDto';
 import { match } from 'ts-pattern';
 import { MediaService } from '../media/MediaService';
 import { EncryptionService } from '../encryption/EncryptionService';
@@ -208,14 +209,58 @@ export class DatabaseService {
   }
 
   public async deleteDatabase(databaseId: string): Promise<void> {
+    await strapi.db.transaction(async (): Promise<void> => {
+      await this._deleteRelatedDocuments(
+        'api::node-configuration.node-configuration',
+        'database',
+        databaseId,
+      );
+      await this._deleteRelatedDocuments(
+        'api::ramen-edge-title-rule.ramen-edge-title-rule',
+        'database',
+        databaseId,
+      );
+      await strapi
+        .documents('api::database-connection.database-connection')
+        .delete({ documentId: databaseId });
+    });
+  }
+
+  public async getRamenEdgeTitleRules(
+    databaseId: string,
+  ): Promise<
+    Modules.Documents.Result<'api::ramen-edge-title-rule.ramen-edge-title-rule'>[]
+  > {
+    return await strapi
+      .documents('api::ramen-edge-title-rule.ramen-edge-title-rule')
+      .findMany({
+        status: 'published',
+        filters: { database: { documentId: databaseId } },
+        sort: ['annotationType:asc'],
+      });
+  }
+
+  public async replaceRamenEdgeTitleRules(
+    databaseId: string,
+    rules: RamenEdgeTitleRuleDto[],
+  ): Promise<void> {
     await this._deleteRelatedDocuments(
-      'api::node-configuration.node-configuration',
+      'api::ramen-edge-title-rule.ramen-edge-title-rule',
       'database',
       databaseId,
     );
-    await strapi
-      .documents('api::database-connection.database-connection')
-      .delete({ documentId: databaseId });
+    for (const rule of rules) {
+      await strapi
+        .documents('api::ramen-edge-title-rule.ramen-edge-title-rule')
+        .create({
+          status: 'published',
+          data: {
+            database: databaseId,
+            annotationType: rule.annotationType,
+            titleProperty: rule.titleProperty,
+          },
+        });
+    }
   }
 
   public async updateDatabase(
@@ -1460,6 +1505,7 @@ export class DatabaseService {
   private async _deleteRelatedDocuments(
     model:
       | 'api::common-property.common-property'
+      | 'api::ramen-edge-title-rule.ramen-edge-title-rule'
       | 'api::scenario.scenario'
       | 'api::node-configuration.node-configuration',
     relation: string,

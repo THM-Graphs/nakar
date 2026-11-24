@@ -18,7 +18,7 @@ import { Neo4jExternalDatabase } from './adapters/neo4j/Neo4jExternalDatabase';
 import { SparqlExternalDatabase } from './adapters/sparql/SparqlExternalDatabase';
 import type { ExternalGraphDatabase } from './ExternalGraphDatabase';
 import type { ExternalGraphDatabaseStats } from './data/ExternalGraphDatabaseStats';
-import { match, P } from 'ts-pattern';
+import { match } from 'ts-pattern';
 import { ExternalGraphDatabaseType } from './data/ExternalGraphDatabaseType';
 import { WikidataExternalDatabase } from './adapters/wikidata/WikidataExternalDatabase';
 
@@ -46,31 +46,43 @@ export class ExternalGraphDatabaseService implements OnModuleDestroy {
       ExternalGraphDatabaseType.wikidata,
       new WikidataExternalDatabase(),
     );
+    this._adapters.set(
+      ExternalGraphDatabaseType.ramen,
+      new Neo4jExternalDatabase(),
+    );
+  }
+
+  public resolveAdapterType(
+    databaseType: NonNullable<
+      Modules.Documents.Result<'api::database-connection.database-connection'>['databaseType']
+    >,
+  ): ExternalGraphDatabaseType {
+    return match(databaseType)
+      .returnType<ExternalGraphDatabaseType>()
+      .with(
+        'neo4j',
+        (): ExternalGraphDatabaseType => ExternalGraphDatabaseType.neo4j,
+      )
+      .with(
+        'ramen',
+        (): ExternalGraphDatabaseType => ExternalGraphDatabaseType.ramen,
+      )
+      .with(
+        'sparql',
+        (): ExternalGraphDatabaseType => ExternalGraphDatabaseType.sparql,
+      )
+      .with(
+        'wikidata',
+        (): ExternalGraphDatabaseType => ExternalGraphDatabaseType.wikidata,
+      )
+      .exhaustive();
   }
 
   public parseCredentials(
     database: Modules.Documents.Result<'api::database-connection.database-connection'>,
   ): ExternalGraphDatabaseCredentials {
     return {
-      databaseType: match(database.databaseType)
-        .returnType<ExternalGraphDatabaseType>()
-        .with(
-          'neo4j',
-          (): ExternalGraphDatabaseType => ExternalGraphDatabaseType.neo4j,
-        )
-        .with(
-          'sparql',
-          (): ExternalGraphDatabaseType => ExternalGraphDatabaseType.sparql,
-        )
-        .with(
-          'wikidata',
-          (): ExternalGraphDatabaseType => ExternalGraphDatabaseType.wikidata,
-        )
-        .with(
-          P.nullish,
-          (): ExternalGraphDatabaseType => ExternalGraphDatabaseType.neo4j,
-        )
-        .exhaustive(),
+      databaseType: this.resolveAdapterType(database.databaseType ?? 'neo4j'),
       nakarId: database.documentId,
       nakarTitle: database.title ?? null,
       connectionUrl: database.connectionUrl ?? null,
@@ -171,10 +183,25 @@ export class ExternalGraphDatabaseService implements OnModuleDestroy {
     } catch {
       throw new BadRequestException('Invalid connection URL.');
     }
-    const supportedProtocols: string[] =
-      databaseType === ExternalGraphDatabaseType.neo4j
-        ? ['bolt:', 'bolt+s:', 'bolt+ssc:', 'neo4j:', 'neo4j+s:', 'neo4j+ssc:']
-        : ['http:', 'https:'];
+    const supportedProtocols: string[] = match(databaseType)
+      .with(
+        ExternalGraphDatabaseType.neo4j,
+        ExternalGraphDatabaseType.ramen,
+        (): string[] => [
+          'bolt:',
+          'bolt+s:',
+          'bolt+ssc:',
+          'neo4j:',
+          'neo4j+s:',
+          'neo4j+ssc:',
+        ],
+      )
+      .with(
+        ExternalGraphDatabaseType.sparql,
+        ExternalGraphDatabaseType.wikidata,
+        (): string[] => ['http:', 'https:'],
+      )
+      .exhaustive();
     if (url.hostname === '' || !supportedProtocols.includes(url.protocol)) {
       throw new BadRequestException('Unsupported connection URL.');
     }

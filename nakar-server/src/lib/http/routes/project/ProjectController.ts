@@ -34,7 +34,6 @@ import type { UpdateDatabaseConnectionRequestBodyDto } from '../database-connect
 import { TestDatabaseConnectionRequestBodyDto } from './dto/TestDatabaseConnectionRequestBodyDto';
 import { TestDatabaseConnectionResponseBodyDto } from './dto/TestDatabaseConnectionResponseBodyDto';
 import { ExternalGraphDatabaseService } from '../../../external-database/ExternalGraphDatabaseService';
-import { ExternalGraphDatabaseType } from '../../../external-database/data/ExternalGraphDatabaseType';
 import { userCanSeeAndEditProject } from '../../../policies/userCanSeeAndEditProject';
 import { databaseBelongsToProject } from '../../../policies/databaseBelongsToProject';
 
@@ -148,7 +147,9 @@ export class ProjectController {
     return new TestDatabaseConnectionResponseBodyDto(
       await this._externalGraphDatabase.testDatabaseConnection({
         connectionUrl: body.connectionUrl,
-        databaseType: ExternalGraphDatabaseType[body.databaseType],
+        databaseType: this._externalGraphDatabase.resolveAdapterType(
+          body.databaseType,
+        ),
         username: body.username ?? existingDatabase?.username ?? '',
         password: body.password ?? existingDatabase?.password ?? '',
         database: body.database,
@@ -254,7 +255,7 @@ export class ProjectController {
   ): Promise<void> {
     this._externalGraphDatabase.validateDatabaseConnectionUrl(
       connection.connectionUrl,
-      ExternalGraphDatabaseType[connection.databaseType],
+      this._externalGraphDatabase.resolveAdapterType(connection.databaseType),
     );
     const database: Modules.Documents.Result<'api::database-connection.database-connection'> =
       await this._database.createDatabase(project.documentId, {
@@ -267,6 +268,10 @@ export class ProjectController {
         databaseType: connection.databaseType,
         language: connection.language ?? undefined,
       });
+    await this._database.replaceRamenEdgeTitleRules(
+      database.documentId,
+      connection.ramenEdgeTitleRules,
+    );
 
     await strapi.documents('api::room.room').create({
       status: 'published',
@@ -285,10 +290,14 @@ export class ProjectController {
         },
       });
     const demo: DemoScenario = match(connection.databaseType)
-      .with(DatabaseConnectionDatabaseType.neo4j, (): DemoScenario => ({
-        title: 'Visualize Database Structure',
-        query: 'CALL db.schema.visualization()',
-      }))
+      .with(
+        DatabaseConnectionDatabaseType.neo4j,
+        DatabaseConnectionDatabaseType.ramen,
+        (): DemoScenario => ({
+          title: 'Visualize Database Structure',
+          query: 'CALL db.schema.visualization()',
+        }),
+      )
       .with(
         DatabaseConnectionDatabaseType.sparql,
         DatabaseConnectionDatabaseType.wikidata,

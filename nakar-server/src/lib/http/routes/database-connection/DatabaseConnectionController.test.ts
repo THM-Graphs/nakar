@@ -23,6 +23,9 @@ const databaseSchema: z.ZodType<DatabaseConnectionDto> = z.strictObject({
   database: z.string(),
   databaseType: z.enum(DatabaseConnectionDatabaseType),
   language: z.string().nullable(),
+  ramenEdgeTitleRules: z.array(
+    z.strictObject({ annotationType: z.string(), titleProperty: z.string() }),
+  ),
   nodeConfigurations: z.array(
     z.strictObject({
       id: z.string().min(1),
@@ -110,6 +113,7 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
           database: '',
           databaseType: DatabaseConnectionDatabaseType.neo4j,
           language: null,
+          ramenEdgeTitleRules: [],
           nodeConfigurations: [],
         });
         const projectResponse: Response = await fetch(
@@ -166,6 +170,7 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
           database: '',
           databaseType: DatabaseConnectionDatabaseType.neo4j,
           language: null,
+          ramenEdgeTitleRules: [],
           nodeConfigurations: [],
         });
         const projectResponse: Response = await fetch(
@@ -225,6 +230,7 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
           database: '',
           databaseType: DatabaseConnectionDatabaseType.neo4j,
           language: null,
+          ramenEdgeTitleRules: [],
           nodeConfigurations: [],
         });
         const projectResponse: Response = await fetch(
@@ -2022,6 +2028,7 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
                 browserUrl: 'https://example.test/browser',
                 credentialStoreConsent: false,
                 databaseType: DatabaseConnectionDatabaseType.neo4j,
+                ramenEdgeTitleRules: [],
                 nodeConfigurations: [],
                 language: null,
               } satisfies Omit<
@@ -2101,6 +2108,7 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
                 browserUrl: 'https://example.test/browser',
                 credentialStoreConsent: false,
                 databaseType: DatabaseConnectionDatabaseType.neo4j,
+                ramenEdgeTitleRules: [],
                 nodeConfigurations: [],
                 language: null,
               } satisfies Omit<
@@ -2169,6 +2177,7 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
                 browserUrl: 'https://example.test/browser',
                 credentialStoreConsent: true,
                 databaseType: DatabaseConnectionDatabaseType.neo4j,
+                ramenEdgeTitleRules: [],
                 nodeConfigurations: [],
                 language: null,
                 username: 'alice',
@@ -2260,6 +2269,7 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
                 browserUrl: 'https://example.test/browser',
                 credentialStoreConsent: true,
                 databaseType: DatabaseConnectionDatabaseType.neo4j,
+                ramenEdgeTitleRules: [],
                 nodeConfigurations: [],
                 language: null,
                 username: 'alice',
@@ -2300,6 +2310,7 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
                 browserUrl: 'https://example.test/browser',
                 credentialStoreConsent: false,
                 databaseType: DatabaseConnectionDatabaseType.neo4j,
+                ramenEdgeTitleRules: [],
                 nodeConfigurations: [],
                 language: null,
               } satisfies Omit<
@@ -2381,6 +2392,7 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
                 browserUrl: 'https://example.test/browser',
                 credentialStoreConsent: true,
                 databaseType: DatabaseConnectionDatabaseType.neo4j,
+                ramenEdgeTitleRules: [],
                 nodeConfigurations: [],
                 language: null,
                 username: 'alice',
@@ -2421,6 +2433,7 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
                 browserUrl: 'https://example.test/browser',
                 credentialStoreConsent: false,
                 databaseType: DatabaseConnectionDatabaseType.neo4j,
+                ramenEdgeTitleRules: [],
                 nodeConfigurations: [],
                 language: null,
                 username: null,
@@ -2501,6 +2514,7 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
                 browserUrl: 'https://example.test/browser',
                 credentialStoreConsent: true,
                 databaseType: DatabaseConnectionDatabaseType.neo4j,
+                ramenEdgeTitleRules: [],
                 nodeConfigurations: [],
                 language: null,
                 username: 'alice',
@@ -2541,6 +2555,7 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
                 browserUrl: 'https://example.test/browser',
                 credentialStoreConsent: true,
                 databaseType: DatabaseConnectionDatabaseType.neo4j,
+                ramenEdgeTitleRules: [],
                 nodeConfigurations: [],
                 language: null,
                 password: '',
@@ -2632,6 +2647,7 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
                 browserUrl: 'https://example.test/browser',
                 credentialStoreConsent: false,
                 databaseType: DatabaseConnectionDatabaseType.neo4j,
+                ramenEdgeTitleRules: [],
                 nodeConfigurations: [
                   {
                     id: randomUUID(),
@@ -2730,6 +2746,7 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
                 browserUrl: 'https://example.test/browser',
                 credentialStoreConsent: false,
                 databaseType: DatabaseConnectionDatabaseType.neo4j,
+                ramenEdgeTitleRules: [],
                 nodeConfigurations: [
                   {
                     id: child,
@@ -2828,6 +2845,7 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
                 browserUrl: 'https://example.test/browser',
                 credentialStoreConsent: false,
                 databaseType: DatabaseConnectionDatabaseType.neo4j,
+                ramenEdgeTitleRules: [],
                 nodeConfigurations: [],
                 language: null,
               } satisfies Omit<
@@ -2904,6 +2922,7 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
                 browserUrl: 'https://example.test/browser',
                 credentialStoreConsent: false,
                 databaseType: DatabaseConnectionDatabaseType.neo4j,
+                ramenEdgeTitleRules: [],
                 nodeConfigurations: [],
                 language: null,
               } satisfies Omit<
@@ -2943,6 +2962,145 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
           );
           assert.ok(persisted);
           assert.equal(persisted.title, 'Updated Database');
+        });
+
+        test('returns saved RAMEN edge-title rules sorted by annotation type', async (testContext: TestContext): Promise<void> => {
+          // given
+          const fixture: FixtureContext =
+            await manager.setupFixture(testContext);
+          const login: PostAuthResponseBodyDto = await manager.loginUser(
+            fixture.collaborator.username,
+            fixture.collaborator.password,
+            testContext,
+          );
+          const url: string = `${manager.apiUrl}/project/${fixture.projectId}/database-connection/${fixture.databaseConnectionId}`;
+          const headers: Headers = new Headers([
+            ['Authorization', `Bearer ${login.jwt}`],
+            ['Content-Type', 'application/json'],
+          ]);
+          const rules: UpdateDatabaseConnectionRequestBodyDto['ramenEdgeTitleRules'] =
+            [
+              { annotationType: 'relation', titleProperty: 'kind' },
+              { annotationType: 'persName', titleProperty: 'type' },
+            ];
+          const sortedRules: UpdateDatabaseConnectionRequestBodyDto['ramenEdgeTitleRules'] =
+            rules.toReversed();
+
+          // when
+          const response: Response = await fetch(url, {
+            method: 'PUT',
+            headers,
+            body: JSON.stringify({
+              title: 'RAMEN',
+              database: 'neo4j',
+              connectionUrl: 'bolt://127.0.0.1:7687',
+              browserUrl: '',
+              credentialStoreConsent: false,
+              databaseType: DatabaseConnectionDatabaseType.ramen,
+              nodeConfigurations: [],
+              language: null,
+              ramenEdgeTitleRules: rules,
+            } satisfies Omit<
+              UpdateDatabaseConnectionRequestBodyDto,
+              'username' | 'password'
+            >),
+            signal: testContext.signal,
+          });
+
+          // then
+          assert.equal(response.status, 200);
+          assert.deepEqual(
+            databaseSchema.parse(await response.json()).ramenEdgeTitleRules,
+            sortedRules,
+          );
+          const persisted: Response = await fetch(url, {
+            headers,
+            signal: testContext.signal,
+          });
+          assert.equal(persisted.status, 200);
+          assert.deepEqual(
+            databaseSchema.parse(await persisted.json()).ramenEdgeTitleRules,
+            sortedRules,
+          );
+        });
+
+        test('clears saved RAMEN edge-title rules with an empty array', async (testContext: TestContext): Promise<void> => {
+          // given
+          const fixture: FixtureContext =
+            await manager.setupFixture(testContext);
+          const login: PostAuthResponseBodyDto = await manager.loginUser(
+            fixture.collaborator.username,
+            fixture.collaborator.password,
+            testContext,
+          );
+          const url: string = `${manager.apiUrl}/project/${fixture.projectId}/database-connection/${fixture.databaseConnectionId}`;
+          const headers: Headers = new Headers([
+            ['Authorization', `Bearer ${login.jwt}`],
+            ['Content-Type', 'application/json'],
+          ]);
+          const setup: Response = await fetch(url, {
+            method: 'PUT',
+            headers,
+            body: JSON.stringify({
+              title: 'RAMEN',
+              database: 'neo4j',
+              connectionUrl: 'bolt://127.0.0.1:7687',
+              browserUrl: '',
+              credentialStoreConsent: false,
+              databaseType: DatabaseConnectionDatabaseType.ramen,
+              nodeConfigurations: [],
+              language: null,
+              ramenEdgeTitleRules: [
+                { annotationType: 'relation', titleProperty: 'kind' },
+              ],
+            } satisfies Omit<
+              UpdateDatabaseConnectionRequestBodyDto,
+              'username' | 'password'
+            >),
+            signal: testContext.signal,
+          });
+          assert.equal(setup.status, 200);
+          assert.equal(
+            databaseSchema.parse(await setup.json()).ramenEdgeTitleRules.length,
+            1,
+          );
+
+          // when
+          const response: Response = await fetch(url, {
+            method: 'PUT',
+            headers,
+            body: JSON.stringify({
+              title: 'RAMEN',
+              database: 'neo4j',
+              connectionUrl: 'bolt://127.0.0.1:7687',
+              browserUrl: '',
+              credentialStoreConsent: false,
+              databaseType: DatabaseConnectionDatabaseType.ramen,
+              nodeConfigurations: [],
+              language: null,
+              ramenEdgeTitleRules: [],
+            } satisfies Omit<
+              UpdateDatabaseConnectionRequestBodyDto,
+              'username' | 'password'
+            >),
+            signal: testContext.signal,
+          });
+
+          // then
+          assert.equal(response.status, 200);
+          assert.deepEqual(
+            databaseSchema.parse(await response.json()).ramenEdgeTitleRules,
+            [],
+          );
+          const persisted: Response = await fetch(url, {
+            headers,
+            signal: testContext.signal,
+          });
+          assert.equal(persisted.status, 200);
+          assert.deepEqual(
+            databaseSchema.parse(await persisted.json()).ramenEdgeTitleRules,
+            [],
+          );
         });
 
         test('collaborator can update a database connection', async (testContext: TestContext): Promise<void> => {
@@ -2976,6 +3134,7 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
                 browserUrl: 'https://example.test/browser',
                 credentialStoreConsent: false,
                 databaseType: DatabaseConnectionDatabaseType.neo4j,
+                ramenEdgeTitleRules: [],
                 nodeConfigurations: [],
                 language: null,
               } satisfies Omit<
@@ -3017,6 +3176,77 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
           assert.equal(persisted.title, 'Updated Database');
         });
 
+        test('clears stored Neo4j credentials when switching to SPARQL', async (testContext: TestContext): Promise<void> => {
+          // given
+          const fixture: FixtureContext =
+            await manager.setupFixture(testContext);
+          const login: PostAuthResponseBodyDto = await manager.loginUser(
+            fixture.owner.username,
+            fixture.owner.password,
+            testContext,
+          );
+          const url: string = `${manager.apiUrl}/project/${fixture.projectId}/database-connection/${fixture.databaseConnectionId}`;
+          const headers: Headers = new Headers([
+            ['Authorization', `Bearer ${login.jwt}`],
+            ['Content-Type', 'application/json'],
+          ]);
+          const setup: Response = await fetch(url, {
+            method: 'PUT',
+            headers,
+            body: JSON.stringify({
+              title: 'Graph',
+              database: 'neo4j',
+              connectionUrl: 'bolt://example.test:7687',
+              browserUrl: '',
+              credentialStoreConsent: true,
+              databaseType: DatabaseConnectionDatabaseType.neo4j,
+              ramenEdgeTitleRules: [],
+              nodeConfigurations: [],
+              language: null,
+              username: 'alice',
+              password: 'stored-secret',
+            } satisfies UpdateDatabaseConnectionRequestBodyDto),
+            signal: testContext.signal,
+          });
+          assert.equal(setup.status, 200);
+
+          // when
+          const response: Response = await fetch(url, {
+            method: 'PUT',
+            headers,
+            body: JSON.stringify({
+              title: 'Graph',
+              database: '',
+              connectionUrl: 'https://example.test/sparql',
+              browserUrl: '',
+              credentialStoreConsent: false,
+              databaseType: DatabaseConnectionDatabaseType.sparql,
+              ramenEdgeTitleRules: [],
+              nodeConfigurations: [],
+              language: null,
+              username: null,
+              password: null,
+            } satisfies UpdateDatabaseConnectionRequestBodyDto),
+            signal: testContext.signal,
+          });
+
+          // then
+          assert.equal(response.status, 200);
+          assert.equal(
+            databaseSchema.parse(await response.json()).database,
+            '',
+          );
+          const stored: Response = await manager.readDocument(
+            'api::database-connection.database-connection',
+            fixture.databaseConnectionId,
+            testContext,
+          );
+          assert.equal(stored.status, 200);
+          z.object({
+            data: z.object({ username: z.null(), password: z.null() }),
+          }).parse(await stored.json());
+        });
+
         test('can change the database type to sparql', async (testContext: TestContext): Promise<void> => {
           // given
           const fixture: FixtureContext =
@@ -3043,6 +3273,7 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
                 browserUrl: 'https://example.test/browser',
                 credentialStoreConsent: false,
                 databaseType: DatabaseConnectionDatabaseType.sparql,
+                ramenEdgeTitleRules: [],
                 nodeConfigurations: [],
                 language: 'de',
               } satisfies Omit<
@@ -3110,6 +3341,7 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
                 browserUrl: 'https://example.test/browser',
                 credentialStoreConsent: false,
                 databaseType: DatabaseConnectionDatabaseType.wikidata,
+                ramenEdgeTitleRules: [],
                 nodeConfigurations: [],
                 language: 'de',
               } satisfies Omit<
@@ -3152,6 +3384,191 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
         });
       });
       describe('400', (): void => {
+        test('rejects an empty RAMEN annotation type', async (testContext: TestContext): Promise<void> => {
+          // given
+          const fixture: FixtureContext =
+            await manager.setupFixture(testContext);
+          const login: PostAuthResponseBodyDto = await manager.loginUser(
+            fixture.collaborator.username,
+            fixture.collaborator.password,
+            testContext,
+          );
+
+          // when
+          const response: Response = await fetch(
+            `${manager.apiUrl}/project/${fixture.projectId}/database-connection/${fixture.databaseConnectionId}`,
+            {
+              method: 'PUT',
+              headers: new Headers([
+                ['Authorization', `Bearer ${login.jwt}`],
+                ['Content-Type', 'application/json'],
+              ]),
+              body: JSON.stringify({
+                title: 'RAMEN',
+                database: 'neo4j',
+                connectionUrl: 'bolt://127.0.0.1:7687',
+                browserUrl: '',
+                credentialStoreConsent: false,
+                databaseType: DatabaseConnectionDatabaseType.ramen,
+                nodeConfigurations: [],
+                language: null,
+                ramenEdgeTitleRules: [
+                  { annotationType: '', titleProperty: 'kind' },
+                ],
+              } satisfies Omit<
+                UpdateDatabaseConnectionRequestBodyDto,
+                'username' | 'password'
+              >),
+              signal: testContext.signal,
+            },
+          );
+
+          // then
+          assert.equal(response.status, 400);
+          const error: { statusCode: 400; message: string[] } = z
+            .object({
+              statusCode: z.literal(400),
+              message: z.array(z.string()),
+            })
+            .parse(await response.json());
+          assert.deepEqual(error.message, [
+            'ramenEdgeTitleRules.0.annotationType should not be empty',
+          ]);
+        });
+
+        test('rejects missing RAMEN edge-title rules', async (testContext: TestContext): Promise<void> => {
+          // given
+          const fixture: FixtureContext =
+            await manager.setupFixture(testContext);
+          const login: PostAuthResponseBodyDto = await manager.loginUser(
+            fixture.collaborator.username,
+            fixture.collaborator.password,
+            testContext,
+          );
+          const url: string = `${manager.apiUrl}/project/${fixture.projectId}/database-connection/${fixture.databaseConnectionId}`;
+          const headers: Headers = new Headers([
+            ['Authorization', `Bearer ${login.jwt}`],
+            ['Content-Type', 'application/json'],
+          ]);
+          const original: Response = await fetch(url, {
+            headers,
+            signal: testContext.signal,
+          });
+          assert.equal(original.status, 200);
+          const originalConnection: DatabaseConnectionDto =
+            databaseSchema.parse(await original.json());
+
+          // when
+          const response: Response = await fetch(url, {
+            method: 'PUT',
+            headers,
+            body: JSON.stringify({
+              title: 'RAMEN',
+              database: 'neo4j',
+              connectionUrl: 'bolt://127.0.0.1:7687',
+              browserUrl: '',
+              credentialStoreConsent: false,
+              databaseType: DatabaseConnectionDatabaseType.neo4j,
+              nodeConfigurations: [],
+              language: null,
+            } satisfies Omit<
+              UpdateDatabaseConnectionRequestBodyDto,
+              'username' | 'password' | 'ramenEdgeTitleRules'
+            >),
+            signal: testContext.signal,
+          });
+
+          // then
+          assert.equal(response.status, 400);
+          const error: { statusCode: 400; message: string[] } = z
+            .object({
+              statusCode: z.literal(400),
+              message: z.array(z.string()),
+            })
+            .parse(await response.json());
+          assert.ok(
+            error.message.some((message: string): boolean =>
+              message.includes('ramenEdgeTitleRules'),
+            ),
+          );
+          const persisted: Response = await fetch(url, {
+            headers,
+            signal: testContext.signal,
+          });
+          assert.equal(persisted.status, 200);
+          assert.deepEqual(
+            databaseSchema.parse(await persisted.json()),
+            originalConnection,
+          );
+        });
+
+        test('rejects null RAMEN edge-title rules', async (testContext: TestContext): Promise<void> => {
+          // given
+          const fixture: FixtureContext =
+            await manager.setupFixture(testContext);
+          const login: PostAuthResponseBodyDto = await manager.loginUser(
+            fixture.collaborator.username,
+            fixture.collaborator.password,
+            testContext,
+          );
+          const url: string = `${manager.apiUrl}/project/${fixture.projectId}/database-connection/${fixture.databaseConnectionId}`;
+          const headers: Headers = new Headers([
+            ['Authorization', `Bearer ${login.jwt}`],
+            ['Content-Type', 'application/json'],
+          ]);
+          const original: Response = await fetch(url, {
+            headers,
+            signal: testContext.signal,
+          });
+          assert.equal(original.status, 200);
+          const originalConnection: DatabaseConnectionDto =
+            databaseSchema.parse(await original.json());
+
+          // when
+          const response: Response = await fetch(url, {
+            method: 'PUT',
+            headers,
+            body: JSON.stringify({
+              title: 'RAMEN',
+              database: 'neo4j',
+              connectionUrl: 'bolt://127.0.0.1:7687',
+              browserUrl: '',
+              credentialStoreConsent: false,
+              databaseType: DatabaseConnectionDatabaseType.neo4j,
+              nodeConfigurations: [],
+              language: null,
+              ramenEdgeTitleRules: null,
+            } satisfies Omit<
+              UpdateDatabaseConnectionRequestBodyDto,
+              'username' | 'password' | 'ramenEdgeTitleRules'
+            > & { ramenEdgeTitleRules: null }),
+            signal: testContext.signal,
+          });
+
+          // then
+          assert.equal(response.status, 400);
+          const error: { statusCode: 400; message: string[] } = z
+            .object({
+              statusCode: z.literal(400),
+              message: z.array(z.string()),
+            })
+            .parse(await response.json());
+          assert.ok(
+            error.message.some((message: string): boolean =>
+              message.includes('ramenEdgeTitleRules'),
+            ),
+          );
+          const persisted: Response = await fetch(url, {
+            headers,
+            signal: testContext.signal,
+          });
+          assert.equal(persisted.status, 200);
+          assert.deepEqual(
+            databaseSchema.parse(await persisted.json()),
+            originalConnection,
+          );
+        });
+
         test(
           'rejects invalid database connection fields',
           { timeout: 180_000 },
@@ -3332,6 +3749,7 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
                     browserUrl: 'https://example.test/browser',
                     credentialStoreConsent: false,
                     databaseType: DatabaseConnectionDatabaseType.neo4j,
+                    ramenEdgeTitleRules: [],
                     nodeConfigurations: [],
                     language: null,
                     title: 'Updated Database',
@@ -3630,6 +4048,7 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
                   browserUrl: 'https://example.test/browser',
                   credentialStoreConsent: false,
                   databaseType: DatabaseConnectionDatabaseType.neo4j,
+                  ramenEdgeTitleRules: [],
                   nodeConfigurations: [],
                   language: null,
                   ...variant.payload,
@@ -3731,6 +4150,7 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
                   browserUrl: 'https://example.test/browser',
                   credentialStoreConsent: false,
                   databaseType: DatabaseConnectionDatabaseType.neo4j,
+                  ramenEdgeTitleRules: [],
                   nodeConfigurations: [],
                   language: null,
                 } satisfies Omit<
@@ -3833,6 +4253,7 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
                 browserUrl: 'https://example.test/browser',
                 credentialStoreConsent: false,
                 databaseType: DatabaseConnectionDatabaseType.neo4j,
+                ramenEdgeTitleRules: [],
                 nodeConfigurations: [],
                 language: null,
               } satisfies Omit<
@@ -3938,6 +4359,7 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
                 browserUrl: 'https://example.test/browser',
                 credentialStoreConsent: false,
                 databaseType: DatabaseConnectionDatabaseType.neo4j,
+                ramenEdgeTitleRules: [],
                 nodeConfigurations: [],
                 language: null,
               } satisfies Omit<
@@ -4062,6 +4484,7 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
                 browserUrl: 'https://example.test/browser',
                 credentialStoreConsent: false,
                 databaseType: DatabaseConnectionDatabaseType.neo4j,
+                ramenEdgeTitleRules: [],
                 nodeConfigurations: [],
                 language: null,
               } satisfies Omit<
@@ -4177,6 +4600,7 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
                 browserUrl: 'https://example.test/browser',
                 credentialStoreConsent: false,
                 databaseType: DatabaseConnectionDatabaseType.neo4j,
+                ramenEdgeTitleRules: [],
                 nodeConfigurations: [],
                 language: null,
               } satisfies Omit<
@@ -4306,6 +4730,7 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
                 browserUrl: 'https://example.test/browser',
                 credentialStoreConsent: false,
                 databaseType: DatabaseConnectionDatabaseType.neo4j,
+                ramenEdgeTitleRules: [],
                 nodeConfigurations: [],
                 language: null,
               } satisfies Omit<
@@ -4398,6 +4823,7 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
                 browserUrl: 'https://example.test/browser',
                 credentialStoreConsent: false,
                 databaseType: DatabaseConnectionDatabaseType.neo4j,
+                ramenEdgeTitleRules: [],
                 nodeConfigurations: [],
                 language: null,
               } satisfies Omit<
@@ -4527,6 +4953,7 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
                 browserUrl: 'https://example.test/browser',
                 credentialStoreConsent: false,
                 databaseType: DatabaseConnectionDatabaseType.neo4j,
+                ramenEdgeTitleRules: [],
                 nodeConfigurations: [],
                 language: null,
               } satisfies Omit<
@@ -4649,6 +5076,7 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
                 browserUrl: 'https://example.test/browser',
                 credentialStoreConsent: false,
                 databaseType: DatabaseConnectionDatabaseType.neo4j,
+                ramenEdgeTitleRules: [],
                 nodeConfigurations: [],
                 language: null,
               } satisfies Omit<

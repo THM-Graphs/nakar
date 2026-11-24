@@ -15,6 +15,7 @@ import { resultOrThrow } from "../shared/data/resultOrThrow.ts";
 import { Router } from "../routing/Router.ts";
 import { CMSEditPageForm } from "../shared/cms/CMSEditPageForm.tsx";
 import { DatabaseConnectionEditor } from "../shared/cms/DatabaseConnectionEditor.tsx";
+import { prepareDatabaseConnectionRequest } from "../shared/data/prepareDatabaseConnectionRequest.ts";
 
 type EditDatabaseConnectionLoaderData = {
   project: ProjectPageDto;
@@ -66,6 +67,7 @@ export function EditDatabaseConnection() {
       nodeConfigurations: loaderData.databaseConnection.nodeConfigurations,
       title: loaderData.databaseConnection.title,
       language: loaderData.databaseConnection.language,
+      ramenEdgeTitleRules: loaderData.databaseConnection.ramenEdgeTitleRules,
     });
 
   return (
@@ -98,7 +100,7 @@ export function EditDatabaseConnection() {
           <CMSEditPageForm
             onSave={async () => {
               await databaseConnectionControllerUpdateDatabaseConnection({
-                body: databaseConnection,
+                body: prepareDatabaseConnectionRequest(databaseConnection),
                 path: {
                   projectId: loaderData.project.id,
                   databaseConnectionId: loaderData.databaseConnection.id,

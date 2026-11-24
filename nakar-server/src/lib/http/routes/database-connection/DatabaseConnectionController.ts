@@ -12,12 +12,14 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ApiParam, ApiResponse } from '@nestjs/swagger';
+import { match } from 'ts-pattern';
 import { UserCanAccessProject } from '../../guards/UserCanAccessProject';
 import type { Modules } from '@strapi/types';
 import { SchemaFactoryService } from '../../../schema/SchemaFactoryService';
 import { DatabaseConnectionDto } from '../../../schema/dtos/DatabaseConnectionDto';
 import { DatabaseConnectionBelongsToProject } from '../../guards/DatabaseConnectionBelongsToProject';
 import { UpdateDatabaseConnectionRequestBodyDto } from './dto/UpdateDatabaseConnectionRequestBodyDto';
+import { DatabaseConnectionDatabaseType } from './dto/DatabaseConnectionDatabaseType';
 import { DatabaseService } from '../../../database/DatabaseService';
 
 @Controller('/project/:projectId/database-connection')
@@ -81,29 +83,60 @@ export class DatabaseConnectionController {
         throw new BadRequestException('Consent required.');
       }
     }
+    const preserveCredentialsOnNull: boolean = match(body.databaseType)
+      .with(
+        DatabaseConnectionDatabaseType.neo4j,
+        DatabaseConnectionDatabaseType.ramen,
+        (): boolean => true,
+      )
+      .with(
+        DatabaseConnectionDatabaseType.sparql,
+        DatabaseConnectionDatabaseType.wikidata,
+        (): boolean => false,
+      )
+      .exhaustive();
+    const username: string | null | undefined = preserveCredentialsOnNull
+      ? (body.username ?? undefined)
+      : body.username;
+    const password: string | null | undefined = preserveCredentialsOnNull
+      ? (body.password ?? undefined)
+      : body.password;
 
-    const databaseConnection: Modules.Documents.Result<'api::database-connection.database-connection'> | null =
-      await this._database.updateDatabase(databaseConnectionId, {
-        title: body.title,
-        username: body.username != null ? body.username : undefined,
-        password: body.password != null ? body.password : undefined,
-        database: body.database,
-        connectionUrl: body.connectionUrl,
-        browserUrl: body.browserUrl,
-        databaseType: body.databaseType,
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
-        language: body.language as string | undefined,
-      });
+    return await strapi.db.transaction(
+      async (): Promise<DatabaseConnectionDto> => {
+        const databaseConnection: Modules.Documents.Result<'api::database-connection.database-connection'> | null =
+          await this._database.updateDatabase(databaseConnectionId, {
+            title: body.title,
+            // Strapi accepts null to clear these fields, but its input type omits it.
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
+            username: username as string | undefined,
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
+            password: password as string | undefined,
+            database: body.database,
+            connectionUrl: body.connectionUrl,
+            browserUrl: body.browserUrl,
+            databaseType: body.databaseType,
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
+            language: body.language as string | undefined,
+          });
 
-    if (databaseConnection == null) {
-      throw new NotFoundException();
-    }
+        if (databaseConnection == null) {
+          throw new NotFoundException();
+        }
 
-    await this._database.upsertNodeConfigurations(
-      databaseConnection,
-      body.nodeConfigurations,
+        await this._database.upsertNodeConfigurations(
+          databaseConnection,
+          body.nodeConfigurations,
+        );
+        await this._database.replaceRamenEdgeTitleRules(
+          databaseConnection.documentId,
+          body.ramenEdgeTitleRules,
+        );
+
+        return await this._schemaFactory.createSchemaDatabase(
+          databaseConnection,
+        );
+      },
     );
-
-    return await this._schemaFactory.createSchemaDatabase(databaseConnection);
   }
 }

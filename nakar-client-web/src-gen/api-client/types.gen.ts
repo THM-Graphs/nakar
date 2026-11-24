@@ -39,6 +39,11 @@ export type NodeConfigurationDto = {
     valueRegex: string;
 };
 
+export type RamenEdgeTitleRuleDto = {
+    annotationType: string;
+    titleProperty: string;
+};
+
 export type DatabaseConnectionDto = {
     id: string;
     title: string;
@@ -46,8 +51,9 @@ export type DatabaseConnectionDto = {
     connectionUrl: string;
     database: string;
     nodeConfigurations: Array<NodeConfigurationDto>;
-    databaseType: 'neo4j' | 'sparql' | 'wikidata';
+    databaseType: 'neo4j' | 'sparql' | 'wikidata' | 'ramen';
     language: string | null;
+    ramenEdgeTitleRules: Array<RamenEdgeTitleRuleDto>;
 };
 
 export type StartPageProjectDto = {
@@ -180,9 +186,10 @@ export type UpdateDatabaseConnectionRequestBodyDto = {
     connectionUrl: string;
     browserUrl: string;
     credentialStoreConsent: boolean;
-    databaseType: 'neo4j' | 'sparql' | 'wikidata';
+    databaseType: 'neo4j' | 'sparql' | 'wikidata' | 'ramen';
     nodeConfigurations: Array<UpdateNodeConfigurationRequestBodyDto>;
     language: string | null;
+    ramenEdgeTitleRules: Array<RamenEdgeTitleRuleDto>;
 };
 
 export type CreateProjectRequestBodyDto = {
@@ -198,7 +205,7 @@ export type TestDatabaseConnectionRequestBodyDto = {
     password?: string | null;
     database?: string | null;
     connectionUrl: string;
-    databaseType: 'neo4j' | 'sparql' | 'wikidata';
+    databaseType: 'neo4j' | 'sparql' | 'wikidata' | 'ramen';
     language?: string | null;
 };
 

@@ -3,6 +3,7 @@ import {
   IsArray,
   IsBoolean,
   IsEnum,
+  IsObject,
   IsOptional,
   IsString,
   Matches,
@@ -13,6 +14,7 @@ import { UpdateNodeConfigurationRequestBodyDto } from './UpdateNodeConfiguration
 import { Type } from 'class-transformer';
 import { DatabaseConnectionDatabaseType } from './DatabaseConnectionDatabaseType';
 import { wikidataLanguagePattern } from '../../../../external-database/adapters/wikidata/WikidataLanguagePattern';
+import { RamenEdgeTitleRuleDto } from './RamenEdgeTitleRuleDto';
 
 export class UpdateDatabaseConnectionRequestBodyDto {
   @ApiProperty()
@@ -65,4 +67,11 @@ export class UpdateDatabaseConnectionRequestBodyDto {
   @Matches(wikidataLanguagePattern)
   @IsOptional()
   public language!: string | null;
+
+  @ApiProperty({ type: RamenEdgeTitleRuleDto, isArray: true })
+  @IsArray()
+  @IsObject({ each: true })
+  @ValidateNested({ each: true })
+  @Type((): typeof RamenEdgeTitleRuleDto => RamenEdgeTitleRuleDto)
+  public ramenEdgeTitleRules!: RamenEdgeTitleRuleDto[];
 }

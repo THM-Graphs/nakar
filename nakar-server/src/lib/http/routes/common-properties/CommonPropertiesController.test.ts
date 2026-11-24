@@ -22,6 +22,7 @@ const databaseSchema: z.ZodType<DatabaseConnectionDto> = z.strictObject({
   database: z.string(),
   databaseType: z.enum(DatabaseConnectionDatabaseType),
   language: z.string().nullable(),
+  ramenEdgeTitleRules: z.array(z.never()),
   nodeConfigurations: z.array(
     z.strictObject({
       id: z.string().min(1),

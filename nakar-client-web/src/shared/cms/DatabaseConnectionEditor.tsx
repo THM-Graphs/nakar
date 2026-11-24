@@ -12,15 +12,16 @@ import { CMSButton } from "./CMSButton.tsx";
 import { useState } from "react";
 import {
   DatabaseConnectionDto,
-  UpdateDatabaseConnectionRequestBodyDto,
   projectControllerTestDatabaseConnection,
   TestDatabaseConnectionResponseBodyDto,
+  UpdateDatabaseConnectionRequestBodyDto,
 } from "api-client";
 import { resultOrThrow } from "../data/resultOrThrow.ts";
 import clsx from "clsx";
 import { handleError } from "../error/handleError.ts";
 import { NodeConfigurationsEditor } from "./NodeConfigurationsEditor.tsx";
 import { getDatabaseTypeDisplay } from "../data/getDatabaseTypeDisplay.ts";
+import { RamenEdgeTitleRulesEditor } from "./RamenEdgeTitleRulesEditor.tsx";
 
 export function DatabaseConnectionEditor(props: {
   value: UpdateDatabaseConnectionRequestBodyDto;
@@ -86,20 +87,13 @@ export function DatabaseConnectionEditor(props: {
                     props.onChange({
                       ...props.value,
                       databaseType,
-                      ...(props.projectId == null && databaseType !== "neo4j"
-                        ? {
-                            username: null,
-                            password: null,
-                            database: "",
-                            credentialStoreConsent: false,
-                          }
-                        : {}),
                     });
                   }}
                 >
                   {(
                     [
                       "neo4j",
+                      "ramen",
                       "sparql",
                       "wikidata",
                     ] satisfies UpdateDatabaseConnectionRequestBodyDto["databaseType"][]
@@ -175,7 +169,8 @@ export function DatabaseConnectionEditor(props: {
                     </Form.Group>
                   </Col>
                 )}
-                {props.value.databaseType === "neo4j" && (
+                {props.value.databaseType === "neo4j" ||
+                props.value.databaseType === "ramen" ? (
                   <>
                     <Col>
                       <Form.Group controlId={"database-username"}>
@@ -266,7 +261,7 @@ export function DatabaseConnectionEditor(props: {
                       </Form.Group>
                     </Col>
                   </>
-                )}
+                ) : null}
               </Row>
               <Stack direction={"horizontal"} gap={3}>
                 <CMSButton
@@ -361,6 +356,14 @@ export function DatabaseConnectionEditor(props: {
           )}
         </Stack>
       </Stack>
+      {props.value.databaseType === "ramen" && (
+        <RamenEdgeTitleRulesEditor
+          value={props.value.ramenEdgeTitleRules}
+          onChange={(ramenEdgeTitleRules) => {
+            props.onChange({ ...props.value, ramenEdgeTitleRules });
+          }}
+        ></RamenEdgeTitleRulesEditor>
+      )}
       {props.projectId != null && (
         <NodeConfigurationsEditor
           value={props.value.nodeConfigurations}

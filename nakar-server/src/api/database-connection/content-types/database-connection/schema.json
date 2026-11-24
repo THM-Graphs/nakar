@@ -28,7 +28,8 @@
       "enum": [
         "neo4j",
         "sparql",
-        "wikidata"
+        "wikidata",
+        "ramen"
       ]
     },
     "username": {
@@ -72,6 +73,12 @@
     },
     "language": {
       "type": "string"
+    },
+    "ramenEdgeTitleRules": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::ramen-edge-title-rule.ramen-edge-title-rule",
+      "mappedBy": "database"
     }
   }
 }

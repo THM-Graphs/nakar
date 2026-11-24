@@ -13,6 +13,7 @@ import { CMSButton } from "../shared/cms/CMSButton.tsx";
 import { CMSEditTextCard } from "../shared/cms/CMSEditTextCard.tsx";
 import { Router } from "../routing/Router.ts";
 import { DatabaseConnectionEditor } from "../shared/cms/DatabaseConnectionEditor.tsx";
+import { prepareDatabaseConnectionRequest } from "../shared/data/prepareDatabaseConnectionRequest.ts";
 
 export function AddProject() {
   const [title, setTitle] = useState<string>("Untitled Project");
@@ -28,6 +29,7 @@ export function AddProject() {
       connectionUrl: "",
       database: "",
       nodeConfigurations: [],
+      ramenEdgeTitleRules: [],
       language: null,
     });
   const [loading, setLoading] = useState(false);
@@ -57,7 +59,7 @@ export function AddProject() {
                     title: title,
                     createDemoScenarios,
                     databaseConnection: createDemoScenarios
-                      ? databaseConnection
+                      ? prepareDatabaseConnectionRequest(databaseConnection)
                       : undefined,
                   },
                 })
