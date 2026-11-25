@@ -8,9 +8,9 @@ import type { ExternalGraphDatabaseQueryLimitConfig } from '../../data/ExternalG
 import type { ExternalGraphDatabaseQueryResult } from '../../data/ExternalGraphDatabaseQueryResult';
 import type { ExternalGraphDatabaseRelationship } from '../../data/ExternalGraphDatabaseRelationship';
 import { Neo4jExternalDatabase } from '../neo4j/Neo4jExternalDatabase';
-import { v4 } from 'uuid';
 
 interface AnnotationCandidate {
+  nativeId: string;
   title: string;
   properties: ExternalGraphDatabaseNode['properties'];
   incoming: ExternalGraphDatabaseRelationship[];
@@ -85,7 +85,8 @@ export class RamenExternalDatabase extends Neo4jExternalDatabase {
       const title: unknown = node.properties[property];
       if (typeof title === 'string' && title.trim().length > 0) {
         candidates.set(node.nativeId, {
-          title,
+          title: title,
+          nativeId: node.nativeId,
           properties: node.properties,
           incoming: [],
           outgoing: [],
@@ -128,7 +129,7 @@ export class RamenExternalDatabase extends Neo4jExternalDatabase {
       endpoints.add(start.nativeId);
       endpoints.add(end.nativeId);
       edges.push({
-        nativeId: v4(),
+        nativeId: `annotation_${candidate.nativeId}`,
         type: candidate.title,
         startNodeId: start.nativeId,
         endNodeId: end.nativeId,
