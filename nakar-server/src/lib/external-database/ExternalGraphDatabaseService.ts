@@ -21,6 +21,8 @@ import type { ExternalGraphDatabaseStats } from './data/ExternalGraphDatabaseSta
 import { match } from 'ts-pattern';
 import { ExternalGraphDatabaseType } from './data/ExternalGraphDatabaseType';
 import { WikidataExternalDatabase } from './adapters/wikidata/WikidataExternalDatabase';
+import { RamenExternalDatabase } from './adapters/ramen/RamenExternalDatabase';
+import { DatabaseService } from '../database/DatabaseService';
 
 @Injectable()
 export class ExternalGraphDatabaseService implements OnModuleDestroy {
@@ -29,7 +31,7 @@ export class ExternalGraphDatabaseService implements OnModuleDestroy {
     ExternalGraphDatabase
   >;
 
-  public constructor() {
+  public constructor(database: DatabaseService) {
     this._adapters = new SMap<
       ExternalGraphDatabaseType,
       ExternalGraphDatabase
@@ -48,7 +50,7 @@ export class ExternalGraphDatabaseService implements OnModuleDestroy {
     );
     this._adapters.set(
       ExternalGraphDatabaseType.ramen,
-      new Neo4jExternalDatabase(),
+      new RamenExternalDatabase(database),
     );
   }
 
