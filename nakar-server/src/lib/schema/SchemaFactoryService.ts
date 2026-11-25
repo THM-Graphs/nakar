@@ -23,6 +23,7 @@ import { ScenarioQueryDto } from './dtos/ScenarioQueryDto';
 import { RoomDto } from './dtos/RoomDto';
 import { ScenarioCollectionDto } from './dtos/ScenarioCollectionDto';
 import { DatabaseConnectionDto } from './dtos/DatabaseConnectionDto';
+import type { RamenEdgeTitleRuleDto } from '../http/routes/database-connection/dto/RamenEdgeTitleRuleDto';
 import { CanvasDto } from './dtos/CanvasDto';
 import { LiveCanvasGraphElementsDto } from './dtos/LiveCanvasGraphElementsDto';
 import { NodeDto } from './dtos/NodeDto';
@@ -76,6 +77,8 @@ export class SchemaFactoryService {
   ): Promise<DatabaseConnectionDto> {
     const nodeConfigurations: Modules.Documents.Result<'api::node-configuration.node-configuration'>[] =
       await this._database.getNodeConfigurationsOfDatabase(databaseDBDTO);
+    const ramenEdgeTitleRules: Modules.Documents.Result<'api::ramen-edge-title-rule.ramen-edge-title-rule'>[] =
+      await this._database.getRamenEdgeTitleRules(databaseDBDTO.documentId);
     return {
       id: databaseDBDTO.documentId,
       title: databaseDBDTO.title ?? '',
@@ -128,12 +131,26 @@ export class SchemaFactoryService {
             DatabaseConnectionDatabaseType.wikidata,
         )
         .with(
+          'ramen',
+          (): DatabaseConnectionDatabaseType =>
+            DatabaseConnectionDatabaseType.ramen,
+        )
+        .with(
           P.nullish,
           (): DatabaseConnectionDatabaseType =>
             DatabaseConnectionDatabaseType.neo4j,
         )
         .exhaustive(),
       language: databaseDBDTO.language ?? null,
+      ramenEdgeTitleRules: ramenEdgeTitleRules.map(
+        ({
+          annotationType,
+          titleProperty,
+        }: Modules.Documents.Result<'api::ramen-edge-title-rule.ramen-edge-title-rule'>): RamenEdgeTitleRuleDto => ({
+          annotationType: annotationType ?? '',
+          titleProperty: titleProperty ?? '',
+        }),
+      ),
     };
   }
 

@@ -18,7 +18,6 @@ import type { DatabaseConnectionDto } from '../../../schema/dtos/DatabaseConnect
 import { DatabaseConnectionDatabaseType } from '../database-connection/dto/DatabaseConnectionDatabaseType';
 import type { ScenarioGroupDto } from '../../../schema/dtos/ScenarioGroupDto';
 import type { CommonPropertyDto } from '../../../schema/dtos/CommonPropertyDto';
-import type { UpdateDatabaseConnectionRequestBodyDto } from '../database-connection/dto/UpdateDatabaseConnectionRequestBodyDto';
 import type { TestDatabaseConnectionRequestBodyDto } from './dto/TestDatabaseConnectionRequestBodyDto';
 import type { ScenarioQueryDto } from '../../../schema/dtos/ScenarioQueryDto';
 
@@ -35,6 +34,9 @@ const databaseSchema: z.ZodType<DatabaseConnectionDto> = z.strictObject({
   database: z.string(),
   databaseType: z.enum(DatabaseConnectionDatabaseType),
   language: z.string().nullable(),
+  ramenEdgeTitleRules: z.array(
+    z.strictObject({ annotationType: z.string(), titleProperty: z.string() }),
+  ),
   nodeConfigurations: z.array(z.never()),
 });
 const scenarioGroupSchema: z.ZodType<ScenarioGroupDto> = z.strictObject({
@@ -107,10 +109,20 @@ const databaseListStateSchema: z.ZodType<{
   ),
 });
 
+type DemoConnectionDetails = Pick<
+  DatabaseConnectionDto,
+  | 'title'
+  | 'databaseType'
+  | 'connectionUrl'
+  | 'browserUrl'
+  | 'database'
+  | 'language'
+>;
+
 function assertDemoProject(
   project: ProjectPageDto,
   owner: E2ETestApplicationUser,
-  databaseConnection: UpdateDatabaseConnectionRequestBodyDto,
+  databaseConnection: DemoConnectionDetails,
   expectedQuery: string,
 ): void {
   const [database]: DatabaseConnectionDto[] = project.databases;
@@ -129,6 +141,7 @@ function assertDemoProject(
     database: databaseConnection.database,
     databaseType: databaseConnection.databaseType,
     language: databaseConnection.language,
+    ramenEdgeTitleRules: [],
     nodeConfigurations: [],
   });
   assert.equal(project.rooms.length, 1);
@@ -225,15 +238,16 @@ describe('/project', (suiteContext: SuiteContext): void => {
             createDemoScenarios: false,
             databaseConnection: {
               title: 'Demo Database',
-              databaseType: DatabaseConnectionDatabaseType.neo4j,
-              connectionUrl: 'bolt://example.test:7687',
               browserUrl: '',
-              database: 'neo4j',
-              username: 'demo-user',
-              password: 'demo-password',
               credentialStoreConsent: false,
               nodeConfigurations: [],
-              language: null,
+              adapter: {
+                databaseType: DatabaseConnectionDatabaseType.neo4j,
+                connectionUrl: 'bolt://example.test:7687',
+                username: 'demo-user',
+                password: 'demo-password',
+                database: 'neo4j',
+              },
             },
           } satisfies CreateProjectRequestBodyDto),
           signal: testContext.signal,
@@ -296,16 +310,12 @@ describe('/project', (suiteContext: SuiteContext): void => {
           ['Authorization', `Bearer ${login.jwt}`],
           ['Content-Type', 'application/json'],
         ]);
-        const databaseConnection: UpdateDatabaseConnectionRequestBodyDto = {
+        const connectionDetails: DemoConnectionDetails = {
           title: 'Demo Database',
           databaseType: DatabaseConnectionDatabaseType.neo4j,
           connectionUrl: 'bolt://example.test:7687',
           browserUrl: 'https://example.test',
           database: 'neo4j',
-          username: 'demo-user',
-          password: 'demo-password',
-          credentialStoreConsent: true,
-          nodeConfigurations: [],
           language: null,
         };
 
@@ -316,7 +326,19 @@ describe('/project', (suiteContext: SuiteContext): void => {
           body: JSON.stringify({
             title: 'Demo Project',
             createDemoScenarios: true,
-            databaseConnection,
+            databaseConnection: {
+              title: connectionDetails.title,
+              browserUrl: connectionDetails.browserUrl,
+              credentialStoreConsent: true,
+              nodeConfigurations: [],
+              adapter: {
+                databaseType: DatabaseConnectionDatabaseType.neo4j,
+                connectionUrl: connectionDetails.connectionUrl,
+                username: 'demo-user',
+                password: 'demo-password',
+                database: connectionDetails.database,
+              },
+            },
           } satisfies CreateProjectRequestBodyDto),
           signal: testContext.signal,
         });
@@ -329,7 +351,7 @@ describe('/project', (suiteContext: SuiteContext): void => {
         assertDemoProject(
           project,
           owner,
-          databaseConnection,
+          connectionDetails,
           'CALL db.schema.visualization()',
         );
 
@@ -342,6 +364,72 @@ describe('/project', (suiteContext: SuiteContext): void => {
         );
         assert.equal(persisted.status, 200);
         assert.deepEqual(projectSchema.parse(await persisted.json()), project);
+      });
+
+      test('persists RAMEN edge-title rules for the initial database connection', async (testContext: TestContext): Promise<void> => {
+        // given
+        const owner: E2ETestApplicationUser =
+          await manager.registerUser(testContext);
+        const login: PostAuthResponseBodyDto = await manager.loginUser(
+          owner.username,
+          owner.password,
+          testContext,
+        );
+        const headers: Headers = new Headers([
+          ['Authorization', `Bearer ${login.jwt}`],
+          ['Content-Type', 'application/json'],
+        ]);
+        const rules: DatabaseConnectionDto['ramenEdgeTitleRules'] = [
+          { annotationType: 'relation', titleProperty: 'kind' },
+        ];
+
+        // when
+        const response: Response = await fetch(`${manager.apiUrl}/project`, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({
+            title: 'Demo Project',
+            createDemoScenarios: true,
+            databaseConnection: {
+              title: 'Demo Database',
+              browserUrl: '',
+              credentialStoreConsent: false,
+              nodeConfigurations: [],
+              adapter: {
+                databaseType: DatabaseConnectionDatabaseType.ramen,
+                connectionUrl: 'bolt://example.test:7687',
+                username: null,
+                password: null,
+                database: 'neo4j',
+                ramenEdgeTitleRules: rules,
+              },
+            },
+          } satisfies CreateProjectRequestBodyDto),
+          signal: testContext.signal,
+        });
+
+        // then
+        assert.equal(response.status, 201);
+        const project: ProjectPageDto = projectSchema.parse(
+          await response.json(),
+        );
+        const database: DatabaseConnectionDto | undefined =
+          project.databases.at(0);
+        assert.ok(database);
+        assert.equal(
+          database.databaseType,
+          DatabaseConnectionDatabaseType.ramen,
+        );
+        assert.deepEqual(database.ramenEdgeTitleRules, rules);
+        const persisted: Response = await fetch(
+          `${manager.apiUrl}/project/${project.id}/database-connection/${database.id}`,
+          { headers, signal: testContext.signal },
+        );
+        assert.equal(persisted.status, 200);
+        assert.deepEqual(
+          databaseSchema.parse(await persisted.json()).ramenEdgeTitleRules,
+          rules,
+        );
       });
 
       test('creates a private demo room and a graph scenario for sparql', async (testContext: TestContext): Promise<void> => {
@@ -357,16 +445,12 @@ describe('/project', (suiteContext: SuiteContext): void => {
           ['Authorization', `Bearer ${login.jwt}`],
           ['Content-Type', 'application/json'],
         ]);
-        const databaseConnection: UpdateDatabaseConnectionRequestBodyDto = {
+        const connectionDetails: DemoConnectionDetails = {
           title: 'Demo Database',
           databaseType: DatabaseConnectionDatabaseType.sparql,
           connectionUrl: 'https://example.test/sparql',
           browserUrl: 'https://example.test',
           database: '',
-          username: null,
-          password: null,
-          credentialStoreConsent: false,
-          nodeConfigurations: [],
           language: null,
         };
 
@@ -377,7 +461,16 @@ describe('/project', (suiteContext: SuiteContext): void => {
           body: JSON.stringify({
             title: 'Demo Project',
             createDemoScenarios: true,
-            databaseConnection,
+            databaseConnection: {
+              title: connectionDetails.title,
+              browserUrl: connectionDetails.browserUrl,
+              credentialStoreConsent: false,
+              nodeConfigurations: [],
+              adapter: {
+                databaseType: DatabaseConnectionDatabaseType.sparql,
+                connectionUrl: connectionDetails.connectionUrl,
+              },
+            },
           } satisfies CreateProjectRequestBodyDto),
           signal: testContext.signal,
         });
@@ -390,7 +483,7 @@ describe('/project', (suiteContext: SuiteContext): void => {
         assertDemoProject(
           project,
           owner,
-          databaseConnection,
+          connectionDetails,
           'CONSTRUCT { ?s ?p ?o } WHERE { ?s ?p ?o } LIMIT 300',
         );
 
@@ -418,16 +511,12 @@ describe('/project', (suiteContext: SuiteContext): void => {
           ['Authorization', `Bearer ${login.jwt}`],
           ['Content-Type', 'application/json'],
         ]);
-        const databaseConnection: UpdateDatabaseConnectionRequestBodyDto = {
+        const connectionDetails: DemoConnectionDetails = {
           title: 'Demo Database',
           databaseType: DatabaseConnectionDatabaseType.wikidata,
           connectionUrl: 'https://example.test/sparql',
           browserUrl: 'https://example.test',
           database: '',
-          username: null,
-          password: null,
-          credentialStoreConsent: false,
-          nodeConfigurations: [],
           language: 'de',
         };
 
@@ -438,7 +527,17 @@ describe('/project', (suiteContext: SuiteContext): void => {
           body: JSON.stringify({
             title: 'Demo Project',
             createDemoScenarios: true,
-            databaseConnection,
+            databaseConnection: {
+              title: connectionDetails.title,
+              browserUrl: connectionDetails.browserUrl,
+              credentialStoreConsent: false,
+              nodeConfigurations: [],
+              adapter: {
+                databaseType: DatabaseConnectionDatabaseType.wikidata,
+                connectionUrl: connectionDetails.connectionUrl,
+                language: connectionDetails.language,
+              },
+            },
           } satisfies CreateProjectRequestBodyDto),
           signal: testContext.signal,
         });
@@ -451,7 +550,7 @@ describe('/project', (suiteContext: SuiteContext): void => {
         assertDemoProject(
           project,
           owner,
-          databaseConnection,
+          connectionDetails,
           'CONSTRUCT { ?s ?p ?o } WHERE { ?s ?p ?o } LIMIT 300',
         );
 
@@ -566,15 +665,16 @@ describe('/project', (suiteContext: SuiteContext): void => {
             createDemoScenarios: true,
             databaseConnection: {
               title: 'Demo Database',
-              databaseType: DatabaseConnectionDatabaseType.neo4j,
-              connectionUrl: 'bolt://example.test:7687',
               browserUrl: '',
-              database: 'neo4j',
-              username: 'demo-user',
-              password: null,
               credentialStoreConsent: false,
               nodeConfigurations: [],
-              language: null,
+              adapter: {
+                databaseType: DatabaseConnectionDatabaseType.neo4j,
+                connectionUrl: 'bolt://example.test:7687',
+                username: 'demo-user',
+                password: null,
+                database: 'neo4j',
+              },
             },
           } satisfies CreateProjectRequestBodyDto),
           signal: testContext.signal,
@@ -626,15 +726,16 @@ describe('/project', (suiteContext: SuiteContext): void => {
             createDemoScenarios: true,
             databaseConnection: {
               title: 'Demo Database',
-              databaseType: DatabaseConnectionDatabaseType.neo4j,
-              connectionUrl: 'bolt://example.test:7687',
               browserUrl: '',
-              database: 'neo4j',
-              username: null,
-              password: 'demo-password',
               credentialStoreConsent: false,
               nodeConfigurations: [],
-              language: null,
+              adapter: {
+                databaseType: DatabaseConnectionDatabaseType.neo4j,
+                connectionUrl: 'bolt://example.test:7687',
+                username: null,
+                password: 'demo-password',
+                database: 'neo4j',
+              },
             },
           } satisfies CreateProjectRequestBodyDto),
           signal: testContext.signal,
@@ -2706,6 +2807,7 @@ describe('/project', (suiteContext: SuiteContext): void => {
               browserUrl: 'https://normal.example.test/browser',
               database: 'normal',
               language: 'en',
+              ramenEdgeTitleRules: [],
               nodeConfigurations: [],
             },
             {
@@ -2716,6 +2818,7 @@ describe('/project', (suiteContext: SuiteContext): void => {
               browserUrl: 'https://published.example.test/browser',
               database: 'published',
               language: 'de',
+              ramenEdgeTitleRules: [],
               nodeConfigurations: [],
             },
           ];
@@ -3053,6 +3156,7 @@ describe('/project', (suiteContext: SuiteContext): void => {
             database: 'left',
             databaseType: DatabaseConnectionDatabaseType.neo4j,
             language: 'en',
+            ramenEdgeTitleRules: [],
             nodeConfigurations: [],
           };
           const expectedRightDatabase: DatabaseConnectionDto = {
@@ -3063,6 +3167,7 @@ describe('/project', (suiteContext: SuiteContext): void => {
             database: 'right',
             databaseType: DatabaseConnectionDatabaseType.sparql,
             language: 'de',
+            ramenEdgeTitleRules: [],
             nodeConfigurations: [],
           };
           const expected: CommonPropertyDto[] = [

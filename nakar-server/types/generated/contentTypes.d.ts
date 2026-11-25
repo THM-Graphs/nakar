@@ -543,7 +543,7 @@ export interface ApiDatabaseConnectionDatabaseConnection
       Schema.Attribute.Private;
     database: Schema.Attribute.String;
     databaseType: Schema.Attribute.Enumeration<
-      ['neo4j', 'sparql', 'wikidata']
+      ['neo4j', 'sparql', 'wikidata', 'ramen']
     > &
       Schema.Attribute.Required &
       Schema.Attribute.DefaultTo<'neo4j'>;
@@ -562,6 +562,10 @@ export interface ApiDatabaseConnectionDatabaseConnection
     project: Schema.Attribute.Relation<'manyToOne', 'api::project.project'>;
     publishedAt: Schema.Attribute.DateTime;
     queries: Schema.Attribute.Relation<'oneToMany', 'api::query.query'>;
+    ramenEdgeTitleRules: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::ramen-edge-title-rule.ramen-edge-title-rule'
+    >;
     title: Schema.Attribute.String;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
@@ -844,6 +848,41 @@ export interface ApiQueryQuery extends Struct.CollectionTypeSchema {
     publishedAt: Schema.Attribute.DateTime;
     query: Schema.Attribute.Text;
     scenario: Schema.Attribute.Relation<'manyToOne', 'api::scenario.scenario'>;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
+export interface ApiRamenEdgeTitleRuleRamenEdgeTitleRule
+  extends Struct.CollectionTypeSchema {
+  collectionName: 'ramen_edge_title_rules';
+  info: {
+    displayName: 'RAMEN Edge Title Rule';
+    pluralName: 'ramen-edge-title-rules';
+    singularName: 'ramen-edge-title-rule';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    annotationType: Schema.Attribute.String & Schema.Attribute.Required;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    database: Schema.Attribute.Relation<
+      'manyToOne',
+      'api::database-connection.database-connection'
+    > &
+      Schema.Attribute.Required;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::ramen-edge-title-rule.ramen-edge-title-rule'
+    > &
+      Schema.Attribute.Private;
+    publishedAt: Schema.Attribute.DateTime;
+    titleProperty: Schema.Attribute.String & Schema.Attribute.Required;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -1512,6 +1551,7 @@ declare module '@strapi/strapi' {
       'api::project.project': ApiProjectProject;
       'api::query-parameter.query-parameter': ApiQueryParameterQueryParameter;
       'api::query.query': ApiQueryQuery;
+      'api::ramen-edge-title-rule.ramen-edge-title-rule': ApiRamenEdgeTitleRuleRamenEdgeTitleRule;
       'api::redirect.redirect': ApiRedirectRedirect;
       'api::room.room': ApiRoomRoom;
       'api::scenario-group.scenario-group': ApiScenarioGroupScenarioGroup;

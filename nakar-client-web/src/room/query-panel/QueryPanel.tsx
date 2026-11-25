@@ -132,7 +132,7 @@ export function QueryPanel() {
             >
               <CypherEditor
                 placeholder={match(referencedDatabase.databaseType)
-                  .with("neo4j", () => "MATCH (n) RETURN n;")
+                  .with("neo4j", "ramen", () => "MATCH (n) RETURN n;")
                   .with(
                     P.union("sparql", "wikidata"),
                     () => "CONSTRUCT {?s ?p ?o .} WHERE {?s ?p ?o .} LIMIT 300",
@@ -158,7 +158,7 @@ export function QueryPanel() {
                 <Stack direction={"horizontal"}>
                   <DropdownButton title={"Presets"} icon={"chevron-down"}>
                     {match(referencedDatabase.databaseType)
-                      .with("neo4j", () => [
+                      .with("neo4j", "ramen", () => [
                         {
                           title: "Schema Visualization",
                           query: "CALL db.schema.visualization();",

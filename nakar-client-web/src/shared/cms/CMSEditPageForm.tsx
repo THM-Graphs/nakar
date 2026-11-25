@@ -45,6 +45,7 @@ export function CMSEditPageForm(props: {
                 setError(null);
               }}
               dismissible={true}
+              className={"user-select-text"}
             >
               {error}
             </Alert>

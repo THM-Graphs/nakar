@@ -1,43 +1,39 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { BadRequestException } from '@nestjs/common';
+import {
+  ApiExtraModels,
+  ApiProperty,
+  getSchemaPath,
+  refs,
+} from '@nestjs/swagger';
+import { Type } from 'class-transformer';
+import type { TypeHelpOptions } from 'class-transformer';
 import {
   IsArray,
   IsBoolean,
-  IsEnum,
-  IsOptional,
+  IsObject,
   IsString,
-  Matches,
   MinLength,
   ValidateNested,
 } from 'class-validator';
-import { UpdateNodeConfigurationRequestBodyDto } from './UpdateNodeConfigurationRequestBodyDto';
-import { Type } from 'class-transformer';
+import { DatabaseConnectionAdapterBaseDto } from './adapters/DatabaseConnectionAdapterBaseDto';
+import { Neo4jDatabaseConnectionAdapterDto } from './adapters/Neo4jDatabaseConnectionAdapterDto';
+import { RamenDatabaseConnectionAdapterDto } from './adapters/RamenDatabaseConnectionAdapterDto';
+import { SparqlDatabaseConnectionAdapterDto } from './adapters/SparqlDatabaseConnectionAdapterDto';
+import { WikidataDatabaseConnectionAdapterDto } from './adapters/WikidataDatabaseConnectionAdapterDto';
 import { DatabaseConnectionDatabaseType } from './DatabaseConnectionDatabaseType';
-import { wikidataLanguagePattern } from '../../../../external-database/adapters/wikidata/WikidataLanguagePattern';
+import { UpdateNodeConfigurationRequestBodyDto } from './UpdateNodeConfigurationRequestBodyDto';
 
+@ApiExtraModels(
+  Neo4jDatabaseConnectionAdapterDto,
+  RamenDatabaseConnectionAdapterDto,
+  SparqlDatabaseConnectionAdapterDto,
+  WikidataDatabaseConnectionAdapterDto,
+)
 export class UpdateDatabaseConnectionRequestBodyDto {
   @ApiProperty()
   @IsString()
   @MinLength(1)
   public title!: string;
-
-  @ApiProperty({ nullable: true, type: String })
-  @IsString()
-  @MinLength(1)
-  @IsOptional()
-  public username!: string | null;
-
-  @ApiProperty({ nullable: true, type: String })
-  @IsString()
-  @IsOptional()
-  public password!: string | null;
-
-  @ApiProperty()
-  @IsString()
-  public database!: string;
-
-  @ApiProperty()
-  @IsString()
-  public connectionUrl!: string;
 
   @ApiProperty()
   @IsString()
@@ -46,10 +42,6 @@ export class UpdateDatabaseConnectionRequestBodyDto {
   @ApiProperty()
   @IsBoolean()
   public credentialStoreConsent!: boolean;
-
-  @ApiProperty({ enum: DatabaseConnectionDatabaseType })
-  @IsEnum(DatabaseConnectionDatabaseType)
-  public databaseType!: DatabaseConnectionDatabaseType;
 
   @ApiProperty({ type: UpdateNodeConfigurationRequestBodyDto, isArray: true })
   @ValidateNested({ each: true })
@@ -60,9 +52,62 @@ export class UpdateDatabaseConnectionRequestBodyDto {
   @IsArray()
   public nodeConfigurations!: UpdateNodeConfigurationRequestBodyDto[];
 
-  @ApiProperty({ nullable: true, type: String })
-  @IsString()
-  @Matches(wikidataLanguagePattern)
-  @IsOptional()
-  public language!: string | null;
+  @ApiProperty({
+    oneOf: refs(
+      Neo4jDatabaseConnectionAdapterDto,
+      RamenDatabaseConnectionAdapterDto,
+      SparqlDatabaseConnectionAdapterDto,
+      WikidataDatabaseConnectionAdapterDto,
+    ),
+    discriminator: {
+      propertyName: 'databaseType',
+      mapping: {
+        neo4j: getSchemaPath(Neo4jDatabaseConnectionAdapterDto),
+        ramen: getSchemaPath(RamenDatabaseConnectionAdapterDto),
+        sparql: getSchemaPath(SparqlDatabaseConnectionAdapterDto),
+        wikidata: getSchemaPath(WikidataDatabaseConnectionAdapterDto),
+      } satisfies Record<DatabaseConnectionDatabaseType, string>,
+    },
+  })
+  @IsObject()
+  @ValidateNested()
+  @Type(
+    (options?: TypeHelpOptions): typeof DatabaseConnectionAdapterBaseDto => {
+      const body: Record<string, unknown> | undefined = options?.object;
+      // class-transformer reads array item discriminators before @IsObject() runs.
+      if (Array.isArray(body?.['adapter'])) {
+        throw new BadRequestException(['adapter must be an object']);
+      }
+      return DatabaseConnectionAdapterBaseDto;
+    },
+    {
+      discriminator: {
+        property: 'databaseType',
+        subTypes: [
+          {
+            name: DatabaseConnectionDatabaseType.neo4j,
+            value: Neo4jDatabaseConnectionAdapterDto,
+          },
+          {
+            name: DatabaseConnectionDatabaseType.ramen,
+            value: RamenDatabaseConnectionAdapterDto,
+          },
+          {
+            name: DatabaseConnectionDatabaseType.sparql,
+            value: SparqlDatabaseConnectionAdapterDto,
+          },
+          {
+            name: DatabaseConnectionDatabaseType.wikidata,
+            value: WikidataDatabaseConnectionAdapterDto,
+          },
+        ],
+      },
+      keepDiscriminatorProperty: true,
+    },
+  )
+  public adapter!:
+    | Neo4jDatabaseConnectionAdapterDto
+    | RamenDatabaseConnectionAdapterDto
+    | SparqlDatabaseConnectionAdapterDto
+    | WikidataDatabaseConnectionAdapterDto;
 }

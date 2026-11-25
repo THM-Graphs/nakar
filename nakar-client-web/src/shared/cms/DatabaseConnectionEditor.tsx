@@ -12,25 +12,30 @@ import { CMSButton } from "./CMSButton.tsx";
 import { useState } from "react";
 import {
   DatabaseConnectionDto,
-  UpdateDatabaseConnectionRequestBodyDto,
   projectControllerTestDatabaseConnection,
   TestDatabaseConnectionResponseBodyDto,
 } from "api-client";
+import { match } from "ts-pattern";
 import { resultOrThrow } from "../data/resultOrThrow.ts";
 import clsx from "clsx";
 import { handleError } from "../error/handleError.ts";
 import { NodeConfigurationsEditor } from "./NodeConfigurationsEditor.tsx";
 import { getDatabaseTypeDisplay } from "../data/getDatabaseTypeDisplay.ts";
+import type { DatabaseConnectionDraft } from "../data/prepareDatabaseConnectionRequest.ts";
+import { RamenEdgeTitleRulesEditor } from "./RamenEdgeTitleRulesEditor.tsx";
 
 export function DatabaseConnectionEditor(props: {
-  value: UpdateDatabaseConnectionRequestBodyDto;
-  onChange: (newValue: UpdateDatabaseConnectionRequestBodyDto) => void;
+  value: DatabaseConnectionDraft;
+  onChange: (newValue: DatabaseConnectionDraft) => void;
   projectId?: string;
   initialDatabase: DatabaseConnectionDto | null;
 }) {
   const [testResult, setTestResult] =
     useState<TestDatabaseConnectionResponseBodyDto | null>(null);
   const [testResultLoading, setTestResultLoading] = useState<boolean>(false);
+
+  const hasNewCredentials =
+    props.value.username != null || props.value.password != null;
 
   return (
     <>
@@ -82,27 +87,20 @@ export function DatabaseConnectionEditor(props: {
                   value={props.value.databaseType}
                   onChange={(e) => {
                     const databaseType = e.target
-                      .value as UpdateDatabaseConnectionRequestBodyDto["databaseType"];
+                      .value as DatabaseConnectionDraft["databaseType"];
                     props.onChange({
                       ...props.value,
                       databaseType,
-                      ...(props.projectId == null && databaseType !== "neo4j"
-                        ? {
-                            username: null,
-                            password: null,
-                            database: "",
-                            credentialStoreConsent: false,
-                          }
-                        : {}),
                     });
                   }}
                 >
                   {(
                     [
                       "neo4j",
+                      "ramen",
                       "sparql",
                       "wikidata",
-                    ] satisfies UpdateDatabaseConnectionRequestBodyDto["databaseType"][]
+                    ] satisfies DatabaseConnectionDraft["databaseType"][]
                   ).map((databaseType) => (
                     <option value={databaseType} key={databaseType}>
                       {getDatabaseTypeDisplay(databaseType)}
@@ -175,98 +173,101 @@ export function DatabaseConnectionEditor(props: {
                     </Form.Group>
                   </Col>
                 )}
-                {props.value.databaseType === "neo4j" && (
-                  <>
-                    <Col>
-                      <Form.Group controlId={"database-username"}>
-                        <Form.Label>Username</Form.Label>
-                        <Stack
-                          direction={"horizontal"}
-                          gap={0}
-                          className={"position-relative"}
-                        >
+                {match(props.value.databaseType)
+                  .with("neo4j", "ramen", () => (
+                    <>
+                      <Col>
+                        <Form.Group controlId={"database-username"}>
+                          <Form.Label>Username</Form.Label>
+                          <Stack
+                            direction={"horizontal"}
+                            gap={0}
+                            className={"position-relative"}
+                          >
+                            <Form.Control
+                              placeholder={
+                                props.initialDatabase
+                                  ? "Leave empty if unchanged"
+                                  : undefined
+                              }
+                              value={props.value.username ?? ""}
+                              autoComplete={"off"}
+                              onChange={(e) => {
+                                props.onChange({
+                                  ...props.value,
+                                  username: e.target.value,
+                                });
+                              }}
+                            ></Form.Control>
+                            {props.value.username != null && (
+                              <Button
+                                onClick={() => {
+                                  props.onChange({
+                                    ...props.value,
+                                    username: null,
+                                  });
+                                }}
+                                className={"bi bi-x-lg position-absolute end-0"}
+                                variant={"icon"}
+                              ></Button>
+                            )}
+                          </Stack>
+                        </Form.Group>
+                      </Col>
+                      <Col>
+                        <Form.Group controlId={"database-password"}>
+                          <Form.Label>Password</Form.Label>
+                          <Stack className={"position-relative"}>
+                            <Form.Control
+                              placeholder={
+                                props.initialDatabase
+                                  ? "Leave empty if unchanged"
+                                  : undefined
+                              }
+                              type={"password"}
+                              autoComplete={"new-password"}
+                              value={props.value.password ?? ""}
+                              onChange={(e) => {
+                                props.onChange({
+                                  ...props.value,
+                                  password: e.target.value,
+                                });
+                              }}
+                            ></Form.Control>
+                            {props.value.password != null && (
+                              <Button
+                                onClick={() => {
+                                  props.onChange({
+                                    ...props.value,
+                                    password: null,
+                                  });
+                                }}
+                                className={"bi bi-x-lg position-absolute end-0"}
+                                variant={"icon"}
+                              ></Button>
+                            )}
+                          </Stack>
+                        </Form.Group>
+                      </Col>
+                      <Col>
+                        <Form.Group controlId={"database-name"}>
+                          <Form.Label>Database Name</Form.Label>
                           <Form.Control
-                            placeholder={
-                              props.initialDatabase
-                                ? "Leave empty if unchanged"
-                                : undefined
-                            }
-                            value={props.value.username ?? ""}
-                            autoComplete={"off"}
+                            placeholder={"Example: neo4j"}
+                            value={props.value.database}
                             onChange={(e) => {
                               props.onChange({
                                 ...props.value,
-                                username: e.target.value,
+                                database: e.target.value,
                               });
                             }}
                           ></Form.Control>
-                          {props.value.username != null && (
-                            <Button
-                              onClick={() => {
-                                props.onChange({
-                                  ...props.value,
-                                  username: null,
-                                });
-                              }}
-                              className={"bi bi-x-lg position-absolute end-0"}
-                              variant={"icon"}
-                            ></Button>
-                          )}
-                        </Stack>
-                      </Form.Group>
-                    </Col>
-                    <Col>
-                      <Form.Group controlId={"database-password"}>
-                        <Form.Label>Password</Form.Label>
-                        <Stack className={"position-relative"}>
-                          <Form.Control
-                            placeholder={
-                              props.initialDatabase
-                                ? "Leave empty if unchanged"
-                                : undefined
-                            }
-                            type={"password"}
-                            autoComplete={"new-password"}
-                            value={props.value.password ?? ""}
-                            onChange={(e) => {
-                              props.onChange({
-                                ...props.value,
-                                password: e.target.value,
-                              });
-                            }}
-                          ></Form.Control>
-                          {props.value.password != null && (
-                            <Button
-                              onClick={() => {
-                                props.onChange({
-                                  ...props.value,
-                                  password: null,
-                                });
-                              }}
-                              className={"bi bi-x-lg position-absolute end-0"}
-                              variant={"icon"}
-                            ></Button>
-                          )}
-                        </Stack>
-                      </Form.Group>
-                    </Col>
-                    <Col>
-                      <Form.Group controlId={"database-name"}>
-                        <Form.Label>Database Name</Form.Label>
-                        <Form.Control
-                          placeholder={"Example: neo4j"}
-                          value={props.value.database}
-                          onChange={(e) => {
-                            props.onChange({
-                              ...props.value,
-                              database: e.target.value,
-                            });
-                          }}
-                        ></Form.Control>
-                      </Form.Group>
-                    </Col>
-                  </>
-                )}
+                        </Form.Group>
+                      </Col>
+                    </>
+                  ))
+                  .with("sparql", "wikidata", () => null)
+                  .exhaustive()}
               </Row>
               <Stack direction={"horizontal"} gap={3}>
                 <CMSButton
@@ -281,12 +282,19 @@ export function DatabaseConnectionEditor(props: {
                       body: {
                         projectId: props.projectId,
                         databaseConnectionId: props.initialDatabase?.id,
-                        databaseType: props.value.databaseType,
-                        username: props.value.username,
-                        password: props.value.password,
-                        database: props.value.database || null,
                         connectionUrl: props.value.connectionUrl,
-                        language: props.value.language,
+                        databaseType: props.value.databaseType,
+                        ...match(props.value.databaseType)
+                          .with("neo4j", "ramen", () => ({
+                            username: props.value.username,
+                            password: props.value.password,
+                            database: props.value.database || null,
+                          }))
+                          .with("sparql", () => ({}))
+                          .with("wikidata", () => ({
+                            language: props.value.language,
+                          }))
+                          .exhaustive(),
                       },
                     })
                       .then(resultOrThrow)
@@ -322,45 +330,57 @@ export function DatabaseConnectionEditor(props: {
             </Stack>
           </Card>
 
-          {(props.value.username != null || props.value.password != null) && (
-            <Card
-              className={clsx(
-                "p-3",
-                !props.value.credentialStoreConsent && "bg-danger-subtle",
-              )}
-            >
-              <Form.Group>
-                <Form.Check
-                  id={"consent"}
-                  className={"d-flex align-items-center gap-3"}
-                  checked={props.value.credentialStoreConsent}
-                  onChange={(e) => {
-                    props.onChange({
-                      ...props.value,
-                      credentialStoreConsent: e.target.checked,
-                    });
-                  }}
-                  label={
-                    <Stack>
-                      <span>
-                        I agree that the database login credentials I provide
-                        will be stored in encrypted form on the server for the
-                        purpose of enabling access to the database. I also
-                        confirm that the information stored in the provided
-                        database consists exclusively of{" "}
-                        <strong>publicly accessible research data</strong> and
-                        does not contain any personal, confidential, or
-                        otherwise sensitive data.{" "}
-                        <span className={"text-danger"}>*</span>
-                      </span>
-                    </Stack>
-                  }
-                ></Form.Check>
-              </Form.Group>
-            </Card>
-          )}
+          {hasNewCredentials &&
+            match(props.value.databaseType)
+              .with("neo4j", "ramen", () => (
+                <Card
+                  className={clsx(
+                    "p-3",
+                    !props.value.credentialStoreConsent && "bg-danger-subtle",
+                  )}
+                >
+                  <Form.Group>
+                    <Form.Check
+                      id={"consent"}
+                      className={"d-flex align-items-center gap-3"}
+                      checked={props.value.credentialStoreConsent}
+                      onChange={(e) => {
+                        props.onChange({
+                          ...props.value,
+                          credentialStoreConsent: e.target.checked,
+                        });
+                      }}
+                      label={
+                        <Stack>
+                          <span>
+                            I agree that the database login credentials I
+                            provide will be stored in encrypted form on the
+                            server for the purpose of enabling access to the
+                            database. I also confirm that the information stored
+                            in the provided database consists exclusively of{" "}
+                            <strong>publicly accessible research data</strong>{" "}
+                            and does not contain any personal, confidential, or
+                            otherwise sensitive data.{" "}
+                            <span className={"text-danger"}>*</span>
+                          </span>
+                        </Stack>
+                      }
+                    ></Form.Check>
+                  </Form.Group>
+                </Card>
+              ))
+              .with("sparql", "wikidata", () => null)
+              .exhaustive()}
         </Stack>
       </Stack>
+      {props.value.databaseType === "ramen" && (
+        <RamenEdgeTitleRulesEditor
+          value={props.value.ramenEdgeTitleRules}
+          onChange={(ramenEdgeTitleRules) => {
+            props.onChange({ ...props.value, ramenEdgeTitleRules });
+          }}
+        ></RamenEdgeTitleRulesEditor>
+      )}
       {props.projectId != null && (
         <NodeConfigurationsEditor
           value={props.value.nodeConfigurations}

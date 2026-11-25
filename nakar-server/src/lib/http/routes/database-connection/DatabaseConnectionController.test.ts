@@ -1,5 +1,6 @@
 import type { FixtureContext } from '../../../../e2e/FixtureContext';
 import type { UpdateDatabaseConnectionRequestBodyDto } from './dto/UpdateDatabaseConnectionRequestBodyDto';
+import type { WikidataDatabaseConnectionAdapterDto } from './dto/adapters/WikidataDatabaseConnectionAdapterDto';
 import { encryptionPayloadSchema } from '../../../encryption/encryptionPayloadSchema';
 import type { E2ETestApplicationUser } from '../../../../e2e/E2ETestApplicationUser';
 import assert from 'node:assert/strict';
@@ -23,6 +24,9 @@ const databaseSchema: z.ZodType<DatabaseConnectionDto> = z.strictObject({
   database: z.string(),
   databaseType: z.enum(DatabaseConnectionDatabaseType),
   language: z.string().nullable(),
+  ramenEdgeTitleRules: z.array(
+    z.strictObject({ annotationType: z.string(), titleProperty: z.string() }),
+  ),
   nodeConfigurations: z.array(
     z.strictObject({
       id: z.string().min(1),
@@ -110,6 +114,7 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
           database: '',
           databaseType: DatabaseConnectionDatabaseType.neo4j,
           language: null,
+          ramenEdgeTitleRules: [],
           nodeConfigurations: [],
         });
         const projectResponse: Response = await fetch(
@@ -166,6 +171,7 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
           database: '',
           databaseType: DatabaseConnectionDatabaseType.neo4j,
           language: null,
+          ramenEdgeTitleRules: [],
           nodeConfigurations: [],
         });
         const projectResponse: Response = await fetch(
@@ -225,6 +231,7 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
           database: '',
           databaseType: DatabaseConnectionDatabaseType.neo4j,
           language: null,
+          ramenEdgeTitleRules: [],
           nodeConfigurations: [],
         });
         const projectResponse: Response = await fetch(
@@ -2017,17 +2024,15 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
               ]),
               body: JSON.stringify({
                 title: 'Updated Database',
-                database: 'neo4j',
-                connectionUrl: 'bolt://127.0.0.1:7687',
                 browserUrl: 'https://example.test/browser',
                 credentialStoreConsent: false,
-                databaseType: DatabaseConnectionDatabaseType.neo4j,
                 nodeConfigurations: [],
-                language: null,
-              } satisfies Omit<
-                UpdateDatabaseConnectionRequestBodyDto,
-                'username' | 'password'
-              >),
+                adapter: {
+                  databaseType: DatabaseConnectionDatabaseType.neo4j,
+                  connectionUrl: 'bolt://127.0.0.1:7687',
+                  database: 'neo4j',
+                },
+              } satisfies UpdateDatabaseConnectionRequestBodyDto),
               signal: testContext.signal,
             },
           );
@@ -2096,17 +2101,15 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
               ]),
               body: JSON.stringify({
                 title: 'Updated Database',
-                database: 'neo4j',
-                connectionUrl: 'bolt://127.0.0.1:7687',
                 browserUrl: 'https://example.test/browser',
                 credentialStoreConsent: false,
-                databaseType: DatabaseConnectionDatabaseType.neo4j,
                 nodeConfigurations: [],
-                language: null,
-              } satisfies Omit<
-                UpdateDatabaseConnectionRequestBodyDto,
-                'username' | 'password'
-              >),
+                adapter: {
+                  databaseType: DatabaseConnectionDatabaseType.neo4j,
+                  connectionUrl: 'bolt://127.0.0.1:7687',
+                  database: 'neo4j',
+                },
+              } satisfies UpdateDatabaseConnectionRequestBodyDto),
               signal: testContext.signal,
             },
           );
@@ -2164,15 +2167,16 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
               ]),
               body: JSON.stringify({
                 title: 'Updated Database',
-                database: 'neo4j',
-                connectionUrl: 'bolt://127.0.0.1:7687',
                 browserUrl: 'https://example.test/browser',
                 credentialStoreConsent: true,
-                databaseType: DatabaseConnectionDatabaseType.neo4j,
                 nodeConfigurations: [],
-                language: null,
-                username: 'alice',
-                password: 'secret-value',
+                adapter: {
+                  databaseType: DatabaseConnectionDatabaseType.neo4j,
+                  connectionUrl: 'bolt://127.0.0.1:7687',
+                  username: 'alice',
+                  password: 'secret-value',
+                  database: 'neo4j',
+                },
               } satisfies UpdateDatabaseConnectionRequestBodyDto),
               signal: testContext.signal,
             },
@@ -2255,15 +2259,16 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
               ]),
               body: JSON.stringify({
                 title: 'Updated Database',
-                database: 'neo4j',
-                connectionUrl: 'bolt://127.0.0.1:7687',
                 browserUrl: 'https://example.test/browser',
                 credentialStoreConsent: true,
-                databaseType: DatabaseConnectionDatabaseType.neo4j,
                 nodeConfigurations: [],
-                language: null,
-                username: 'alice',
-                password: 'stored-secret',
+                adapter: {
+                  databaseType: DatabaseConnectionDatabaseType.neo4j,
+                  connectionUrl: 'bolt://127.0.0.1:7687',
+                  username: 'alice',
+                  password: 'stored-secret',
+                  database: 'neo4j',
+                },
               } satisfies UpdateDatabaseConnectionRequestBodyDto),
               signal: testContext.signal,
             },
@@ -2295,17 +2300,15 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
               ]),
               body: JSON.stringify({
                 title: 'Updated Database',
-                database: 'neo4j',
-                connectionUrl: 'bolt://127.0.0.1:7687',
                 browserUrl: 'https://example.test/browser',
                 credentialStoreConsent: false,
-                databaseType: DatabaseConnectionDatabaseType.neo4j,
                 nodeConfigurations: [],
-                language: null,
-              } satisfies Omit<
-                UpdateDatabaseConnectionRequestBodyDto,
-                'username' | 'password'
-              >),
+                adapter: {
+                  databaseType: DatabaseConnectionDatabaseType.neo4j,
+                  connectionUrl: 'bolt://127.0.0.1:7687',
+                  database: 'neo4j',
+                },
+              } satisfies UpdateDatabaseConnectionRequestBodyDto),
               signal: testContext.signal,
             },
           );
@@ -2376,15 +2379,16 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
               ]),
               body: JSON.stringify({
                 title: 'Updated Database',
-                database: 'neo4j',
-                connectionUrl: 'bolt://127.0.0.1:7687',
                 browserUrl: 'https://example.test/browser',
                 credentialStoreConsent: true,
-                databaseType: DatabaseConnectionDatabaseType.neo4j,
                 nodeConfigurations: [],
-                language: null,
-                username: 'alice',
-                password: 'stored-secret',
+                adapter: {
+                  databaseType: DatabaseConnectionDatabaseType.neo4j,
+                  connectionUrl: 'bolt://127.0.0.1:7687',
+                  username: 'alice',
+                  password: 'stored-secret',
+                  database: 'neo4j',
+                },
               } satisfies UpdateDatabaseConnectionRequestBodyDto),
               signal: testContext.signal,
             },
@@ -2416,15 +2420,16 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
               ]),
               body: JSON.stringify({
                 title: 'Updated Database',
-                database: 'neo4j',
-                connectionUrl: 'bolt://127.0.0.1:7687',
                 browserUrl: 'https://example.test/browser',
                 credentialStoreConsent: false,
-                databaseType: DatabaseConnectionDatabaseType.neo4j,
                 nodeConfigurations: [],
-                language: null,
-                username: null,
-                password: null,
+                adapter: {
+                  databaseType: DatabaseConnectionDatabaseType.neo4j,
+                  connectionUrl: 'bolt://127.0.0.1:7687',
+                  username: null,
+                  password: null,
+                  database: 'neo4j',
+                },
               } satisfies UpdateDatabaseConnectionRequestBodyDto),
               signal: testContext.signal,
             },
@@ -2496,15 +2501,16 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
               ]),
               body: JSON.stringify({
                 title: 'Updated Database',
-                database: 'neo4j',
-                connectionUrl: 'bolt://127.0.0.1:7687',
                 browserUrl: 'https://example.test/browser',
                 credentialStoreConsent: true,
-                databaseType: DatabaseConnectionDatabaseType.neo4j,
                 nodeConfigurations: [],
-                language: null,
-                username: 'alice',
-                password: 'stored-secret',
+                adapter: {
+                  databaseType: DatabaseConnectionDatabaseType.neo4j,
+                  connectionUrl: 'bolt://127.0.0.1:7687',
+                  username: 'alice',
+                  password: 'stored-secret',
+                  database: 'neo4j',
+                },
               } satisfies UpdateDatabaseConnectionRequestBodyDto),
               signal: testContext.signal,
             },
@@ -2536,14 +2542,15 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
               ]),
               body: JSON.stringify({
                 title: 'Updated Database',
-                database: 'neo4j',
-                connectionUrl: 'bolt://127.0.0.1:7687',
                 browserUrl: 'https://example.test/browser',
                 credentialStoreConsent: true,
-                databaseType: DatabaseConnectionDatabaseType.neo4j,
                 nodeConfigurations: [],
-                language: null,
-                password: '',
+                adapter: {
+                  databaseType: DatabaseConnectionDatabaseType.neo4j,
+                  connectionUrl: 'bolt://127.0.0.1:7687',
+                  password: '',
+                  database: 'neo4j',
+                },
               } satisfies Omit<
                 UpdateDatabaseConnectionRequestBodyDto,
                 'username'
@@ -2627,11 +2634,8 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
               ]),
               body: JSON.stringify({
                 title: 'Updated Database',
-                database: 'neo4j',
-                connectionUrl: 'bolt://127.0.0.1:7687',
                 browserUrl: 'https://example.test/browser',
                 credentialStoreConsent: false,
-                databaseType: DatabaseConnectionDatabaseType.neo4j,
                 nodeConfigurations: [
                   {
                     id: randomUUID(),
@@ -2643,11 +2647,12 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
                     valueRegex: '.*',
                   },
                 ],
-                language: null,
-              } satisfies Omit<
-                UpdateDatabaseConnectionRequestBodyDto,
-                'username' | 'password'
-              >),
+                adapter: {
+                  databaseType: DatabaseConnectionDatabaseType.neo4j,
+                  connectionUrl: 'bolt://127.0.0.1:7687',
+                  database: 'neo4j',
+                },
+              } satisfies UpdateDatabaseConnectionRequestBodyDto),
               signal: testContext.signal,
             },
           );
@@ -2725,11 +2730,8 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
               ]),
               body: JSON.stringify({
                 title: 'Updated Database',
-                database: 'neo4j',
-                connectionUrl: 'bolt://127.0.0.1:7687',
                 browserUrl: 'https://example.test/browser',
                 credentialStoreConsent: false,
-                databaseType: DatabaseConnectionDatabaseType.neo4j,
                 nodeConfigurations: [
                   {
                     id: child,
@@ -2741,11 +2743,12 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
                     valueRegex: '.*',
                   },
                 ],
-                language: null,
-              } satisfies Omit<
-                UpdateDatabaseConnectionRequestBodyDto,
-                'username' | 'password'
-              >),
+                adapter: {
+                  databaseType: DatabaseConnectionDatabaseType.neo4j,
+                  connectionUrl: 'bolt://127.0.0.1:7687',
+                  database: 'neo4j',
+                },
+              } satisfies UpdateDatabaseConnectionRequestBodyDto),
               signal: testContext.signal,
             },
           );
@@ -2823,17 +2826,15 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
               ]),
               body: JSON.stringify({
                 title: 'Updated Database',
-                database: 'neo4j',
-                connectionUrl: 'bolt://127.0.0.1:7687',
                 browserUrl: 'https://example.test/browser',
                 credentialStoreConsent: false,
-                databaseType: DatabaseConnectionDatabaseType.neo4j,
                 nodeConfigurations: [],
-                language: null,
-              } satisfies Omit<
-                UpdateDatabaseConnectionRequestBodyDto,
-                'username' | 'password'
-              >),
+                adapter: {
+                  databaseType: DatabaseConnectionDatabaseType.neo4j,
+                  connectionUrl: 'bolt://127.0.0.1:7687',
+                  database: 'neo4j',
+                },
+              } satisfies UpdateDatabaseConnectionRequestBodyDto),
               signal: testContext.signal,
             },
           );
@@ -2899,17 +2900,15 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
               ]),
               body: JSON.stringify({
                 title: 'Updated Database',
-                database: 'neo4j',
-                connectionUrl: 'bolt://127.0.0.1:7687',
                 browserUrl: 'https://example.test/browser',
                 credentialStoreConsent: false,
-                databaseType: DatabaseConnectionDatabaseType.neo4j,
                 nodeConfigurations: [],
-                language: null,
-              } satisfies Omit<
-                UpdateDatabaseConnectionRequestBodyDto,
-                'username' | 'password'
-              >),
+                adapter: {
+                  databaseType: DatabaseConnectionDatabaseType.neo4j,
+                  connectionUrl: 'bolt://127.0.0.1:7687',
+                  database: 'neo4j',
+                },
+              } satisfies UpdateDatabaseConnectionRequestBodyDto),
               signal: testContext.signal,
             },
           );
@@ -2943,6 +2942,138 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
           );
           assert.ok(persisted);
           assert.equal(persisted.title, 'Updated Database');
+        });
+
+        test('returns saved RAMEN edge-title rules sorted by annotation type', async (testContext: TestContext): Promise<void> => {
+          // given
+          const fixture: FixtureContext =
+            await manager.setupFixture(testContext);
+          const login: PostAuthResponseBodyDto = await manager.loginUser(
+            fixture.collaborator.username,
+            fixture.collaborator.password,
+            testContext,
+          );
+          const url: string = `${manager.apiUrl}/project/${fixture.projectId}/database-connection/${fixture.databaseConnectionId}`;
+          const headers: Headers = new Headers([
+            ['Authorization', `Bearer ${login.jwt}`],
+            ['Content-Type', 'application/json'],
+          ]);
+          const rules: DatabaseConnectionDto['ramenEdgeTitleRules'] = [
+            { annotationType: 'relation', titleProperty: 'kind' },
+            { annotationType: 'persName', titleProperty: 'type' },
+          ];
+          const sortedRules: DatabaseConnectionDto['ramenEdgeTitleRules'] =
+            rules.toReversed();
+
+          // when
+          const response: Response = await fetch(url, {
+            method: 'PUT',
+            headers,
+            body: JSON.stringify({
+              title: 'RAMEN',
+              browserUrl: '',
+              credentialStoreConsent: false,
+              nodeConfigurations: [],
+              adapter: {
+                databaseType: DatabaseConnectionDatabaseType.ramen,
+                connectionUrl: 'bolt://127.0.0.1:7687',
+                database: 'neo4j',
+                ramenEdgeTitleRules: rules,
+              },
+            } satisfies UpdateDatabaseConnectionRequestBodyDto),
+            signal: testContext.signal,
+          });
+
+          // then
+          assert.equal(response.status, 200);
+          assert.deepEqual(
+            databaseSchema.parse(await response.json()).ramenEdgeTitleRules,
+            sortedRules,
+          );
+          const persisted: Response = await fetch(url, {
+            headers,
+            signal: testContext.signal,
+          });
+          assert.equal(persisted.status, 200);
+          assert.deepEqual(
+            databaseSchema.parse(await persisted.json()).ramenEdgeTitleRules,
+            sortedRules,
+          );
+        });
+
+        test('clears saved RAMEN edge-title rules with an empty array', async (testContext: TestContext): Promise<void> => {
+          // given
+          const fixture: FixtureContext =
+            await manager.setupFixture(testContext);
+          const login: PostAuthResponseBodyDto = await manager.loginUser(
+            fixture.collaborator.username,
+            fixture.collaborator.password,
+            testContext,
+          );
+          const url: string = `${manager.apiUrl}/project/${fixture.projectId}/database-connection/${fixture.databaseConnectionId}`;
+          const headers: Headers = new Headers([
+            ['Authorization', `Bearer ${login.jwt}`],
+            ['Content-Type', 'application/json'],
+          ]);
+          const setup: Response = await fetch(url, {
+            method: 'PUT',
+            headers,
+            body: JSON.stringify({
+              title: 'RAMEN',
+              browserUrl: '',
+              credentialStoreConsent: false,
+              nodeConfigurations: [],
+              adapter: {
+                databaseType: DatabaseConnectionDatabaseType.ramen,
+                connectionUrl: 'bolt://127.0.0.1:7687',
+                database: 'neo4j',
+                ramenEdgeTitleRules: [
+                  { annotationType: 'relation', titleProperty: 'kind' },
+                ],
+              },
+            } satisfies UpdateDatabaseConnectionRequestBodyDto),
+            signal: testContext.signal,
+          });
+          assert.equal(setup.status, 200);
+          assert.equal(
+            databaseSchema.parse(await setup.json()).ramenEdgeTitleRules.length,
+            1,
+          );
+
+          // when
+          const response: Response = await fetch(url, {
+            method: 'PUT',
+            headers,
+            body: JSON.stringify({
+              title: 'RAMEN',
+              browserUrl: '',
+              credentialStoreConsent: false,
+              nodeConfigurations: [],
+              adapter: {
+                databaseType: DatabaseConnectionDatabaseType.ramen,
+                connectionUrl: 'bolt://127.0.0.1:7687',
+                database: 'neo4j',
+                ramenEdgeTitleRules: [],
+              },
+            } satisfies UpdateDatabaseConnectionRequestBodyDto),
+            signal: testContext.signal,
+          });
+
+          // then
+          assert.equal(response.status, 200);
+          assert.deepEqual(
+            databaseSchema.parse(await response.json()).ramenEdgeTitleRules,
+            [],
+          );
+          const persisted: Response = await fetch(url, {
+            headers,
+            signal: testContext.signal,
+          });
+          assert.equal(persisted.status, 200);
+          assert.deepEqual(
+            databaseSchema.parse(await persisted.json()).ramenEdgeTitleRules,
+            [],
+          );
         });
 
         test('collaborator can update a database connection', async (testContext: TestContext): Promise<void> => {
@@ -2971,17 +3102,15 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
               ]),
               body: JSON.stringify({
                 title: 'Updated Database',
-                database: 'neo4j',
-                connectionUrl: 'bolt://127.0.0.1:7687',
                 browserUrl: 'https://example.test/browser',
                 credentialStoreConsent: false,
-                databaseType: DatabaseConnectionDatabaseType.neo4j,
                 nodeConfigurations: [],
-                language: null,
-              } satisfies Omit<
-                UpdateDatabaseConnectionRequestBodyDto,
-                'username' | 'password'
-              >),
+                adapter: {
+                  databaseType: DatabaseConnectionDatabaseType.neo4j,
+                  connectionUrl: 'bolt://127.0.0.1:7687',
+                  database: 'neo4j',
+                },
+              } satisfies UpdateDatabaseConnectionRequestBodyDto),
               signal: testContext.signal,
             },
           );
@@ -3017,6 +3146,74 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
           assert.equal(persisted.title, 'Updated Database');
         });
 
+        test('clears stored Neo4j credentials when switching to SPARQL', async (testContext: TestContext): Promise<void> => {
+          // given
+          const fixture: FixtureContext =
+            await manager.setupFixture(testContext);
+          const login: PostAuthResponseBodyDto = await manager.loginUser(
+            fixture.owner.username,
+            fixture.owner.password,
+            testContext,
+          );
+          const url: string = `${manager.apiUrl}/project/${fixture.projectId}/database-connection/${fixture.databaseConnectionId}`;
+          const headers: Headers = new Headers([
+            ['Authorization', `Bearer ${login.jwt}`],
+            ['Content-Type', 'application/json'],
+          ]);
+          const setup: Response = await fetch(url, {
+            method: 'PUT',
+            headers,
+            body: JSON.stringify({
+              title: 'Graph',
+              browserUrl: '',
+              credentialStoreConsent: true,
+              nodeConfigurations: [],
+              adapter: {
+                databaseType: DatabaseConnectionDatabaseType.neo4j,
+                connectionUrl: 'bolt://example.test:7687',
+                username: 'alice',
+                password: 'stored-secret',
+                database: 'neo4j',
+              },
+            } satisfies UpdateDatabaseConnectionRequestBodyDto),
+            signal: testContext.signal,
+          });
+          assert.equal(setup.status, 200);
+
+          // when
+          const response: Response = await fetch(url, {
+            method: 'PUT',
+            headers,
+            body: JSON.stringify({
+              title: 'Graph',
+              browserUrl: '',
+              credentialStoreConsent: false,
+              nodeConfigurations: [],
+              adapter: {
+                databaseType: DatabaseConnectionDatabaseType.sparql,
+                connectionUrl: 'https://example.test/sparql',
+              },
+            } satisfies UpdateDatabaseConnectionRequestBodyDto),
+            signal: testContext.signal,
+          });
+
+          // then
+          assert.equal(response.status, 200);
+          assert.equal(
+            databaseSchema.parse(await response.json()).database,
+            '',
+          );
+          const stored: Response = await manager.readDocument(
+            'api::database-connection.database-connection',
+            fixture.databaseConnectionId,
+            testContext,
+          );
+          assert.equal(stored.status, 200);
+          z.object({
+            data: z.object({ username: z.null(), password: z.null() }),
+          }).parse(await stored.json());
+        });
+
         test('can change the database type to sparql', async (testContext: TestContext): Promise<void> => {
           // given
           const fixture: FixtureContext =
@@ -3038,17 +3235,14 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
               ]),
               body: JSON.stringify({
                 title: 'Updated Database',
-                database: 'neo4j',
-                connectionUrl: 'bolt://127.0.0.1:7687',
                 browserUrl: 'https://example.test/browser',
                 credentialStoreConsent: false,
-                databaseType: DatabaseConnectionDatabaseType.sparql,
                 nodeConfigurations: [],
-                language: 'de',
-              } satisfies Omit<
-                UpdateDatabaseConnectionRequestBodyDto,
-                'username' | 'password'
-              >),
+                adapter: {
+                  databaseType: DatabaseConnectionDatabaseType.sparql,
+                  connectionUrl: 'bolt://127.0.0.1:7687',
+                },
+              } satisfies UpdateDatabaseConnectionRequestBodyDto),
               signal: testContext.signal,
             },
           );
@@ -3105,17 +3299,15 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
               ]),
               body: JSON.stringify({
                 title: 'Updated Database',
-                database: 'neo4j',
-                connectionUrl: 'bolt://127.0.0.1:7687',
                 browserUrl: 'https://example.test/browser',
                 credentialStoreConsent: false,
-                databaseType: DatabaseConnectionDatabaseType.wikidata,
                 nodeConfigurations: [],
-                language: 'de',
-              } satisfies Omit<
-                UpdateDatabaseConnectionRequestBodyDto,
-                'username' | 'password'
-              >),
+                adapter: {
+                  databaseType: DatabaseConnectionDatabaseType.wikidata,
+                  connectionUrl: 'bolt://127.0.0.1:7687',
+                  language: 'de',
+                },
+              } satisfies UpdateDatabaseConnectionRequestBodyDto),
               signal: testContext.signal,
             },
           );
@@ -3150,12 +3342,262 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
           assert.ok(persisted);
           assert.equal(persisted.title, 'Updated Database');
         });
+
+        test('clears the Wikidata language when language is explicitly null', async (testContext: TestContext): Promise<void> => {
+          // given
+          const fixture: FixtureContext =
+            await manager.setupFixture(testContext);
+          const login: PostAuthResponseBodyDto = await manager.loginUser(
+            fixture.owner.username,
+            fixture.owner.password,
+            testContext,
+          );
+          const url: string = `${manager.apiUrl}/project/${fixture.projectId}/database-connection/${fixture.databaseConnectionId}`;
+          const headers: Headers = new Headers([
+            ['Authorization', `Bearer ${login.jwt}`],
+            ['Content-Type', 'application/json'],
+          ]);
+          const adapter: WikidataDatabaseConnectionAdapterDto = {
+            databaseType: DatabaseConnectionDatabaseType.wikidata,
+            connectionUrl: 'https://example.test/sparql',
+            language: 'de',
+          };
+          const body: UpdateDatabaseConnectionRequestBodyDto = {
+            title: 'Wikidata',
+            browserUrl: '',
+            credentialStoreConsent: false,
+            nodeConfigurations: [],
+            adapter,
+          };
+
+          const initialSave: Response = await fetch(url, {
+            method: 'PUT',
+            headers,
+            body: JSON.stringify(body),
+            signal: testContext.signal,
+          });
+          assert.equal(initialSave.status, 200);
+          assert.equal(
+            databaseSchema.parse(await initialSave.json()).language,
+            'de',
+          );
+
+          // when
+          adapter.language = null;
+          const nextSave: Response = await fetch(url, {
+            method: 'PUT',
+            headers,
+            body: JSON.stringify(body),
+            signal: testContext.signal,
+          });
+
+          // then
+          assert.equal(nextSave.status, 200);
+          assert.equal(
+            databaseSchema.parse(await nextSave.json()).language,
+            null,
+          );
+          const read: Response = await fetch(url, {
+            headers,
+            signal: testContext.signal,
+          });
+          assert.equal(read.status, 200);
+          assert.equal(databaseSchema.parse(await read.json()).language, null);
+        });
       });
       describe('400', (): void => {
+        test('rejects an empty RAMEN annotation type', async (testContext: TestContext): Promise<void> => {
+          // given
+          const fixture: FixtureContext =
+            await manager.setupFixture(testContext);
+          const login: PostAuthResponseBodyDto = await manager.loginUser(
+            fixture.collaborator.username,
+            fixture.collaborator.password,
+            testContext,
+          );
+
+          // when
+          const response: Response = await fetch(
+            `${manager.apiUrl}/project/${fixture.projectId}/database-connection/${fixture.databaseConnectionId}`,
+            {
+              method: 'PUT',
+              headers: new Headers([
+                ['Authorization', `Bearer ${login.jwt}`],
+                ['Content-Type', 'application/json'],
+              ]),
+              body: JSON.stringify({
+                title: 'RAMEN',
+                browserUrl: '',
+                credentialStoreConsent: false,
+                nodeConfigurations: [],
+                adapter: {
+                  databaseType: DatabaseConnectionDatabaseType.ramen,
+                  connectionUrl: 'bolt://127.0.0.1:7687',
+                  database: 'neo4j',
+                  ramenEdgeTitleRules: [
+                    { annotationType: '', titleProperty: 'kind' },
+                  ],
+                },
+              } satisfies UpdateDatabaseConnectionRequestBodyDto),
+              signal: testContext.signal,
+            },
+          );
+
+          // then
+          assert.equal(response.status, 400);
+          const error: { statusCode: 400; message: string[] } = z
+            .object({
+              statusCode: z.literal(400),
+              message: z.array(z.string()),
+            })
+            .parse(await response.json());
+          assert.deepEqual(error.message, [
+            'adapter.ramenEdgeTitleRules.0.annotationType should not be empty',
+          ]);
+        });
+
+        test('rejects missing RAMEN edge-title rules', async (testContext: TestContext): Promise<void> => {
+          // given
+          const fixture: FixtureContext =
+            await manager.setupFixture(testContext);
+          const login: PostAuthResponseBodyDto = await manager.loginUser(
+            fixture.collaborator.username,
+            fixture.collaborator.password,
+            testContext,
+          );
+          const url: string = `${manager.apiUrl}/project/${fixture.projectId}/database-connection/${fixture.databaseConnectionId}`;
+          const headers: Headers = new Headers([
+            ['Authorization', `Bearer ${login.jwt}`],
+            ['Content-Type', 'application/json'],
+          ]);
+          const original: Response = await fetch(url, {
+            headers,
+            signal: testContext.signal,
+          });
+          assert.equal(original.status, 200);
+          const originalConnection: DatabaseConnectionDto =
+            databaseSchema.parse(await original.json());
+
+          // when
+          const response: Response = await fetch(url, {
+            method: 'PUT',
+            headers,
+            body: JSON.stringify({
+              title: 'RAMEN',
+              browserUrl: '',
+              credentialStoreConsent: false,
+              nodeConfigurations: [],
+              adapter: {
+                databaseType: DatabaseConnectionDatabaseType.ramen,
+                connectionUrl: 'bolt://127.0.0.1:7687',
+                database: 'neo4j',
+              },
+            }),
+            signal: testContext.signal,
+          });
+
+          // then
+          assert.equal(response.status, 400);
+          const error: { statusCode: 400; message: string[] } = z
+            .object({
+              statusCode: z.literal(400),
+              message: z.array(z.string()),
+            })
+            .parse(await response.json());
+          assert.ok(
+            error.message.some((message: string): boolean =>
+              message.includes('ramenEdgeTitleRules'),
+            ),
+          );
+          const persisted: Response = await fetch(url, {
+            headers,
+            signal: testContext.signal,
+          });
+          assert.equal(persisted.status, 200);
+          assert.deepEqual(
+            databaseSchema.parse(await persisted.json()),
+            originalConnection,
+          );
+        });
+
+        test('rejects null RAMEN edge-title rules', async (testContext: TestContext): Promise<void> => {
+          // given
+          const fixture: FixtureContext =
+            await manager.setupFixture(testContext);
+          const login: PostAuthResponseBodyDto = await manager.loginUser(
+            fixture.collaborator.username,
+            fixture.collaborator.password,
+            testContext,
+          );
+          const url: string = `${manager.apiUrl}/project/${fixture.projectId}/database-connection/${fixture.databaseConnectionId}`;
+          const headers: Headers = new Headers([
+            ['Authorization', `Bearer ${login.jwt}`],
+            ['Content-Type', 'application/json'],
+          ]);
+          const original: Response = await fetch(url, {
+            headers,
+            signal: testContext.signal,
+          });
+          assert.equal(original.status, 200);
+          const originalConnection: DatabaseConnectionDto =
+            databaseSchema.parse(await original.json());
+
+          // when
+          const response: Response = await fetch(url, {
+            method: 'PUT',
+            headers,
+            body: JSON.stringify({
+              title: 'RAMEN',
+              browserUrl: '',
+              credentialStoreConsent: false,
+              nodeConfigurations: [],
+              adapter: {
+                databaseType: DatabaseConnectionDatabaseType.ramen,
+                connectionUrl: 'bolt://127.0.0.1:7687',
+                database: 'neo4j',
+                ramenEdgeTitleRules: null,
+              },
+            }),
+            signal: testContext.signal,
+          });
+
+          // then
+          assert.equal(response.status, 400);
+          const error: { statusCode: 400; message: string[] } = z
+            .object({
+              statusCode: z.literal(400),
+              message: z.array(z.string()),
+            })
+            .parse(await response.json());
+          assert.ok(
+            error.message.some((message: string): boolean =>
+              message.includes('ramenEdgeTitleRules'),
+            ),
+          );
+          const persisted: Response = await fetch(url, {
+            headers,
+            signal: testContext.signal,
+          });
+          assert.equal(persisted.status, 200);
+          assert.deepEqual(
+            databaseSchema.parse(await persisted.json()),
+            originalConnection,
+          );
+        });
+
         test(
           'rejects invalid database connection fields',
           { timeout: 180_000 },
           async (testContext: TestContext): Promise<void> => {
+            const neo4jAdapter: {
+              databaseType: DatabaseConnectionDatabaseType.neo4j;
+              connectionUrl: string;
+              database: string;
+            } = {
+              databaseType: DatabaseConnectionDatabaseType.neo4j,
+              connectionUrl: 'bolt://127.0.0.1:7687',
+              database: 'neo4j',
+            };
             const variants: {
               payload: Record<string, unknown>;
               expectedMessage: string;
@@ -3177,27 +3619,29 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
                 expectedMessage: 'title',
               },
               {
-                payload: { database: undefined },
+                payload: { adapter: { ...neo4jAdapter, database: undefined } },
                 expectedMessage: 'database',
               },
               {
-                payload: { database: null },
+                payload: { adapter: { ...neo4jAdapter, database: null } },
                 expectedMessage: 'database',
               },
               {
-                payload: { database: 123 },
+                payload: { adapter: { ...neo4jAdapter, database: 123 } },
                 expectedMessage: 'database',
               },
               {
-                payload: { connectionUrl: undefined },
+                payload: {
+                  adapter: { ...neo4jAdapter, connectionUrl: undefined },
+                },
                 expectedMessage: 'connectionUrl',
               },
               {
-                payload: { connectionUrl: null },
+                payload: { adapter: { ...neo4jAdapter, connectionUrl: null } },
                 expectedMessage: 'connectionUrl',
               },
               {
-                payload: { connectionUrl: 123 },
+                payload: { adapter: { ...neo4jAdapter, connectionUrl: 123 } },
                 expectedMessage: 'connectionUrl',
               },
               {
@@ -3225,19 +3669,23 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
                 expectedMessage: 'credentialStoreConsent',
               },
               {
-                payload: { databaseType: undefined },
+                payload: {
+                  adapter: { ...neo4jAdapter, databaseType: undefined },
+                },
                 expectedMessage: 'databaseType',
               },
               {
-                payload: { databaseType: null },
+                payload: { adapter: { ...neo4jAdapter, databaseType: null } },
                 expectedMessage: 'databaseType',
               },
               {
-                payload: { databaseType: 123 },
+                payload: { adapter: { ...neo4jAdapter, databaseType: 123 } },
                 expectedMessage: 'databaseType',
               },
               {
-                payload: { databaseType: 'unknown' },
+                payload: {
+                  adapter: { ...neo4jAdapter, databaseType: 'unknown' },
+                },
                 expectedMessage: 'databaseType',
               },
               {
@@ -3257,24 +3705,67 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
                 expectedMessage: 'unexpected',
               },
               {
-                payload: { username: '' },
+                payload: { adapter: { ...neo4jAdapter, username: '' } },
                 expectedMessage: 'username',
               },
               {
-                payload: { username: 123 },
+                payload: { adapter: { ...neo4jAdapter, username: 123 } },
                 expectedMessage: 'username',
               },
               {
-                payload: { password: 123 },
+                payload: { adapter: { ...neo4jAdapter, password: 123 } },
                 expectedMessage: 'password',
               },
               {
-                payload: { language: 'e' },
+                payload: {
+                  adapter: {
+                    databaseType: DatabaseConnectionDatabaseType.wikidata,
+                    connectionUrl: 'https://example.test/sparql',
+                  },
+                },
                 expectedMessage: 'language',
               },
               {
-                payload: { language: 123 },
+                payload: {
+                  adapter: {
+                    databaseType: DatabaseConnectionDatabaseType.wikidata,
+                    connectionUrl: 'https://example.test/sparql',
+                    language: 'e',
+                  },
+                },
                 expectedMessage: 'language',
+              },
+              {
+                payload: {
+                  adapter: {
+                    databaseType: DatabaseConnectionDatabaseType.wikidata,
+                    connectionUrl: 'https://example.test/sparql',
+                    language: 123,
+                  },
+                },
+                expectedMessage: 'language',
+              },
+              {
+                payload: { adapter: undefined },
+                expectedMessage: 'adapter',
+              },
+              {
+                payload: { adapter: null },
+                expectedMessage: 'adapter',
+              },
+              {
+                payload: { adapter: [null] },
+                expectedMessage: 'adapter',
+              },
+              {
+                payload: {
+                  adapter: {
+                    databaseType: DatabaseConnectionDatabaseType.sparql,
+                    connectionUrl: 'https://example.test/sparql',
+                    username: 'unused',
+                  },
+                },
+                expectedMessage: 'username',
               },
             ];
             for (const variant of variants) {
@@ -3327,14 +3818,11 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
                     ['Content-Type', 'application/json'],
                   ]),
                   body: JSON.stringify({
-                    database: 'neo4j',
-                    connectionUrl: 'bolt://127.0.0.1:7687',
+                    title: 'Updated Database',
                     browserUrl: 'https://example.test/browser',
                     credentialStoreConsent: false,
-                    databaseType: DatabaseConnectionDatabaseType.neo4j,
                     nodeConfigurations: [],
-                    language: null,
-                    title: 'Updated Database',
+                    adapter: neo4jAdapter,
                     ...variant.payload,
                   }),
                   signal: testContext.signal,
@@ -3342,7 +3830,7 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
               );
 
               // then
-              assert.equal(response.status, 400);
+              assert.equal(response.status, 400, JSON.stringify(variant));
               const error: {
                 statusCode: number;
                 message: string[];
@@ -3511,12 +3999,13 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
                 ]),
                 body: JSON.stringify({
                   title: 'Updated Database',
-                  database: 'neo4j',
-                  connectionUrl: 'bolt://127.0.0.1:7687',
                   browserUrl: 'https://example.test/browser',
                   credentialStoreConsent: false,
-                  databaseType: DatabaseConnectionDatabaseType.neo4j,
-                  language: null,
+                  adapter: {
+                    databaseType: DatabaseConnectionDatabaseType.neo4j,
+                    connectionUrl: 'bolt://127.0.0.1:7687',
+                    database: 'neo4j',
+                  },
                   ...variant.payload,
                 }),
                 signal: testContext.signal,
@@ -3625,14 +4114,15 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
                 ]),
                 body: JSON.stringify({
                   title: 'Updated Database',
-                  database: 'neo4j',
-                  connectionUrl: 'bolt://127.0.0.1:7687',
                   browserUrl: 'https://example.test/browser',
                   credentialStoreConsent: false,
-                  databaseType: DatabaseConnectionDatabaseType.neo4j,
                   nodeConfigurations: [],
-                  language: null,
-                  ...variant.payload,
+                  adapter: {
+                    databaseType: DatabaseConnectionDatabaseType.neo4j,
+                    connectionUrl: 'bolt://127.0.0.1:7687',
+                    database: 'neo4j',
+                    ...variant.payload,
+                  },
                 }),
                 signal: testContext.signal,
               },
@@ -3726,17 +4216,15 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
                 method: 'PUT',
                 body: JSON.stringify({
                   title: 'Updated Database',
-                  database: 'neo4j',
-                  connectionUrl: 'bolt://127.0.0.1:7687',
                   browserUrl: 'https://example.test/browser',
                   credentialStoreConsent: false,
-                  databaseType: DatabaseConnectionDatabaseType.neo4j,
                   nodeConfigurations: [],
-                  language: null,
-                } satisfies Omit<
-                  UpdateDatabaseConnectionRequestBodyDto,
-                  'username' | 'password'
-                >),
+                  adapter: {
+                    databaseType: DatabaseConnectionDatabaseType.neo4j,
+                    connectionUrl: 'bolt://127.0.0.1:7687',
+                    database: 'neo4j',
+                  },
+                } satisfies UpdateDatabaseConnectionRequestBodyDto),
                 signal: testContext.signal,
                 headers: new Headers(variant.headers),
               },
@@ -3828,17 +4316,15 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
               ]),
               body: JSON.stringify({
                 title: 'Updated Database',
-                database: 'neo4j',
-                connectionUrl: 'bolt://127.0.0.1:7687',
                 browserUrl: 'https://example.test/browser',
                 credentialStoreConsent: false,
-                databaseType: DatabaseConnectionDatabaseType.neo4j,
                 nodeConfigurations: [],
-                language: null,
-              } satisfies Omit<
-                UpdateDatabaseConnectionRequestBodyDto,
-                'username' | 'password'
-              >),
+                adapter: {
+                  databaseType: DatabaseConnectionDatabaseType.neo4j,
+                  connectionUrl: 'bolt://127.0.0.1:7687',
+                  database: 'neo4j',
+                },
+              } satisfies UpdateDatabaseConnectionRequestBodyDto),
               signal: testContext.signal,
             },
           );
@@ -3933,17 +4419,15 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
               ]),
               body: JSON.stringify({
                 title: 'Updated Database',
-                database: 'neo4j',
-                connectionUrl: 'bolt://127.0.0.1:7687',
                 browserUrl: 'https://example.test/browser',
                 credentialStoreConsent: false,
-                databaseType: DatabaseConnectionDatabaseType.neo4j,
                 nodeConfigurations: [],
-                language: null,
-              } satisfies Omit<
-                UpdateDatabaseConnectionRequestBodyDto,
-                'username' | 'password'
-              >),
+                adapter: {
+                  databaseType: DatabaseConnectionDatabaseType.neo4j,
+                  connectionUrl: 'bolt://127.0.0.1:7687',
+                  database: 'neo4j',
+                },
+              } satisfies UpdateDatabaseConnectionRequestBodyDto),
               signal: testContext.signal,
             },
           );
@@ -4057,17 +4541,15 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
               ]),
               body: JSON.stringify({
                 title: 'Updated Database',
-                database: 'neo4j',
-                connectionUrl: 'bolt://127.0.0.1:7687',
                 browserUrl: 'https://example.test/browser',
                 credentialStoreConsent: false,
-                databaseType: DatabaseConnectionDatabaseType.neo4j,
                 nodeConfigurations: [],
-                language: null,
-              } satisfies Omit<
-                UpdateDatabaseConnectionRequestBodyDto,
-                'username' | 'password'
-              >),
+                adapter: {
+                  databaseType: DatabaseConnectionDatabaseType.neo4j,
+                  connectionUrl: 'bolt://127.0.0.1:7687',
+                  database: 'neo4j',
+                },
+              } satisfies UpdateDatabaseConnectionRequestBodyDto),
               signal: testContext.signal,
             },
           );
@@ -4172,17 +4654,15 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
               ]),
               body: JSON.stringify({
                 title: 'Updated Database',
-                database: 'neo4j',
-                connectionUrl: 'bolt://127.0.0.1:7687',
                 browserUrl: 'https://example.test/browser',
                 credentialStoreConsent: false,
-                databaseType: DatabaseConnectionDatabaseType.neo4j,
                 nodeConfigurations: [],
-                language: null,
-              } satisfies Omit<
-                UpdateDatabaseConnectionRequestBodyDto,
-                'username' | 'password'
-              >),
+                adapter: {
+                  databaseType: DatabaseConnectionDatabaseType.neo4j,
+                  connectionUrl: 'bolt://127.0.0.1:7687',
+                  database: 'neo4j',
+                },
+              } satisfies UpdateDatabaseConnectionRequestBodyDto),
               signal: testContext.signal,
             },
           );
@@ -4301,17 +4781,15 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
               ]),
               body: JSON.stringify({
                 title: 'Updated Database',
-                database: 'neo4j',
-                connectionUrl: 'bolt://127.0.0.1:7687',
                 browserUrl: 'https://example.test/browser',
                 credentialStoreConsent: false,
-                databaseType: DatabaseConnectionDatabaseType.neo4j,
                 nodeConfigurations: [],
-                language: null,
-              } satisfies Omit<
-                UpdateDatabaseConnectionRequestBodyDto,
-                'username' | 'password'
-              >),
+                adapter: {
+                  databaseType: DatabaseConnectionDatabaseType.neo4j,
+                  connectionUrl: 'bolt://127.0.0.1:7687',
+                  database: 'neo4j',
+                },
+              } satisfies UpdateDatabaseConnectionRequestBodyDto),
               signal: testContext.signal,
             },
           );
@@ -4393,17 +4871,15 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
               ]),
               body: JSON.stringify({
                 title: 'Updated Database',
-                database: 'neo4j',
-                connectionUrl: 'bolt://127.0.0.1:7687',
                 browserUrl: 'https://example.test/browser',
                 credentialStoreConsent: false,
-                databaseType: DatabaseConnectionDatabaseType.neo4j,
                 nodeConfigurations: [],
-                language: null,
-              } satisfies Omit<
-                UpdateDatabaseConnectionRequestBodyDto,
-                'username' | 'password'
-              >),
+                adapter: {
+                  databaseType: DatabaseConnectionDatabaseType.neo4j,
+                  connectionUrl: 'bolt://127.0.0.1:7687',
+                  database: 'neo4j',
+                },
+              } satisfies UpdateDatabaseConnectionRequestBodyDto),
               signal: testContext.signal,
             },
           );
@@ -4522,17 +4998,15 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
               ]),
               body: JSON.stringify({
                 title: 'Updated Database',
-                database: 'neo4j',
-                connectionUrl: 'bolt://127.0.0.1:7687',
                 browserUrl: 'https://example.test/browser',
                 credentialStoreConsent: false,
-                databaseType: DatabaseConnectionDatabaseType.neo4j,
                 nodeConfigurations: [],
-                language: null,
-              } satisfies Omit<
-                UpdateDatabaseConnectionRequestBodyDto,
-                'username' | 'password'
-              >),
+                adapter: {
+                  databaseType: DatabaseConnectionDatabaseType.neo4j,
+                  connectionUrl: 'bolt://127.0.0.1:7687',
+                  database: 'neo4j',
+                },
+              } satisfies UpdateDatabaseConnectionRequestBodyDto),
               signal: testContext.signal,
             },
           );
@@ -4644,17 +5118,15 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
               ]),
               body: JSON.stringify({
                 title: 'Updated Database',
-                database: 'neo4j',
-                connectionUrl: 'bolt://127.0.0.1:7687',
                 browserUrl: 'https://example.test/browser',
                 credentialStoreConsent: false,
-                databaseType: DatabaseConnectionDatabaseType.neo4j,
                 nodeConfigurations: [],
-                language: null,
-              } satisfies Omit<
-                UpdateDatabaseConnectionRequestBodyDto,
-                'username' | 'password'
-              >),
+                adapter: {
+                  databaseType: DatabaseConnectionDatabaseType.neo4j,
+                  connectionUrl: 'bolt://127.0.0.1:7687',
+                  database: 'neo4j',
+                },
+              } satisfies UpdateDatabaseConnectionRequestBodyDto),
               signal: testContext.signal,
             },
           );

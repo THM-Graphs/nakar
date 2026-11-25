@@ -1,0 +1,30 @@
+{
+  "kind": "collectionType",
+  "collectionName": "ramen_edge_title_rules",
+  "info": {
+    "singularName": "ramen-edge-title-rule",
+    "pluralName": "ramen-edge-title-rules",
+    "displayName": "RAMEN Edge Title Rule"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "database": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::database-connection.database-connection",
+      "inversedBy": "ramenEdgeTitleRules",
+      "required": true
+    },
+    "annotationType": {
+      "type": "string",
+      "required": true
+    },
+    "titleProperty": {
+      "type": "string",
+      "required": true
+    }
+  }
+}

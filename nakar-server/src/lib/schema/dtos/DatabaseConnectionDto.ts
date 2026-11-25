@@ -1,6 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { NodeConfigurationDto } from './NodeConfigurationDto';
 import { DatabaseConnectionDatabaseType } from '../../http/routes/database-connection/dto/DatabaseConnectionDatabaseType';
+import { RamenEdgeTitleRuleDto } from '../../http/routes/database-connection/dto/RamenEdgeTitleRuleDto';
 
 export class DatabaseConnectionDto {
   @ApiProperty()
@@ -27,6 +28,9 @@ export class DatabaseConnectionDto {
   @ApiProperty({ nullable: true, type: String })
   public language: string | null;
 
+  @ApiProperty({ type: RamenEdgeTitleRuleDto, isArray: true })
+  public ramenEdgeTitleRules: RamenEdgeTitleRuleDto[];
+
   public constructor(data: {
     id: string;
     title: string;
@@ -36,6 +40,7 @@ export class DatabaseConnectionDto {
     nodeConfigurations: NodeConfigurationDto[];
     databaseType: DatabaseConnectionDatabaseType;
     language: string | null;
+    ramenEdgeTitleRules: RamenEdgeTitleRuleDto[];
   }) {
     this.id = data.id;
     this.title = data.title;
@@ -45,5 +50,6 @@ export class DatabaseConnectionDto {
     this.nodeConfigurations = data.nodeConfigurations;
     this.databaseType = data.databaseType;
     this.language = data.language;
+    this.ramenEdgeTitleRules = data.ramenEdgeTitleRules;
   }
 }
