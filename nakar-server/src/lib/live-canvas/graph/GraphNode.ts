@@ -168,11 +168,24 @@ export class GraphNode {
       const labelViewSettings: LiveCanvasLabelViewSettingsState =
         viewSettings.getLabelSettings(label);
       if (labelViewSettings.customTitleProperty) {
-        const propertyValue: string | null =
-          this.properties.getStringValueOfProperty(
-            labelViewSettings.titleProperty,
-          );
-        return propertyValue ?? '';
+        const titleProperty: string = labelViewSettings.titleProperty;
+
+        if (this.properties.properties.has(titleProperty)) {
+          return this.properties.getStringValueOfProperty(titleProperty) ?? '';
+        }
+
+        for (const entry of titleProperty.split(',')) {
+          const key: string = entry.trim();
+          if (key.length === 0) {
+            continue;
+          }
+          const value: string | null =
+            this.properties.getStringValueOfProperty(key);
+          if (value != null) {
+            return value;
+          }
+        }
+        return '';
       }
     }
 

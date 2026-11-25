@@ -9,6 +9,7 @@ export function ApplyableStringInput(props: {
   size?: "sm" | "lg";
   className?: string;
   suggestions?: string[];
+  placeholder?: string;
 }) {
   const [currentText, setCurrentText] = useState(props.value);
   useEffect(() => {
@@ -23,6 +24,7 @@ export function ApplyableStringInput(props: {
     <Stack direction={"horizontal"} className={props.className}>
       <Form.Control
         size={props.size}
+        placeholder={props.placeholder}
         value={currentText}
         onChange={(e) => {
           setCurrentText(e.target.value);

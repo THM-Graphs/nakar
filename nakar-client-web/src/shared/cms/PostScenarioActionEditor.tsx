@@ -338,10 +338,10 @@ export function PostScenarioActionEditor(props: {
             {props.value.type === "setNodeTitleProperty" && (
               <Col>
                 <Form.Group className="" controlId="property">
-                  <Form.Label>Property</Form.Label>
+                  <Form.Label>Title Properties</Form.Label>
                   <Form.Control
                     type="text"
-                    placeholder="name"
+                    placeholder="Comma-separated property names"
                     className={"font-monospace"}
                     value={props.value.property}
                     onChange={(e) => {

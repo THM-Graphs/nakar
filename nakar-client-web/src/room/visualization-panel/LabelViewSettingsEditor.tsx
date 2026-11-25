@@ -97,7 +97,7 @@ export function LabelViewSettingsEditor(props: {
       <Form.Check
         type={"switch"}
         id={`customTitle${labelVisualization.label}`}
-        label={<span className={"small"}>Title Property</span>}
+        label={<span className={"small"}>Title Properties</span>}
         checked={labelVisualization.customTitleProperty}
         onChange={(e) => {
           onChange({
@@ -110,6 +110,7 @@ export function LabelViewSettingsEditor(props: {
         <ApplyableStringInput
           suggestions={properties}
           size={"sm"}
+          placeholder={"Comma-separated property names"}
           value={labelVisualization.titleProperty}
           onChange={(value) => {
             onChange({
