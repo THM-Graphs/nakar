@@ -4,8 +4,8 @@ import {
   Controller,
   Delete,
   ForbiddenException,
-  HttpCode,
   Get,
+  HttpCode,
   NotFoundException,
   Param,
   Post,
@@ -31,16 +31,15 @@ import { LiveCanvasUser } from '../../../live-canvas/data/LiveCanvasUser';
 import { match } from 'ts-pattern';
 import { DatabaseConnectionDatabaseType } from '../database-connection/dto/DatabaseConnectionDatabaseType';
 import type { UpdateDatabaseConnectionRequestBodyDto } from '../database-connection/dto/UpdateDatabaseConnectionRequestBodyDto';
+import type { Neo4jDatabaseConnectionAdapterDto } from '../database-connection/dto/adapters/Neo4jDatabaseConnectionAdapterDto';
+import type { RamenDatabaseConnectionAdapterDto } from '../database-connection/dto/adapters/RamenDatabaseConnectionAdapterDto';
+import type { SparqlDatabaseConnectionAdapterDto } from '../database-connection/dto/adapters/SparqlDatabaseConnectionAdapterDto';
+import type { WikidataDatabaseConnectionAdapterDto } from '../database-connection/dto/adapters/WikidataDatabaseConnectionAdapterDto';
 import { TestDatabaseConnectionRequestBodyDto } from './dto/TestDatabaseConnectionRequestBodyDto';
 import { TestDatabaseConnectionResponseBodyDto } from './dto/TestDatabaseConnectionResponseBodyDto';
 import { ExternalGraphDatabaseService } from '../../../external-database/ExternalGraphDatabaseService';
 import { userCanSeeAndEditProject } from '../../../policies/userCanSeeAndEditProject';
 import { databaseBelongsToProject } from '../../../policies/databaseBelongsToProject';
-
-interface DemoScenario {
-  title: string;
-  query: string;
-}
 
 @Controller('project')
 export class ProjectController {
@@ -88,9 +87,14 @@ export class ProjectController {
     }
     const demoConnection: UpdateDatabaseConnectionRequestBodyDto | undefined =
       body.createDemoScenarios ? body.databaseConnection : undefined;
+    const adapter:
+      UpdateDatabaseConnectionRequestBodyDto['adapter'] | undefined =
+      demoConnection?.adapter;
     if (
       demoConnection != null &&
-      (demoConnection.username != null || demoConnection.password != null) &&
+      (adapter?.databaseType === DatabaseConnectionDatabaseType.neo4j ||
+        adapter?.databaseType === DatabaseConnectionDatabaseType.ramen) &&
+      (adapter.username != null || adapter.password != null) &&
       !demoConnection.credentialStoreConsent
     ) {
       throw new BadRequestException('Consent required.');
@@ -253,24 +257,11 @@ export class ProjectController {
     projectTitle: string,
     connection: UpdateDatabaseConnectionRequestBodyDto,
   ): Promise<void> {
+    const adapter: UpdateDatabaseConnectionRequestBodyDto['adapter'] =
+      connection.adapter;
     this._externalGraphDatabase.validateDatabaseConnectionUrl(
-      connection.connectionUrl,
-      this._externalGraphDatabase.resolveAdapterType(connection.databaseType),
-    );
-    const database: Modules.Documents.Result<'api::database-connection.database-connection'> =
-      await this._database.createDatabase(project.documentId, {
-        title: connection.title,
-        username: connection.username ?? undefined,
-        password: connection.password ?? undefined,
-        database: connection.database,
-        connectionUrl: connection.connectionUrl,
-        browserUrl: connection.browserUrl,
-        databaseType: connection.databaseType,
-        language: connection.language ?? undefined,
-      });
-    await this._database.replaceRamenEdgeTitleRules(
-      database.documentId,
-      connection.ramenEdgeTitleRules,
+      adapter.connectionUrl,
+      this._externalGraphDatabase.resolveAdapterType(adapter.databaseType),
     );
 
     await strapi.documents('api::room.room').create({
@@ -289,37 +280,94 @@ export class ProjectController {
           project: project.documentId,
         },
       });
-    const demo: DemoScenario = match(connection.databaseType)
+
+    await match(adapter)
       .with(
-        DatabaseConnectionDatabaseType.neo4j,
-        DatabaseConnectionDatabaseType.ramen,
-        (): DemoScenario => ({
-          title: 'Visualize Database Structure',
-          query: 'CALL db.schema.visualization()',
-        }),
+        { databaseType: DatabaseConnectionDatabaseType.neo4j },
+        { databaseType: DatabaseConnectionDatabaseType.ramen },
+        async (
+          neo4jCompatibleAdapter:
+            | Neo4jDatabaseConnectionAdapterDto
+            | RamenDatabaseConnectionAdapterDto,
+        ): Promise<void> => {
+          const database: Modules.Documents.Result<'api::database-connection.database-connection'> =
+            await this._database.createDatabase(project.documentId, {
+              title: connection.title,
+              username: neo4jCompatibleAdapter.username ?? undefined,
+              password: neo4jCompatibleAdapter.password ?? undefined,
+              database: neo4jCompatibleAdapter.database,
+              connectionUrl: neo4jCompatibleAdapter.connectionUrl,
+              browserUrl: connection.browserUrl,
+              databaseType: neo4jCompatibleAdapter.databaseType,
+            });
+          if (
+            neo4jCompatibleAdapter.databaseType ===
+            DatabaseConnectionDatabaseType.ramen
+          ) {
+            await this._database.replaceRamenEdgeTitleRules(
+              database.documentId,
+              neo4jCompatibleAdapter.ramenEdgeTitleRules,
+            );
+          }
+          const scenario: Modules.Documents.Result<'api::scenario.scenario'> =
+            await strapi.documents('api::scenario.scenario').create({
+              status: 'published',
+              data: {
+                title: 'Visualize Database Structure',
+                group: group.documentId,
+              },
+            });
+          await strapi.documents('api::query.query').create({
+            status: 'published',
+            data: {
+              query: 'CALL db.schema.visualization()',
+              database: database.documentId,
+              scenario: scenario.documentId,
+              isTableQuery: false,
+            },
+          });
+        },
       )
       .with(
-        DatabaseConnectionDatabaseType.sparql,
-        DatabaseConnectionDatabaseType.wikidata,
-        (): DemoScenario => ({
-          title: 'Explore Sample Triples',
-          query: 'CONSTRUCT { ?s ?p ?o } WHERE { ?s ?p ?o } LIMIT 300',
-        }),
+        { databaseType: DatabaseConnectionDatabaseType.sparql },
+        { databaseType: DatabaseConnectionDatabaseType.wikidata },
+        async (
+          sparqlAdapter:
+            | SparqlDatabaseConnectionAdapterDto
+            | WikidataDatabaseConnectionAdapterDto,
+        ): Promise<void> => {
+          const database: Modules.Documents.Result<'api::database-connection.database-connection'> =
+            await this._database.createDatabase(project.documentId, {
+              title: connection.title,
+              database: '',
+              connectionUrl: sparqlAdapter.connectionUrl,
+              browserUrl: connection.browserUrl,
+              databaseType: sparqlAdapter.databaseType,
+              language:
+                sparqlAdapter.databaseType ===
+                DatabaseConnectionDatabaseType.wikidata
+                  ? (sparqlAdapter.language ?? undefined)
+                  : undefined,
+            });
+          const scenario: Modules.Documents.Result<'api::scenario.scenario'> =
+            await strapi.documents('api::scenario.scenario').create({
+              status: 'published',
+              data: {
+                title: 'Explore Sample Triples',
+                group: group.documentId,
+              },
+            });
+          await strapi.documents('api::query.query').create({
+            status: 'published',
+            data: {
+              query: 'CONSTRUCT { ?s ?p ?o } WHERE { ?s ?p ?o } LIMIT 300',
+              database: database.documentId,
+              scenario: scenario.documentId,
+              isTableQuery: false,
+            },
+          });
+        },
       )
       .exhaustive();
-    const scenario: Modules.Documents.Result<'api::scenario.scenario'> =
-      await strapi.documents('api::scenario.scenario').create({
-        status: 'published',
-        data: { title: demo.title, group: group.documentId },
-      });
-    await strapi.documents('api::query.query').create({
-      status: 'published',
-      data: {
-        query: demo.query,
-        database: database.documentId,
-        scenario: scenario.documentId,
-        isTableQuery: false,
-      },
-    });
   }
 }

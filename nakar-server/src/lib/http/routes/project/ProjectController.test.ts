@@ -18,7 +18,6 @@ import type { DatabaseConnectionDto } from '../../../schema/dtos/DatabaseConnect
 import { DatabaseConnectionDatabaseType } from '../database-connection/dto/DatabaseConnectionDatabaseType';
 import type { ScenarioGroupDto } from '../../../schema/dtos/ScenarioGroupDto';
 import type { CommonPropertyDto } from '../../../schema/dtos/CommonPropertyDto';
-import type { UpdateDatabaseConnectionRequestBodyDto } from '../database-connection/dto/UpdateDatabaseConnectionRequestBodyDto';
 import type { TestDatabaseConnectionRequestBodyDto } from './dto/TestDatabaseConnectionRequestBodyDto';
 import type { ScenarioQueryDto } from '../../../schema/dtos/ScenarioQueryDto';
 
@@ -239,16 +238,16 @@ describe('/project', (suiteContext: SuiteContext): void => {
             createDemoScenarios: false,
             databaseConnection: {
               title: 'Demo Database',
-              databaseType: DatabaseConnectionDatabaseType.neo4j,
-              connectionUrl: 'bolt://example.test:7687',
               browserUrl: '',
-              database: 'neo4j',
-              username: 'demo-user',
-              password: 'demo-password',
               credentialStoreConsent: false,
-              ramenEdgeTitleRules: [],
               nodeConfigurations: [],
-              language: null,
+              adapter: {
+                databaseType: DatabaseConnectionDatabaseType.neo4j,
+                connectionUrl: 'bolt://example.test:7687',
+                username: 'demo-user',
+                password: 'demo-password',
+                database: 'neo4j',
+              },
             },
           } satisfies CreateProjectRequestBodyDto),
           signal: testContext.signal,
@@ -328,12 +327,17 @@ describe('/project', (suiteContext: SuiteContext): void => {
             title: 'Demo Project',
             createDemoScenarios: true,
             databaseConnection: {
-              ...connectionDetails,
-              username: 'demo-user',
-              password: 'demo-password',
+              title: connectionDetails.title,
+              browserUrl: connectionDetails.browserUrl,
               credentialStoreConsent: true,
               nodeConfigurations: [],
-              ramenEdgeTitleRules: [],
+              adapter: {
+                databaseType: DatabaseConnectionDatabaseType.neo4j,
+                connectionUrl: connectionDetails.connectionUrl,
+                username: 'demo-user',
+                password: 'demo-password',
+                database: connectionDetails.database,
+              },
             },
           } satisfies CreateProjectRequestBodyDto),
           signal: testContext.signal,
@@ -375,8 +379,9 @@ describe('/project', (suiteContext: SuiteContext): void => {
           ['Authorization', `Bearer ${login.jwt}`],
           ['Content-Type', 'application/json'],
         ]);
-        const rules: UpdateDatabaseConnectionRequestBodyDto['ramenEdgeTitleRules'] =
-          [{ annotationType: 'relation', titleProperty: 'kind' }];
+        const rules: DatabaseConnectionDto['ramenEdgeTitleRules'] = [
+          { annotationType: 'relation', titleProperty: 'kind' },
+        ];
 
         // when
         const response: Response = await fetch(`${manager.apiUrl}/project`, {
@@ -387,16 +392,17 @@ describe('/project', (suiteContext: SuiteContext): void => {
             createDemoScenarios: true,
             databaseConnection: {
               title: 'Demo Database',
-              databaseType: DatabaseConnectionDatabaseType.ramen,
-              connectionUrl: 'bolt://example.test:7687',
               browserUrl: '',
-              database: 'neo4j',
-              username: null,
-              password: null,
               credentialStoreConsent: false,
-              ramenEdgeTitleRules: rules,
               nodeConfigurations: [],
-              language: null,
+              adapter: {
+                databaseType: DatabaseConnectionDatabaseType.ramen,
+                connectionUrl: 'bolt://example.test:7687',
+                username: null,
+                password: null,
+                database: 'neo4j',
+                ramenEdgeTitleRules: rules,
+              },
             },
           } satisfies CreateProjectRequestBodyDto),
           signal: testContext.signal,
@@ -456,12 +462,14 @@ describe('/project', (suiteContext: SuiteContext): void => {
             title: 'Demo Project',
             createDemoScenarios: true,
             databaseConnection: {
-              ...connectionDetails,
-              username: null,
-              password: null,
+              title: connectionDetails.title,
+              browserUrl: connectionDetails.browserUrl,
               credentialStoreConsent: false,
               nodeConfigurations: [],
-              ramenEdgeTitleRules: [],
+              adapter: {
+                databaseType: DatabaseConnectionDatabaseType.sparql,
+                connectionUrl: connectionDetails.connectionUrl,
+              },
             },
           } satisfies CreateProjectRequestBodyDto),
           signal: testContext.signal,
@@ -520,12 +528,15 @@ describe('/project', (suiteContext: SuiteContext): void => {
             title: 'Demo Project',
             createDemoScenarios: true,
             databaseConnection: {
-              ...connectionDetails,
-              username: null,
-              password: null,
+              title: connectionDetails.title,
+              browserUrl: connectionDetails.browserUrl,
               credentialStoreConsent: false,
               nodeConfigurations: [],
-              ramenEdgeTitleRules: [],
+              adapter: {
+                databaseType: DatabaseConnectionDatabaseType.wikidata,
+                connectionUrl: connectionDetails.connectionUrl,
+                language: connectionDetails.language,
+              },
             },
           } satisfies CreateProjectRequestBodyDto),
           signal: testContext.signal,
@@ -654,16 +665,16 @@ describe('/project', (suiteContext: SuiteContext): void => {
             createDemoScenarios: true,
             databaseConnection: {
               title: 'Demo Database',
-              databaseType: DatabaseConnectionDatabaseType.neo4j,
-              connectionUrl: 'bolt://example.test:7687',
               browserUrl: '',
-              database: 'neo4j',
-              username: 'demo-user',
-              password: null,
               credentialStoreConsent: false,
-              ramenEdgeTitleRules: [],
               nodeConfigurations: [],
-              language: null,
+              adapter: {
+                databaseType: DatabaseConnectionDatabaseType.neo4j,
+                connectionUrl: 'bolt://example.test:7687',
+                username: 'demo-user',
+                password: null,
+                database: 'neo4j',
+              },
             },
           } satisfies CreateProjectRequestBodyDto),
           signal: testContext.signal,
@@ -715,16 +726,16 @@ describe('/project', (suiteContext: SuiteContext): void => {
             createDemoScenarios: true,
             databaseConnection: {
               title: 'Demo Database',
-              databaseType: DatabaseConnectionDatabaseType.neo4j,
-              connectionUrl: 'bolt://example.test:7687',
               browserUrl: '',
-              database: 'neo4j',
-              username: null,
-              password: 'demo-password',
               credentialStoreConsent: false,
-              ramenEdgeTitleRules: [],
               nodeConfigurations: [],
-              language: null,
+              adapter: {
+                databaseType: DatabaseConnectionDatabaseType.neo4j,
+                connectionUrl: 'bolt://example.test:7687',
+                username: null,
+                password: 'demo-password',
+                database: 'neo4j',
+              },
             },
           } satisfies CreateProjectRequestBodyDto),
           signal: testContext.signal,

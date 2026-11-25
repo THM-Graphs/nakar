@@ -9,13 +9,15 @@ import {
   DatabaseConnectionDto,
   projectControllerGetProject,
   ProjectPageDto,
-  UpdateDatabaseConnectionRequestBodyDto,
 } from "api-client";
 import { resultOrThrow } from "../shared/data/resultOrThrow.ts";
 import { Router } from "../routing/Router.ts";
 import { CMSEditPageForm } from "../shared/cms/CMSEditPageForm.tsx";
 import { DatabaseConnectionEditor } from "../shared/cms/DatabaseConnectionEditor.tsx";
-import { prepareDatabaseConnectionRequest } from "../shared/data/prepareDatabaseConnectionRequest.ts";
+import {
+  type DatabaseConnectionDraft,
+  prepareDatabaseConnectionRequest,
+} from "../shared/data/prepareDatabaseConnectionRequest.ts";
 
 type EditDatabaseConnectionLoaderData = {
   project: ProjectPageDto;
@@ -56,7 +58,7 @@ export async function EditDatabaseConnectionLoader(
 export function EditDatabaseConnection() {
   const loaderData: EditDatabaseConnectionLoaderData = useLoaderData();
   const [databaseConnection, setDatabaseConnection] =
-    useState<UpdateDatabaseConnectionRequestBodyDto>({
+    useState<DatabaseConnectionDraft>({
       databaseType: loaderData.databaseConnection.databaseType,
       username: null,
       password: null,

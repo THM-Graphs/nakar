@@ -168,6 +168,34 @@ export type ProjectPageDto = {
     commonProperties: Array<CommonPropertyDto>;
 };
 
+export type Neo4jDatabaseConnectionAdapterDto = {
+    connectionUrl: string;
+    username?: string | null;
+    password?: string | null;
+    database: string;
+    databaseType: 'neo4j';
+};
+
+export type RamenDatabaseConnectionAdapterDto = {
+    connectionUrl: string;
+    username?: string | null;
+    password?: string | null;
+    database: string;
+    databaseType: 'ramen';
+    ramenEdgeTitleRules: Array<RamenEdgeTitleRuleDto>;
+};
+
+export type SparqlDatabaseConnectionAdapterDto = {
+    connectionUrl: string;
+    databaseType: 'sparql';
+};
+
+export type WikidataDatabaseConnectionAdapterDto = {
+    connectionUrl: string;
+    databaseType: 'wikidata';
+    language: string | null;
+};
+
 export type UpdateNodeConfigurationRequestBodyDto = {
     id: string;
     type: 'link' | 'image';
@@ -180,16 +208,18 @@ export type UpdateNodeConfigurationRequestBodyDto = {
 
 export type UpdateDatabaseConnectionRequestBodyDto = {
     title: string;
-    username: string | null;
-    password: string | null;
-    database: string;
-    connectionUrl: string;
     browserUrl: string;
     credentialStoreConsent: boolean;
-    databaseType: 'neo4j' | 'sparql' | 'wikidata' | 'ramen';
     nodeConfigurations: Array<UpdateNodeConfigurationRequestBodyDto>;
-    language: string | null;
-    ramenEdgeTitleRules: Array<RamenEdgeTitleRuleDto>;
+    adapter: ({
+        databaseType: 'neo4j';
+    } & Neo4jDatabaseConnectionAdapterDto) | ({
+        databaseType: 'ramen';
+    } & RamenDatabaseConnectionAdapterDto) | ({
+        databaseType: 'sparql';
+    } & SparqlDatabaseConnectionAdapterDto) | ({
+        databaseType: 'wikidata';
+    } & WikidataDatabaseConnectionAdapterDto);
 };
 
 export type CreateProjectRequestBodyDto = {

@@ -19,6 +19,10 @@ import { SchemaFactoryService } from '../../../schema/SchemaFactoryService';
 import { DatabaseConnectionDto } from '../../../schema/dtos/DatabaseConnectionDto';
 import { DatabaseConnectionBelongsToProject } from '../../guards/DatabaseConnectionBelongsToProject';
 import { UpdateDatabaseConnectionRequestBodyDto } from './dto/UpdateDatabaseConnectionRequestBodyDto';
+import type { Neo4jDatabaseConnectionAdapterDto } from './dto/adapters/Neo4jDatabaseConnectionAdapterDto';
+import type { RamenDatabaseConnectionAdapterDto } from './dto/adapters/RamenDatabaseConnectionAdapterDto';
+import type { SparqlDatabaseConnectionAdapterDto } from './dto/adapters/SparqlDatabaseConnectionAdapterDto';
+import type { WikidataDatabaseConnectionAdapterDto } from './dto/adapters/WikidataDatabaseConnectionAdapterDto';
 import { DatabaseConnectionDatabaseType } from './dto/DatabaseConnectionDatabaseType';
 import { DatabaseService } from '../../../database/DatabaseService';
 
@@ -78,47 +82,66 @@ export class DatabaseConnectionController {
     @Param('databaseConnectionId') databaseConnectionId: string,
     @Body() body: UpdateDatabaseConnectionRequestBodyDto,
   ): Promise<DatabaseConnectionDto> {
-    if (body.username != null || body.password != null) {
-      if (!body.credentialStoreConsent) {
-        throw new BadRequestException('Consent required.');
-      }
-    }
-    const preserveCredentialsOnNull: boolean = match(body.databaseType)
-      .with(
-        DatabaseConnectionDatabaseType.neo4j,
-        DatabaseConnectionDatabaseType.ramen,
-        (): boolean => true,
-      )
-      .with(
-        DatabaseConnectionDatabaseType.sparql,
-        DatabaseConnectionDatabaseType.wikidata,
-        (): boolean => false,
-      )
-      .exhaustive();
-    const username: string | null | undefined = preserveCredentialsOnNull
-      ? (body.username ?? undefined)
-      : body.username;
-    const password: string | null | undefined = preserveCredentialsOnNull
-      ? (body.password ?? undefined)
-      : body.password;
+    // Strapi accepts null to clear string fields, but its input type omits it.
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
+    const nullString: string = null as unknown as string;
 
     return await strapi.db.transaction(
       async (): Promise<DatabaseConnectionDto> => {
         const databaseConnection: Modules.Documents.Result<'api::database-connection.database-connection'> | null =
-          await this._database.updateDatabase(databaseConnectionId, {
-            title: body.title,
-            // Strapi accepts null to clear these fields, but its input type omits it.
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
-            username: username as string | undefined,
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
-            password: password as string | undefined,
-            database: body.database,
-            connectionUrl: body.connectionUrl,
-            browserUrl: body.browserUrl,
-            databaseType: body.databaseType,
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
-            language: body.language as string | undefined,
-          });
+          await match(body.adapter)
+            .with(
+              { databaseType: DatabaseConnectionDatabaseType.neo4j },
+              { databaseType: DatabaseConnectionDatabaseType.ramen },
+              (
+                neo4jAdapter:
+                  | Neo4jDatabaseConnectionAdapterDto
+                  | RamenDatabaseConnectionAdapterDto,
+              ): Promise<Modules.Documents.Result<'api::database-connection.database-connection'> | null> => {
+                if (
+                  (neo4jAdapter.username != null ||
+                    neo4jAdapter.password != null) &&
+                  !body.credentialStoreConsent
+                ) {
+                  throw new BadRequestException('Consent required.');
+                }
+                return this._database.updateDatabase(databaseConnectionId, {
+                  title: body.title,
+                  username: neo4jAdapter.username ?? undefined,
+                  password: neo4jAdapter.password ?? undefined,
+                  database: neo4jAdapter.database,
+                  connectionUrl: neo4jAdapter.connectionUrl,
+                  browserUrl: body.browserUrl,
+                  databaseType: neo4jAdapter.databaseType,
+                  language: nullString,
+                });
+              },
+            )
+            .with(
+              { databaseType: DatabaseConnectionDatabaseType.sparql },
+              { databaseType: DatabaseConnectionDatabaseType.wikidata },
+              (
+                sparqlAdapter:
+                  | SparqlDatabaseConnectionAdapterDto
+                  | WikidataDatabaseConnectionAdapterDto,
+              ): Promise<Modules.Documents.Result<'api::database-connection.database-connection'> | null> => {
+                return this._database.updateDatabase(databaseConnectionId, {
+                  title: body.title,
+                  username: nullString,
+                  password: nullString,
+                  database: '',
+                  connectionUrl: sparqlAdapter.connectionUrl,
+                  browserUrl: body.browserUrl,
+                  databaseType: sparqlAdapter.databaseType,
+                  language:
+                    sparqlAdapter.databaseType ===
+                    DatabaseConnectionDatabaseType.wikidata
+                      ? (sparqlAdapter.language ?? nullString)
+                      : nullString,
+                });
+              },
+            )
+            .exhaustive();
 
         if (databaseConnection == null) {
           throw new NotFoundException();
@@ -130,7 +153,9 @@ export class DatabaseConnectionController {
         );
         await this._database.replaceRamenEdgeTitleRules(
           databaseConnection.documentId,
-          body.ramenEdgeTitleRules,
+          body.adapter.databaseType === DatabaseConnectionDatabaseType.ramen
+            ? body.adapter.ramenEdgeTitleRules
+            : [],
         );
 
         return await this._schemaFactory.createSchemaDatabase(

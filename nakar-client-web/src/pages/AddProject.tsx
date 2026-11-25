@@ -1,10 +1,7 @@
 import { Card, Container, Form, Spinner, Stack } from "react-bootstrap";
 import { CMSNavbar } from "../shared/cms/CMSNavbar.tsx";
 import { useState } from "react";
-import {
-  projectControllerCreateProject,
-  UpdateDatabaseConnectionRequestBodyDto,
-} from "api-client";
+import { projectControllerCreateProject } from "api-client";
 import { resultOrThrow } from "../shared/data/resultOrThrow.ts";
 import { useNavigate } from "react-router";
 import { CMSErrorCard } from "../shared/cms/CMSErrorCard.tsx";
@@ -13,13 +10,16 @@ import { CMSButton } from "../shared/cms/CMSButton.tsx";
 import { CMSEditTextCard } from "../shared/cms/CMSEditTextCard.tsx";
 import { Router } from "../routing/Router.ts";
 import { DatabaseConnectionEditor } from "../shared/cms/DatabaseConnectionEditor.tsx";
-import { prepareDatabaseConnectionRequest } from "../shared/data/prepareDatabaseConnectionRequest.ts";
+import {
+  type DatabaseConnectionDraft,
+  prepareDatabaseConnectionRequest,
+} from "../shared/data/prepareDatabaseConnectionRequest.ts";
 
 export function AddProject() {
   const [title, setTitle] = useState<string>("Untitled Project");
   const [createDemoScenarios, setCreateDemoScenarios] = useState(true);
   const [databaseConnection, setDatabaseConnection] =
-    useState<UpdateDatabaseConnectionRequestBodyDto>({
+    useState<DatabaseConnectionDraft>({
       title: "Main Database",
       databaseType: "neo4j",
       username: null,
