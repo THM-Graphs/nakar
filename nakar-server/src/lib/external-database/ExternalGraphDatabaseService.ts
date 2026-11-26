@@ -5,7 +5,7 @@ import {
   Injectable,
   OnModuleDestroy,
 } from '@nestjs/common';
-import type { Modules } from '@strapi/types';
+import type { Modules } from '@strapi/strapi';
 import { SMap } from '../../packages/map/Map';
 import { SSet } from '../../packages/set/Set';
 import type { ExternalGraphDatabaseCredentials } from './data/ExternalGraphDatabaseCredentials';

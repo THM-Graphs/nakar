@@ -6,7 +6,7 @@ import { SSet } from '../../packages/set/Set';
 import { LiveCanvasMetaData } from '../live-canvas/graph/LiveCanvasMetaData';
 import { PropertyCollection } from '../live-canvas/graph/PropertyCollection';
 import { DatabaseService } from '../database/DatabaseService';
-import type { Modules } from '@strapi/types';
+import type { Modules } from '@strapi/strapi';
 import { Range } from '../../packages/range/Range';
 import { Logger } from '@strapi/logger';
 import { createChildLogger } from '../logger/createChildLogger';

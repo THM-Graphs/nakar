@@ -1,6 +1,6 @@
 import { Controller, Get, Param, UseGuards } from '@nestjs/common';
 import { ApiParam, ApiResponse } from '@nestjs/swagger';
-import type { Modules } from '@strapi/types';
+import type { Modules } from '@strapi/strapi';
 import { DatabaseService } from '../../../database/DatabaseService';
 import { SchemaFactoryService } from '../../../schema/SchemaFactoryService';
 import { UserCanAccessRoom } from '../../guards/UserCanAccessRoom';

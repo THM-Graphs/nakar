@@ -2,7 +2,7 @@ import { Controller, Get, Query } from '@nestjs/common';
 import { StartPageDto } from './dto/StartPageDto';
 import { ApiResponse } from '@nestjs/swagger';
 import { GetStartPageRequestQueryDto } from './dto/GetStartPageRequestQueryDto';
-import type { Modules } from '@strapi/types';
+import type { Modules } from '@strapi/strapi';
 import { userCanSeeAndJoinRoom } from '../../../policies/userCanSeeAndJoinRoom';
 
 import { DatabaseService } from '../../../database/DatabaseService';

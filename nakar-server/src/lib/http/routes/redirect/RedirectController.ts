@@ -1,7 +1,7 @@
 import { Controller, Get, Query } from '@nestjs/common';
 import { GetUrlRequestQueryDto } from './dto/GetUrlRequestQueryDto';
 import { GetUrlResponseBodyDto } from './dto/GetUrlResponseBodyDto';
-import type { Modules } from '@strapi/types';
+import type { Modules } from '@strapi/strapi';
 import { Logger } from '@strapi/logger';
 import { createChildLogger } from '../../../logger/createChildLogger';
 import { ApiResponse } from '@nestjs/swagger';

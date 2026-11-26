@@ -1,7 +1,7 @@
 import type { Response } from 'express';
 import { Unauthorized } from 'http-errors';
 import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
-import type { Modules } from '@strapi/types';
+import type { Modules } from '@strapi/strapi';
 import { AuthService } from '../../auth/AuthService';
 
 @Injectable()

@@ -1,4 +1,4 @@
-import type { Core, Data, Modules } from '@strapi/types';
+import type { Core, Data, Modules } from '@strapi/strapi';
 import path from 'path';
 import fs from 'node:fs/promises';
 import os from 'node:os';

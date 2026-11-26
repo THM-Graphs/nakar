@@ -142,6 +142,7 @@ export default defineConfig([
           ],
         },
       ],
+      '@typescript-eslint/no-unsafe-class-instance-assignment': 'off', // activate later
     },
   },
   {

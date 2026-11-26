@@ -2,7 +2,7 @@ import { SMap } from '../../packages/map/Map';
 import type { DatabaseService } from '../database/DatabaseService';
 import type { Logger } from '@strapi/logger';
 import { createChildLogger } from '../logger/createChildLogger';
-import type { Modules } from '@strapi/types';
+import type { Modules } from '@strapi/strapi';
 
 export class DatabaseReferenceCache {
   private readonly _logger: Logger = createChildLogger(this);

@@ -5,7 +5,7 @@ import { DatabaseService } from '../database/DatabaseService';
 import { Profiler } from 'winston';
 import { match, P } from 'ts-pattern';
 import { Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
-import type { Modules } from '@strapi/types';
+import type { Modules } from '@strapi/strapi';
 import { MediaService } from '../media/MediaService';
 import type { CanvasDeletedEvent } from './CanvasDeletedEvent';
 

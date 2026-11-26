@@ -13,7 +13,7 @@ import type { Logger } from '@strapi/logger';
 import { createChildLogger } from '../../logger/createChildLogger';
 import Handlebars from 'handlebars';
 import { IdHash } from '../../../packages/hash/IdHash';
-import type { Modules } from '@strapi/types';
+import type { Modules } from '@strapi/strapi';
 
 export class NodeIndex {
   private readonly _logger: Logger = createChildLogger(this);

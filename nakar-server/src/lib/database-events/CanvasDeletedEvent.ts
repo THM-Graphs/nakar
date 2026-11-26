@@ -1,4 +1,4 @@
-import type { Modules } from '@strapi/types';
+import type { Modules } from '@strapi/strapi';
 
 export interface CanvasDeletedEvent {
   canvas: Modules.Documents.Result<'api::canvas.canvas'>;

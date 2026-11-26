@@ -5,7 +5,7 @@ import type { DatabaseService } from '../../database/DatabaseService';
 import { LiveCanvasNoteNodeReference } from './LiveCanvasNoteNodeReference';
 import type { LiveCanvas } from '../LiveCanvas';
 import type { GraphNode } from '../graph/GraphNode';
-import type { Modules } from '@strapi/types';
+import type { Modules } from '@strapi/strapi';
 
 export class LiveCanvasNote {
   // eslint-disable-next-line @typescript-eslint/typedef

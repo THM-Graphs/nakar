@@ -1,5 +1,5 @@
 import type { DatabaseService } from '../database/DatabaseService';
-import type { Modules } from '@strapi/types';
+import type { Modules } from '@strapi/strapi';
 
 export async function databaseBelongsToCanvas(
   database: Modules.Documents.Result<'api::database-connection.database-connection'>,

@@ -1,7 +1,7 @@
 import z from 'zod';
 import { LiveCanvasParameterDataType } from './LiveCanvasParameterDataType';
 import { match, P } from 'ts-pattern';
-import type { Modules } from '@strapi/types';
+import type { Modules } from '@strapi/strapi';
 
 export class LiveCanvasParameter {
   // eslint-disable-next-line @typescript-eslint/typedef

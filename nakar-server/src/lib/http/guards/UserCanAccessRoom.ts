@@ -6,7 +6,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import type { Modules } from '@strapi/types';
+import type { Modules } from '@strapi/strapi';
 import { Request } from 'express';
 import { DatabaseService } from '../../database/DatabaseService';
 import { AuthService } from '../../auth/AuthService';

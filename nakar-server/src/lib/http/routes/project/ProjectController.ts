@@ -15,7 +15,7 @@ import {
 } from '@nestjs/common';
 import { ProjectPageDto } from './dto/ProjectPageDto';
 import { ApiResponse } from '@nestjs/swagger';
-import type { Modules } from '@strapi/types';
+import type { Modules } from '@strapi/strapi';
 import { NotFound } from 'http-errors';
 import { DatabaseService } from '../../../database/DatabaseService';
 import { SchemaFactoryService } from '../../../schema/SchemaFactoryService';

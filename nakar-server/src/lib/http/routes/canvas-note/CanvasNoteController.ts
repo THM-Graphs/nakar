@@ -11,7 +11,7 @@ import {
 } from '@nestjs/common';
 import { PostNoteRequestBody } from './dto/PostNoteRequestBody';
 import { ApiBody, ApiParam, ApiResponse } from '@nestjs/swagger';
-import type { Modules } from '@strapi/types';
+import type { Modules } from '@strapi/strapi';
 import { DatabaseService } from '../../../database/DatabaseService';
 import { Logger } from '@strapi/logger';
 import { createChildLogger } from '../../../logger/createChildLogger';

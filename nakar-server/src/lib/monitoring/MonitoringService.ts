@@ -3,7 +3,7 @@ import { MonitoringEvent } from './MonitoringEvent';
 import { createChildLogger } from '../logger/createChildLogger';
 import { Logger } from '@strapi/logger';
 import { DatabaseService } from '../database/DatabaseService';
-import type { Modules } from '@strapi/types';
+import type { Modules } from '@strapi/strapi';
 
 @Injectable()
 export class MonitoringService implements OnModuleDestroy {

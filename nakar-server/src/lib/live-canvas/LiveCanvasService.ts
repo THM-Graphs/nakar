@@ -8,7 +8,7 @@ import { SMap } from '../../packages/map/Map';
 import { CanvasEvent } from './events/CanvasEvent';
 import { CanvasEventEventKick } from './events/CanvasEventEventKick';
 import { LiveCanvas } from './LiveCanvas';
-import type { Modules } from '@strapi/types';
+import type { Modules } from '@strapi/strapi';
 import { createChildLogger } from '../logger/createChildLogger';
 import { Logger } from '@strapi/logger';
 import { Profiler } from 'winston';

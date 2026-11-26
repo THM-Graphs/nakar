@@ -17,7 +17,7 @@ import type { RamenEdgeTitleRuleDto } from '../http/routes/database-connection/d
 import { match } from 'ts-pattern';
 import { MediaService } from '../media/MediaService';
 import { EncryptionService } from '../encryption/EncryptionService';
-import type { Modules } from '@strapi/types';
+import type { Modules } from '@strapi/strapi';
 
 @Injectable()
 export class DatabaseService {
