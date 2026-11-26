@@ -14,7 +14,7 @@ import {
 } from 'http-errors';
 import z from 'zod';
 import { GetAuthResponseBodyDto } from './dto/GetAuthResponseBodyDto';
-import type { Modules } from '@strapi/types';
+import type { Modules } from '@strapi/strapi';
 import { JWT } from '../../decorators/JWT';
 import { AuthService } from '../../../auth/AuthService';
 import { StrapiService } from '../../../strapi/StrapiService';

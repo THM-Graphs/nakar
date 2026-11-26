@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import type { OnModuleInit } from '@nestjs/common';
 import type { Logger } from '@strapi/logger';
-import type { Modules } from '@strapi/types';
+import type { Modules } from '@strapi/strapi';
 import { SMap } from '../../packages/map/Map';
 import { SSet } from '../../packages/set/Set';
 import { DatabaseService } from '../database/DatabaseService';

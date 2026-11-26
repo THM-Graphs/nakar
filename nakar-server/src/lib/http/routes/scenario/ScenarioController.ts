@@ -14,7 +14,7 @@ import { ScenarioDto } from '../../../schema/dtos/ScenarioDto';
 import { UserCanAccessProject } from '../../guards/UserCanAccessProject';
 import { DatabaseService } from '../../../database/DatabaseService';
 import { ScenarioGroupBelongsToProject } from '../../guards/ScenarioGroupBelongsToProject';
-import type { Modules } from '@strapi/types';
+import type { Modules } from '@strapi/strapi';
 import { SchemaFactoryService } from '../../../schema/SchemaFactoryService';
 import { ScenarioBelongsToScenarioGroup } from '../../guards/ScenarioBelongsToScenarioGroup';
 import { databaseBelongsToProject } from '../../../policies/databaseBelongsToProject';

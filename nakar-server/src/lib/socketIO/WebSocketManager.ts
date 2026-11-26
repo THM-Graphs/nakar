@@ -19,7 +19,7 @@ import {
   ValidationPipe,
 } from '@nestjs/common';
 import { match, P } from 'ts-pattern';
-import type { Modules } from '@strapi/types';
+import type { Modules } from '@strapi/strapi';
 import { DatabaseService } from '../database/DatabaseService';
 import { LiveCanvas } from '../live-canvas/LiveCanvas';
 import { SchemaFactoryService } from '../schema/SchemaFactoryService';

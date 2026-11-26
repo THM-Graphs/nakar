@@ -66,7 +66,7 @@ import { databaseBelongsToCanvas } from '../policies/databaseBelongsToCanvas';
 import { scenarioBelongsToCanvas } from '../policies/scenarioBelongsToCanvas';
 import { ExternalGraphDatabaseQueryLimitConfigType } from '../external-database/data/ExternalGraphDatabaseQueryLimitConfigType';
 import { ExternalGraphDatabaseQueryLimitConfigCollectionType } from '../external-database/data/ExternalGraphDatabaseQueryLimitConfigCollectionType';
-import type { Modules } from '@strapi/types';
+import type { Modules } from '@strapi/strapi';
 
 export class LiveCanvas {
   // Room-wide changes must be serialized across all LiveCanvas instances.

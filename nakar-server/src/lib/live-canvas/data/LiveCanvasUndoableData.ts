@@ -17,7 +17,7 @@ import type { Profiler } from 'winston';
 import type { LiveCanvasViewSettings } from '../view-settings/LiveCanvasViewSettings';
 import { LiveCanvasParameter } from '../graph/LiveCanvasParameter';
 import { LiveCanvasNote } from './LiveCanvasNote';
-import type { Modules } from '@strapi/types';
+import type { Modules } from '@strapi/strapi';
 
 export class LiveCanvasUndoableData {
   // eslint-disable-next-line @typescript-eslint/typedef

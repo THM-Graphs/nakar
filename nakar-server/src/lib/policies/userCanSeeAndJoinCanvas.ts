@@ -1,6 +1,6 @@
 import type { DatabaseService } from '../database/DatabaseService';
 import { userCanSeeAndJoinRoom } from './userCanSeeAndJoinRoom';
-import type { Modules } from '@strapi/types';
+import type { Modules } from '@strapi/strapi';
 
 export async function userCanSeeAndJoinCanvas(
   user: Modules.Documents.Result<'plugin::users-permissions.user'> | null,

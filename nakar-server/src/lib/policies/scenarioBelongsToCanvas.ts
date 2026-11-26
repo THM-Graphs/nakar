@@ -1,5 +1,5 @@
 import type { DatabaseService } from '../database/DatabaseService';
-import type { Modules } from '@strapi/types';
+import type { Modules } from '@strapi/strapi';
 
 export async function scenarioBelongsToCanvas(
   scenario: Modules.Documents.Result<'api::scenario.scenario'>,

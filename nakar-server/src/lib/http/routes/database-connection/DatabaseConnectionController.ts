@@ -14,7 +14,7 @@ import {
 import { ApiParam, ApiResponse } from '@nestjs/swagger';
 import { match } from 'ts-pattern';
 import { UserCanAccessProject } from '../../guards/UserCanAccessProject';
-import type { Modules } from '@strapi/types';
+import type { Modules } from '@strapi/strapi';
 import { SchemaFactoryService } from '../../../schema/SchemaFactoryService';
 import { DatabaseConnectionDto } from '../../../schema/dtos/DatabaseConnectionDto';
 import { DatabaseConnectionBelongsToProject } from '../../guards/DatabaseConnectionBelongsToProject';

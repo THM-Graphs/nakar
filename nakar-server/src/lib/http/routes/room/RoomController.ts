@@ -11,7 +11,7 @@ import {
   Put,
   UseGuards,
 } from '@nestjs/common';
-import type { Modules } from '@strapi/types';
+import type { Modules } from '@strapi/strapi';
 import { DatabaseService } from '../../../database/DatabaseService';
 import { SchemaFactoryService } from '../../../schema/SchemaFactoryService';
 import { RoomDto } from '../../../schema/dtos/RoomDto';

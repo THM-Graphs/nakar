@@ -2,7 +2,7 @@ import type { DatabaseService } from '../database/DatabaseService';
 import type { Logger } from '@strapi/logger';
 import { createChildLogger } from '../logger/createChildLogger';
 import { userCanSeeAndEditProject } from './userCanSeeAndEditProject';
-import type { Modules } from '@strapi/types';
+import type { Modules } from '@strapi/strapi';
 
 export async function userCanSeeAndJoinRoom(
   user: Modules.Documents.Result<'plugin::users-permissions.user'> | null,

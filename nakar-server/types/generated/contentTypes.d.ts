@@ -803,7 +803,15 @@ export interface ApiQueryParameterQueryParameter
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
     dataType: Schema.Attribute.Enumeration<
-      ['string', 'number', 'json', 'sparqlUri', 'urlPathSegment', 'startDateTime', 'endDateTime']
+      [
+        'string',
+        'number',
+        'json',
+        'sparqlUri',
+        'urlPathSegment',
+        'startDateTime',
+        'endDateTime',
+      ]
     > &
       Schema.Attribute.DefaultTo<'string'>;
     defaultValue: Schema.Attribute.String;

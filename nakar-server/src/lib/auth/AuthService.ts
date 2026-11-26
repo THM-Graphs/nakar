@@ -2,7 +2,7 @@ import { ExecutionContext, Injectable } from '@nestjs/common';
 import * as undici from 'undici';
 import { DatabaseService } from '../database/DatabaseService';
 import { Request } from 'express';
-import type { Modules } from '@strapi/types';
+import type { Modules } from '@strapi/strapi';
 import { StrapiService } from '../strapi/StrapiService';
 
 @Injectable()

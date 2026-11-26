@@ -42,7 +42,7 @@ import { LiveCanvasService } from '../../../live-canvas/LiveCanvasService';
 import { LiveCanvas } from '../../../live-canvas/LiveCanvas';
 import { ExternalGraphDatabaseStatsRelationship } from '../../../external-database/data/ExternalGraphDatabaseStatsRelationship';
 import { ExternalGraphDatabaseStatsLabel } from '../../../external-database/data/ExternalGraphDatabaseStatsLabel';
-import type { Modules } from '@strapi/types';
+import type { Modules } from '@strapi/strapi';
 
 @Controller('room/:roomId/canvas/:canvasId/database-connection/:databaseId')
 @ApiParam({
