@@ -3,6 +3,6 @@
   "test": {
     "test-timeout": 60000,
     "test-randomize": true,
-    "test-concurrency": 4
+    "test-concurrency": 8
   }
 }

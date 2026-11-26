@@ -13,6 +13,7 @@ import { randomUUID } from 'node:crypto';
 import type { SuiteContext, TestContext } from 'node:test';
 import { after, before, describe, test } from 'node:test';
 import z from 'zod';
+import { suiteOptions } from '../../../../e2e/suiteOptions';
 import { E2ETestManager } from '../../../../e2e/E2ETestManager';
 import { RoomVisibilityDto } from '../../../schema/dtos/RoomVisibilityDto';
 
@@ -64,7 +65,7 @@ const startSchema: z.ZodType<StartPageDto> = z.strictObject({
   recentRooms: z.array(roomSchema),
 });
 
-describe('/', (suiteContext: SuiteContext): void => {
+describe('/', suiteOptions, (suiteContext: SuiteContext): void => {
   const manager: E2ETestManager = new E2ETestManager();
 
   before(

@@ -6,6 +6,7 @@ import { randomUUID } from 'node:crypto';
 import type { SuiteContext, TestContext } from 'node:test';
 import { after, before, describe, test } from 'node:test';
 import z from 'zod';
+import { suiteOptions } from '../../../../e2e/suiteOptions';
 import { E2ETestManager } from '../../../../e2e/E2ETestManager';
 import type { PostAuthResponseBodyDto } from '../auth/dto/PostAuthResponseBodyDto';
 import type { ScenarioGroupDto } from '../../../schema/dtos/ScenarioGroupDto';
@@ -37,35 +38,168 @@ const scenarioGroupStateSchema: z.ZodType<{
   }),
 });
 
-describe('/project/:projectId/scenario-group', (suiteContext: SuiteContext): void => {
-  const manager: E2ETestManager = new E2ETestManager();
+describe(
+  '/project/:projectId/scenario-group',
+  suiteOptions,
+  (suiteContext: SuiteContext): void => {
+    const manager: E2ETestManager = new E2ETestManager();
 
-  before(
-    async (): Promise<void> => {
-      await manager.createAndStartApp(suiteContext);
-    },
-    { timeout: Infinity },
-  );
+    before(
+      async (): Promise<void> => {
+        await manager.createAndStartApp(suiteContext);
+      },
+      { timeout: Infinity },
+    );
 
-  after(async (): Promise<void> => {
-    await manager.destroy(suiteContext);
-  });
+    after(async (): Promise<void> => {
+      await manager.destroy(suiteContext);
+    });
 
-  describe('POST', (): void => {
-    describe('201', (): void => {
-      test('allows the owner and collaborator to create a scenario group', async (testContext: TestContext): Promise<void> => {
-        const roles: ('owner' | 'collaborator')[] = ['owner', 'collaborator'];
-        for (const role of roles) {
+    describe('POST', (): void => {
+      describe('201', (): void => {
+        test('allows the owner and collaborator to create a scenario group', async (testContext: TestContext): Promise<void> => {
+          const roles: ('owner' | 'collaborator')[] = ['owner', 'collaborator'];
+          for (const role of roles) {
+            // given
+            const fixture: FixtureContext =
+              await manager.setupFixture(testContext);
+            const actor: E2ETestApplicationUser =
+              role === 'owner' ? fixture.owner : fixture.collaborator;
+            const login: PostAuthResponseBodyDto = await manager.loginUser(
+              actor.username,
+              actor.password,
+              testContext,
+            );
+
+            // when
+            const response: Response = await fetch(
+              `${manager.apiUrl}/project/${fixture.projectId}/scenario-group`,
+              {
+                method: 'POST',
+                headers: new Headers([
+                  ['Authorization', `Bearer ${login.jwt}`],
+                ]),
+                signal: testContext.signal,
+              },
+            );
+
+            // then
+            assert.equal(response.status, 201);
+            const body: ScenarioGroupDto = scenarioGroupSchema.parse(
+              await response.json(),
+            );
+            assert.deepEqual(body, {
+              id: body.id,
+              title: 'Untitled Scenario Group',
+              scenarios: [],
+            });
+            const projectResponse: Response = await fetch(
+              `${manager.apiUrl}/project/${fixture.projectId}`,
+              {
+                headers: new Headers([
+                  ['Authorization', `Bearer ${login.jwt}`],
+                ]),
+                signal: testContext.signal,
+              },
+            );
+            assert.equal(projectResponse.status, 200);
+            const persisted: z.infer<typeof projectScenarioGroupsSchema> =
+              projectScenarioGroupsSchema.parse(await projectResponse.json());
+            assert.deepEqual(
+              persisted.scenarioGroups.find(
+                ({ id }: { id: string }): boolean => id === body.id,
+              ),
+              body,
+            );
+          }
+        });
+      });
+
+      describe('401', (): void => {
+        test('rejects anonymous creation', async (testContext: TestContext): Promise<void> => {
           // given
           const fixture: FixtureContext =
             await manager.setupFixture(testContext);
-          const actor: E2ETestApplicationUser =
-            role === 'owner' ? fixture.owner : fixture.collaborator;
-          const login: PostAuthResponseBodyDto = await manager.loginUser(
-            actor.username,
-            actor.password,
+
+          const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
+            fixture.owner.username,
+            fixture.owner.password,
             testContext,
           );
+          const originalResponse: Response = await fetch(
+            `${manager.apiUrl}/project/${fixture.projectId}`,
+            {
+              headers: new Headers([
+                ['Authorization', `Bearer ${ownerLogin.jwt}`],
+              ]),
+              signal: testContext.signal,
+            },
+          );
+          assert.equal(originalResponse.status, 200);
+          const original: z.infer<typeof projectScenarioGroupsSchema> =
+            projectScenarioGroupsSchema.parse(await originalResponse.json());
+
+          // when
+          const response: Response = await fetch(
+            `${manager.apiUrl}/project/${fixture.projectId}/scenario-group`,
+            {
+              method: 'POST',
+              signal: testContext.signal,
+            },
+          );
+
+          // then
+          assert.equal(response.status, 401);
+          assert.equal(response.headers.get('www-authenticate'), 'Bearer');
+          assert.deepEqual(await response.json(), {
+            statusCode: 401,
+            message: 'Unauthorized',
+          });
+          const persisted: Response = await fetch(
+            `${manager.apiUrl}/project/${fixture.projectId}`,
+            {
+              headers: new Headers([
+                ['Authorization', `Bearer ${ownerLogin.jwt}`],
+              ]),
+              signal: testContext.signal,
+            },
+          );
+          assert.equal(persisted.status, 200);
+          assert.deepEqual(
+            projectScenarioGroupsSchema.parse(await persisted.json()),
+            original,
+          );
+        });
+      });
+
+      describe('403', (): void => {
+        test('rejects outsider creation', async (testContext: TestContext): Promise<void> => {
+          // given
+          const fixture: FixtureContext =
+            await manager.setupFixture(testContext);
+          const login: PostAuthResponseBodyDto = await manager.loginUser(
+            fixture.outsider.username,
+            fixture.outsider.password,
+            testContext,
+          );
+
+          const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
+            fixture.owner.username,
+            fixture.owner.password,
+            testContext,
+          );
+          const originalResponse: Response = await fetch(
+            `${manager.apiUrl}/project/${fixture.projectId}`,
+            {
+              headers: new Headers([
+                ['Authorization', `Bearer ${ownerLogin.jwt}`],
+              ]),
+              signal: testContext.signal,
+            },
+          );
+          assert.equal(originalResponse.status, 200);
+          const original: z.infer<typeof projectScenarioGroupsSchema> =
+            projectScenarioGroupsSchema.parse(await originalResponse.json());
 
           // when
           const response: Response = await fetch(
@@ -78,274 +212,59 @@ describe('/project/:projectId/scenario-group', (suiteContext: SuiteContext): voi
           );
 
           // then
-          assert.equal(response.status, 201);
-          const body: ScenarioGroupDto = scenarioGroupSchema.parse(
-            await response.json(),
-          );
-          assert.deepEqual(body, {
-            id: body.id,
-            title: 'Untitled Scenario Group',
-            scenarios: [],
+          assert.equal(response.status, 403);
+          assert.deepEqual(await response.json(), {
+            statusCode: 403,
+            message: 'Forbidden resource',
+            error: 'Forbidden',
           });
-          const projectResponse: Response = await fetch(
+          const persisted: Response = await fetch(
             `${manager.apiUrl}/project/${fixture.projectId}`,
             {
-              headers: new Headers([['Authorization', `Bearer ${login.jwt}`]]),
+              headers: new Headers([
+                ['Authorization', `Bearer ${ownerLogin.jwt}`],
+              ]),
               signal: testContext.signal,
             },
           );
-          assert.equal(projectResponse.status, 200);
-          const persisted: z.infer<typeof projectScenarioGroupsSchema> =
-            projectScenarioGroupsSchema.parse(await projectResponse.json());
+          assert.equal(persisted.status, 200);
           assert.deepEqual(
-            persisted.scenarioGroups.find(
-              ({ id }: { id: string }): boolean => id === body.id,
-            ),
-            body,
+            projectScenarioGroupsSchema.parse(await persisted.json()),
+            original,
           );
-        }
-      });
-    });
-
-    describe('401', (): void => {
-      test('rejects anonymous creation', async (testContext: TestContext): Promise<void> => {
-        // given
-        const fixture: FixtureContext = await manager.setupFixture(testContext);
-
-        const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-          fixture.owner.username,
-          fixture.owner.password,
-          testContext,
-        );
-        const originalResponse: Response = await fetch(
-          `${manager.apiUrl}/project/${fixture.projectId}`,
-          {
-            headers: new Headers([
-              ['Authorization', `Bearer ${ownerLogin.jwt}`],
-            ]),
-            signal: testContext.signal,
-          },
-        );
-        assert.equal(originalResponse.status, 200);
-        const original: z.infer<typeof projectScenarioGroupsSchema> =
-          projectScenarioGroupsSchema.parse(await originalResponse.json());
-
-        // when
-        const response: Response = await fetch(
-          `${manager.apiUrl}/project/${fixture.projectId}/scenario-group`,
-          {
-            method: 'POST',
-            signal: testContext.signal,
-          },
-        );
-
-        // then
-        assert.equal(response.status, 401);
-        assert.equal(response.headers.get('www-authenticate'), 'Bearer');
-        assert.deepEqual(await response.json(), {
-          statusCode: 401,
-          message: 'Unauthorized',
-        });
-        const persisted: Response = await fetch(
-          `${manager.apiUrl}/project/${fixture.projectId}`,
-          {
-            headers: new Headers([
-              ['Authorization', `Bearer ${ownerLogin.jwt}`],
-            ]),
-            signal: testContext.signal,
-          },
-        );
-        assert.equal(persisted.status, 200);
-        assert.deepEqual(
-          projectScenarioGroupsSchema.parse(await persisted.json()),
-          original,
-        );
-      });
-    });
-
-    describe('403', (): void => {
-      test('rejects outsider creation', async (testContext: TestContext): Promise<void> => {
-        // given
-        const fixture: FixtureContext = await manager.setupFixture(testContext);
-        const login: PostAuthResponseBodyDto = await manager.loginUser(
-          fixture.outsider.username,
-          fixture.outsider.password,
-          testContext,
-        );
-
-        const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-          fixture.owner.username,
-          fixture.owner.password,
-          testContext,
-        );
-        const originalResponse: Response = await fetch(
-          `${manager.apiUrl}/project/${fixture.projectId}`,
-          {
-            headers: new Headers([
-              ['Authorization', `Bearer ${ownerLogin.jwt}`],
-            ]),
-            signal: testContext.signal,
-          },
-        );
-        assert.equal(originalResponse.status, 200);
-        const original: z.infer<typeof projectScenarioGroupsSchema> =
-          projectScenarioGroupsSchema.parse(await originalResponse.json());
-
-        // when
-        const response: Response = await fetch(
-          `${manager.apiUrl}/project/${fixture.projectId}/scenario-group`,
-          {
-            method: 'POST',
-            headers: new Headers([['Authorization', `Bearer ${login.jwt}`]]),
-            signal: testContext.signal,
-          },
-        );
-
-        // then
-        assert.equal(response.status, 403);
-        assert.deepEqual(await response.json(), {
-          statusCode: 403,
-          message: 'Forbidden resource',
-          error: 'Forbidden',
-        });
-        const persisted: Response = await fetch(
-          `${manager.apiUrl}/project/${fixture.projectId}`,
-          {
-            headers: new Headers([
-              ['Authorization', `Bearer ${ownerLogin.jwt}`],
-            ]),
-            signal: testContext.signal,
-          },
-        );
-        assert.equal(persisted.status, 200);
-        assert.deepEqual(
-          projectScenarioGroupsSchema.parse(await persisted.json()),
-          original,
-        );
-      });
-    });
-
-    describe('404', (): void => {
-      test('rejects creating a scenario group in an unpublished project', async (testContext: TestContext): Promise<void> => {
-        // given
-        const owner: E2ETestApplicationUser =
-          await manager.registerUser(testContext);
-        const project: string = await manager.createPublishedDocument(
-          'api::project.project',
-          {
-            title: 'Scenario Project',
-            owner: owner.documentId,
-            collaborators: [],
-          },
-          testContext,
-        );
-        const unpublish: Response = await manager.unpublishDocument(
-          'api::project.project',
-          project,
-          {},
-          testContext,
-        );
-        assert.equal(unpublish.status, 200);
-        const stored: Response = await manager.readDocument(
-          'api::project.project',
-          project,
-          testContext,
-        );
-        assert.equal(stored.status, 200);
-        z.object({ data: z.object({ publishedAt: z.null() }) }).parse(
-          await stored.json(),
-        );
-        const login: PostAuthResponseBodyDto = await manager.loginUser(
-          owner.username,
-          owner.password,
-          testContext,
-        );
-
-        // when
-        const response: Response = await fetch(
-          `${manager.apiUrl}/project/${project}/scenario-group`,
-          {
-            method: 'POST',
-            headers: new Headers([['Authorization', `Bearer ${login.jwt}`]]),
-            signal: testContext.signal,
-          },
-        );
-
-        // then
-        assert.equal(response.status, 404);
-        assert.deepEqual(await response.json(), {
-          statusCode: 404,
-          message: 'Not Found',
         });
       });
 
-      test('rejects creating a scenario group in an unknown project', async (testContext: TestContext): Promise<void> => {
-        // given
-        const owner: E2ETestApplicationUser =
-          await manager.registerUser(testContext);
-        const login: PostAuthResponseBodyDto = await manager.loginUser(
-          owner.username,
-          owner.password,
-          testContext,
-        );
-
-        // when
-        const response: Response = await fetch(
-          `${manager.apiUrl}/project/${randomUUID()}/scenario-group`,
-          {
-            method: 'POST',
-            headers: new Headers([['Authorization', `Bearer ${login.jwt}`]]),
-            signal: testContext.signal,
-          },
-        );
-
-        // then
-        assert.equal(response.status, 404);
-        assert.deepEqual(await response.json(), {
-          statusCode: 404,
-          message: 'Not Found',
-        });
-      });
-    });
-  });
-
-  describe('/:scenarioGroupId', (): void => {
-    describe('PUT', (): void => {
-      describe('204', (): void => {
-        test('uses the published assignment despite draft reassignment', async (testContext: TestContext): Promise<void> => {
+      describe('404', (): void => {
+        test('rejects creating a scenario group in an unpublished project', async (testContext: TestContext): Promise<void> => {
           // given
           const owner: E2ETestApplicationUser =
             await manager.registerUser(testContext);
           const project: string = await manager.createPublishedDocument(
             'api::project.project',
             {
-              title: 'Published Project',
+              title: 'Scenario Project',
               owner: owner.documentId,
               collaborators: [],
             },
             testContext,
           );
-          const otherProject: string = await manager.createPublishedDocument(
+          const unpublish: Response = await manager.unpublishDocument(
             'api::project.project',
-            {
-              title: 'Other Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
+            project,
+            {},
             testContext,
           );
-          const scenarioGroup: string = await manager.createPublishedDocument(
-            'api::scenario-group.scenario-group',
-            { title: 'Published Group', project },
+          assert.equal(unpublish.status, 200);
+          const stored: Response = await manager.readDocument(
+            'api::project.project',
+            project,
             testContext,
           );
-          const draft: Response = await manager.updateDocument(
-            'api::scenario-group.scenario-group',
-            scenarioGroup,
-            { title: 'Draft Group', project: otherProject },
-            testContext,
+          assert.equal(stored.status, 200);
+          z.object({ data: z.object({ publishedAt: z.null() }) }).parse(
+            await stored.json(),
           );
-          assert.equal(draft.status, 200);
           const login: PostAuthResponseBodyDto = await manager.loginUser(
             owner.username,
             owner.password,
@@ -354,192 +273,155 @@ describe('/project/:projectId/scenario-group', (suiteContext: SuiteContext): voi
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/scenario-group/${scenarioGroup}`,
+            `${manager.apiUrl}/project/${project}/scenario-group`,
             {
-              method: 'PUT',
-              headers: new Headers([
-                ['Authorization', `Bearer ${login.jwt}`],
-                ['Content-Type', 'application/json'],
-              ]),
-              body: JSON.stringify({
-                title: 'Updated Group',
-              } satisfies UpdateScenarioGroupRequestBodyDto),
-              signal: testContext.signal,
-            },
-          );
-
-          // then
-          assert.equal(response.status, 204);
-          assert.equal(await response.text(), '');
-          const originalProject: Response = await fetch(
-            `${manager.apiUrl}/project/${project}`,
-            {
+              method: 'POST',
               headers: new Headers([['Authorization', `Bearer ${login.jwt}`]]),
               signal: testContext.signal,
             },
           );
-          assert.equal(originalProject.status, 200);
-          const originalGroups: { scenarioGroups: ScenarioGroupDto[] } = z
-            .object({ scenarioGroups: z.array(scenarioGroupSchema) })
-            .parse(await originalProject.json());
-          assert.deepEqual(
-            originalGroups.scenarioGroups.find(
-              (item: ScenarioGroupDto): boolean => item.id === scenarioGroup,
-            ),
-            { id: scenarioGroup, title: 'Updated Group', scenarios: [] },
+
+          // then
+          assert.equal(response.status, 404);
+          assert.deepEqual(await response.json(), {
+            statusCode: 404,
+            message: 'Not Found',
+          });
+        });
+
+        test('rejects creating a scenario group in an unknown project', async (testContext: TestContext): Promise<void> => {
+          // given
+          const owner: E2ETestApplicationUser =
+            await manager.registerUser(testContext);
+          const login: PostAuthResponseBodyDto = await manager.loginUser(
+            owner.username,
+            owner.password,
+            testContext,
           );
-          const reassignedProject: Response = await fetch(
-            `${manager.apiUrl}/project/${otherProject}`,
+
+          // when
+          const response: Response = await fetch(
+            `${manager.apiUrl}/project/${randomUUID()}/scenario-group`,
             {
+              method: 'POST',
               headers: new Headers([['Authorization', `Bearer ${login.jwt}`]]),
               signal: testContext.signal,
             },
           );
-          assert.equal(reassignedProject.status, 200);
-          const reassignedGroups: { scenarioGroups: ScenarioGroupDto[] } = z
-            .object({ scenarioGroups: z.array(scenarioGroupSchema) })
-            .parse(await reassignedProject.json());
-          assert.equal(
-            reassignedGroups.scenarioGroups.some(
-              (item: ScenarioGroupDto): boolean => item.id === scenarioGroup,
-            ),
-            false,
-          );
-        });
-
-        test('owner can update a scenario group', async (testContext: TestContext): Promise<void> => {
-          // given
-          const fixture: FixtureContext =
-            await manager.setupFixture(testContext);
-          const login: PostAuthResponseBodyDto = await manager.loginUser(
-            fixture.owner.username,
-            fixture.owner.password,
-            testContext,
-          );
-
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/project/${fixture.projectId}/scenario-group/${fixture.scenarioGroupId}`,
-            {
-              method: 'PUT',
-              headers: new Headers([
-                ['Authorization', `Bearer ${login.jwt}`],
-                ['Content-Type', 'application/json'],
-              ]),
-              body: JSON.stringify({
-                title: 'Updated Group',
-              } satisfies UpdateScenarioGroupRequestBodyDto),
-              signal: testContext.signal,
-            },
-          );
 
           // then
-          assert.equal(response.status, 204);
-          assert.equal(await response.text(), '');
-          const persisted: Response = await manager.readDocument(
-            'api::scenario-group.scenario-group',
-            fixture.scenarioGroupId,
-            testContext,
-          );
-          assert.equal(persisted.status, 200);
-          const body: z.infer<typeof scenarioGroupStateSchema> =
-            scenarioGroupStateSchema.parse(await persisted.json());
-          assert.equal(body.data.documentId, fixture.scenarioGroupId);
-          assert.equal(body.data.title, 'Updated Group');
-        });
-
-        test('collaborator can update a scenario group', async (testContext: TestContext): Promise<void> => {
-          // given
-          const fixture: FixtureContext =
-            await manager.setupFixture(testContext);
-          const login: PostAuthResponseBodyDto = await manager.loginUser(
-            fixture.collaborator.username,
-            fixture.collaborator.password,
-            testContext,
-          );
-
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/project/${fixture.projectId}/scenario-group/${fixture.scenarioGroupId}`,
-            {
-              method: 'PUT',
-              headers: new Headers([
-                ['Authorization', `Bearer ${login.jwt}`],
-                ['Content-Type', 'application/json'],
-              ]),
-              body: JSON.stringify({
-                title: 'Updated Group',
-              } satisfies UpdateScenarioGroupRequestBodyDto),
-              signal: testContext.signal,
-            },
-          );
-
-          // then
-          assert.equal(response.status, 204);
-          assert.equal(await response.text(), '');
-          const persisted: Response = await manager.readDocument(
-            'api::scenario-group.scenario-group',
-            fixture.scenarioGroupId,
-            testContext,
-          );
-          assert.equal(persisted.status, 200);
-          assert.equal(
-            scenarioGroupStateSchema.parse(await persisted.json()).data.title,
-            'Updated Group',
-          );
-        });
-        test('accepts an empty title', async (testContext: TestContext): Promise<void> => {
-          // given
-          const fixture: FixtureContext =
-            await manager.setupFixture(testContext);
-          const login: PostAuthResponseBodyDto = await manager.loginUser(
-            fixture.owner.username,
-            fixture.owner.password,
-            testContext,
-          );
-
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/project/${fixture.projectId}/scenario-group/${fixture.scenarioGroupId}`,
-            {
-              method: 'PUT',
-              headers: new Headers([
-                ['Authorization', `Bearer ${login.jwt}`],
-                ['Content-Type', 'application/json'],
-              ]),
-              body: JSON.stringify({
-                title: '',
-              } satisfies UpdateScenarioGroupRequestBodyDto),
-              signal: testContext.signal,
-            },
-          );
-
-          // then
-          assert.equal(response.status, 204);
-          assert.equal(await response.text(), '');
-          const persisted: Response = await manager.readDocument(
-            'api::scenario-group.scenario-group',
-            fixture.scenarioGroupId,
-            testContext,
-          );
-          assert.equal(persisted.status, 200);
-          assert.equal(
-            scenarioGroupStateSchema.parse(await persisted.json()).data.title,
-            '',
-          );
+          assert.equal(response.status, 404);
+          assert.deepEqual(await response.json(), {
+            statusCode: 404,
+            message: 'Not Found',
+          });
         });
       });
-      describe('400', (): void => {
-        test('rejects invalid scenario group update bodies', async (testContext: TestContext): Promise<void> => {
-          const variants: { payload: Record<string, unknown> }[] = [
-            { payload: {} },
-            { payload: { title: null } },
-            { payload: { title: 123 } },
-            {
-              payload: { title: 'Updated Group', unexpected: true },
-            },
-          ];
-          for (const variant of variants) {
+    });
+
+    describe('/:scenarioGroupId', (): void => {
+      describe('PUT', (): void => {
+        describe('204', (): void => {
+          test('uses the published assignment despite draft reassignment', async (testContext: TestContext): Promise<void> => {
+            // given
+            const owner: E2ETestApplicationUser =
+              await manager.registerUser(testContext);
+            const project: string = await manager.createPublishedDocument(
+              'api::project.project',
+              {
+                title: 'Published Project',
+                owner: owner.documentId,
+                collaborators: [],
+              },
+              testContext,
+            );
+            const otherProject: string = await manager.createPublishedDocument(
+              'api::project.project',
+              {
+                title: 'Other Project',
+                owner: owner.documentId,
+                collaborators: [],
+              },
+              testContext,
+            );
+            const scenarioGroup: string = await manager.createPublishedDocument(
+              'api::scenario-group.scenario-group',
+              { title: 'Published Group', project },
+              testContext,
+            );
+            const draft: Response = await manager.updateDocument(
+              'api::scenario-group.scenario-group',
+              scenarioGroup,
+              { title: 'Draft Group', project: otherProject },
+              testContext,
+            );
+            assert.equal(draft.status, 200);
+            const login: PostAuthResponseBodyDto = await manager.loginUser(
+              owner.username,
+              owner.password,
+              testContext,
+            );
+
+            // when
+            const response: Response = await fetch(
+              `${manager.apiUrl}/project/${project}/scenario-group/${scenarioGroup}`,
+              {
+                method: 'PUT',
+                headers: new Headers([
+                  ['Authorization', `Bearer ${login.jwt}`],
+                  ['Content-Type', 'application/json'],
+                ]),
+                body: JSON.stringify({
+                  title: 'Updated Group',
+                } satisfies UpdateScenarioGroupRequestBodyDto),
+                signal: testContext.signal,
+              },
+            );
+
+            // then
+            assert.equal(response.status, 204);
+            assert.equal(await response.text(), '');
+            const originalProject: Response = await fetch(
+              `${manager.apiUrl}/project/${project}`,
+              {
+                headers: new Headers([
+                  ['Authorization', `Bearer ${login.jwt}`],
+                ]),
+                signal: testContext.signal,
+              },
+            );
+            assert.equal(originalProject.status, 200);
+            const originalGroups: { scenarioGroups: ScenarioGroupDto[] } = z
+              .object({ scenarioGroups: z.array(scenarioGroupSchema) })
+              .parse(await originalProject.json());
+            assert.deepEqual(
+              originalGroups.scenarioGroups.find(
+                (item: ScenarioGroupDto): boolean => item.id === scenarioGroup,
+              ),
+              { id: scenarioGroup, title: 'Updated Group', scenarios: [] },
+            );
+            const reassignedProject: Response = await fetch(
+              `${manager.apiUrl}/project/${otherProject}`,
+              {
+                headers: new Headers([
+                  ['Authorization', `Bearer ${login.jwt}`],
+                ]),
+                signal: testContext.signal,
+              },
+            );
+            assert.equal(reassignedProject.status, 200);
+            const reassignedGroups: { scenarioGroups: ScenarioGroupDto[] } = z
+              .object({ scenarioGroups: z.array(scenarioGroupSchema) })
+              .parse(await reassignedProject.json());
+            assert.equal(
+              reassignedGroups.scenarioGroups.some(
+                (item: ScenarioGroupDto): boolean => item.id === scenarioGroup,
+              ),
+              false,
+            );
+          });
+
+          test('owner can update a scenario group', async (testContext: TestContext): Promise<void> => {
             // given
             const fixture: FixtureContext =
               await manager.setupFixture(testContext);
@@ -558,13 +440,57 @@ describe('/project/:projectId/scenario-group', (suiteContext: SuiteContext): voi
                   ['Authorization', `Bearer ${login.jwt}`],
                   ['Content-Type', 'application/json'],
                 ]),
-                body: JSON.stringify(variant.payload),
+                body: JSON.stringify({
+                  title: 'Updated Group',
+                } satisfies UpdateScenarioGroupRequestBodyDto),
                 signal: testContext.signal,
               },
             );
 
             // then
-            assert.equal(response.status, 400);
+            assert.equal(response.status, 204);
+            assert.equal(await response.text(), '');
+            const persisted: Response = await manager.readDocument(
+              'api::scenario-group.scenario-group',
+              fixture.scenarioGroupId,
+              testContext,
+            );
+            assert.equal(persisted.status, 200);
+            const body: z.infer<typeof scenarioGroupStateSchema> =
+              scenarioGroupStateSchema.parse(await persisted.json());
+            assert.equal(body.data.documentId, fixture.scenarioGroupId);
+            assert.equal(body.data.title, 'Updated Group');
+          });
+
+          test('collaborator can update a scenario group', async (testContext: TestContext): Promise<void> => {
+            // given
+            const fixture: FixtureContext =
+              await manager.setupFixture(testContext);
+            const login: PostAuthResponseBodyDto = await manager.loginUser(
+              fixture.collaborator.username,
+              fixture.collaborator.password,
+              testContext,
+            );
+
+            // when
+            const response: Response = await fetch(
+              `${manager.apiUrl}/project/${fixture.projectId}/scenario-group/${fixture.scenarioGroupId}`,
+              {
+                method: 'PUT',
+                headers: new Headers([
+                  ['Authorization', `Bearer ${login.jwt}`],
+                  ['Content-Type', 'application/json'],
+                ]),
+                body: JSON.stringify({
+                  title: 'Updated Group',
+                } satisfies UpdateScenarioGroupRequestBodyDto),
+                signal: testContext.signal,
+              },
+            );
+
+            // then
+            assert.equal(response.status, 204);
+            assert.equal(await response.text(), '');
             const persisted: Response = await manager.readDocument(
               'api::scenario-group.scenario-group',
               fixture.scenarioGroupId,
@@ -573,496 +499,667 @@ describe('/project/:projectId/scenario-group', (suiteContext: SuiteContext): voi
             assert.equal(persisted.status, 200);
             assert.equal(
               scenarioGroupStateSchema.parse(await persisted.json()).data.title,
-              'Original Group',
+              'Updated Group',
             );
-          }
-        });
-      });
-      describe('401', (): void => {
-        test('rejects anonymous access', async (testContext: TestContext): Promise<void> => {
-          // given
-          const fixture: FixtureContext =
-            await manager.setupFixture(testContext);
-
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/project/${fixture.projectId}/scenario-group/${fixture.scenarioGroupId}`,
-            {
-              method: 'PUT',
-              headers: new Headers([['Content-Type', 'application/json']]),
-              body: JSON.stringify({
-                title: 'Updated Group',
-              } satisfies UpdateScenarioGroupRequestBodyDto),
-              signal: testContext.signal,
-            },
-          );
-
-          // then
-          assert.equal(response.status, 401);
-          assert.equal(response.headers.get('www-authenticate'), 'Bearer');
-          assert.deepEqual(await response.json(), {
-            statusCode: 401,
-            message: 'Unauthorized',
           });
-          const persisted: Response = await manager.readDocument(
-            'api::scenario-group.scenario-group',
-            fixture.scenarioGroupId,
-            testContext,
-          );
-          assert.equal(persisted.status, 200);
-          const state: z.infer<typeof scenarioGroupStateSchema> =
-            scenarioGroupStateSchema.parse(await persisted.json());
-          assert.equal(state.data.documentId, fixture.scenarioGroupId);
-          assert.equal(state.data.title, 'Original Group');
-        });
-      });
-
-      describe('403', (): void => {
-        test('rejects outsider access', async (testContext: TestContext): Promise<void> => {
-          // given
-          const fixture: FixtureContext =
-            await manager.setupFixture(testContext);
-          const login: PostAuthResponseBodyDto = await manager.loginUser(
-            fixture.outsider.username,
-            fixture.outsider.password,
-            testContext,
-          );
-
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/project/${fixture.projectId}/scenario-group/${fixture.scenarioGroupId}`,
-            {
-              method: 'PUT',
-              headers: new Headers([
-                ['Authorization', `Bearer ${login.jwt}`],
-                ['Content-Type', 'application/json'],
-              ]),
-              body: JSON.stringify({
-                title: 'Updated Group',
-              } satisfies UpdateScenarioGroupRequestBodyDto),
-              signal: testContext.signal,
-            },
-          );
-
-          // then
-          assert.equal(response.status, 403);
-          assert.deepEqual(await response.json(), {
-            statusCode: 403,
-            message: 'Forbidden resource',
-            error: 'Forbidden',
-          });
-          const persisted: Response = await manager.readDocument(
-            'api::scenario-group.scenario-group',
-            fixture.scenarioGroupId,
-            testContext,
-          );
-          assert.equal(persisted.status, 200);
-          const state: z.infer<typeof scenarioGroupStateSchema> =
-            scenarioGroupStateSchema.parse(await persisted.json());
-          assert.equal(state.data.documentId, fixture.scenarioGroupId);
-          assert.equal(state.data.title, 'Original Group');
-        });
-      });
-
-      describe('404', (): void => {
-        test('rejects a scenario group belonging to another project', async (testContext: TestContext): Promise<void> => {
-          // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            { title: 'Project', owner: owner.documentId, collaborators: [] },
-            testContext,
-          );
-          const scenarioGroup: string = await manager.createPublishedDocument(
-            'api::scenario-group.scenario-group',
-            { title: 'Original Group', project },
-            testContext,
-          );
-          const login: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
-            testContext,
-          );
-          const otherProject: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Other Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
-
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/project/${otherProject}/scenario-group/${scenarioGroup}`,
-            {
-              method: 'PUT',
-              headers: new Headers([
-                ['Authorization', `Bearer ${login.jwt}`],
-                ['Content-Type', 'application/json'],
-              ]),
-              body: JSON.stringify({
-                title: 'Updated Group',
-              } satisfies UpdateScenarioGroupRequestBodyDto),
-              signal: testContext.signal,
-            },
-          );
-
-          // then
-          assert.equal(response.status, 404);
-          assert.deepEqual(await response.json(), {
-            statusCode: 404,
-            message: 'Not Found',
-          });
-          const persisted: Response = await manager.readDocument(
-            'api::scenario-group.scenario-group',
-            scenarioGroup,
-            testContext,
-          );
-          assert.equal(persisted.status, 200);
-          assert.equal(
-            scenarioGroupStateSchema.parse(await persisted.json()).data.title,
-            'Original Group',
-          );
-        });
-
-        test('rejects updating a draft scenario group even for its owner', async (testContext: TestContext): Promise<void> => {
-          // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Scenario Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
-          const creation: Response = await manager.createDocument(
-            'api::scenario-group.scenario-group',
-            { title: 'Draft Group', project },
-            testContext,
-          );
-          assert.equal(creation.status, 201);
-          const scenarioGroup: string = z
-            .object({
-              data: z.object({ documentId: z.string(), publishedAt: z.null() }),
-            })
-            .parse(await creation.json()).data.documentId;
-          const login: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
-            testContext,
-          );
-
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/scenario-group/${scenarioGroup}`,
-            {
-              method: 'PUT',
-              headers: new Headers([
-                ['Authorization', `Bearer ${login.jwt}`],
-                ['Content-Type', 'application/json'],
-              ]),
-              body: JSON.stringify({
-                title: 'Updated Group',
-              } satisfies UpdateScenarioGroupRequestBodyDto),
-              signal: testContext.signal,
-            },
-          );
-
-          // then
-          assert.equal(response.status, 404);
-          assert.deepEqual(await response.json(), {
-            statusCode: 404,
-            message: 'Not Found',
-          });
-          const persisted: Response = await manager.readDocument(
-            'api::scenario-group.scenario-group',
-            scenarioGroup,
-            testContext,
-          );
-          assert.equal(persisted.status, 200);
-          const state: z.infer<typeof scenarioGroupStateSchema> =
-            scenarioGroupStateSchema.parse(await persisted.json());
-          assert.equal(state.data.documentId, scenarioGroup);
-          assert.equal(state.data.title, 'Draft Group');
-          assert.equal(state.data.publishedAt, null);
-        });
-
-        test('rejects updating a published scenario group in a draft project', async (testContext: TestContext): Promise<void> => {
-          // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Scenario Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
-          const scenarioGroup: string = await manager.createPublishedDocument(
-            'api::scenario-group.scenario-group',
-            { title: 'Original Group', project },
-            testContext,
-          );
-          const unpublish: Response = await manager.unpublishDocument(
-            'api::project.project',
-            project,
-            {},
-            testContext,
-          );
-          assert.equal(unpublish.status, 200);
-          const login: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
-            testContext,
-          );
-
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/scenario-group/${scenarioGroup}`,
-            {
-              method: 'PUT',
-              headers: new Headers([
-                ['Authorization', `Bearer ${login.jwt}`],
-                ['Content-Type', 'application/json'],
-              ]),
-              body: JSON.stringify({
-                title: 'Updated Group',
-              } satisfies UpdateScenarioGroupRequestBodyDto),
-              signal: testContext.signal,
-            },
-          );
-
-          // then
-          assert.equal(response.status, 404);
-          assert.deepEqual(await response.json(), {
-            statusCode: 404,
-            message: 'Not Found',
-          });
-          const persisted: Response = await manager.readDocument(
-            'api::scenario-group.scenario-group',
-            scenarioGroup,
-            testContext,
-          );
-          assert.equal(persisted.status, 200);
-          const state: z.infer<typeof scenarioGroupStateSchema> =
-            scenarioGroupStateSchema.parse(await persisted.json());
-          assert.equal(state.data.documentId, scenarioGroup);
-          assert.equal(state.data.title, 'Original Group');
-        });
-
-        test('rejects updating an unknown scenario group', async (testContext: TestContext): Promise<void> => {
-          // given
-          const fixture: FixtureContext =
-            await manager.setupFixture(testContext);
-          const login: PostAuthResponseBodyDto = await manager.loginUser(
-            fixture.owner.username,
-            fixture.owner.password,
-            testContext,
-          );
-
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/project/${fixture.projectId}/scenario-group/${randomUUID()}`,
-            {
-              method: 'PUT',
-              headers: new Headers([
-                ['Authorization', `Bearer ${login.jwt}`],
-                ['Content-Type', 'application/json'],
-              ]),
-              body: JSON.stringify({
-                title: 'Updated Group',
-              } satisfies UpdateScenarioGroupRequestBodyDto),
-              signal: testContext.signal,
-            },
-          );
-
-          // then
-          assert.equal(response.status, 404);
-          assert.deepEqual(await response.json(), {
-            statusCode: 404,
-            message: 'Not Found',
-          });
-        });
-
-        test('rejects updating a known scenario group through an unknown project', async (testContext: TestContext): Promise<void> => {
-          // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Scenario Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
-          const scenarioGroup: string = await manager.createPublishedDocument(
-            'api::scenario-group.scenario-group',
-            { title: 'Original Group', project },
-            testContext,
-          );
-          const login: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
-            testContext,
-          );
-
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/project/${randomUUID()}/scenario-group/${scenarioGroup}`,
-            {
-              method: 'PUT',
-              headers: new Headers([
-                ['Authorization', `Bearer ${login.jwt}`],
-                ['Content-Type', 'application/json'],
-              ]),
-              body: JSON.stringify({
-                title: 'Updated Group',
-              } satisfies UpdateScenarioGroupRequestBodyDto),
-              signal: testContext.signal,
-            },
-          );
-
-          // then
-          assert.equal(response.status, 404);
-          assert.deepEqual(await response.json(), {
-            statusCode: 404,
-            message: 'Not Found',
-          });
-          const persisted: Response = await manager.readDocument(
-            'api::scenario-group.scenario-group',
-            scenarioGroup,
-            testContext,
-          );
-          assert.equal(persisted.status, 200);
-          const state: z.infer<typeof scenarioGroupStateSchema> =
-            scenarioGroupStateSchema.parse(await persisted.json());
-          assert.equal(state.data.documentId, scenarioGroup);
-          assert.equal(state.data.title, 'Original Group');
-        });
-      });
-    });
-
-    describe('DELETE', (): void => {
-      describe('204', (): void => {
-        test('uses the published assignment despite draft reassignment', async (testContext: TestContext): Promise<void> => {
-          // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Published Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
-          const otherProject: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Other Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
-          const scenarioGroup: string = await manager.createPublishedDocument(
-            'api::scenario-group.scenario-group',
-            { title: 'Published Group', project },
-            testContext,
-          );
-          const draft: Response = await manager.updateDocument(
-            'api::scenario-group.scenario-group',
-            scenarioGroup,
-            { title: 'Draft Group', project: otherProject },
-            testContext,
-          );
-          assert.equal(draft.status, 200);
-          const login: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
-            testContext,
-          );
-
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/scenario-group/${scenarioGroup}`,
-            {
-              method: 'DELETE',
-              headers: new Headers([
-                ['Authorization', `Bearer ${login.jwt}`],
-                ['Content-Type', 'application/json'],
-              ]),
-              signal: testContext.signal,
-            },
-          );
-
-          // then
-          assert.equal(response.status, 204);
-          assert.equal(await response.text(), '');
-          const originalProject: Response = await fetch(
-            `${manager.apiUrl}/project/${project}`,
-            {
-              headers: new Headers([['Authorization', `Bearer ${login.jwt}`]]),
-              signal: testContext.signal,
-            },
-          );
-          assert.equal(originalProject.status, 200);
-          const originalGroups: { scenarioGroups: ScenarioGroupDto[] } = z
-            .object({ scenarioGroups: z.array(scenarioGroupSchema) })
-            .parse(await originalProject.json());
-          assert.equal(
-            originalGroups.scenarioGroups.some(
-              (item: ScenarioGroupDto): boolean => item.id === scenarioGroup,
-            ),
-            false,
-          );
-          const persisted: Response = await manager.readDocument(
-            'api::scenario-group.scenario-group',
-            scenarioGroup,
-            testContext,
-          );
-          assert.equal(persisted.status, 404);
-          const reassignedProject: Response = await fetch(
-            `${manager.apiUrl}/project/${otherProject}`,
-            {
-              headers: new Headers([['Authorization', `Bearer ${login.jwt}`]]),
-              signal: testContext.signal,
-            },
-          );
-          assert.equal(reassignedProject.status, 200);
-          const reassignedGroups: { scenarioGroups: ScenarioGroupDto[] } = z
-            .object({ scenarioGroups: z.array(scenarioGroupSchema) })
-            .parse(await reassignedProject.json());
-          assert.equal(
-            reassignedGroups.scenarioGroups.some(
-              (item: ScenarioGroupDto): boolean => item.id === scenarioGroup,
-            ),
-            false,
-          );
-        });
-
-        test('allows the owner and collaborator to delete a scenario group', async (testContext: TestContext): Promise<void> => {
-          const roles: ('owner' | 'collaborator')[] = ['owner', 'collaborator'];
-          for (const role of roles) {
+          test('accepts an empty title', async (testContext: TestContext): Promise<void> => {
             // given
             const fixture: FixtureContext =
               await manager.setupFixture(testContext);
-            const actor: E2ETestApplicationUser =
-              role === 'owner' ? fixture.owner : fixture.collaborator;
             const login: PostAuthResponseBodyDto = await manager.loginUser(
-              actor.username,
-              actor.password,
+              fixture.owner.username,
+              fixture.owner.password,
+              testContext,
+            );
+
+            // when
+            const response: Response = await fetch(
+              `${manager.apiUrl}/project/${fixture.projectId}/scenario-group/${fixture.scenarioGroupId}`,
+              {
+                method: 'PUT',
+                headers: new Headers([
+                  ['Authorization', `Bearer ${login.jwt}`],
+                  ['Content-Type', 'application/json'],
+                ]),
+                body: JSON.stringify({
+                  title: '',
+                } satisfies UpdateScenarioGroupRequestBodyDto),
+                signal: testContext.signal,
+              },
+            );
+
+            // then
+            assert.equal(response.status, 204);
+            assert.equal(await response.text(), '');
+            const persisted: Response = await manager.readDocument(
+              'api::scenario-group.scenario-group',
+              fixture.scenarioGroupId,
+              testContext,
+            );
+            assert.equal(persisted.status, 200);
+            assert.equal(
+              scenarioGroupStateSchema.parse(await persisted.json()).data.title,
+              '',
+            );
+          });
+        });
+        describe('400', (): void => {
+          test('rejects invalid scenario group update bodies', async (testContext: TestContext): Promise<void> => {
+            const variants: { payload: Record<string, unknown> }[] = [
+              { payload: {} },
+              { payload: { title: null } },
+              { payload: { title: 123 } },
+              {
+                payload: { title: 'Updated Group', unexpected: true },
+              },
+            ];
+            for (const variant of variants) {
+              // given
+              const fixture: FixtureContext =
+                await manager.setupFixture(testContext);
+              const login: PostAuthResponseBodyDto = await manager.loginUser(
+                fixture.owner.username,
+                fixture.owner.password,
+                testContext,
+              );
+
+              // when
+              const response: Response = await fetch(
+                `${manager.apiUrl}/project/${fixture.projectId}/scenario-group/${fixture.scenarioGroupId}`,
+                {
+                  method: 'PUT',
+                  headers: new Headers([
+                    ['Authorization', `Bearer ${login.jwt}`],
+                    ['Content-Type', 'application/json'],
+                  ]),
+                  body: JSON.stringify(variant.payload),
+                  signal: testContext.signal,
+                },
+              );
+
+              // then
+              assert.equal(response.status, 400);
+              const persisted: Response = await manager.readDocument(
+                'api::scenario-group.scenario-group',
+                fixture.scenarioGroupId,
+                testContext,
+              );
+              assert.equal(persisted.status, 200);
+              assert.equal(
+                scenarioGroupStateSchema.parse(await persisted.json()).data
+                  .title,
+                'Original Group',
+              );
+            }
+          });
+        });
+        describe('401', (): void => {
+          test('rejects anonymous access', async (testContext: TestContext): Promise<void> => {
+            // given
+            const fixture: FixtureContext =
+              await manager.setupFixture(testContext);
+
+            // when
+            const response: Response = await fetch(
+              `${manager.apiUrl}/project/${fixture.projectId}/scenario-group/${fixture.scenarioGroupId}`,
+              {
+                method: 'PUT',
+                headers: new Headers([['Content-Type', 'application/json']]),
+                body: JSON.stringify({
+                  title: 'Updated Group',
+                } satisfies UpdateScenarioGroupRequestBodyDto),
+                signal: testContext.signal,
+              },
+            );
+
+            // then
+            assert.equal(response.status, 401);
+            assert.equal(response.headers.get('www-authenticate'), 'Bearer');
+            assert.deepEqual(await response.json(), {
+              statusCode: 401,
+              message: 'Unauthorized',
+            });
+            const persisted: Response = await manager.readDocument(
+              'api::scenario-group.scenario-group',
+              fixture.scenarioGroupId,
+              testContext,
+            );
+            assert.equal(persisted.status, 200);
+            const state: z.infer<typeof scenarioGroupStateSchema> =
+              scenarioGroupStateSchema.parse(await persisted.json());
+            assert.equal(state.data.documentId, fixture.scenarioGroupId);
+            assert.equal(state.data.title, 'Original Group');
+          });
+        });
+
+        describe('403', (): void => {
+          test('rejects outsider access', async (testContext: TestContext): Promise<void> => {
+            // given
+            const fixture: FixtureContext =
+              await manager.setupFixture(testContext);
+            const login: PostAuthResponseBodyDto = await manager.loginUser(
+              fixture.outsider.username,
+              fixture.outsider.password,
+              testContext,
+            );
+
+            // when
+            const response: Response = await fetch(
+              `${manager.apiUrl}/project/${fixture.projectId}/scenario-group/${fixture.scenarioGroupId}`,
+              {
+                method: 'PUT',
+                headers: new Headers([
+                  ['Authorization', `Bearer ${login.jwt}`],
+                  ['Content-Type', 'application/json'],
+                ]),
+                body: JSON.stringify({
+                  title: 'Updated Group',
+                } satisfies UpdateScenarioGroupRequestBodyDto),
+                signal: testContext.signal,
+              },
+            );
+
+            // then
+            assert.equal(response.status, 403);
+            assert.deepEqual(await response.json(), {
+              statusCode: 403,
+              message: 'Forbidden resource',
+              error: 'Forbidden',
+            });
+            const persisted: Response = await manager.readDocument(
+              'api::scenario-group.scenario-group',
+              fixture.scenarioGroupId,
+              testContext,
+            );
+            assert.equal(persisted.status, 200);
+            const state: z.infer<typeof scenarioGroupStateSchema> =
+              scenarioGroupStateSchema.parse(await persisted.json());
+            assert.equal(state.data.documentId, fixture.scenarioGroupId);
+            assert.equal(state.data.title, 'Original Group');
+          });
+        });
+
+        describe('404', (): void => {
+          test('rejects a scenario group belonging to another project', async (testContext: TestContext): Promise<void> => {
+            // given
+            const owner: E2ETestApplicationUser =
+              await manager.registerUser(testContext);
+            const project: string = await manager.createPublishedDocument(
+              'api::project.project',
+              { title: 'Project', owner: owner.documentId, collaborators: [] },
+              testContext,
+            );
+            const scenarioGroup: string = await manager.createPublishedDocument(
+              'api::scenario-group.scenario-group',
+              { title: 'Original Group', project },
+              testContext,
+            );
+            const login: PostAuthResponseBodyDto = await manager.loginUser(
+              owner.username,
+              owner.password,
+              testContext,
+            );
+            const otherProject: string = await manager.createPublishedDocument(
+              'api::project.project',
+              {
+                title: 'Other Project',
+                owner: owner.documentId,
+                collaborators: [],
+              },
+              testContext,
+            );
+
+            // when
+            const response: Response = await fetch(
+              `${manager.apiUrl}/project/${otherProject}/scenario-group/${scenarioGroup}`,
+              {
+                method: 'PUT',
+                headers: new Headers([
+                  ['Authorization', `Bearer ${login.jwt}`],
+                  ['Content-Type', 'application/json'],
+                ]),
+                body: JSON.stringify({
+                  title: 'Updated Group',
+                } satisfies UpdateScenarioGroupRequestBodyDto),
+                signal: testContext.signal,
+              },
+            );
+
+            // then
+            assert.equal(response.status, 404);
+            assert.deepEqual(await response.json(), {
+              statusCode: 404,
+              message: 'Not Found',
+            });
+            const persisted: Response = await manager.readDocument(
+              'api::scenario-group.scenario-group',
+              scenarioGroup,
+              testContext,
+            );
+            assert.equal(persisted.status, 200);
+            assert.equal(
+              scenarioGroupStateSchema.parse(await persisted.json()).data.title,
+              'Original Group',
+            );
+          });
+
+          test('rejects updating a draft scenario group even for its owner', async (testContext: TestContext): Promise<void> => {
+            // given
+            const owner: E2ETestApplicationUser =
+              await manager.registerUser(testContext);
+            const project: string = await manager.createPublishedDocument(
+              'api::project.project',
+              {
+                title: 'Scenario Project',
+                owner: owner.documentId,
+                collaborators: [],
+              },
+              testContext,
+            );
+            const creation: Response = await manager.createDocument(
+              'api::scenario-group.scenario-group',
+              { title: 'Draft Group', project },
+              testContext,
+            );
+            assert.equal(creation.status, 201);
+            const scenarioGroup: string = z
+              .object({
+                data: z.object({
+                  documentId: z.string(),
+                  publishedAt: z.null(),
+                }),
+              })
+              .parse(await creation.json()).data.documentId;
+            const login: PostAuthResponseBodyDto = await manager.loginUser(
+              owner.username,
+              owner.password,
+              testContext,
+            );
+
+            // when
+            const response: Response = await fetch(
+              `${manager.apiUrl}/project/${project}/scenario-group/${scenarioGroup}`,
+              {
+                method: 'PUT',
+                headers: new Headers([
+                  ['Authorization', `Bearer ${login.jwt}`],
+                  ['Content-Type', 'application/json'],
+                ]),
+                body: JSON.stringify({
+                  title: 'Updated Group',
+                } satisfies UpdateScenarioGroupRequestBodyDto),
+                signal: testContext.signal,
+              },
+            );
+
+            // then
+            assert.equal(response.status, 404);
+            assert.deepEqual(await response.json(), {
+              statusCode: 404,
+              message: 'Not Found',
+            });
+            const persisted: Response = await manager.readDocument(
+              'api::scenario-group.scenario-group',
+              scenarioGroup,
+              testContext,
+            );
+            assert.equal(persisted.status, 200);
+            const state: z.infer<typeof scenarioGroupStateSchema> =
+              scenarioGroupStateSchema.parse(await persisted.json());
+            assert.equal(state.data.documentId, scenarioGroup);
+            assert.equal(state.data.title, 'Draft Group');
+            assert.equal(state.data.publishedAt, null);
+          });
+
+          test('rejects updating a published scenario group in a draft project', async (testContext: TestContext): Promise<void> => {
+            // given
+            const owner: E2ETestApplicationUser =
+              await manager.registerUser(testContext);
+            const project: string = await manager.createPublishedDocument(
+              'api::project.project',
+              {
+                title: 'Scenario Project',
+                owner: owner.documentId,
+                collaborators: [],
+              },
+              testContext,
+            );
+            const scenarioGroup: string = await manager.createPublishedDocument(
+              'api::scenario-group.scenario-group',
+              { title: 'Original Group', project },
+              testContext,
+            );
+            const unpublish: Response = await manager.unpublishDocument(
+              'api::project.project',
+              project,
+              {},
+              testContext,
+            );
+            assert.equal(unpublish.status, 200);
+            const login: PostAuthResponseBodyDto = await manager.loginUser(
+              owner.username,
+              owner.password,
+              testContext,
+            );
+
+            // when
+            const response: Response = await fetch(
+              `${manager.apiUrl}/project/${project}/scenario-group/${scenarioGroup}`,
+              {
+                method: 'PUT',
+                headers: new Headers([
+                  ['Authorization', `Bearer ${login.jwt}`],
+                  ['Content-Type', 'application/json'],
+                ]),
+                body: JSON.stringify({
+                  title: 'Updated Group',
+                } satisfies UpdateScenarioGroupRequestBodyDto),
+                signal: testContext.signal,
+              },
+            );
+
+            // then
+            assert.equal(response.status, 404);
+            assert.deepEqual(await response.json(), {
+              statusCode: 404,
+              message: 'Not Found',
+            });
+            const persisted: Response = await manager.readDocument(
+              'api::scenario-group.scenario-group',
+              scenarioGroup,
+              testContext,
+            );
+            assert.equal(persisted.status, 200);
+            const state: z.infer<typeof scenarioGroupStateSchema> =
+              scenarioGroupStateSchema.parse(await persisted.json());
+            assert.equal(state.data.documentId, scenarioGroup);
+            assert.equal(state.data.title, 'Original Group');
+          });
+
+          test('rejects updating an unknown scenario group', async (testContext: TestContext): Promise<void> => {
+            // given
+            const fixture: FixtureContext =
+              await manager.setupFixture(testContext);
+            const login: PostAuthResponseBodyDto = await manager.loginUser(
+              fixture.owner.username,
+              fixture.owner.password,
+              testContext,
+            );
+
+            // when
+            const response: Response = await fetch(
+              `${manager.apiUrl}/project/${fixture.projectId}/scenario-group/${randomUUID()}`,
+              {
+                method: 'PUT',
+                headers: new Headers([
+                  ['Authorization', `Bearer ${login.jwt}`],
+                  ['Content-Type', 'application/json'],
+                ]),
+                body: JSON.stringify({
+                  title: 'Updated Group',
+                } satisfies UpdateScenarioGroupRequestBodyDto),
+                signal: testContext.signal,
+              },
+            );
+
+            // then
+            assert.equal(response.status, 404);
+            assert.deepEqual(await response.json(), {
+              statusCode: 404,
+              message: 'Not Found',
+            });
+          });
+
+          test('rejects updating a known scenario group through an unknown project', async (testContext: TestContext): Promise<void> => {
+            // given
+            const owner: E2ETestApplicationUser =
+              await manager.registerUser(testContext);
+            const project: string = await manager.createPublishedDocument(
+              'api::project.project',
+              {
+                title: 'Scenario Project',
+                owner: owner.documentId,
+                collaborators: [],
+              },
+              testContext,
+            );
+            const scenarioGroup: string = await manager.createPublishedDocument(
+              'api::scenario-group.scenario-group',
+              { title: 'Original Group', project },
+              testContext,
+            );
+            const login: PostAuthResponseBodyDto = await manager.loginUser(
+              owner.username,
+              owner.password,
+              testContext,
+            );
+
+            // when
+            const response: Response = await fetch(
+              `${manager.apiUrl}/project/${randomUUID()}/scenario-group/${scenarioGroup}`,
+              {
+                method: 'PUT',
+                headers: new Headers([
+                  ['Authorization', `Bearer ${login.jwt}`],
+                  ['Content-Type', 'application/json'],
+                ]),
+                body: JSON.stringify({
+                  title: 'Updated Group',
+                } satisfies UpdateScenarioGroupRequestBodyDto),
+                signal: testContext.signal,
+              },
+            );
+
+            // then
+            assert.equal(response.status, 404);
+            assert.deepEqual(await response.json(), {
+              statusCode: 404,
+              message: 'Not Found',
+            });
+            const persisted: Response = await manager.readDocument(
+              'api::scenario-group.scenario-group',
+              scenarioGroup,
+              testContext,
+            );
+            assert.equal(persisted.status, 200);
+            const state: z.infer<typeof scenarioGroupStateSchema> =
+              scenarioGroupStateSchema.parse(await persisted.json());
+            assert.equal(state.data.documentId, scenarioGroup);
+            assert.equal(state.data.title, 'Original Group');
+          });
+        });
+      });
+
+      describe('DELETE', (): void => {
+        describe('204', (): void => {
+          test('uses the published assignment despite draft reassignment', async (testContext: TestContext): Promise<void> => {
+            // given
+            const owner: E2ETestApplicationUser =
+              await manager.registerUser(testContext);
+            const project: string = await manager.createPublishedDocument(
+              'api::project.project',
+              {
+                title: 'Published Project',
+                owner: owner.documentId,
+                collaborators: [],
+              },
+              testContext,
+            );
+            const otherProject: string = await manager.createPublishedDocument(
+              'api::project.project',
+              {
+                title: 'Other Project',
+                owner: owner.documentId,
+                collaborators: [],
+              },
+              testContext,
+            );
+            const scenarioGroup: string = await manager.createPublishedDocument(
+              'api::scenario-group.scenario-group',
+              { title: 'Published Group', project },
+              testContext,
+            );
+            const draft: Response = await manager.updateDocument(
+              'api::scenario-group.scenario-group',
+              scenarioGroup,
+              { title: 'Draft Group', project: otherProject },
+              testContext,
+            );
+            assert.equal(draft.status, 200);
+            const login: PostAuthResponseBodyDto = await manager.loginUser(
+              owner.username,
+              owner.password,
+              testContext,
+            );
+
+            // when
+            const response: Response = await fetch(
+              `${manager.apiUrl}/project/${project}/scenario-group/${scenarioGroup}`,
+              {
+                method: 'DELETE',
+                headers: new Headers([
+                  ['Authorization', `Bearer ${login.jwt}`],
+                  ['Content-Type', 'application/json'],
+                ]),
+                signal: testContext.signal,
+              },
+            );
+
+            // then
+            assert.equal(response.status, 204);
+            assert.equal(await response.text(), '');
+            const originalProject: Response = await fetch(
+              `${manager.apiUrl}/project/${project}`,
+              {
+                headers: new Headers([
+                  ['Authorization', `Bearer ${login.jwt}`],
+                ]),
+                signal: testContext.signal,
+              },
+            );
+            assert.equal(originalProject.status, 200);
+            const originalGroups: { scenarioGroups: ScenarioGroupDto[] } = z
+              .object({ scenarioGroups: z.array(scenarioGroupSchema) })
+              .parse(await originalProject.json());
+            assert.equal(
+              originalGroups.scenarioGroups.some(
+                (item: ScenarioGroupDto): boolean => item.id === scenarioGroup,
+              ),
+              false,
+            );
+            const persisted: Response = await manager.readDocument(
+              'api::scenario-group.scenario-group',
+              scenarioGroup,
+              testContext,
+            );
+            assert.equal(persisted.status, 404);
+            const reassignedProject: Response = await fetch(
+              `${manager.apiUrl}/project/${otherProject}`,
+              {
+                headers: new Headers([
+                  ['Authorization', `Bearer ${login.jwt}`],
+                ]),
+                signal: testContext.signal,
+              },
+            );
+            assert.equal(reassignedProject.status, 200);
+            const reassignedGroups: { scenarioGroups: ScenarioGroupDto[] } = z
+              .object({ scenarioGroups: z.array(scenarioGroupSchema) })
+              .parse(await reassignedProject.json());
+            assert.equal(
+              reassignedGroups.scenarioGroups.some(
+                (item: ScenarioGroupDto): boolean => item.id === scenarioGroup,
+              ),
+              false,
+            );
+          });
+
+          test('allows the owner and collaborator to delete a scenario group', async (testContext: TestContext): Promise<void> => {
+            const roles: ('owner' | 'collaborator')[] = [
+              'owner',
+              'collaborator',
+            ];
+            for (const role of roles) {
+              // given
+              const fixture: FixtureContext =
+                await manager.setupFixture(testContext);
+              const actor: E2ETestApplicationUser =
+                role === 'owner' ? fixture.owner : fixture.collaborator;
+              const login: PostAuthResponseBodyDto = await manager.loginUser(
+                actor.username,
+                actor.password,
+                testContext,
+              );
+
+              // when
+              const response: Response = await fetch(
+                `${manager.apiUrl}/project/${fixture.projectId}/scenario-group/${fixture.scenarioGroupId}`,
+                {
+                  method: 'DELETE',
+                  headers: new Headers([
+                    ['Authorization', `Bearer ${login.jwt}`],
+                  ]),
+                  signal: testContext.signal,
+                },
+              );
+
+              // then
+              assert.equal(response.status, 204);
+              assert.equal(await response.text(), '');
+              assert.equal(
+                (
+                  await manager.readDocument(
+                    'api::scenario-group.scenario-group',
+                    fixture.scenarioGroupId,
+                    testContext,
+                  )
+                ).status,
+                404,
+              );
+            }
+          });
+        });
+
+        describe('401', (): void => {
+          test('rejects anonymous access', async (testContext: TestContext): Promise<void> => {
+            // given
+            const fixture: FixtureContext =
+              await manager.setupFixture(testContext);
+
+            // when
+            const response: Response = await fetch(
+              `${manager.apiUrl}/project/${fixture.projectId}/scenario-group/${fixture.scenarioGroupId}`,
+              { method: 'DELETE', signal: testContext.signal },
+            );
+
+            // then
+            assert.equal(response.status, 401);
+            assert.equal(response.headers.get('www-authenticate'), 'Bearer');
+            assert.deepEqual(await response.json(), {
+              statusCode: 401,
+              message: 'Unauthorized',
+            });
+            const persisted: Response = await manager.readDocument(
+              'api::scenario-group.scenario-group',
+              fixture.scenarioGroupId,
+              testContext,
+            );
+            assert.equal(persisted.status, 200);
+            const state: z.infer<typeof scenarioGroupStateSchema> =
+              scenarioGroupStateSchema.parse(await persisted.json());
+            assert.equal(state.data.documentId, fixture.scenarioGroupId);
+            assert.equal(state.data.title, 'Original Group');
+          });
+        });
+
+        describe('403', (): void => {
+          test('rejects outsider access', async (testContext: TestContext): Promise<void> => {
+            // given
+            const fixture: FixtureContext =
+              await manager.setupFixture(testContext);
+            const login: PostAuthResponseBodyDto = await manager.loginUser(
+              fixture.outsider.username,
+              fixture.outsider.password,
               testContext,
             );
 
@@ -1079,354 +1176,296 @@ describe('/project/:projectId/scenario-group', (suiteContext: SuiteContext): voi
             );
 
             // then
-            assert.equal(response.status, 204);
-            assert.equal(await response.text(), '');
-            assert.equal(
-              (
-                await manager.readDocument(
-                  'api::scenario-group.scenario-group',
-                  fixture.scenarioGroupId,
-                  testContext,
-                )
-              ).status,
-              404,
+            assert.equal(response.status, 403);
+            assert.deepEqual(await response.json(), {
+              statusCode: 403,
+              message: 'Forbidden resource',
+              error: 'Forbidden',
+            });
+            const persisted: Response = await manager.readDocument(
+              'api::scenario-group.scenario-group',
+              fixture.scenarioGroupId,
+              testContext,
             );
-          }
-        });
-      });
-
-      describe('401', (): void => {
-        test('rejects anonymous access', async (testContext: TestContext): Promise<void> => {
-          // given
-          const fixture: FixtureContext =
-            await manager.setupFixture(testContext);
-
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/project/${fixture.projectId}/scenario-group/${fixture.scenarioGroupId}`,
-            { method: 'DELETE', signal: testContext.signal },
-          );
-
-          // then
-          assert.equal(response.status, 401);
-          assert.equal(response.headers.get('www-authenticate'), 'Bearer');
-          assert.deepEqual(await response.json(), {
-            statusCode: 401,
-            message: 'Unauthorized',
-          });
-          const persisted: Response = await manager.readDocument(
-            'api::scenario-group.scenario-group',
-            fixture.scenarioGroupId,
-            testContext,
-          );
-          assert.equal(persisted.status, 200);
-          const state: z.infer<typeof scenarioGroupStateSchema> =
-            scenarioGroupStateSchema.parse(await persisted.json());
-          assert.equal(state.data.documentId, fixture.scenarioGroupId);
-          assert.equal(state.data.title, 'Original Group');
-        });
-      });
-
-      describe('403', (): void => {
-        test('rejects outsider access', async (testContext: TestContext): Promise<void> => {
-          // given
-          const fixture: FixtureContext =
-            await manager.setupFixture(testContext);
-          const login: PostAuthResponseBodyDto = await manager.loginUser(
-            fixture.outsider.username,
-            fixture.outsider.password,
-            testContext,
-          );
-
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/project/${fixture.projectId}/scenario-group/${fixture.scenarioGroupId}`,
-            {
-              method: 'DELETE',
-              headers: new Headers([['Authorization', `Bearer ${login.jwt}`]]),
-              signal: testContext.signal,
-            },
-          );
-
-          // then
-          assert.equal(response.status, 403);
-          assert.deepEqual(await response.json(), {
-            statusCode: 403,
-            message: 'Forbidden resource',
-            error: 'Forbidden',
-          });
-          const persisted: Response = await manager.readDocument(
-            'api::scenario-group.scenario-group',
-            fixture.scenarioGroupId,
-            testContext,
-          );
-          assert.equal(persisted.status, 200);
-          const state: z.infer<typeof scenarioGroupStateSchema> =
-            scenarioGroupStateSchema.parse(await persisted.json());
-          assert.equal(state.data.documentId, fixture.scenarioGroupId);
-          assert.equal(state.data.title, 'Original Group');
-        });
-      });
-
-      describe('404', (): void => {
-        test('rejects a scenario group belonging to another project', async (testContext: TestContext): Promise<void> => {
-          // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            { title: 'Project', owner: owner.documentId, collaborators: [] },
-            testContext,
-          );
-          const scenarioGroup: string = await manager.createPublishedDocument(
-            'api::scenario-group.scenario-group',
-            { title: 'Original Group', project },
-            testContext,
-          );
-          const login: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
-            testContext,
-          );
-          const otherProject: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Other Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
-
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/project/${otherProject}/scenario-group/${scenarioGroup}`,
-            {
-              method: 'DELETE',
-              headers: new Headers([
-                ['Authorization', `Bearer ${login.jwt}`],
-                ['Content-Type', 'application/json'],
-              ]),
-              signal: testContext.signal,
-            },
-          );
-
-          // then
-          assert.equal(response.status, 404);
-          assert.deepEqual(await response.json(), {
-            statusCode: 404,
-            message: 'Not Found',
-          });
-          const persisted: Response = await manager.readDocument(
-            'api::scenario-group.scenario-group',
-            scenarioGroup,
-            testContext,
-          );
-          assert.equal(persisted.status, 200);
-          assert.equal(
-            scenarioGroupStateSchema.parse(await persisted.json()).data.title,
-            'Original Group',
-          );
-        });
-
-        test('rejects deleting a draft scenario group even for its owner', async (testContext: TestContext): Promise<void> => {
-          // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Scenario Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
-          const creation: Response = await manager.createDocument(
-            'api::scenario-group.scenario-group',
-            { title: 'Draft Group', project },
-            testContext,
-          );
-          assert.equal(creation.status, 201);
-          const scenarioGroup: string = z
-            .object({
-              data: z.object({ documentId: z.string(), publishedAt: z.null() }),
-            })
-            .parse(await creation.json()).data.documentId;
-          const login: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
-            testContext,
-          );
-
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/scenario-group/${scenarioGroup}`,
-            {
-              method: 'DELETE',
-              headers: new Headers([['Authorization', `Bearer ${login.jwt}`]]),
-              signal: testContext.signal,
-            },
-          );
-
-          // then
-          assert.equal(response.status, 404);
-          assert.deepEqual(await response.json(), {
-            statusCode: 404,
-            message: 'Not Found',
-          });
-          const persisted: Response = await manager.readDocument(
-            'api::scenario-group.scenario-group',
-            scenarioGroup,
-            testContext,
-          );
-          assert.equal(persisted.status, 200);
-          const state: z.infer<typeof scenarioGroupStateSchema> =
-            scenarioGroupStateSchema.parse(await persisted.json());
-          assert.equal(state.data.documentId, scenarioGroup);
-          assert.equal(state.data.title, 'Draft Group');
-          assert.equal(state.data.publishedAt, null);
-        });
-
-        test('rejects deleting a published scenario group in a draft project', async (testContext: TestContext): Promise<void> => {
-          // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Scenario Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
-          const scenarioGroup: string = await manager.createPublishedDocument(
-            'api::scenario-group.scenario-group',
-            { title: 'Original Group', project },
-            testContext,
-          );
-          const unpublish: Response = await manager.unpublishDocument(
-            'api::project.project',
-            project,
-            {},
-            testContext,
-          );
-          assert.equal(unpublish.status, 200);
-          const login: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
-            testContext,
-          );
-
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/scenario-group/${scenarioGroup}`,
-            {
-              method: 'DELETE',
-              headers: new Headers([['Authorization', `Bearer ${login.jwt}`]]),
-              signal: testContext.signal,
-            },
-          );
-
-          // then
-          assert.equal(response.status, 404);
-          assert.deepEqual(await response.json(), {
-            statusCode: 404,
-            message: 'Not Found',
-          });
-          const persisted: Response = await manager.readDocument(
-            'api::scenario-group.scenario-group',
-            scenarioGroup,
-            testContext,
-          );
-          assert.equal(persisted.status, 200);
-          const state: z.infer<typeof scenarioGroupStateSchema> =
-            scenarioGroupStateSchema.parse(await persisted.json());
-          assert.equal(state.data.documentId, scenarioGroup);
-          assert.equal(state.data.title, 'Original Group');
-        });
-
-        test('rejects deleting an unknown scenario group', async (testContext: TestContext): Promise<void> => {
-          // given
-          const fixture: FixtureContext =
-            await manager.setupFixture(testContext);
-          const login: PostAuthResponseBodyDto = await manager.loginUser(
-            fixture.owner.username,
-            fixture.owner.password,
-            testContext,
-          );
-
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/project/${fixture.projectId}/scenario-group/${randomUUID()}`,
-            {
-              method: 'DELETE',
-              headers: new Headers([['Authorization', `Bearer ${login.jwt}`]]),
-              signal: testContext.signal,
-            },
-          );
-
-          // then
-          assert.equal(response.status, 404);
-          assert.deepEqual(await response.json(), {
-            statusCode: 404,
-            message: 'Not Found',
+            assert.equal(persisted.status, 200);
+            const state: z.infer<typeof scenarioGroupStateSchema> =
+              scenarioGroupStateSchema.parse(await persisted.json());
+            assert.equal(state.data.documentId, fixture.scenarioGroupId);
+            assert.equal(state.data.title, 'Original Group');
           });
         });
 
-        test('rejects deleting a known scenario group through an unknown project', async (testContext: TestContext): Promise<void> => {
-          // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Scenario Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
-          const scenarioGroup: string = await manager.createPublishedDocument(
-            'api::scenario-group.scenario-group',
-            { title: 'Original Group', project },
-            testContext,
-          );
-          const login: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
-            testContext,
-          );
+        describe('404', (): void => {
+          test('rejects a scenario group belonging to another project', async (testContext: TestContext): Promise<void> => {
+            // given
+            const owner: E2ETestApplicationUser =
+              await manager.registerUser(testContext);
+            const project: string = await manager.createPublishedDocument(
+              'api::project.project',
+              { title: 'Project', owner: owner.documentId, collaborators: [] },
+              testContext,
+            );
+            const scenarioGroup: string = await manager.createPublishedDocument(
+              'api::scenario-group.scenario-group',
+              { title: 'Original Group', project },
+              testContext,
+            );
+            const login: PostAuthResponseBodyDto = await manager.loginUser(
+              owner.username,
+              owner.password,
+              testContext,
+            );
+            const otherProject: string = await manager.createPublishedDocument(
+              'api::project.project',
+              {
+                title: 'Other Project',
+                owner: owner.documentId,
+                collaborators: [],
+              },
+              testContext,
+            );
 
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/project/${randomUUID()}/scenario-group/${scenarioGroup}`,
-            {
-              method: 'DELETE',
-              headers: new Headers([['Authorization', `Bearer ${login.jwt}`]]),
-              signal: testContext.signal,
-            },
-          );
+            // when
+            const response: Response = await fetch(
+              `${manager.apiUrl}/project/${otherProject}/scenario-group/${scenarioGroup}`,
+              {
+                method: 'DELETE',
+                headers: new Headers([
+                  ['Authorization', `Bearer ${login.jwt}`],
+                  ['Content-Type', 'application/json'],
+                ]),
+                signal: testContext.signal,
+              },
+            );
 
-          // then
-          assert.equal(response.status, 404);
-          assert.deepEqual(await response.json(), {
-            statusCode: 404,
-            message: 'Not Found',
+            // then
+            assert.equal(response.status, 404);
+            assert.deepEqual(await response.json(), {
+              statusCode: 404,
+              message: 'Not Found',
+            });
+            const persisted: Response = await manager.readDocument(
+              'api::scenario-group.scenario-group',
+              scenarioGroup,
+              testContext,
+            );
+            assert.equal(persisted.status, 200);
+            assert.equal(
+              scenarioGroupStateSchema.parse(await persisted.json()).data.title,
+              'Original Group',
+            );
           });
-          const persisted: Response = await manager.readDocument(
-            'api::scenario-group.scenario-group',
-            scenarioGroup,
-            testContext,
-          );
-          assert.equal(persisted.status, 200);
-          const state: z.infer<typeof scenarioGroupStateSchema> =
-            scenarioGroupStateSchema.parse(await persisted.json());
-          assert.equal(state.data.documentId, scenarioGroup);
-          assert.equal(state.data.title, 'Original Group');
+
+          test('rejects deleting a draft scenario group even for its owner', async (testContext: TestContext): Promise<void> => {
+            // given
+            const owner: E2ETestApplicationUser =
+              await manager.registerUser(testContext);
+            const project: string = await manager.createPublishedDocument(
+              'api::project.project',
+              {
+                title: 'Scenario Project',
+                owner: owner.documentId,
+                collaborators: [],
+              },
+              testContext,
+            );
+            const creation: Response = await manager.createDocument(
+              'api::scenario-group.scenario-group',
+              { title: 'Draft Group', project },
+              testContext,
+            );
+            assert.equal(creation.status, 201);
+            const scenarioGroup: string = z
+              .object({
+                data: z.object({
+                  documentId: z.string(),
+                  publishedAt: z.null(),
+                }),
+              })
+              .parse(await creation.json()).data.documentId;
+            const login: PostAuthResponseBodyDto = await manager.loginUser(
+              owner.username,
+              owner.password,
+              testContext,
+            );
+
+            // when
+            const response: Response = await fetch(
+              `${manager.apiUrl}/project/${project}/scenario-group/${scenarioGroup}`,
+              {
+                method: 'DELETE',
+                headers: new Headers([
+                  ['Authorization', `Bearer ${login.jwt}`],
+                ]),
+                signal: testContext.signal,
+              },
+            );
+
+            // then
+            assert.equal(response.status, 404);
+            assert.deepEqual(await response.json(), {
+              statusCode: 404,
+              message: 'Not Found',
+            });
+            const persisted: Response = await manager.readDocument(
+              'api::scenario-group.scenario-group',
+              scenarioGroup,
+              testContext,
+            );
+            assert.equal(persisted.status, 200);
+            const state: z.infer<typeof scenarioGroupStateSchema> =
+              scenarioGroupStateSchema.parse(await persisted.json());
+            assert.equal(state.data.documentId, scenarioGroup);
+            assert.equal(state.data.title, 'Draft Group');
+            assert.equal(state.data.publishedAt, null);
+          });
+
+          test('rejects deleting a published scenario group in a draft project', async (testContext: TestContext): Promise<void> => {
+            // given
+            const owner: E2ETestApplicationUser =
+              await manager.registerUser(testContext);
+            const project: string = await manager.createPublishedDocument(
+              'api::project.project',
+              {
+                title: 'Scenario Project',
+                owner: owner.documentId,
+                collaborators: [],
+              },
+              testContext,
+            );
+            const scenarioGroup: string = await manager.createPublishedDocument(
+              'api::scenario-group.scenario-group',
+              { title: 'Original Group', project },
+              testContext,
+            );
+            const unpublish: Response = await manager.unpublishDocument(
+              'api::project.project',
+              project,
+              {},
+              testContext,
+            );
+            assert.equal(unpublish.status, 200);
+            const login: PostAuthResponseBodyDto = await manager.loginUser(
+              owner.username,
+              owner.password,
+              testContext,
+            );
+
+            // when
+            const response: Response = await fetch(
+              `${manager.apiUrl}/project/${project}/scenario-group/${scenarioGroup}`,
+              {
+                method: 'DELETE',
+                headers: new Headers([
+                  ['Authorization', `Bearer ${login.jwt}`],
+                ]),
+                signal: testContext.signal,
+              },
+            );
+
+            // then
+            assert.equal(response.status, 404);
+            assert.deepEqual(await response.json(), {
+              statusCode: 404,
+              message: 'Not Found',
+            });
+            const persisted: Response = await manager.readDocument(
+              'api::scenario-group.scenario-group',
+              scenarioGroup,
+              testContext,
+            );
+            assert.equal(persisted.status, 200);
+            const state: z.infer<typeof scenarioGroupStateSchema> =
+              scenarioGroupStateSchema.parse(await persisted.json());
+            assert.equal(state.data.documentId, scenarioGroup);
+            assert.equal(state.data.title, 'Original Group');
+          });
+
+          test('rejects deleting an unknown scenario group', async (testContext: TestContext): Promise<void> => {
+            // given
+            const fixture: FixtureContext =
+              await manager.setupFixture(testContext);
+            const login: PostAuthResponseBodyDto = await manager.loginUser(
+              fixture.owner.username,
+              fixture.owner.password,
+              testContext,
+            );
+
+            // when
+            const response: Response = await fetch(
+              `${manager.apiUrl}/project/${fixture.projectId}/scenario-group/${randomUUID()}`,
+              {
+                method: 'DELETE',
+                headers: new Headers([
+                  ['Authorization', `Bearer ${login.jwt}`],
+                ]),
+                signal: testContext.signal,
+              },
+            );
+
+            // then
+            assert.equal(response.status, 404);
+            assert.deepEqual(await response.json(), {
+              statusCode: 404,
+              message: 'Not Found',
+            });
+          });
+
+          test('rejects deleting a known scenario group through an unknown project', async (testContext: TestContext): Promise<void> => {
+            // given
+            const owner: E2ETestApplicationUser =
+              await manager.registerUser(testContext);
+            const project: string = await manager.createPublishedDocument(
+              'api::project.project',
+              {
+                title: 'Scenario Project',
+                owner: owner.documentId,
+                collaborators: [],
+              },
+              testContext,
+            );
+            const scenarioGroup: string = await manager.createPublishedDocument(
+              'api::scenario-group.scenario-group',
+              { title: 'Original Group', project },
+              testContext,
+            );
+            const login: PostAuthResponseBodyDto = await manager.loginUser(
+              owner.username,
+              owner.password,
+              testContext,
+            );
+
+            // when
+            const response: Response = await fetch(
+              `${manager.apiUrl}/project/${randomUUID()}/scenario-group/${scenarioGroup}`,
+              {
+                method: 'DELETE',
+                headers: new Headers([
+                  ['Authorization', `Bearer ${login.jwt}`],
+                ]),
+                signal: testContext.signal,
+              },
+            );
+
+            // then
+            assert.equal(response.status, 404);
+            assert.deepEqual(await response.json(), {
+              statusCode: 404,
+              message: 'Not Found',
+            });
+            const persisted: Response = await manager.readDocument(
+              'api::scenario-group.scenario-group',
+              scenarioGroup,
+              testContext,
+            );
+            assert.equal(persisted.status, 200);
+            const state: z.infer<typeof scenarioGroupStateSchema> =
+              scenarioGroupStateSchema.parse(await persisted.json());
+            assert.equal(state.data.documentId, scenarioGroup);
+            assert.equal(state.data.title, 'Original Group');
+          });
         });
       });
     });
-  });
-});
+  },
+);

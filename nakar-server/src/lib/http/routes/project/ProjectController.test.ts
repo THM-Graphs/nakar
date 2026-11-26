@@ -7,6 +7,7 @@ import { randomUUID } from 'node:crypto';
 import type { SuiteContext, TestContext } from 'node:test';
 import { after, before, describe, test } from 'node:test';
 import z from 'zod';
+import { suiteOptions } from '../../../../e2e/suiteOptions';
 import { E2ETestManager } from '../../../../e2e/E2ETestManager';
 
 import type { PostAuthResponseBodyDto } from '../auth/dto/PostAuthResponseBodyDto';
@@ -162,7 +163,7 @@ function assertDemoProject(
   });
 }
 
-describe('/project', (suiteContext: SuiteContext): void => {
+describe('/project', suiteOptions, (suiteContext: SuiteContext): void => {
   const manager: E2ETestManager = new E2ETestManager();
 
   before(

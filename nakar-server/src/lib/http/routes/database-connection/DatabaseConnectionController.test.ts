@@ -8,6 +8,7 @@ import { randomUUID } from 'node:crypto';
 import type { SuiteContext, TestContext } from 'node:test';
 import { after, before, describe, test } from 'node:test';
 import z from 'zod';
+import { suiteOptions } from '../../../../e2e/suiteOptions';
 import { E2ETestManager } from '../../../../e2e/E2ETestManager';
 import type { PostAuthResponseBodyDto } from '../auth/dto/PostAuthResponseBodyDto';
 import type { DatabaseConnectionDto } from '../../../schema/dtos/DatabaseConnectionDto';
@@ -56,860 +57,22 @@ const listStateSchema: z.ZodType<{
 });
 const projectStateSchema: z.ZodType<{ databases: DatabaseConnectionDto[] }> =
   z.object({ databases: z.array(databaseSchema) });
-describe('/project/:projectId/database-connection', (suiteContext: SuiteContext): void => {
-  const manager: E2ETestManager = new E2ETestManager();
-  before(
-    async (): Promise<void> => {
-      await manager.createAndStartApp(suiteContext);
-    },
-    { timeout: Infinity },
-  );
-  after(async (): Promise<void> => {
-    await manager.destroy(suiteContext);
-  });
-  describe('POST', (): void => {
-    describe('201', (): void => {
-      test('published collaborator retains access after draft removal', async (testContext: TestContext): Promise<void> => {
-        // given
-        const fixture: FixtureContext = await manager.setupFixture(testContext);
-        const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-          fixture.owner.username,
-          fixture.owner.password,
-          testContext,
-        );
-        const login: PostAuthResponseBodyDto = await manager.loginUser(
-          fixture.collaborator.username,
-          fixture.collaborator.password,
-          testContext,
-        );
-        const draftRemoval: Response = await manager.updateDocument(
-          'api::project.project',
-          fixture.projectId,
-          { collaborators: [] },
-          testContext,
-        );
-        assert.equal(draftRemoval.status, 200);
-
-        // when
-        const response: Response = await fetch(
-          `${manager.apiUrl}/project/${fixture.projectId}/database-connection`,
-          {
-            method: 'POST',
-            headers: new Headers([['Authorization', `Bearer ${login.jwt}`]]),
-            signal: testContext.signal,
-          },
-        );
-
-        // then
-        assert.equal(response.status, 201);
-        const body: DatabaseConnectionDto = databaseSchema.parse(
-          await response.json(),
-        );
-        assert.notEqual(body.id, fixture.databaseConnectionId);
-        assert.deepEqual(body, {
-          id: body.id,
-          title: 'Untitled Database Connection',
-          browserUrl: '',
-          connectionUrl: '',
-          database: '',
-          databaseType: DatabaseConnectionDatabaseType.neo4j,
-          language: null,
-          ramenEdgeTitleRules: [],
-          nodeConfigurations: [],
-        });
-        const projectResponse: Response = await fetch(
-          `${manager.apiUrl}/project/${fixture.projectId}`,
-          {
-            headers: new Headers([
-              ['Authorization', `Bearer ${ownerLogin.jwt}`],
-            ]),
-            signal: testContext.signal,
-          },
-        );
-        assert.equal(projectResponse.status, 200);
-        const publishedState: z.infer<typeof projectStateSchema> =
-          projectStateSchema.parse(await projectResponse.json());
-        assert.deepEqual(
-          publishedState.databases.find(
-            (item: DatabaseConnectionDto): boolean => item.id === body.id,
-          ),
-          body,
-        );
-      });
-      test('owner can create a database connection', async (testContext: TestContext): Promise<void> => {
-        // given
-        const fixture: FixtureContext = await manager.setupFixture(testContext);
-        const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-          fixture.owner.username,
-          fixture.owner.password,
-          testContext,
-        );
-
-        // when
-        const response: Response = await fetch(
-          `${manager.apiUrl}/project/${fixture.projectId}/database-connection`,
-          {
-            method: 'POST',
-            headers: new Headers([
-              ['Authorization', `Bearer ${ownerLogin.jwt}`],
-            ]),
-            signal: testContext.signal,
-          },
-        );
-
-        // then
-        assert.equal(response.status, 201);
-        const body: DatabaseConnectionDto = databaseSchema.parse(
-          await response.json(),
-        );
-        assert.notEqual(body.id, fixture.databaseConnectionId);
-        assert.deepEqual(body, {
-          id: body.id,
-          title: 'Untitled Database Connection',
-          browserUrl: '',
-          connectionUrl: '',
-          database: '',
-          databaseType: DatabaseConnectionDatabaseType.neo4j,
-          language: null,
-          ramenEdgeTitleRules: [],
-          nodeConfigurations: [],
-        });
-        const projectResponse: Response = await fetch(
-          `${manager.apiUrl}/project/${fixture.projectId}`,
-          {
-            headers: new Headers([
-              ['Authorization', `Bearer ${ownerLogin.jwt}`],
-            ]),
-            signal: testContext.signal,
-          },
-        );
-        assert.equal(projectResponse.status, 200);
-        const publishedState: z.infer<typeof projectStateSchema> =
-          projectStateSchema.parse(await projectResponse.json());
-        assert.deepEqual(
-          publishedState.databases.find(
-            (item: DatabaseConnectionDto): boolean => item.id === body.id,
-          ),
-          body,
-        );
-      });
-      test('collaborator can create a database connection', async (testContext: TestContext): Promise<void> => {
-        // given
-        const fixture: FixtureContext = await manager.setupFixture(testContext);
-        const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-          fixture.owner.username,
-          fixture.owner.password,
-          testContext,
-        );
-        const login: PostAuthResponseBodyDto = await manager.loginUser(
-          fixture.collaborator.username,
-          fixture.collaborator.password,
-          testContext,
-        );
-
-        // when
-        const response: Response = await fetch(
-          `${manager.apiUrl}/project/${fixture.projectId}/database-connection`,
-          {
-            method: 'POST',
-            headers: new Headers([['Authorization', `Bearer ${login.jwt}`]]),
-            signal: testContext.signal,
-          },
-        );
-
-        // then
-        assert.equal(response.status, 201);
-        const body: DatabaseConnectionDto = databaseSchema.parse(
-          await response.json(),
-        );
-        assert.notEqual(body.id, fixture.databaseConnectionId);
-        assert.deepEqual(body, {
-          id: body.id,
-          title: 'Untitled Database Connection',
-          browserUrl: '',
-          connectionUrl: '',
-          database: '',
-          databaseType: DatabaseConnectionDatabaseType.neo4j,
-          language: null,
-          ramenEdgeTitleRules: [],
-          nodeConfigurations: [],
-        });
-        const projectResponse: Response = await fetch(
-          `${manager.apiUrl}/project/${fixture.projectId}`,
-          {
-            headers: new Headers([
-              ['Authorization', `Bearer ${ownerLogin.jwt}`],
-            ]),
-            signal: testContext.signal,
-          },
-        );
-        assert.equal(projectResponse.status, 200);
-        const publishedState: z.infer<typeof projectStateSchema> =
-          projectStateSchema.parse(await projectResponse.json());
-        assert.deepEqual(
-          publishedState.databases.find(
-            (item: DatabaseConnectionDto): boolean => item.id === body.id,
-          ),
-          body,
-        );
-      });
+describe(
+  '/project/:projectId/database-connection',
+  suiteOptions,
+  (suiteContext: SuiteContext): void => {
+    const manager: E2ETestManager = new E2ETestManager();
+    before(
+      async (): Promise<void> => {
+        await manager.createAndStartApp(suiteContext);
+      },
+      { timeout: Infinity },
+    );
+    after(async (): Promise<void> => {
+      await manager.destroy(suiteContext);
     });
-    describe('401', (): void => {
-      test('rejects requests without valid authentication', async (testContext: TestContext): Promise<void> => {
-        const variants: { headers: [string, string][] }[] = [
-          { headers: [] },
-          {
-            headers: [['Authorization', 'Bearer invalid-jwt']],
-          },
-        ];
-        for (const variant of variants) {
-          // given
-          const fixture: FixtureContext =
-            await manager.setupFixture(testContext);
-          await manager.loginUser(
-            fixture.owner.username,
-            fixture.owner.password,
-            testContext,
-          );
-          const filters: Record<string, string> = {
-            [`filters[project][documentId][$eq]`]: fixture.projectId,
-            pageSize: '100',
-            sort: 'documentId:asc',
-          };
-          const originalDraftResponse: Response = await manager.readDocuments(
-            'api::database-connection.database-connection',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(originalDraftResponse.status, 200);
-          const originalDraft: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalDraftResponse.json());
-          assert.ok(
-            originalDraft.results.some(
-              (item: { documentId: string }): boolean =>
-                item.documentId === fixture.databaseConnectionId,
-            ),
-          );
-          const originalPublishedResponse: Response =
-            await manager.readDocuments(
-              'api::database-connection.database-connection',
-              { ...filters, status: 'published' },
-              testContext,
-            );
-          assert.equal(originalPublishedResponse.status, 200);
-          const originalPublished: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalPublishedResponse.json());
-
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/project/${fixture.projectId}/database-connection`,
-            {
-              method: 'POST',
-              signal: testContext.signal,
-              headers: new Headers(variant.headers),
-            },
-          );
-
-          // then
-          assert.equal(response.status, 401);
-          assert.equal(response.headers.get('www-authenticate'), 'Bearer');
-          assert.deepEqual(await response.json(), {
-            statusCode: 401,
-            message: 'Unauthorized',
-          });
-          const draftResponse: Response = await manager.readDocuments(
-            'api::database-connection.database-connection',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(draftResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await draftResponse.json()),
-            originalDraft,
-          );
-          const publishedResponse: Response = await manager.readDocuments(
-            'api::database-connection.database-connection',
-            { ...filters, status: 'published' },
-            testContext,
-          );
-          assert.equal(publishedResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await publishedResponse.json()),
-            originalPublished,
-          );
-        }
-      });
-    });
-
-    describe('403', (): void => {
-      test('rejects outsider access', async (testContext: TestContext): Promise<void> => {
-        // given
-        const fixture: FixtureContext = await manager.setupFixture(testContext);
-        await manager.loginUser(
-          fixture.owner.username,
-          fixture.owner.password,
-          testContext,
-        );
-        const login: PostAuthResponseBodyDto = await manager.loginUser(
-          fixture.outsider.username,
-          fixture.outsider.password,
-          testContext,
-        );
-        const filters: Record<string, string> = {
-          [`filters[project][documentId][$eq]`]: fixture.projectId,
-          pageSize: '100',
-          sort: 'documentId:asc',
-        };
-        const originalDraftResponse: Response = await manager.readDocuments(
-          'api::database-connection.database-connection',
-          { ...filters, status: 'draft' },
-          testContext,
-        );
-        assert.equal(originalDraftResponse.status, 200);
-        const originalDraft: z.infer<typeof listStateSchema> =
-          listStateSchema.parse(await originalDraftResponse.json());
-        assert.ok(
-          originalDraft.results.some(
-            (item: { documentId: string }): boolean =>
-              item.documentId === fixture.databaseConnectionId,
-          ),
-        );
-        const originalPublishedResponse: Response = await manager.readDocuments(
-          'api::database-connection.database-connection',
-          { ...filters, status: 'published' },
-          testContext,
-        );
-        assert.equal(originalPublishedResponse.status, 200);
-        const originalPublished: z.infer<typeof listStateSchema> =
-          listStateSchema.parse(await originalPublishedResponse.json());
-
-        // when
-        const response: Response = await fetch(
-          `${manager.apiUrl}/project/${fixture.projectId}/database-connection`,
-          {
-            method: 'POST',
-            headers: new Headers([['Authorization', `Bearer ${login.jwt}`]]),
-            signal: testContext.signal,
-          },
-        );
-
-        // then
-        assert.equal(response.status, 403);
-        assert.deepEqual(await response.json(), {
-          statusCode: 403,
-          message: 'Forbidden resource',
-          error: 'Forbidden',
-        });
-        const draftResponse: Response = await manager.readDocuments(
-          'api::database-connection.database-connection',
-          { ...filters, status: 'draft' },
-          testContext,
-        );
-        assert.equal(draftResponse.status, 200);
-        assert.deepEqual(
-          listStateSchema.parse(await draftResponse.json()),
-          originalDraft,
-        );
-        const publishedResponse: Response = await manager.readDocuments(
-          'api::database-connection.database-connection',
-          { ...filters, status: 'published' },
-          testContext,
-        );
-        assert.equal(publishedResponse.status, 200);
-        assert.deepEqual(
-          listStateSchema.parse(await publishedResponse.json()),
-          originalPublished,
-        );
-      });
-
-      test('rejects removed collaborator access', async (testContext: TestContext): Promise<void> => {
-        // given
-        const fixture: FixtureContext = await manager.setupFixture(testContext);
-        await manager.loginUser(
-          fixture.owner.username,
-          fixture.owner.password,
-          testContext,
-        );
-        const login: PostAuthResponseBodyDto = await manager.loginUser(
-          fixture.collaborator.username,
-          fixture.collaborator.password,
-          testContext,
-        );
-        const removal: Response = await manager.publishDocument(
-          'api::project.project',
-          fixture.projectId,
-          { collaborators: [] },
-          testContext,
-        );
-        assert.equal(removal.status, 200);
-        const filters: Record<string, string> = {
-          [`filters[project][documentId][$eq]`]: fixture.projectId,
-          pageSize: '100',
-          sort: 'documentId:asc',
-        };
-        const originalDraftResponse: Response = await manager.readDocuments(
-          'api::database-connection.database-connection',
-          { ...filters, status: 'draft' },
-          testContext,
-        );
-        assert.equal(originalDraftResponse.status, 200);
-        const originalDraft: z.infer<typeof listStateSchema> =
-          listStateSchema.parse(await originalDraftResponse.json());
-        assert.ok(
-          originalDraft.results.some(
-            (item: { documentId: string }): boolean =>
-              item.documentId === fixture.databaseConnectionId,
-          ),
-        );
-        const originalPublishedResponse: Response = await manager.readDocuments(
-          'api::database-connection.database-connection',
-          { ...filters, status: 'published' },
-          testContext,
-        );
-        assert.equal(originalPublishedResponse.status, 200);
-        const originalPublished: z.infer<typeof listStateSchema> =
-          listStateSchema.parse(await originalPublishedResponse.json());
-
-        // when
-        const response: Response = await fetch(
-          `${manager.apiUrl}/project/${fixture.projectId}/database-connection`,
-          {
-            method: 'POST',
-            headers: new Headers([['Authorization', `Bearer ${login.jwt}`]]),
-            signal: testContext.signal,
-          },
-        );
-
-        // then
-        assert.equal(response.status, 403);
-        assert.deepEqual(await response.json(), {
-          statusCode: 403,
-          message: 'Forbidden resource',
-          error: 'Forbidden',
-        });
-        const draftResponse: Response = await manager.readDocuments(
-          'api::database-connection.database-connection',
-          { ...filters, status: 'draft' },
-          testContext,
-        );
-        assert.equal(draftResponse.status, 200);
-        assert.deepEqual(
-          listStateSchema.parse(await draftResponse.json()),
-          originalDraft,
-        );
-        const publishedResponse: Response = await manager.readDocuments(
-          'api::database-connection.database-connection',
-          { ...filters, status: 'published' },
-          testContext,
-        );
-        assert.equal(publishedResponse.status, 200);
-        assert.deepEqual(
-          listStateSchema.parse(await publishedResponse.json()),
-          originalPublished,
-        );
-      });
-
-      test('rejects draft collaborator access', async (testContext: TestContext): Promise<void> => {
-        // given
-        const owner: E2ETestApplicationUser =
-          await manager.registerUser(testContext);
-        const collaborator: E2ETestApplicationUser =
-          await manager.registerUser(testContext);
-        const project: string = await manager.createPublishedDocument(
-          'api::project.project',
-          { title: 'Test Project', owner: owner.documentId, collaborators: [] },
-          testContext,
-        );
-        const resource: string = await manager.createPublishedDocument(
-          'api::database-connection.database-connection',
-          {
-            title: 'Original Database',
-            project,
-            databaseType: 'neo4j',
-            connectionUrl: '',
-            browserUrl: '',
-            database: '',
-          },
-          testContext,
-        );
-        await manager.loginUser(owner.username, owner.password, testContext);
-        const login: PostAuthResponseBodyDto = await manager.loginUser(
-          collaborator.username,
-          collaborator.password,
-          testContext,
-        );
-        const draftAccess: Response = await manager.updateDocument(
-          'api::project.project',
-          project,
-          { collaborators: [collaborator.documentId] },
-          testContext,
-        );
-        assert.equal(draftAccess.status, 200);
-        const filters: Record<string, string> = {
-          [`filters[project][documentId][$eq]`]: project,
-          pageSize: '100',
-          sort: 'documentId:asc',
-        };
-        const originalDraftResponse: Response = await manager.readDocuments(
-          'api::database-connection.database-connection',
-          { ...filters, status: 'draft' },
-          testContext,
-        );
-        assert.equal(originalDraftResponse.status, 200);
-        const originalDraft: z.infer<typeof listStateSchema> =
-          listStateSchema.parse(await originalDraftResponse.json());
-        assert.ok(
-          originalDraft.results.some(
-            (item: { documentId: string }): boolean =>
-              item.documentId === resource,
-          ),
-        );
-        const originalPublishedResponse: Response = await manager.readDocuments(
-          'api::database-connection.database-connection',
-          { ...filters, status: 'published' },
-          testContext,
-        );
-        assert.equal(originalPublishedResponse.status, 200);
-        const originalPublished: z.infer<typeof listStateSchema> =
-          listStateSchema.parse(await originalPublishedResponse.json());
-
-        // when
-        const response: Response = await fetch(
-          `${manager.apiUrl}/project/${project}/database-connection`,
-          {
-            method: 'POST',
-            headers: new Headers([['Authorization', `Bearer ${login.jwt}`]]),
-            signal: testContext.signal,
-          },
-        );
-
-        // then
-        assert.equal(response.status, 403);
-        assert.deepEqual(await response.json(), {
-          statusCode: 403,
-          message: 'Forbidden resource',
-          error: 'Forbidden',
-        });
-        const draftResponse: Response = await manager.readDocuments(
-          'api::database-connection.database-connection',
-          { ...filters, status: 'draft' },
-          testContext,
-        );
-        assert.equal(draftResponse.status, 200);
-        assert.deepEqual(
-          listStateSchema.parse(await draftResponse.json()),
-          originalDraft,
-        );
-        const publishedResponse: Response = await manager.readDocuments(
-          'api::database-connection.database-connection',
-          { ...filters, status: 'published' },
-          testContext,
-        );
-        assert.equal(publishedResponse.status, 200);
-        assert.deepEqual(
-          listStateSchema.parse(await publishedResponse.json()),
-          originalPublished,
-        );
-      });
-    });
-    describe('404', (): void => {
-      test('rejects an unknown project', async (testContext: TestContext): Promise<void> => {
-        // given
-        const owner: E2ETestApplicationUser =
-          await manager.registerUser(testContext);
-        const project: string = await manager.createPublishedDocument(
-          'api::project.project',
-          { title: 'Test Project', owner: owner.documentId, collaborators: [] },
-          testContext,
-        );
-        const resource: string = await manager.createPublishedDocument(
-          'api::database-connection.database-connection',
-          {
-            title: 'Original Database',
-            project,
-            databaseType: 'neo4j',
-            connectionUrl: '',
-            browserUrl: '',
-            database: '',
-          },
-          testContext,
-        );
-        const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-          owner.username,
-          owner.password,
-          testContext,
-        );
-        const filters: Record<string, string> = {
-          [`filters[project][documentId][$eq]`]: project,
-          pageSize: '100',
-          sort: 'documentId:asc',
-        };
-        const originalDraftResponse: Response = await manager.readDocuments(
-          'api::database-connection.database-connection',
-          { ...filters, status: 'draft' },
-          testContext,
-        );
-        assert.equal(originalDraftResponse.status, 200);
-        const originalDraft: z.infer<typeof listStateSchema> =
-          listStateSchema.parse(await originalDraftResponse.json());
-        assert.ok(
-          originalDraft.results.some(
-            (item: { documentId: string }): boolean =>
-              item.documentId === resource,
-          ),
-        );
-        const originalPublishedResponse: Response = await manager.readDocuments(
-          'api::database-connection.database-connection',
-          { ...filters, status: 'published' },
-          testContext,
-        );
-        assert.equal(originalPublishedResponse.status, 200);
-        const originalPublished: z.infer<typeof listStateSchema> =
-          listStateSchema.parse(await originalPublishedResponse.json());
-
-        // when
-        const response: Response = await fetch(
-          `${manager.apiUrl}/project/${randomUUID()}/database-connection`,
-          {
-            method: 'POST',
-            headers: new Headers([
-              ['Authorization', `Bearer ${ownerLogin.jwt}`],
-            ]),
-            signal: testContext.signal,
-          },
-        );
-
-        // then
-        assert.equal(response.status, 404);
-        assert.deepEqual(await response.json(), {
-          statusCode: 404,
-          message: 'Not Found',
-        });
-        const draftResponse: Response = await manager.readDocuments(
-          'api::database-connection.database-connection',
-          { ...filters, status: 'draft' },
-          testContext,
-        );
-        assert.equal(draftResponse.status, 200);
-        assert.deepEqual(
-          listStateSchema.parse(await draftResponse.json()),
-          originalDraft,
-        );
-        const publishedResponse: Response = await manager.readDocuments(
-          'api::database-connection.database-connection',
-          { ...filters, status: 'published' },
-          testContext,
-        );
-        assert.equal(publishedResponse.status, 200);
-        assert.deepEqual(
-          listStateSchema.parse(await publishedResponse.json()),
-          originalPublished,
-        );
-      });
-
-      test('rejects an unpublished project', async (testContext: TestContext): Promise<void> => {
-        // given
-        const owner: E2ETestApplicationUser =
-          await manager.registerUser(testContext);
-        const project: string = await manager.createPublishedDocument(
-          'api::project.project',
-          { title: 'Test Project', owner: owner.documentId, collaborators: [] },
-          testContext,
-        );
-        const resource: string = await manager.createPublishedDocument(
-          'api::database-connection.database-connection',
-          {
-            title: 'Original Database',
-            project,
-            databaseType: 'neo4j',
-            connectionUrl: '',
-            browserUrl: '',
-            database: '',
-          },
-          testContext,
-        );
-        const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-          owner.username,
-          owner.password,
-          testContext,
-        );
-        const unpublish: Response = await manager.unpublishDocument(
-          'api::project.project',
-          project,
-          {},
-          testContext,
-        );
-        assert.equal(unpublish.status, 200);
-        const draftProject: Response = await manager.readDocument(
-          'api::project.project',
-          project,
-          testContext,
-        );
-        assert.equal(draftProject.status, 200);
-        z.object({ data: z.object({ publishedAt: z.null() }) }).parse(
-          await draftProject.json(),
-        );
-        const filters: Record<string, string> = {
-          [`filters[project][documentId][$eq]`]: project,
-          pageSize: '100',
-          sort: 'documentId:asc',
-        };
-        const originalDraftResponse: Response = await manager.readDocuments(
-          'api::database-connection.database-connection',
-          { ...filters, status: 'draft' },
-          testContext,
-        );
-        assert.equal(originalDraftResponse.status, 200);
-        const originalDraft: z.infer<typeof listStateSchema> =
-          listStateSchema.parse(await originalDraftResponse.json());
-        assert.ok(
-          originalDraft.results.some(
-            (item: { documentId: string }): boolean =>
-              item.documentId === resource,
-          ),
-        );
-        const originalPublishedResponse: Response = await manager.readDocuments(
-          'api::database-connection.database-connection',
-          { ...filters, status: 'published' },
-          testContext,
-        );
-        assert.equal(originalPublishedResponse.status, 200);
-        const originalPublished: z.infer<typeof listStateSchema> =
-          listStateSchema.parse(await originalPublishedResponse.json());
-
-        // when
-        const response: Response = await fetch(
-          `${manager.apiUrl}/project/${project}/database-connection`,
-          {
-            method: 'POST',
-            headers: new Headers([
-              ['Authorization', `Bearer ${ownerLogin.jwt}`],
-            ]),
-            signal: testContext.signal,
-          },
-        );
-
-        // then
-        assert.equal(response.status, 404);
-        assert.deepEqual(await response.json(), {
-          statusCode: 404,
-          message: 'Not Found',
-        });
-        const draftResponse: Response = await manager.readDocuments(
-          'api::database-connection.database-connection',
-          { ...filters, status: 'draft' },
-          testContext,
-        );
-        assert.equal(draftResponse.status, 200);
-        assert.deepEqual(
-          listStateSchema.parse(await draftResponse.json()),
-          originalDraft,
-        );
-        const publishedResponse: Response = await manager.readDocuments(
-          'api::database-connection.database-connection',
-          { ...filters, status: 'published' },
-          testContext,
-        );
-        assert.equal(publishedResponse.status, 200);
-        assert.deepEqual(
-          listStateSchema.parse(await publishedResponse.json()),
-          originalPublished,
-        );
-      });
-    });
-  });
-  describe('/:databaseConnectionId', (): void => {
-    describe('GET', (): void => {
-      describe('200', (): void => {
-        test('uses the published assignment despite draft reassignment', async (testContext: TestContext): Promise<void> => {
-          // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
-          const resource: string = await manager.createPublishedDocument(
-            'api::database-connection.database-connection',
-            {
-              title: 'Original Database',
-              project,
-              databaseType: 'neo4j',
-              connectionUrl: '',
-              browserUrl: '',
-              database: '',
-            },
-            testContext,
-          );
-          const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
-            testContext,
-          );
-          const otherProject: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Other Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
-          const draftChange: Response = await manager.updateDocument(
-            'api::database-connection.database-connection',
-            resource,
-            { title: 'Draft Database', project: otherProject },
-            testContext,
-          );
-          assert.equal(draftChange.status, 200);
-
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/database-connection/${resource}`,
-            {
-              method: 'GET',
-              headers: new Headers([
-                ['Authorization', `Bearer ${ownerLogin.jwt}`],
-              ]),
-              signal: testContext.signal,
-            },
-          );
-
-          // then
-          assert.equal(response.status, 200);
-          const projectResponse: Response = await fetch(
-            `${manager.apiUrl}/project/${project}`,
-            {
-              headers: new Headers([
-                ['Authorization', `Bearer ${ownerLogin.jwt}`],
-              ]),
-              signal: testContext.signal,
-            },
-          );
-          assert.equal(projectResponse.status, 200);
-          const publishedState: z.infer<typeof projectStateSchema> =
-            projectStateSchema.parse(await projectResponse.json());
-          const items: DatabaseConnectionDto[] | undefined =
-            publishedState.databases;
-
-          const body: DatabaseConnectionDto = databaseSchema.parse(
-            await response.json(),
-          );
-          assert.equal(body.id, resource);
-          assert.equal(body.title, 'Original Database');
-          assert.deepEqual(
-            items.find(
-              (item: DatabaseConnectionDto): boolean => item.id === resource,
-            ),
-            body,
-          );
-        });
-
+    describe('POST', (): void => {
+      describe('201', (): void => {
         test('published collaborator retains access after draft removal', async (testContext: TestContext): Promise<void> => {
           // given
           const fixture: FixtureContext =
@@ -934,16 +97,31 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/project/${fixture.projectId}/database-connection/${fixture.databaseConnectionId}`,
+            `${manager.apiUrl}/project/${fixture.projectId}/database-connection`,
             {
-              method: 'GET',
+              method: 'POST',
               headers: new Headers([['Authorization', `Bearer ${login.jwt}`]]),
               signal: testContext.signal,
             },
           );
 
           // then
-          assert.equal(response.status, 200);
+          assert.equal(response.status, 201);
+          const body: DatabaseConnectionDto = databaseSchema.parse(
+            await response.json(),
+          );
+          assert.notEqual(body.id, fixture.databaseConnectionId);
+          assert.deepEqual(body, {
+            id: body.id,
+            title: 'Untitled Database Connection',
+            browserUrl: '',
+            connectionUrl: '',
+            database: '',
+            databaseType: DatabaseConnectionDatabaseType.neo4j,
+            language: null,
+            ramenEdgeTitleRules: [],
+            nodeConfigurations: [],
+          });
           const projectResponse: Response = await fetch(
             `${manager.apiUrl}/project/${fixture.projectId}`,
             {
@@ -956,24 +134,14 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
           assert.equal(projectResponse.status, 200);
           const publishedState: z.infer<typeof projectStateSchema> =
             projectStateSchema.parse(await projectResponse.json());
-          const items: DatabaseConnectionDto[] | undefined =
-            publishedState.databases;
-
-          const body: DatabaseConnectionDto = databaseSchema.parse(
-            await response.json(),
-          );
-          assert.equal(body.id, fixture.databaseConnectionId);
-          assert.equal(body.title, 'Original Database');
           assert.deepEqual(
-            items.find(
-              (item: DatabaseConnectionDto): boolean =>
-                item.id === fixture.databaseConnectionId,
+            publishedState.databases.find(
+              (item: DatabaseConnectionDto): boolean => item.id === body.id,
             ),
             body,
           );
         });
-
-        test('owner can read a database connection', async (testContext: TestContext): Promise<void> => {
+        test('owner can create a database connection', async (testContext: TestContext): Promise<void> => {
           // given
           const fixture: FixtureContext =
             await manager.setupFixture(testContext);
@@ -985,9 +153,9 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/project/${fixture.projectId}/database-connection/${fixture.databaseConnectionId}`,
+            `${manager.apiUrl}/project/${fixture.projectId}/database-connection`,
             {
-              method: 'GET',
+              method: 'POST',
               headers: new Headers([
                 ['Authorization', `Bearer ${ownerLogin.jwt}`],
               ]),
@@ -996,7 +164,22 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
           );
 
           // then
-          assert.equal(response.status, 200);
+          assert.equal(response.status, 201);
+          const body: DatabaseConnectionDto = databaseSchema.parse(
+            await response.json(),
+          );
+          assert.notEqual(body.id, fixture.databaseConnectionId);
+          assert.deepEqual(body, {
+            id: body.id,
+            title: 'Untitled Database Connection',
+            browserUrl: '',
+            connectionUrl: '',
+            database: '',
+            databaseType: DatabaseConnectionDatabaseType.neo4j,
+            language: null,
+            ramenEdgeTitleRules: [],
+            nodeConfigurations: [],
+          });
           const projectResponse: Response = await fetch(
             `${manager.apiUrl}/project/${fixture.projectId}`,
             {
@@ -1009,23 +192,14 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
           assert.equal(projectResponse.status, 200);
           const publishedState: z.infer<typeof projectStateSchema> =
             projectStateSchema.parse(await projectResponse.json());
-          const items: DatabaseConnectionDto[] | undefined =
-            publishedState.databases;
-          const body: DatabaseConnectionDto = databaseSchema.parse(
-            await response.json(),
-          );
-          assert.equal(body.id, fixture.databaseConnectionId);
-          assert.equal(body.title, 'Original Database');
           assert.deepEqual(
-            items.find(
-              (item: DatabaseConnectionDto): boolean =>
-                item.id === fixture.databaseConnectionId,
+            publishedState.databases.find(
+              (item: DatabaseConnectionDto): boolean => item.id === body.id,
             ),
             body,
           );
         });
-
-        test('collaborator can read a database connection', async (testContext: TestContext): Promise<void> => {
+        test('collaborator can create a database connection', async (testContext: TestContext): Promise<void> => {
           // given
           const fixture: FixtureContext =
             await manager.setupFixture(testContext);
@@ -1042,16 +216,31 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/project/${fixture.projectId}/database-connection/${fixture.databaseConnectionId}`,
+            `${manager.apiUrl}/project/${fixture.projectId}/database-connection`,
             {
-              method: 'GET',
+              method: 'POST',
               headers: new Headers([['Authorization', `Bearer ${login.jwt}`]]),
               signal: testContext.signal,
             },
           );
 
           // then
-          assert.equal(response.status, 200);
+          assert.equal(response.status, 201);
+          const body: DatabaseConnectionDto = databaseSchema.parse(
+            await response.json(),
+          );
+          assert.notEqual(body.id, fixture.databaseConnectionId);
+          assert.deepEqual(body, {
+            id: body.id,
+            title: 'Untitled Database Connection',
+            browserUrl: '',
+            connectionUrl: '',
+            database: '',
+            databaseType: DatabaseConnectionDatabaseType.neo4j,
+            language: null,
+            ramenEdgeTitleRules: [],
+            nodeConfigurations: [],
+          });
           const projectResponse: Response = await fetch(
             `${manager.apiUrl}/project/${fixture.projectId}`,
             {
@@ -1064,17 +253,9 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
           assert.equal(projectResponse.status, 200);
           const publishedState: z.infer<typeof projectStateSchema> =
             projectStateSchema.parse(await projectResponse.json());
-          const items: DatabaseConnectionDto[] | undefined =
-            publishedState.databases;
-          const body: DatabaseConnectionDto = databaseSchema.parse(
-            await response.json(),
-          );
-          assert.equal(body.id, fixture.databaseConnectionId);
-          assert.equal(body.title, 'Original Database');
           assert.deepEqual(
-            items.find(
-              (item: DatabaseConnectionDto): boolean =>
-                item.id === fixture.databaseConnectionId,
+            publishedState.databases.find(
+              (item: DatabaseConnectionDto): boolean => item.id === body.id,
             ),
             body,
           );
@@ -1128,9 +309,9 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
 
             // when
             const response: Response = await fetch(
-              `${manager.apiUrl}/project/${fixture.projectId}/database-connection/${fixture.databaseConnectionId}`,
+              `${manager.apiUrl}/project/${fixture.projectId}/database-connection`,
               {
-                method: 'GET',
+                method: 'POST',
                 signal: testContext.signal,
                 headers: new Headers(variant.headers),
               },
@@ -1213,9 +394,9 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/project/${fixture.projectId}/database-connection/${fixture.databaseConnectionId}`,
+            `${manager.apiUrl}/project/${fixture.projectId}/database-connection`,
             {
-              method: 'GET',
+              method: 'POST',
               headers: new Headers([['Authorization', `Bearer ${login.jwt}`]]),
               signal: testContext.signal,
             },
@@ -1302,9 +483,9 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/project/${fixture.projectId}/database-connection/${fixture.databaseConnectionId}`,
+            `${manager.apiUrl}/project/${fixture.projectId}/database-connection`,
             {
-              method: 'GET',
+              method: 'POST',
               headers: new Headers([['Authorization', `Bearer ${login.jwt}`]]),
               signal: testContext.signal,
             },
@@ -1410,9 +591,9 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/database-connection/${resource}`,
+            `${manager.apiUrl}/project/${project}/database-connection`,
             {
-              method: 'GET',
+              method: 'POST',
               headers: new Headers([['Authorization', `Bearer ${login.jwt}`]]),
               signal: testContext.signal,
             },
@@ -1509,9 +690,9 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/project/${randomUUID()}/database-connection/${resource}`,
+            `${manager.apiUrl}/project/${randomUUID()}/database-connection`,
             {
-              method: 'GET',
+              method: 'POST',
               headers: new Headers([
                 ['Authorization', `Bearer ${ownerLogin.jwt}`],
               ]),
@@ -1624,310 +805,9 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
 
           // when
           const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/database-connection/${resource}`,
+            `${manager.apiUrl}/project/${project}/database-connection`,
             {
-              method: 'GET',
-              headers: new Headers([
-                ['Authorization', `Bearer ${ownerLogin.jwt}`],
-              ]),
-              signal: testContext.signal,
-            },
-          );
-
-          // then
-          assert.equal(response.status, 404);
-          assert.deepEqual(await response.json(), {
-            statusCode: 404,
-            message: 'Not Found',
-          });
-          const draftResponse: Response = await manager.readDocuments(
-            'api::database-connection.database-connection',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(draftResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await draftResponse.json()),
-            originalDraft,
-          );
-          const publishedResponse: Response = await manager.readDocuments(
-            'api::database-connection.database-connection',
-            { ...filters, status: 'published' },
-            testContext,
-          );
-          assert.equal(publishedResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await publishedResponse.json()),
-            originalPublished,
-          );
-        });
-
-        test('rejects an unknown database connection', async (testContext: TestContext): Promise<void> => {
-          // given
-          const fixture: FixtureContext =
-            await manager.setupFixture(testContext);
-          const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-            fixture.owner.username,
-            fixture.owner.password,
-            testContext,
-          );
-          const filters: Record<string, string> = {
-            [`filters[project][documentId][$eq]`]: fixture.projectId,
-            pageSize: '100',
-            sort: 'documentId:asc',
-          };
-          const originalDraftResponse: Response = await manager.readDocuments(
-            'api::database-connection.database-connection',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(originalDraftResponse.status, 200);
-          const originalDraft: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalDraftResponse.json());
-          assert.ok(
-            originalDraft.results.some(
-              (item: { documentId: string }): boolean =>
-                item.documentId === fixture.databaseConnectionId,
-            ),
-          );
-          const originalPublishedResponse: Response =
-            await manager.readDocuments(
-              'api::database-connection.database-connection',
-              { ...filters, status: 'published' },
-              testContext,
-            );
-          assert.equal(originalPublishedResponse.status, 200);
-          const originalPublished: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalPublishedResponse.json());
-
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/project/${fixture.projectId}/database-connection/${randomUUID()}`,
-            {
-              method: 'GET',
-              headers: new Headers([
-                ['Authorization', `Bearer ${ownerLogin.jwt}`],
-              ]),
-              signal: testContext.signal,
-            },
-          );
-
-          // then
-          assert.equal(response.status, 404);
-          assert.deepEqual(await response.json(), {
-            statusCode: 404,
-            message: 'Not Found',
-          });
-          const draftResponse: Response = await manager.readDocuments(
-            'api::database-connection.database-connection',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(draftResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await draftResponse.json()),
-            originalDraft,
-          );
-          const publishedResponse: Response = await manager.readDocuments(
-            'api::database-connection.database-connection',
-            { ...filters, status: 'published' },
-            testContext,
-          );
-          assert.equal(publishedResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await publishedResponse.json()),
-            originalPublished,
-          );
-        });
-
-        test('rejects an unpublished database connection', async (testContext: TestContext): Promise<void> => {
-          // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
-          const resource: string = await manager.createPublishedDocument(
-            'api::database-connection.database-connection',
-            {
-              title: 'Original Database',
-              project,
-              databaseType: 'neo4j',
-              connectionUrl: '',
-              browserUrl: '',
-              database: '',
-            },
-            testContext,
-          );
-          const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
-            testContext,
-          );
-          const unpublish: Response = await manager.unpublishDocument(
-            'api::database-connection.database-connection',
-            resource,
-            {},
-            testContext,
-          );
-          assert.equal(unpublish.status, 200);
-          const draftResource: Response = await manager.readDocument(
-            'api::database-connection.database-connection',
-            resource,
-            testContext,
-          );
-          assert.equal(draftResource.status, 200);
-          z.object({ data: z.object({ publishedAt: z.null() }) }).parse(
-            await draftResource.json(),
-          );
-          const filters: Record<string, string> = {
-            [`filters[project][documentId][$eq]`]: project,
-            pageSize: '100',
-            sort: 'documentId:asc',
-          };
-          const originalDraftResponse: Response = await manager.readDocuments(
-            'api::database-connection.database-connection',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(originalDraftResponse.status, 200);
-          const originalDraft: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalDraftResponse.json());
-          assert.ok(
-            originalDraft.results.some(
-              (item: { documentId: string }): boolean =>
-                item.documentId === resource,
-            ),
-          );
-          const originalPublishedResponse: Response =
-            await manager.readDocuments(
-              'api::database-connection.database-connection',
-              { ...filters, status: 'published' },
-              testContext,
-            );
-          assert.equal(originalPublishedResponse.status, 200);
-          const originalPublished: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalPublishedResponse.json());
-
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/database-connection/${resource}`,
-            {
-              method: 'GET',
-              headers: new Headers([
-                ['Authorization', `Bearer ${ownerLogin.jwt}`],
-              ]),
-              signal: testContext.signal,
-            },
-          );
-
-          // then
-          assert.equal(response.status, 404);
-          assert.deepEqual(await response.json(), {
-            statusCode: 404,
-            message: 'Not Found',
-          });
-          const draftResponse: Response = await manager.readDocuments(
-            'api::database-connection.database-connection',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(draftResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await draftResponse.json()),
-            originalDraft,
-          );
-          const publishedResponse: Response = await manager.readDocuments(
-            'api::database-connection.database-connection',
-            { ...filters, status: 'published' },
-            testContext,
-          );
-          assert.equal(publishedResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await publishedResponse.json()),
-            originalPublished,
-          );
-        });
-
-        test('rejects a database connection belonging to another existing project', async (testContext: TestContext): Promise<void> => {
-          // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
-          const resource: string = await manager.createPublishedDocument(
-            'api::database-connection.database-connection',
-            {
-              title: 'Original Database',
-              project,
-              databaseType: 'neo4j',
-              connectionUrl: '',
-              browserUrl: '',
-              database: '',
-            },
-            testContext,
-          );
-          const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
-            testContext,
-          );
-          const otherProject: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Other Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
-          const filters: Record<string, string> = {
-            [`filters[project][documentId][$eq]`]: project,
-            pageSize: '100',
-            sort: 'documentId:asc',
-          };
-          const originalDraftResponse: Response = await manager.readDocuments(
-            'api::database-connection.database-connection',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(originalDraftResponse.status, 200);
-          const originalDraft: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalDraftResponse.json());
-          assert.ok(
-            originalDraft.results.some(
-              (item: { documentId: string }): boolean =>
-                item.documentId === resource,
-            ),
-          );
-          const originalPublishedResponse: Response =
-            await manager.readDocuments(
-              'api::database-connection.database-connection',
-              { ...filters, status: 'published' },
-              testContext,
-            );
-          assert.equal(originalPublishedResponse.status, 200);
-          const originalPublished: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalPublishedResponse.json());
-
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/project/${otherProject}/database-connection/${resource}`,
-            {
-              method: 'GET',
+              method: 'POST',
               headers: new Headers([
                 ['Authorization', `Bearer ${ownerLogin.jwt}`],
               ]),
@@ -1964,1467 +844,2222 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
         });
       });
     });
-    describe('PUT', (): void => {
-      describe('200', (): void => {
-        test('uses the published assignment despite draft reassignment', async (testContext: TestContext): Promise<void> => {
-          // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
-          const resource: string = await manager.createPublishedDocument(
-            'api::database-connection.database-connection',
-            {
-              title: 'Original Database',
+    describe('/:databaseConnectionId', (): void => {
+      describe('GET', (): void => {
+        describe('200', (): void => {
+          test('uses the published assignment despite draft reassignment', async (testContext: TestContext): Promise<void> => {
+            // given
+            const owner: E2ETestApplicationUser =
+              await manager.registerUser(testContext);
+            const project: string = await manager.createPublishedDocument(
+              'api::project.project',
+              {
+                title: 'Test Project',
+                owner: owner.documentId,
+                collaborators: [],
+              },
+              testContext,
+            );
+            const resource: string = await manager.createPublishedDocument(
+              'api::database-connection.database-connection',
+              {
+                title: 'Original Database',
+                project,
+                databaseType: 'neo4j',
+                connectionUrl: '',
+                browserUrl: '',
+                database: '',
+              },
+              testContext,
+            );
+            const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
+              owner.username,
+              owner.password,
+              testContext,
+            );
+            const otherProject: string = await manager.createPublishedDocument(
+              'api::project.project',
+              {
+                title: 'Other Project',
+                owner: owner.documentId,
+                collaborators: [],
+              },
+              testContext,
+            );
+            const draftChange: Response = await manager.updateDocument(
+              'api::database-connection.database-connection',
+              resource,
+              { title: 'Draft Database', project: otherProject },
+              testContext,
+            );
+            assert.equal(draftChange.status, 200);
+
+            // when
+            const response: Response = await fetch(
+              `${manager.apiUrl}/project/${project}/database-connection/${resource}`,
+              {
+                method: 'GET',
+                headers: new Headers([
+                  ['Authorization', `Bearer ${ownerLogin.jwt}`],
+                ]),
+                signal: testContext.signal,
+              },
+            );
+
+            // then
+            assert.equal(response.status, 200);
+            const projectResponse: Response = await fetch(
+              `${manager.apiUrl}/project/${project}`,
+              {
+                headers: new Headers([
+                  ['Authorization', `Bearer ${ownerLogin.jwt}`],
+                ]),
+                signal: testContext.signal,
+              },
+            );
+            assert.equal(projectResponse.status, 200);
+            const publishedState: z.infer<typeof projectStateSchema> =
+              projectStateSchema.parse(await projectResponse.json());
+            const items: DatabaseConnectionDto[] | undefined =
+              publishedState.databases;
+
+            const body: DatabaseConnectionDto = databaseSchema.parse(
+              await response.json(),
+            );
+            assert.equal(body.id, resource);
+            assert.equal(body.title, 'Original Database');
+            assert.deepEqual(
+              items.find(
+                (item: DatabaseConnectionDto): boolean => item.id === resource,
+              ),
+              body,
+            );
+          });
+
+          test('published collaborator retains access after draft removal', async (testContext: TestContext): Promise<void> => {
+            // given
+            const fixture: FixtureContext =
+              await manager.setupFixture(testContext);
+            const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
+              fixture.owner.username,
+              fixture.owner.password,
+              testContext,
+            );
+            const login: PostAuthResponseBodyDto = await manager.loginUser(
+              fixture.collaborator.username,
+              fixture.collaborator.password,
+              testContext,
+            );
+            const draftRemoval: Response = await manager.updateDocument(
+              'api::project.project',
+              fixture.projectId,
+              { collaborators: [] },
+              testContext,
+            );
+            assert.equal(draftRemoval.status, 200);
+
+            // when
+            const response: Response = await fetch(
+              `${manager.apiUrl}/project/${fixture.projectId}/database-connection/${fixture.databaseConnectionId}`,
+              {
+                method: 'GET',
+                headers: new Headers([
+                  ['Authorization', `Bearer ${login.jwt}`],
+                ]),
+                signal: testContext.signal,
+              },
+            );
+
+            // then
+            assert.equal(response.status, 200);
+            const projectResponse: Response = await fetch(
+              `${manager.apiUrl}/project/${fixture.projectId}`,
+              {
+                headers: new Headers([
+                  ['Authorization', `Bearer ${ownerLogin.jwt}`],
+                ]),
+                signal: testContext.signal,
+              },
+            );
+            assert.equal(projectResponse.status, 200);
+            const publishedState: z.infer<typeof projectStateSchema> =
+              projectStateSchema.parse(await projectResponse.json());
+            const items: DatabaseConnectionDto[] | undefined =
+              publishedState.databases;
+
+            const body: DatabaseConnectionDto = databaseSchema.parse(
+              await response.json(),
+            );
+            assert.equal(body.id, fixture.databaseConnectionId);
+            assert.equal(body.title, 'Original Database');
+            assert.deepEqual(
+              items.find(
+                (item: DatabaseConnectionDto): boolean =>
+                  item.id === fixture.databaseConnectionId,
+              ),
+              body,
+            );
+          });
+
+          test('owner can read a database connection', async (testContext: TestContext): Promise<void> => {
+            // given
+            const fixture: FixtureContext =
+              await manager.setupFixture(testContext);
+            const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
+              fixture.owner.username,
+              fixture.owner.password,
+              testContext,
+            );
+
+            // when
+            const response: Response = await fetch(
+              `${manager.apiUrl}/project/${fixture.projectId}/database-connection/${fixture.databaseConnectionId}`,
+              {
+                method: 'GET',
+                headers: new Headers([
+                  ['Authorization', `Bearer ${ownerLogin.jwt}`],
+                ]),
+                signal: testContext.signal,
+              },
+            );
+
+            // then
+            assert.equal(response.status, 200);
+            const projectResponse: Response = await fetch(
+              `${manager.apiUrl}/project/${fixture.projectId}`,
+              {
+                headers: new Headers([
+                  ['Authorization', `Bearer ${ownerLogin.jwt}`],
+                ]),
+                signal: testContext.signal,
+              },
+            );
+            assert.equal(projectResponse.status, 200);
+            const publishedState: z.infer<typeof projectStateSchema> =
+              projectStateSchema.parse(await projectResponse.json());
+            const items: DatabaseConnectionDto[] | undefined =
+              publishedState.databases;
+            const body: DatabaseConnectionDto = databaseSchema.parse(
+              await response.json(),
+            );
+            assert.equal(body.id, fixture.databaseConnectionId);
+            assert.equal(body.title, 'Original Database');
+            assert.deepEqual(
+              items.find(
+                (item: DatabaseConnectionDto): boolean =>
+                  item.id === fixture.databaseConnectionId,
+              ),
+              body,
+            );
+          });
+
+          test('collaborator can read a database connection', async (testContext: TestContext): Promise<void> => {
+            // given
+            const fixture: FixtureContext =
+              await manager.setupFixture(testContext);
+            const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
+              fixture.owner.username,
+              fixture.owner.password,
+              testContext,
+            );
+            const login: PostAuthResponseBodyDto = await manager.loginUser(
+              fixture.collaborator.username,
+              fixture.collaborator.password,
+              testContext,
+            );
+
+            // when
+            const response: Response = await fetch(
+              `${manager.apiUrl}/project/${fixture.projectId}/database-connection/${fixture.databaseConnectionId}`,
+              {
+                method: 'GET',
+                headers: new Headers([
+                  ['Authorization', `Bearer ${login.jwt}`],
+                ]),
+                signal: testContext.signal,
+              },
+            );
+
+            // then
+            assert.equal(response.status, 200);
+            const projectResponse: Response = await fetch(
+              `${manager.apiUrl}/project/${fixture.projectId}`,
+              {
+                headers: new Headers([
+                  ['Authorization', `Bearer ${ownerLogin.jwt}`],
+                ]),
+                signal: testContext.signal,
+              },
+            );
+            assert.equal(projectResponse.status, 200);
+            const publishedState: z.infer<typeof projectStateSchema> =
+              projectStateSchema.parse(await projectResponse.json());
+            const items: DatabaseConnectionDto[] | undefined =
+              publishedState.databases;
+            const body: DatabaseConnectionDto = databaseSchema.parse(
+              await response.json(),
+            );
+            assert.equal(body.id, fixture.databaseConnectionId);
+            assert.equal(body.title, 'Original Database');
+            assert.deepEqual(
+              items.find(
+                (item: DatabaseConnectionDto): boolean =>
+                  item.id === fixture.databaseConnectionId,
+              ),
+              body,
+            );
+          });
+        });
+        describe('401', (): void => {
+          test('rejects requests without valid authentication', async (testContext: TestContext): Promise<void> => {
+            const variants: { headers: [string, string][] }[] = [
+              { headers: [] },
+              {
+                headers: [['Authorization', 'Bearer invalid-jwt']],
+              },
+            ];
+            for (const variant of variants) {
+              // given
+              const fixture: FixtureContext =
+                await manager.setupFixture(testContext);
+              await manager.loginUser(
+                fixture.owner.username,
+                fixture.owner.password,
+                testContext,
+              );
+              const filters: Record<string, string> = {
+                [`filters[project][documentId][$eq]`]: fixture.projectId,
+                pageSize: '100',
+                sort: 'documentId:asc',
+              };
+              const originalDraftResponse: Response =
+                await manager.readDocuments(
+                  'api::database-connection.database-connection',
+                  { ...filters, status: 'draft' },
+                  testContext,
+                );
+              assert.equal(originalDraftResponse.status, 200);
+              const originalDraft: z.infer<typeof listStateSchema> =
+                listStateSchema.parse(await originalDraftResponse.json());
+              assert.ok(
+                originalDraft.results.some(
+                  (item: { documentId: string }): boolean =>
+                    item.documentId === fixture.databaseConnectionId,
+                ),
+              );
+              const originalPublishedResponse: Response =
+                await manager.readDocuments(
+                  'api::database-connection.database-connection',
+                  { ...filters, status: 'published' },
+                  testContext,
+                );
+              assert.equal(originalPublishedResponse.status, 200);
+              const originalPublished: z.infer<typeof listStateSchema> =
+                listStateSchema.parse(await originalPublishedResponse.json());
+
+              // when
+              const response: Response = await fetch(
+                `${manager.apiUrl}/project/${fixture.projectId}/database-connection/${fixture.databaseConnectionId}`,
+                {
+                  method: 'GET',
+                  signal: testContext.signal,
+                  headers: new Headers(variant.headers),
+                },
+              );
+
+              // then
+              assert.equal(response.status, 401);
+              assert.equal(response.headers.get('www-authenticate'), 'Bearer');
+              assert.deepEqual(await response.json(), {
+                statusCode: 401,
+                message: 'Unauthorized',
+              });
+              const draftResponse: Response = await manager.readDocuments(
+                'api::database-connection.database-connection',
+                { ...filters, status: 'draft' },
+                testContext,
+              );
+              assert.equal(draftResponse.status, 200);
+              assert.deepEqual(
+                listStateSchema.parse(await draftResponse.json()),
+                originalDraft,
+              );
+              const publishedResponse: Response = await manager.readDocuments(
+                'api::database-connection.database-connection',
+                { ...filters, status: 'published' },
+                testContext,
+              );
+              assert.equal(publishedResponse.status, 200);
+              assert.deepEqual(
+                listStateSchema.parse(await publishedResponse.json()),
+                originalPublished,
+              );
+            }
+          });
+        });
+
+        describe('403', (): void => {
+          test('rejects outsider access', async (testContext: TestContext): Promise<void> => {
+            // given
+            const fixture: FixtureContext =
+              await manager.setupFixture(testContext);
+            await manager.loginUser(
+              fixture.owner.username,
+              fixture.owner.password,
+              testContext,
+            );
+            const login: PostAuthResponseBodyDto = await manager.loginUser(
+              fixture.outsider.username,
+              fixture.outsider.password,
+              testContext,
+            );
+            const filters: Record<string, string> = {
+              [`filters[project][documentId][$eq]`]: fixture.projectId,
+              pageSize: '100',
+              sort: 'documentId:asc',
+            };
+            const originalDraftResponse: Response = await manager.readDocuments(
+              'api::database-connection.database-connection',
+              { ...filters, status: 'draft' },
+              testContext,
+            );
+            assert.equal(originalDraftResponse.status, 200);
+            const originalDraft: z.infer<typeof listStateSchema> =
+              listStateSchema.parse(await originalDraftResponse.json());
+            assert.ok(
+              originalDraft.results.some(
+                (item: { documentId: string }): boolean =>
+                  item.documentId === fixture.databaseConnectionId,
+              ),
+            );
+            const originalPublishedResponse: Response =
+              await manager.readDocuments(
+                'api::database-connection.database-connection',
+                { ...filters, status: 'published' },
+                testContext,
+              );
+            assert.equal(originalPublishedResponse.status, 200);
+            const originalPublished: z.infer<typeof listStateSchema> =
+              listStateSchema.parse(await originalPublishedResponse.json());
+
+            // when
+            const response: Response = await fetch(
+              `${manager.apiUrl}/project/${fixture.projectId}/database-connection/${fixture.databaseConnectionId}`,
+              {
+                method: 'GET',
+                headers: new Headers([
+                  ['Authorization', `Bearer ${login.jwt}`],
+                ]),
+                signal: testContext.signal,
+              },
+            );
+
+            // then
+            assert.equal(response.status, 403);
+            assert.deepEqual(await response.json(), {
+              statusCode: 403,
+              message: 'Forbidden resource',
+              error: 'Forbidden',
+            });
+            const draftResponse: Response = await manager.readDocuments(
+              'api::database-connection.database-connection',
+              { ...filters, status: 'draft' },
+              testContext,
+            );
+            assert.equal(draftResponse.status, 200);
+            assert.deepEqual(
+              listStateSchema.parse(await draftResponse.json()),
+              originalDraft,
+            );
+            const publishedResponse: Response = await manager.readDocuments(
+              'api::database-connection.database-connection',
+              { ...filters, status: 'published' },
+              testContext,
+            );
+            assert.equal(publishedResponse.status, 200);
+            assert.deepEqual(
+              listStateSchema.parse(await publishedResponse.json()),
+              originalPublished,
+            );
+          });
+
+          test('rejects removed collaborator access', async (testContext: TestContext): Promise<void> => {
+            // given
+            const fixture: FixtureContext =
+              await manager.setupFixture(testContext);
+            await manager.loginUser(
+              fixture.owner.username,
+              fixture.owner.password,
+              testContext,
+            );
+            const login: PostAuthResponseBodyDto = await manager.loginUser(
+              fixture.collaborator.username,
+              fixture.collaborator.password,
+              testContext,
+            );
+            const removal: Response = await manager.publishDocument(
+              'api::project.project',
+              fixture.projectId,
+              { collaborators: [] },
+              testContext,
+            );
+            assert.equal(removal.status, 200);
+            const filters: Record<string, string> = {
+              [`filters[project][documentId][$eq]`]: fixture.projectId,
+              pageSize: '100',
+              sort: 'documentId:asc',
+            };
+            const originalDraftResponse: Response = await manager.readDocuments(
+              'api::database-connection.database-connection',
+              { ...filters, status: 'draft' },
+              testContext,
+            );
+            assert.equal(originalDraftResponse.status, 200);
+            const originalDraft: z.infer<typeof listStateSchema> =
+              listStateSchema.parse(await originalDraftResponse.json());
+            assert.ok(
+              originalDraft.results.some(
+                (item: { documentId: string }): boolean =>
+                  item.documentId === fixture.databaseConnectionId,
+              ),
+            );
+            const originalPublishedResponse: Response =
+              await manager.readDocuments(
+                'api::database-connection.database-connection',
+                { ...filters, status: 'published' },
+                testContext,
+              );
+            assert.equal(originalPublishedResponse.status, 200);
+            const originalPublished: z.infer<typeof listStateSchema> =
+              listStateSchema.parse(await originalPublishedResponse.json());
+
+            // when
+            const response: Response = await fetch(
+              `${manager.apiUrl}/project/${fixture.projectId}/database-connection/${fixture.databaseConnectionId}`,
+              {
+                method: 'GET',
+                headers: new Headers([
+                  ['Authorization', `Bearer ${login.jwt}`],
+                ]),
+                signal: testContext.signal,
+              },
+            );
+
+            // then
+            assert.equal(response.status, 403);
+            assert.deepEqual(await response.json(), {
+              statusCode: 403,
+              message: 'Forbidden resource',
+              error: 'Forbidden',
+            });
+            const draftResponse: Response = await manager.readDocuments(
+              'api::database-connection.database-connection',
+              { ...filters, status: 'draft' },
+              testContext,
+            );
+            assert.equal(draftResponse.status, 200);
+            assert.deepEqual(
+              listStateSchema.parse(await draftResponse.json()),
+              originalDraft,
+            );
+            const publishedResponse: Response = await manager.readDocuments(
+              'api::database-connection.database-connection',
+              { ...filters, status: 'published' },
+              testContext,
+            );
+            assert.equal(publishedResponse.status, 200);
+            assert.deepEqual(
+              listStateSchema.parse(await publishedResponse.json()),
+              originalPublished,
+            );
+          });
+
+          test('rejects draft collaborator access', async (testContext: TestContext): Promise<void> => {
+            // given
+            const owner: E2ETestApplicationUser =
+              await manager.registerUser(testContext);
+            const collaborator: E2ETestApplicationUser =
+              await manager.registerUser(testContext);
+            const project: string = await manager.createPublishedDocument(
+              'api::project.project',
+              {
+                title: 'Test Project',
+                owner: owner.documentId,
+                collaborators: [],
+              },
+              testContext,
+            );
+            const resource: string = await manager.createPublishedDocument(
+              'api::database-connection.database-connection',
+              {
+                title: 'Original Database',
+                project,
+                databaseType: 'neo4j',
+                connectionUrl: '',
+                browserUrl: '',
+                database: '',
+              },
+              testContext,
+            );
+            await manager.loginUser(
+              owner.username,
+              owner.password,
+              testContext,
+            );
+            const login: PostAuthResponseBodyDto = await manager.loginUser(
+              collaborator.username,
+              collaborator.password,
+              testContext,
+            );
+            const draftAccess: Response = await manager.updateDocument(
+              'api::project.project',
               project,
-              databaseType: 'neo4j',
-              connectionUrl: '',
-              browserUrl: '',
-              database: '',
-            },
-            testContext,
-          );
-          const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
-            testContext,
-          );
-          const otherProject: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Other Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
-          const draftChange: Response = await manager.updateDocument(
-            'api::database-connection.database-connection',
-            resource,
-            { title: 'Draft Database', project: otherProject },
-            testContext,
-          );
-          assert.equal(draftChange.status, 200);
+              { collaborators: [collaborator.documentId] },
+              testContext,
+            );
+            assert.equal(draftAccess.status, 200);
+            const filters: Record<string, string> = {
+              [`filters[project][documentId][$eq]`]: project,
+              pageSize: '100',
+              sort: 'documentId:asc',
+            };
+            const originalDraftResponse: Response = await manager.readDocuments(
+              'api::database-connection.database-connection',
+              { ...filters, status: 'draft' },
+              testContext,
+            );
+            assert.equal(originalDraftResponse.status, 200);
+            const originalDraft: z.infer<typeof listStateSchema> =
+              listStateSchema.parse(await originalDraftResponse.json());
+            assert.ok(
+              originalDraft.results.some(
+                (item: { documentId: string }): boolean =>
+                  item.documentId === resource,
+              ),
+            );
+            const originalPublishedResponse: Response =
+              await manager.readDocuments(
+                'api::database-connection.database-connection',
+                { ...filters, status: 'published' },
+                testContext,
+              );
+            assert.equal(originalPublishedResponse.status, 200);
+            const originalPublished: z.infer<typeof listStateSchema> =
+              listStateSchema.parse(await originalPublishedResponse.json());
 
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/database-connection/${resource}`,
-            {
-              method: 'PUT',
-              headers: new Headers([
-                ['Authorization', `Bearer ${ownerLogin.jwt}`],
-                ['Content-Type', 'application/json'],
-              ]),
-              body: JSON.stringify({
-                title: 'Updated Database',
-                browserUrl: 'https://example.test/browser',
-                credentialStoreConsent: false,
-                nodeConfigurations: [],
-                adapter: {
-                  databaseType: DatabaseConnectionDatabaseType.neo4j,
-                  connectionUrl: 'bolt://127.0.0.1:7687',
-                  database: 'neo4j',
-                },
-              } satisfies UpdateDatabaseConnectionRequestBodyDto),
-              signal: testContext.signal,
-            },
-          );
+            // when
+            const response: Response = await fetch(
+              `${manager.apiUrl}/project/${project}/database-connection/${resource}`,
+              {
+                method: 'GET',
+                headers: new Headers([
+                  ['Authorization', `Bearer ${login.jwt}`],
+                ]),
+                signal: testContext.signal,
+              },
+            );
 
-          // then
-          assert.equal(response.status, 200);
-          const result: DatabaseConnectionDto = databaseSchema.parse(
-            await response.json(),
-          );
-          assert.equal(result.id, resource);
-          assert.equal(result.title, 'Updated Database');
-          assert.equal(result.connectionUrl, 'bolt://127.0.0.1:7687');
-          assert.equal(result.databaseType, 'neo4j');
-          const projectResponse: Response = await fetch(
-            `${manager.apiUrl}/project/${project}`,
-            {
-              headers: new Headers([
-                ['Authorization', `Bearer ${ownerLogin.jwt}`],
-              ]),
-              signal: testContext.signal,
-            },
-          );
-          assert.equal(projectResponse.status, 200);
-          const publishedState: z.infer<typeof projectStateSchema> =
-            projectStateSchema.parse(await projectResponse.json());
-          const items: DatabaseConnectionDto[] | undefined =
-            publishedState.databases;
-
-          const persisted: DatabaseConnectionDto | undefined = items.find(
-            (item: DatabaseConnectionDto): boolean => item.id === resource,
-          );
-          assert.ok(persisted);
-          assert.equal(persisted.title, 'Updated Database');
+            // then
+            assert.equal(response.status, 403);
+            assert.deepEqual(await response.json(), {
+              statusCode: 403,
+              message: 'Forbidden resource',
+              error: 'Forbidden',
+            });
+            const draftResponse: Response = await manager.readDocuments(
+              'api::database-connection.database-connection',
+              { ...filters, status: 'draft' },
+              testContext,
+            );
+            assert.equal(draftResponse.status, 200);
+            assert.deepEqual(
+              listStateSchema.parse(await draftResponse.json()),
+              originalDraft,
+            );
+            const publishedResponse: Response = await manager.readDocuments(
+              'api::database-connection.database-connection',
+              { ...filters, status: 'published' },
+              testContext,
+            );
+            assert.equal(publishedResponse.status, 200);
+            assert.deepEqual(
+              listStateSchema.parse(await publishedResponse.json()),
+              originalPublished,
+            );
+          });
         });
+        describe('404', (): void => {
+          test('rejects an unknown project', async (testContext: TestContext): Promise<void> => {
+            // given
+            const owner: E2ETestApplicationUser =
+              await manager.registerUser(testContext);
+            const project: string = await manager.createPublishedDocument(
+              'api::project.project',
+              {
+                title: 'Test Project',
+                owner: owner.documentId,
+                collaborators: [],
+              },
+              testContext,
+            );
+            const resource: string = await manager.createPublishedDocument(
+              'api::database-connection.database-connection',
+              {
+                title: 'Original Database',
+                project,
+                databaseType: 'neo4j',
+                connectionUrl: '',
+                browserUrl: '',
+                database: '',
+              },
+              testContext,
+            );
+            const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
+              owner.username,
+              owner.password,
+              testContext,
+            );
+            const filters: Record<string, string> = {
+              [`filters[project][documentId][$eq]`]: project,
+              pageSize: '100',
+              sort: 'documentId:asc',
+            };
+            const originalDraftResponse: Response = await manager.readDocuments(
+              'api::database-connection.database-connection',
+              { ...filters, status: 'draft' },
+              testContext,
+            );
+            assert.equal(originalDraftResponse.status, 200);
+            const originalDraft: z.infer<typeof listStateSchema> =
+              listStateSchema.parse(await originalDraftResponse.json());
+            assert.ok(
+              originalDraft.results.some(
+                (item: { documentId: string }): boolean =>
+                  item.documentId === resource,
+              ),
+            );
+            const originalPublishedResponse: Response =
+              await manager.readDocuments(
+                'api::database-connection.database-connection',
+                { ...filters, status: 'published' },
+                testContext,
+              );
+            assert.equal(originalPublishedResponse.status, 200);
+            const originalPublished: z.infer<typeof listStateSchema> =
+              listStateSchema.parse(await originalPublishedResponse.json());
 
-        test('published collaborator retains access after draft removal', async (testContext: TestContext): Promise<void> => {
-          // given
-          const fixture: FixtureContext =
-            await manager.setupFixture(testContext);
-          const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-            fixture.owner.username,
-            fixture.owner.password,
-            testContext,
-          );
-          const login: PostAuthResponseBodyDto = await manager.loginUser(
-            fixture.collaborator.username,
-            fixture.collaborator.password,
-            testContext,
-          );
-          const draftRemoval: Response = await manager.updateDocument(
-            'api::project.project',
-            fixture.projectId,
-            { collaborators: [] },
-            testContext,
-          );
-          assert.equal(draftRemoval.status, 200);
+            // when
+            const response: Response = await fetch(
+              `${manager.apiUrl}/project/${randomUUID()}/database-connection/${resource}`,
+              {
+                method: 'GET',
+                headers: new Headers([
+                  ['Authorization', `Bearer ${ownerLogin.jwt}`],
+                ]),
+                signal: testContext.signal,
+              },
+            );
 
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/project/${fixture.projectId}/database-connection/${fixture.databaseConnectionId}`,
-            {
-              method: 'PUT',
-              headers: new Headers([
-                ['Authorization', `Bearer ${login.jwt}`],
-                ['Content-Type', 'application/json'],
-              ]),
-              body: JSON.stringify({
-                title: 'Updated Database',
-                browserUrl: 'https://example.test/browser',
-                credentialStoreConsent: false,
-                nodeConfigurations: [],
-                adapter: {
-                  databaseType: DatabaseConnectionDatabaseType.neo4j,
-                  connectionUrl: 'bolt://127.0.0.1:7687',
-                  database: 'neo4j',
-                },
-              } satisfies UpdateDatabaseConnectionRequestBodyDto),
-              signal: testContext.signal,
-            },
-          );
+            // then
+            assert.equal(response.status, 404);
+            assert.deepEqual(await response.json(), {
+              statusCode: 404,
+              message: 'Not Found',
+            });
+            const draftResponse: Response = await manager.readDocuments(
+              'api::database-connection.database-connection',
+              { ...filters, status: 'draft' },
+              testContext,
+            );
+            assert.equal(draftResponse.status, 200);
+            assert.deepEqual(
+              listStateSchema.parse(await draftResponse.json()),
+              originalDraft,
+            );
+            const publishedResponse: Response = await manager.readDocuments(
+              'api::database-connection.database-connection',
+              { ...filters, status: 'published' },
+              testContext,
+            );
+            assert.equal(publishedResponse.status, 200);
+            assert.deepEqual(
+              listStateSchema.parse(await publishedResponse.json()),
+              originalPublished,
+            );
+          });
 
-          // then
-          assert.equal(response.status, 200);
-          const result: DatabaseConnectionDto = databaseSchema.parse(
-            await response.json(),
-          );
-          assert.equal(result.id, fixture.databaseConnectionId);
-          assert.equal(result.title, 'Updated Database');
-          assert.equal(result.connectionUrl, 'bolt://127.0.0.1:7687');
-          assert.equal(result.databaseType, 'neo4j');
-          const projectResponse: Response = await fetch(
-            `${manager.apiUrl}/project/${fixture.projectId}`,
-            {
-              headers: new Headers([
-                ['Authorization', `Bearer ${ownerLogin.jwt}`],
-              ]),
-              signal: testContext.signal,
-            },
-          );
-          assert.equal(projectResponse.status, 200);
-          const publishedState: z.infer<typeof projectStateSchema> =
-            projectStateSchema.parse(await projectResponse.json());
-          const items: DatabaseConnectionDto[] | undefined =
-            publishedState.databases;
+          test('rejects an unpublished project', async (testContext: TestContext): Promise<void> => {
+            // given
+            const owner: E2ETestApplicationUser =
+              await manager.registerUser(testContext);
+            const project: string = await manager.createPublishedDocument(
+              'api::project.project',
+              {
+                title: 'Test Project',
+                owner: owner.documentId,
+                collaborators: [],
+              },
+              testContext,
+            );
+            const resource: string = await manager.createPublishedDocument(
+              'api::database-connection.database-connection',
+              {
+                title: 'Original Database',
+                project,
+                databaseType: 'neo4j',
+                connectionUrl: '',
+                browserUrl: '',
+                database: '',
+              },
+              testContext,
+            );
+            const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
+              owner.username,
+              owner.password,
+              testContext,
+            );
+            const unpublish: Response = await manager.unpublishDocument(
+              'api::project.project',
+              project,
+              {},
+              testContext,
+            );
+            assert.equal(unpublish.status, 200);
+            const draftProject: Response = await manager.readDocument(
+              'api::project.project',
+              project,
+              testContext,
+            );
+            assert.equal(draftProject.status, 200);
+            z.object({ data: z.object({ publishedAt: z.null() }) }).parse(
+              await draftProject.json(),
+            );
+            const filters: Record<string, string> = {
+              [`filters[project][documentId][$eq]`]: project,
+              pageSize: '100',
+              sort: 'documentId:asc',
+            };
+            const originalDraftResponse: Response = await manager.readDocuments(
+              'api::database-connection.database-connection',
+              { ...filters, status: 'draft' },
+              testContext,
+            );
+            assert.equal(originalDraftResponse.status, 200);
+            const originalDraft: z.infer<typeof listStateSchema> =
+              listStateSchema.parse(await originalDraftResponse.json());
+            assert.ok(
+              originalDraft.results.some(
+                (item: { documentId: string }): boolean =>
+                  item.documentId === resource,
+              ),
+            );
+            const originalPublishedResponse: Response =
+              await manager.readDocuments(
+                'api::database-connection.database-connection',
+                { ...filters, status: 'published' },
+                testContext,
+              );
+            assert.equal(originalPublishedResponse.status, 200);
+            const originalPublished: z.infer<typeof listStateSchema> =
+              listStateSchema.parse(await originalPublishedResponse.json());
 
-          const persisted: DatabaseConnectionDto | undefined = items.find(
-            (item: DatabaseConnectionDto): boolean =>
-              item.id === fixture.databaseConnectionId,
-          );
-          assert.ok(persisted);
-          assert.equal(persisted.title, 'Updated Database');
+            // when
+            const response: Response = await fetch(
+              `${manager.apiUrl}/project/${project}/database-connection/${resource}`,
+              {
+                method: 'GET',
+                headers: new Headers([
+                  ['Authorization', `Bearer ${ownerLogin.jwt}`],
+                ]),
+                signal: testContext.signal,
+              },
+            );
+
+            // then
+            assert.equal(response.status, 404);
+            assert.deepEqual(await response.json(), {
+              statusCode: 404,
+              message: 'Not Found',
+            });
+            const draftResponse: Response = await manager.readDocuments(
+              'api::database-connection.database-connection',
+              { ...filters, status: 'draft' },
+              testContext,
+            );
+            assert.equal(draftResponse.status, 200);
+            assert.deepEqual(
+              listStateSchema.parse(await draftResponse.json()),
+              originalDraft,
+            );
+            const publishedResponse: Response = await manager.readDocuments(
+              'api::database-connection.database-connection',
+              { ...filters, status: 'published' },
+              testContext,
+            );
+            assert.equal(publishedResponse.status, 200);
+            assert.deepEqual(
+              listStateSchema.parse(await publishedResponse.json()),
+              originalPublished,
+            );
+          });
+
+          test('rejects an unknown database connection', async (testContext: TestContext): Promise<void> => {
+            // given
+            const fixture: FixtureContext =
+              await manager.setupFixture(testContext);
+            const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
+              fixture.owner.username,
+              fixture.owner.password,
+              testContext,
+            );
+            const filters: Record<string, string> = {
+              [`filters[project][documentId][$eq]`]: fixture.projectId,
+              pageSize: '100',
+              sort: 'documentId:asc',
+            };
+            const originalDraftResponse: Response = await manager.readDocuments(
+              'api::database-connection.database-connection',
+              { ...filters, status: 'draft' },
+              testContext,
+            );
+            assert.equal(originalDraftResponse.status, 200);
+            const originalDraft: z.infer<typeof listStateSchema> =
+              listStateSchema.parse(await originalDraftResponse.json());
+            assert.ok(
+              originalDraft.results.some(
+                (item: { documentId: string }): boolean =>
+                  item.documentId === fixture.databaseConnectionId,
+              ),
+            );
+            const originalPublishedResponse: Response =
+              await manager.readDocuments(
+                'api::database-connection.database-connection',
+                { ...filters, status: 'published' },
+                testContext,
+              );
+            assert.equal(originalPublishedResponse.status, 200);
+            const originalPublished: z.infer<typeof listStateSchema> =
+              listStateSchema.parse(await originalPublishedResponse.json());
+
+            // when
+            const response: Response = await fetch(
+              `${manager.apiUrl}/project/${fixture.projectId}/database-connection/${randomUUID()}`,
+              {
+                method: 'GET',
+                headers: new Headers([
+                  ['Authorization', `Bearer ${ownerLogin.jwt}`],
+                ]),
+                signal: testContext.signal,
+              },
+            );
+
+            // then
+            assert.equal(response.status, 404);
+            assert.deepEqual(await response.json(), {
+              statusCode: 404,
+              message: 'Not Found',
+            });
+            const draftResponse: Response = await manager.readDocuments(
+              'api::database-connection.database-connection',
+              { ...filters, status: 'draft' },
+              testContext,
+            );
+            assert.equal(draftResponse.status, 200);
+            assert.deepEqual(
+              listStateSchema.parse(await draftResponse.json()),
+              originalDraft,
+            );
+            const publishedResponse: Response = await manager.readDocuments(
+              'api::database-connection.database-connection',
+              { ...filters, status: 'published' },
+              testContext,
+            );
+            assert.equal(publishedResponse.status, 200);
+            assert.deepEqual(
+              listStateSchema.parse(await publishedResponse.json()),
+              originalPublished,
+            );
+          });
+
+          test('rejects an unpublished database connection', async (testContext: TestContext): Promise<void> => {
+            // given
+            const owner: E2ETestApplicationUser =
+              await manager.registerUser(testContext);
+            const project: string = await manager.createPublishedDocument(
+              'api::project.project',
+              {
+                title: 'Test Project',
+                owner: owner.documentId,
+                collaborators: [],
+              },
+              testContext,
+            );
+            const resource: string = await manager.createPublishedDocument(
+              'api::database-connection.database-connection',
+              {
+                title: 'Original Database',
+                project,
+                databaseType: 'neo4j',
+                connectionUrl: '',
+                browserUrl: '',
+                database: '',
+              },
+              testContext,
+            );
+            const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
+              owner.username,
+              owner.password,
+              testContext,
+            );
+            const unpublish: Response = await manager.unpublishDocument(
+              'api::database-connection.database-connection',
+              resource,
+              {},
+              testContext,
+            );
+            assert.equal(unpublish.status, 200);
+            const draftResource: Response = await manager.readDocument(
+              'api::database-connection.database-connection',
+              resource,
+              testContext,
+            );
+            assert.equal(draftResource.status, 200);
+            z.object({ data: z.object({ publishedAt: z.null() }) }).parse(
+              await draftResource.json(),
+            );
+            const filters: Record<string, string> = {
+              [`filters[project][documentId][$eq]`]: project,
+              pageSize: '100',
+              sort: 'documentId:asc',
+            };
+            const originalDraftResponse: Response = await manager.readDocuments(
+              'api::database-connection.database-connection',
+              { ...filters, status: 'draft' },
+              testContext,
+            );
+            assert.equal(originalDraftResponse.status, 200);
+            const originalDraft: z.infer<typeof listStateSchema> =
+              listStateSchema.parse(await originalDraftResponse.json());
+            assert.ok(
+              originalDraft.results.some(
+                (item: { documentId: string }): boolean =>
+                  item.documentId === resource,
+              ),
+            );
+            const originalPublishedResponse: Response =
+              await manager.readDocuments(
+                'api::database-connection.database-connection',
+                { ...filters, status: 'published' },
+                testContext,
+              );
+            assert.equal(originalPublishedResponse.status, 200);
+            const originalPublished: z.infer<typeof listStateSchema> =
+              listStateSchema.parse(await originalPublishedResponse.json());
+
+            // when
+            const response: Response = await fetch(
+              `${manager.apiUrl}/project/${project}/database-connection/${resource}`,
+              {
+                method: 'GET',
+                headers: new Headers([
+                  ['Authorization', `Bearer ${ownerLogin.jwt}`],
+                ]),
+                signal: testContext.signal,
+              },
+            );
+
+            // then
+            assert.equal(response.status, 404);
+            assert.deepEqual(await response.json(), {
+              statusCode: 404,
+              message: 'Not Found',
+            });
+            const draftResponse: Response = await manager.readDocuments(
+              'api::database-connection.database-connection',
+              { ...filters, status: 'draft' },
+              testContext,
+            );
+            assert.equal(draftResponse.status, 200);
+            assert.deepEqual(
+              listStateSchema.parse(await draftResponse.json()),
+              originalDraft,
+            );
+            const publishedResponse: Response = await manager.readDocuments(
+              'api::database-connection.database-connection',
+              { ...filters, status: 'published' },
+              testContext,
+            );
+            assert.equal(publishedResponse.status, 200);
+            assert.deepEqual(
+              listStateSchema.parse(await publishedResponse.json()),
+              originalPublished,
+            );
+          });
+
+          test('rejects a database connection belonging to another existing project', async (testContext: TestContext): Promise<void> => {
+            // given
+            const owner: E2ETestApplicationUser =
+              await manager.registerUser(testContext);
+            const project: string = await manager.createPublishedDocument(
+              'api::project.project',
+              {
+                title: 'Test Project',
+                owner: owner.documentId,
+                collaborators: [],
+              },
+              testContext,
+            );
+            const resource: string = await manager.createPublishedDocument(
+              'api::database-connection.database-connection',
+              {
+                title: 'Original Database',
+                project,
+                databaseType: 'neo4j',
+                connectionUrl: '',
+                browserUrl: '',
+                database: '',
+              },
+              testContext,
+            );
+            const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
+              owner.username,
+              owner.password,
+              testContext,
+            );
+            const otherProject: string = await manager.createPublishedDocument(
+              'api::project.project',
+              {
+                title: 'Other Project',
+                owner: owner.documentId,
+                collaborators: [],
+              },
+              testContext,
+            );
+            const filters: Record<string, string> = {
+              [`filters[project][documentId][$eq]`]: project,
+              pageSize: '100',
+              sort: 'documentId:asc',
+            };
+            const originalDraftResponse: Response = await manager.readDocuments(
+              'api::database-connection.database-connection',
+              { ...filters, status: 'draft' },
+              testContext,
+            );
+            assert.equal(originalDraftResponse.status, 200);
+            const originalDraft: z.infer<typeof listStateSchema> =
+              listStateSchema.parse(await originalDraftResponse.json());
+            assert.ok(
+              originalDraft.results.some(
+                (item: { documentId: string }): boolean =>
+                  item.documentId === resource,
+              ),
+            );
+            const originalPublishedResponse: Response =
+              await manager.readDocuments(
+                'api::database-connection.database-connection',
+                { ...filters, status: 'published' },
+                testContext,
+              );
+            assert.equal(originalPublishedResponse.status, 200);
+            const originalPublished: z.infer<typeof listStateSchema> =
+              listStateSchema.parse(await originalPublishedResponse.json());
+
+            // when
+            const response: Response = await fetch(
+              `${manager.apiUrl}/project/${otherProject}/database-connection/${resource}`,
+              {
+                method: 'GET',
+                headers: new Headers([
+                  ['Authorization', `Bearer ${ownerLogin.jwt}`],
+                ]),
+                signal: testContext.signal,
+              },
+            );
+
+            // then
+            assert.equal(response.status, 404);
+            assert.deepEqual(await response.json(), {
+              statusCode: 404,
+              message: 'Not Found',
+            });
+            const draftResponse: Response = await manager.readDocuments(
+              'api::database-connection.database-connection',
+              { ...filters, status: 'draft' },
+              testContext,
+            );
+            assert.equal(draftResponse.status, 200);
+            assert.deepEqual(
+              listStateSchema.parse(await draftResponse.json()),
+              originalDraft,
+            );
+            const publishedResponse: Response = await manager.readDocuments(
+              'api::database-connection.database-connection',
+              { ...filters, status: 'published' },
+              testContext,
+            );
+            assert.equal(publishedResponse.status, 200);
+            assert.deepEqual(
+              listStateSchema.parse(await publishedResponse.json()),
+              originalPublished,
+            );
+          });
         });
+      });
+      describe('PUT', (): void => {
+        describe('200', (): void => {
+          test('uses the published assignment despite draft reassignment', async (testContext: TestContext): Promise<void> => {
+            // given
+            const owner: E2ETestApplicationUser =
+              await manager.registerUser(testContext);
+            const project: string = await manager.createPublishedDocument(
+              'api::project.project',
+              {
+                title: 'Test Project',
+                owner: owner.documentId,
+                collaborators: [],
+              },
+              testContext,
+            );
+            const resource: string = await manager.createPublishedDocument(
+              'api::database-connection.database-connection',
+              {
+                title: 'Original Database',
+                project,
+                databaseType: 'neo4j',
+                connectionUrl: '',
+                browserUrl: '',
+                database: '',
+              },
+              testContext,
+            );
+            const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
+              owner.username,
+              owner.password,
+              testContext,
+            );
+            const otherProject: string = await manager.createPublishedDocument(
+              'api::project.project',
+              {
+                title: 'Other Project',
+                owner: owner.documentId,
+                collaborators: [],
+              },
+              testContext,
+            );
+            const draftChange: Response = await manager.updateDocument(
+              'api::database-connection.database-connection',
+              resource,
+              { title: 'Draft Database', project: otherProject },
+              testContext,
+            );
+            assert.equal(draftChange.status, 200);
 
-        test('stores credentials only after consent without exposing them in the response', async (testContext: TestContext): Promise<void> => {
-          // given
-          const fixture: FixtureContext =
-            await manager.setupFixture(testContext);
-          const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-            fixture.owner.username,
-            fixture.owner.password,
-            testContext,
-          );
+            // when
+            const response: Response = await fetch(
+              `${manager.apiUrl}/project/${project}/database-connection/${resource}`,
+              {
+                method: 'PUT',
+                headers: new Headers([
+                  ['Authorization', `Bearer ${ownerLogin.jwt}`],
+                  ['Content-Type', 'application/json'],
+                ]),
+                body: JSON.stringify({
+                  title: 'Updated Database',
+                  browserUrl: 'https://example.test/browser',
+                  credentialStoreConsent: false,
+                  nodeConfigurations: [],
+                  adapter: {
+                    databaseType: DatabaseConnectionDatabaseType.neo4j,
+                    connectionUrl: 'bolt://127.0.0.1:7687',
+                    database: 'neo4j',
+                  },
+                } satisfies UpdateDatabaseConnectionRequestBodyDto),
+                signal: testContext.signal,
+              },
+            );
 
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/project/${fixture.projectId}/database-connection/${fixture.databaseConnectionId}`,
-            {
-              method: 'PUT',
-              headers: new Headers([
-                ['Authorization', `Bearer ${ownerLogin.jwt}`],
-                ['Content-Type', 'application/json'],
-              ]),
-              body: JSON.stringify({
-                title: 'Updated Database',
-                browserUrl: 'https://example.test/browser',
-                credentialStoreConsent: true,
-                nodeConfigurations: [],
-                adapter: {
-                  databaseType: DatabaseConnectionDatabaseType.neo4j,
-                  connectionUrl: 'bolt://127.0.0.1:7687',
-                  username: 'alice',
-                  password: 'secret-value',
-                  database: 'neo4j',
-                },
-              } satisfies UpdateDatabaseConnectionRequestBodyDto),
-              signal: testContext.signal,
-            },
-          );
+            // then
+            assert.equal(response.status, 200);
+            const result: DatabaseConnectionDto = databaseSchema.parse(
+              await response.json(),
+            );
+            assert.equal(result.id, resource);
+            assert.equal(result.title, 'Updated Database');
+            assert.equal(result.connectionUrl, 'bolt://127.0.0.1:7687');
+            assert.equal(result.databaseType, 'neo4j');
+            const projectResponse: Response = await fetch(
+              `${manager.apiUrl}/project/${project}`,
+              {
+                headers: new Headers([
+                  ['Authorization', `Bearer ${ownerLogin.jwt}`],
+                ]),
+                signal: testContext.signal,
+              },
+            );
+            assert.equal(projectResponse.status, 200);
+            const publishedState: z.infer<typeof projectStateSchema> =
+              projectStateSchema.parse(await projectResponse.json());
+            const items: DatabaseConnectionDto[] | undefined =
+              publishedState.databases;
 
-          // then
-          assert.equal(response.status, 200);
-          const result: DatabaseConnectionDto = databaseSchema.parse(
-            await response.json(),
-          );
-          assert.equal(result.id, fixture.databaseConnectionId);
-          assert.equal(result.title, 'Updated Database');
-          assert.equal(result.connectionUrl, 'bolt://127.0.0.1:7687');
-          assert.equal(result.databaseType, 'neo4j');
-          const projectResponse: Response = await fetch(
-            `${manager.apiUrl}/project/${fixture.projectId}`,
-            {
-              headers: new Headers([
-                ['Authorization', `Bearer ${ownerLogin.jwt}`],
-              ]),
-              signal: testContext.signal,
-            },
-          );
-          assert.equal(projectResponse.status, 200);
-          const publishedState: z.infer<typeof projectStateSchema> =
-            projectStateSchema.parse(await projectResponse.json());
-          const items: DatabaseConnectionDto[] | undefined =
-            publishedState.databases;
+            const persisted: DatabaseConnectionDto | undefined = items.find(
+              (item: DatabaseConnectionDto): boolean => item.id === resource,
+            );
+            assert.ok(persisted);
+            assert.equal(persisted.title, 'Updated Database');
+          });
 
-          const persisted: DatabaseConnectionDto | undefined = items.find(
-            (item: DatabaseConnectionDto): boolean =>
-              item.id === fixture.databaseConnectionId,
-          );
-          assert.ok(persisted);
-          assert.equal(persisted.title, 'Updated Database');
-          const stored: Response = await manager.readDocument(
-            'api::database-connection.database-connection',
-            fixture.databaseConnectionId,
-            testContext,
-          );
-          assert.equal(stored.status, 200);
-          const credentials: { data: { username: string; password: string } } =
-            z
+          test('published collaborator retains access after draft removal', async (testContext: TestContext): Promise<void> => {
+            // given
+            const fixture: FixtureContext =
+              await manager.setupFixture(testContext);
+            const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
+              fixture.owner.username,
+              fixture.owner.password,
+              testContext,
+            );
+            const login: PostAuthResponseBodyDto = await manager.loginUser(
+              fixture.collaborator.username,
+              fixture.collaborator.password,
+              testContext,
+            );
+            const draftRemoval: Response = await manager.updateDocument(
+              'api::project.project',
+              fixture.projectId,
+              { collaborators: [] },
+              testContext,
+            );
+            assert.equal(draftRemoval.status, 200);
+
+            // when
+            const response: Response = await fetch(
+              `${manager.apiUrl}/project/${fixture.projectId}/database-connection/${fixture.databaseConnectionId}`,
+              {
+                method: 'PUT',
+                headers: new Headers([
+                  ['Authorization', `Bearer ${login.jwt}`],
+                  ['Content-Type', 'application/json'],
+                ]),
+                body: JSON.stringify({
+                  title: 'Updated Database',
+                  browserUrl: 'https://example.test/browser',
+                  credentialStoreConsent: false,
+                  nodeConfigurations: [],
+                  adapter: {
+                    databaseType: DatabaseConnectionDatabaseType.neo4j,
+                    connectionUrl: 'bolt://127.0.0.1:7687',
+                    database: 'neo4j',
+                  },
+                } satisfies UpdateDatabaseConnectionRequestBodyDto),
+                signal: testContext.signal,
+              },
+            );
+
+            // then
+            assert.equal(response.status, 200);
+            const result: DatabaseConnectionDto = databaseSchema.parse(
+              await response.json(),
+            );
+            assert.equal(result.id, fixture.databaseConnectionId);
+            assert.equal(result.title, 'Updated Database');
+            assert.equal(result.connectionUrl, 'bolt://127.0.0.1:7687');
+            assert.equal(result.databaseType, 'neo4j');
+            const projectResponse: Response = await fetch(
+              `${manager.apiUrl}/project/${fixture.projectId}`,
+              {
+                headers: new Headers([
+                  ['Authorization', `Bearer ${ownerLogin.jwt}`],
+                ]),
+                signal: testContext.signal,
+              },
+            );
+            assert.equal(projectResponse.status, 200);
+            const publishedState: z.infer<typeof projectStateSchema> =
+              projectStateSchema.parse(await projectResponse.json());
+            const items: DatabaseConnectionDto[] | undefined =
+              publishedState.databases;
+
+            const persisted: DatabaseConnectionDto | undefined = items.find(
+              (item: DatabaseConnectionDto): boolean =>
+                item.id === fixture.databaseConnectionId,
+            );
+            assert.ok(persisted);
+            assert.equal(persisted.title, 'Updated Database');
+          });
+
+          test('stores credentials only after consent without exposing them in the response', async (testContext: TestContext): Promise<void> => {
+            // given
+            const fixture: FixtureContext =
+              await manager.setupFixture(testContext);
+            const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
+              fixture.owner.username,
+              fixture.owner.password,
+              testContext,
+            );
+
+            // when
+            const response: Response = await fetch(
+              `${manager.apiUrl}/project/${fixture.projectId}/database-connection/${fixture.databaseConnectionId}`,
+              {
+                method: 'PUT',
+                headers: new Headers([
+                  ['Authorization', `Bearer ${ownerLogin.jwt}`],
+                  ['Content-Type', 'application/json'],
+                ]),
+                body: JSON.stringify({
+                  title: 'Updated Database',
+                  browserUrl: 'https://example.test/browser',
+                  credentialStoreConsent: true,
+                  nodeConfigurations: [],
+                  adapter: {
+                    databaseType: DatabaseConnectionDatabaseType.neo4j,
+                    connectionUrl: 'bolt://127.0.0.1:7687',
+                    username: 'alice',
+                    password: 'secret-value',
+                    database: 'neo4j',
+                  },
+                } satisfies UpdateDatabaseConnectionRequestBodyDto),
+                signal: testContext.signal,
+              },
+            );
+
+            // then
+            assert.equal(response.status, 200);
+            const result: DatabaseConnectionDto = databaseSchema.parse(
+              await response.json(),
+            );
+            assert.equal(result.id, fixture.databaseConnectionId);
+            assert.equal(result.title, 'Updated Database');
+            assert.equal(result.connectionUrl, 'bolt://127.0.0.1:7687');
+            assert.equal(result.databaseType, 'neo4j');
+            const projectResponse: Response = await fetch(
+              `${manager.apiUrl}/project/${fixture.projectId}`,
+              {
+                headers: new Headers([
+                  ['Authorization', `Bearer ${ownerLogin.jwt}`],
+                ]),
+                signal: testContext.signal,
+              },
+            );
+            assert.equal(projectResponse.status, 200);
+            const publishedState: z.infer<typeof projectStateSchema> =
+              projectStateSchema.parse(await projectResponse.json());
+            const items: DatabaseConnectionDto[] | undefined =
+              publishedState.databases;
+
+            const persisted: DatabaseConnectionDto | undefined = items.find(
+              (item: DatabaseConnectionDto): boolean =>
+                item.id === fixture.databaseConnectionId,
+            );
+            assert.ok(persisted);
+            assert.equal(persisted.title, 'Updated Database');
+            const stored: Response = await manager.readDocument(
+              'api::database-connection.database-connection',
+              fixture.databaseConnectionId,
+              testContext,
+            );
+            assert.equal(stored.status, 200);
+            const credentials: {
+              data: { username: string; password: string };
+            } = z
               .object({
                 data: z.object({ username: z.string(), password: z.string() }),
               })
               .parse(await stored.json());
-          assert.equal(credentials.data.username, 'alice');
-          assert.notEqual(credentials.data.password, 'secret-value');
-          const encryptedPassword: z.infer<typeof encryptionPayloadSchema> =
+            assert.equal(credentials.data.username, 'alice');
+            assert.notEqual(credentials.data.password, 'secret-value');
+            const encryptedPassword: z.infer<typeof encryptionPayloadSchema> =
+              encryptionPayloadSchema.parse(
+                JSON.parse(credentials.data.password),
+              );
+            assert.equal(
+              encryptedPassword.keyId,
+              manager.context.encryptionKeys.currentKeyId,
+            );
+            const encryption: Encryption = new Encryption(
+              manager.context.encryptionKeys,
+            );
+            assert.equal(encryption.decrypt(encryptedPassword), 'secret-value');
+          });
+
+          test('preserves omitted credentials without requiring renewed consent', async (testContext: TestContext): Promise<void> => {
+            // given
+            const fixture: FixtureContext =
+              await manager.setupFixture(testContext);
+            const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
+              fixture.owner.username,
+              fixture.owner.password,
+              testContext,
+            );
+            const credentialSetup: Response = await fetch(
+              `${manager.apiUrl}/project/${fixture.projectId}/database-connection/${fixture.databaseConnectionId}`,
+              {
+                method: 'PUT',
+                headers: new Headers([
+                  ['Authorization', `Bearer ${ownerLogin.jwt}`],
+                  ['Content-Type', 'application/json'],
+                ]),
+                body: JSON.stringify({
+                  title: 'Updated Database',
+                  browserUrl: 'https://example.test/browser',
+                  credentialStoreConsent: true,
+                  nodeConfigurations: [],
+                  adapter: {
+                    databaseType: DatabaseConnectionDatabaseType.neo4j,
+                    connectionUrl: 'bolt://127.0.0.1:7687',
+                    username: 'alice',
+                    password: 'stored-secret',
+                    database: 'neo4j',
+                  },
+                } satisfies UpdateDatabaseConnectionRequestBodyDto),
+                signal: testContext.signal,
+              },
+            );
+            assert.equal(credentialSetup.status, 200);
+            const originalCredentialsResponse: Response =
+              await manager.readDocument(
+                'api::database-connection.database-connection',
+                fixture.databaseConnectionId,
+                testContext,
+              );
+            assert.equal(originalCredentialsResponse.status, 200);
+            const originalCredentials: {
+              data: { username: string; password: string };
+            } = z
+              .object({
+                data: z.object({ username: z.string(), password: z.string() }),
+              })
+              .parse(await originalCredentialsResponse.json());
+
+            // when
+            const response: Response = await fetch(
+              `${manager.apiUrl}/project/${fixture.projectId}/database-connection/${fixture.databaseConnectionId}`,
+              {
+                method: 'PUT',
+                headers: new Headers([
+                  ['Authorization', `Bearer ${ownerLogin.jwt}`],
+                  ['Content-Type', 'application/json'],
+                ]),
+                body: JSON.stringify({
+                  title: 'Updated Database',
+                  browserUrl: 'https://example.test/browser',
+                  credentialStoreConsent: false,
+                  nodeConfigurations: [],
+                  adapter: {
+                    databaseType: DatabaseConnectionDatabaseType.neo4j,
+                    connectionUrl: 'bolt://127.0.0.1:7687',
+                    database: 'neo4j',
+                  },
+                } satisfies UpdateDatabaseConnectionRequestBodyDto),
+                signal: testContext.signal,
+              },
+            );
+
+            // then
+            assert.equal(response.status, 200);
+            const result: DatabaseConnectionDto = databaseSchema.parse(
+              await response.json(),
+            );
+            assert.equal(result.id, fixture.databaseConnectionId);
+            assert.equal(result.title, 'Updated Database');
+            assert.equal(result.connectionUrl, 'bolt://127.0.0.1:7687');
+            assert.equal(result.databaseType, 'neo4j');
+            const projectResponse: Response = await fetch(
+              `${manager.apiUrl}/project/${fixture.projectId}`,
+              {
+                headers: new Headers([
+                  ['Authorization', `Bearer ${ownerLogin.jwt}`],
+                ]),
+                signal: testContext.signal,
+              },
+            );
+            assert.equal(projectResponse.status, 200);
+            const publishedState: z.infer<typeof projectStateSchema> =
+              projectStateSchema.parse(await projectResponse.json());
+            const items: DatabaseConnectionDto[] | undefined =
+              publishedState.databases;
+
+            const persisted: DatabaseConnectionDto | undefined = items.find(
+              (item: DatabaseConnectionDto): boolean =>
+                item.id === fixture.databaseConnectionId,
+            );
+            assert.ok(persisted);
+            assert.equal(persisted.title, 'Updated Database');
+            const storedCredentialsResponse: Response =
+              await manager.readDocument(
+                'api::database-connection.database-connection',
+                fixture.databaseConnectionId,
+                testContext,
+              );
+            assert.equal(storedCredentialsResponse.status, 200);
+            const storedCredentials: {
+              data: { username: string; password: string };
+            } = z
+              .object({
+                data: z.object({ username: z.string(), password: z.string() }),
+              })
+              .parse(await storedCredentialsResponse.json());
+            assert.deepEqual(storedCredentials, originalCredentials);
+          });
+
+          test('preserves null credentials without requiring renewed consent', async (testContext: TestContext): Promise<void> => {
+            // given
+            const fixture: FixtureContext =
+              await manager.setupFixture(testContext);
+            const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
+              fixture.owner.username,
+              fixture.owner.password,
+              testContext,
+            );
+            const credentialSetup: Response = await fetch(
+              `${manager.apiUrl}/project/${fixture.projectId}/database-connection/${fixture.databaseConnectionId}`,
+              {
+                method: 'PUT',
+                headers: new Headers([
+                  ['Authorization', `Bearer ${ownerLogin.jwt}`],
+                  ['Content-Type', 'application/json'],
+                ]),
+                body: JSON.stringify({
+                  title: 'Updated Database',
+                  browserUrl: 'https://example.test/browser',
+                  credentialStoreConsent: true,
+                  nodeConfigurations: [],
+                  adapter: {
+                    databaseType: DatabaseConnectionDatabaseType.neo4j,
+                    connectionUrl: 'bolt://127.0.0.1:7687',
+                    username: 'alice',
+                    password: 'stored-secret',
+                    database: 'neo4j',
+                  },
+                } satisfies UpdateDatabaseConnectionRequestBodyDto),
+                signal: testContext.signal,
+              },
+            );
+            assert.equal(credentialSetup.status, 200);
+            const originalCredentialsResponse: Response =
+              await manager.readDocument(
+                'api::database-connection.database-connection',
+                fixture.databaseConnectionId,
+                testContext,
+              );
+            assert.equal(originalCredentialsResponse.status, 200);
+            const originalCredentials: {
+              data: { username: string; password: string };
+            } = z
+              .object({
+                data: z.object({ username: z.string(), password: z.string() }),
+              })
+              .parse(await originalCredentialsResponse.json());
+
+            // when
+            const response: Response = await fetch(
+              `${manager.apiUrl}/project/${fixture.projectId}/database-connection/${fixture.databaseConnectionId}`,
+              {
+                method: 'PUT',
+                headers: new Headers([
+                  ['Authorization', `Bearer ${ownerLogin.jwt}`],
+                  ['Content-Type', 'application/json'],
+                ]),
+                body: JSON.stringify({
+                  title: 'Updated Database',
+                  browserUrl: 'https://example.test/browser',
+                  credentialStoreConsent: false,
+                  nodeConfigurations: [],
+                  adapter: {
+                    databaseType: DatabaseConnectionDatabaseType.neo4j,
+                    connectionUrl: 'bolt://127.0.0.1:7687',
+                    username: null,
+                    password: null,
+                    database: 'neo4j',
+                  },
+                } satisfies UpdateDatabaseConnectionRequestBodyDto),
+                signal: testContext.signal,
+              },
+            );
+
+            // then
+            assert.equal(response.status, 200);
+            const result: DatabaseConnectionDto = databaseSchema.parse(
+              await response.json(),
+            );
+            assert.equal(result.id, fixture.databaseConnectionId);
+            assert.equal(result.title, 'Updated Database');
+            assert.equal(result.connectionUrl, 'bolt://127.0.0.1:7687');
+            assert.equal(result.databaseType, 'neo4j');
+            const projectResponse: Response = await fetch(
+              `${manager.apiUrl}/project/${fixture.projectId}`,
+              {
+                headers: new Headers([
+                  ['Authorization', `Bearer ${ownerLogin.jwt}`],
+                ]),
+                signal: testContext.signal,
+              },
+            );
+            assert.equal(projectResponse.status, 200);
+            const publishedState: z.infer<typeof projectStateSchema> =
+              projectStateSchema.parse(await projectResponse.json());
+            const items: DatabaseConnectionDto[] | undefined =
+              publishedState.databases;
+
+            const persisted: DatabaseConnectionDto | undefined = items.find(
+              (item: DatabaseConnectionDto): boolean =>
+                item.id === fixture.databaseConnectionId,
+            );
+            assert.ok(persisted);
+            assert.equal(persisted.title, 'Updated Database');
+            const storedCredentialsResponse: Response =
+              await manager.readDocument(
+                'api::database-connection.database-connection',
+                fixture.databaseConnectionId,
+                testContext,
+              );
+            assert.equal(storedCredentialsResponse.status, 200);
+            const storedCredentials: {
+              data: { username: string; password: string };
+            } = z
+              .object({
+                data: z.object({ username: z.string(), password: z.string() }),
+              })
+              .parse(await storedCredentialsResponse.json());
+            assert.deepEqual(storedCredentials, originalCredentials);
+          });
+
+          test('clears the password with explicit consent', async (testContext: TestContext): Promise<void> => {
+            // given
+            const fixture: FixtureContext =
+              await manager.setupFixture(testContext);
+            const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
+              fixture.owner.username,
+              fixture.owner.password,
+              testContext,
+            );
+            const credentialSetup: Response = await fetch(
+              `${manager.apiUrl}/project/${fixture.projectId}/database-connection/${fixture.databaseConnectionId}`,
+              {
+                method: 'PUT',
+                headers: new Headers([
+                  ['Authorization', `Bearer ${ownerLogin.jwt}`],
+                  ['Content-Type', 'application/json'],
+                ]),
+                body: JSON.stringify({
+                  title: 'Updated Database',
+                  browserUrl: 'https://example.test/browser',
+                  credentialStoreConsent: true,
+                  nodeConfigurations: [],
+                  adapter: {
+                    databaseType: DatabaseConnectionDatabaseType.neo4j,
+                    connectionUrl: 'bolt://127.0.0.1:7687',
+                    username: 'alice',
+                    password: 'stored-secret',
+                    database: 'neo4j',
+                  },
+                } satisfies UpdateDatabaseConnectionRequestBodyDto),
+                signal: testContext.signal,
+              },
+            );
+            assert.equal(credentialSetup.status, 200);
+            const originalCredentialsResponse: Response =
+              await manager.readDocument(
+                'api::database-connection.database-connection',
+                fixture.databaseConnectionId,
+                testContext,
+              );
+            assert.equal(originalCredentialsResponse.status, 200);
+            const originalCredentials: {
+              data: { username: string; password: string };
+            } = z
+              .object({
+                data: z.object({ username: z.string(), password: z.string() }),
+              })
+              .parse(await originalCredentialsResponse.json());
+
+            // when
+            const response: Response = await fetch(
+              `${manager.apiUrl}/project/${fixture.projectId}/database-connection/${fixture.databaseConnectionId}`,
+              {
+                method: 'PUT',
+                headers: new Headers([
+                  ['Authorization', `Bearer ${ownerLogin.jwt}`],
+                  ['Content-Type', 'application/json'],
+                ]),
+                body: JSON.stringify({
+                  title: 'Updated Database',
+                  browserUrl: 'https://example.test/browser',
+                  credentialStoreConsent: true,
+                  nodeConfigurations: [],
+                  adapter: {
+                    databaseType: DatabaseConnectionDatabaseType.neo4j,
+                    connectionUrl: 'bolt://127.0.0.1:7687',
+                    password: '',
+                    database: 'neo4j',
+                  },
+                } satisfies Omit<
+                  UpdateDatabaseConnectionRequestBodyDto,
+                  'username'
+                >),
+                signal: testContext.signal,
+              },
+            );
+
+            // then
+            assert.equal(response.status, 200);
+            const result: DatabaseConnectionDto = databaseSchema.parse(
+              await response.json(),
+            );
+            assert.equal(result.id, fixture.databaseConnectionId);
+            assert.equal(result.title, 'Updated Database');
+            assert.equal(result.connectionUrl, 'bolt://127.0.0.1:7687');
+            assert.equal(result.databaseType, 'neo4j');
+            const projectResponse: Response = await fetch(
+              `${manager.apiUrl}/project/${fixture.projectId}`,
+              {
+                headers: new Headers([
+                  ['Authorization', `Bearer ${ownerLogin.jwt}`],
+                ]),
+                signal: testContext.signal,
+              },
+            );
+            assert.equal(projectResponse.status, 200);
+            const publishedState: z.infer<typeof projectStateSchema> =
+              projectStateSchema.parse(await projectResponse.json());
+            const items: DatabaseConnectionDto[] | undefined =
+              publishedState.databases;
+
+            const persisted: DatabaseConnectionDto | undefined = items.find(
+              (item: DatabaseConnectionDto): boolean =>
+                item.id === fixture.databaseConnectionId,
+            );
+            assert.ok(persisted);
+            assert.equal(persisted.title, 'Updated Database');
+            const storedCredentialsResponse: Response =
+              await manager.readDocument(
+                'api::database-connection.database-connection',
+                fixture.databaseConnectionId,
+                testContext,
+              );
+            assert.equal(storedCredentialsResponse.status, 200);
+            const storedCredentials: {
+              data: { username: string; password: string };
+            } = z
+              .object({
+                data: z.object({ username: z.string(), password: z.string() }),
+              })
+              .parse(await storedCredentialsResponse.json());
+            assert.equal(storedCredentials.data.username, 'alice');
+            assert.notEqual(
+              storedCredentials.data.password,
+              originalCredentials.data.password,
+            );
             encryptionPayloadSchema.parse(
-              JSON.parse(credentials.data.password),
+              JSON.parse(storedCredentials.data.password),
             );
-          assert.equal(
-            encryptedPassword.keyId,
-            manager.context.encryptionKeys.currentKeyId,
-          );
-          const encryption: Encryption = new Encryption(
-            manager.context.encryptionKeys,
-          );
-          assert.equal(encryption.decrypt(encryptedPassword), 'secret-value');
-        });
+          });
 
-        test('preserves omitted credentials without requiring renewed consent', async (testContext: TestContext): Promise<void> => {
-          // given
-          const fixture: FixtureContext =
-            await manager.setupFixture(testContext);
-          const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-            fixture.owner.username,
-            fixture.owner.password,
-            testContext,
-          );
-          const credentialSetup: Response = await fetch(
-            `${manager.apiUrl}/project/${fixture.projectId}/database-connection/${fixture.databaseConnectionId}`,
-            {
-              method: 'PUT',
-              headers: new Headers([
-                ['Authorization', `Bearer ${ownerLogin.jwt}`],
-                ['Content-Type', 'application/json'],
-              ]),
-              body: JSON.stringify({
-                title: 'Updated Database',
-                browserUrl: 'https://example.test/browser',
-                credentialStoreConsent: true,
-                nodeConfigurations: [],
-                adapter: {
-                  databaseType: DatabaseConnectionDatabaseType.neo4j,
-                  connectionUrl: 'bolt://127.0.0.1:7687',
-                  username: 'alice',
-                  password: 'stored-secret',
-                  database: 'neo4j',
-                },
-              } satisfies UpdateDatabaseConnectionRequestBodyDto),
-              signal: testContext.signal,
-            },
-          );
-          assert.equal(credentialSetup.status, 200);
-          const originalCredentialsResponse: Response =
-            await manager.readDocument(
-              'api::database-connection.database-connection',
-              fixture.databaseConnectionId,
+          test('persists a new node configuration', async (testContext: TestContext): Promise<void> => {
+            // given
+            const fixture: FixtureContext =
+              await manager.setupFixture(testContext);
+            const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
+              fixture.owner.username,
+              fixture.owner.password,
               testContext,
             );
-          assert.equal(originalCredentialsResponse.status, 200);
-          const originalCredentials: {
-            data: { username: string; password: string };
-          } = z
-            .object({
-              data: z.object({ username: z.string(), password: z.string() }),
-            })
-            .parse(await originalCredentialsResponse.json());
 
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/project/${fixture.projectId}/database-connection/${fixture.databaseConnectionId}`,
-            {
-              method: 'PUT',
-              headers: new Headers([
-                ['Authorization', `Bearer ${ownerLogin.jwt}`],
-                ['Content-Type', 'application/json'],
-              ]),
-              body: JSON.stringify({
-                title: 'Updated Database',
-                browserUrl: 'https://example.test/browser',
-                credentialStoreConsent: false,
-                nodeConfigurations: [],
-                adapter: {
-                  databaseType: DatabaseConnectionDatabaseType.neo4j,
-                  connectionUrl: 'bolt://127.0.0.1:7687',
-                  database: 'neo4j',
-                },
-              } satisfies UpdateDatabaseConnectionRequestBodyDto),
-              signal: testContext.signal,
-            },
-          );
-
-          // then
-          assert.equal(response.status, 200);
-          const result: DatabaseConnectionDto = databaseSchema.parse(
-            await response.json(),
-          );
-          assert.equal(result.id, fixture.databaseConnectionId);
-          assert.equal(result.title, 'Updated Database');
-          assert.equal(result.connectionUrl, 'bolt://127.0.0.1:7687');
-          assert.equal(result.databaseType, 'neo4j');
-          const projectResponse: Response = await fetch(
-            `${manager.apiUrl}/project/${fixture.projectId}`,
-            {
-              headers: new Headers([
-                ['Authorization', `Bearer ${ownerLogin.jwt}`],
-              ]),
-              signal: testContext.signal,
-            },
-          );
-          assert.equal(projectResponse.status, 200);
-          const publishedState: z.infer<typeof projectStateSchema> =
-            projectStateSchema.parse(await projectResponse.json());
-          const items: DatabaseConnectionDto[] | undefined =
-            publishedState.databases;
-
-          const persisted: DatabaseConnectionDto | undefined = items.find(
-            (item: DatabaseConnectionDto): boolean =>
-              item.id === fixture.databaseConnectionId,
-          );
-          assert.ok(persisted);
-          assert.equal(persisted.title, 'Updated Database');
-          const storedCredentialsResponse: Response =
-            await manager.readDocument(
-              'api::database-connection.database-connection',
-              fixture.databaseConnectionId,
-              testContext,
-            );
-          assert.equal(storedCredentialsResponse.status, 200);
-          const storedCredentials: {
-            data: { username: string; password: string };
-          } = z
-            .object({
-              data: z.object({ username: z.string(), password: z.string() }),
-            })
-            .parse(await storedCredentialsResponse.json());
-          assert.deepEqual(storedCredentials, originalCredentials);
-        });
-
-        test('preserves null credentials without requiring renewed consent', async (testContext: TestContext): Promise<void> => {
-          // given
-          const fixture: FixtureContext =
-            await manager.setupFixture(testContext);
-          const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-            fixture.owner.username,
-            fixture.owner.password,
-            testContext,
-          );
-          const credentialSetup: Response = await fetch(
-            `${manager.apiUrl}/project/${fixture.projectId}/database-connection/${fixture.databaseConnectionId}`,
-            {
-              method: 'PUT',
-              headers: new Headers([
-                ['Authorization', `Bearer ${ownerLogin.jwt}`],
-                ['Content-Type', 'application/json'],
-              ]),
-              body: JSON.stringify({
-                title: 'Updated Database',
-                browserUrl: 'https://example.test/browser',
-                credentialStoreConsent: true,
-                nodeConfigurations: [],
-                adapter: {
-                  databaseType: DatabaseConnectionDatabaseType.neo4j,
-                  connectionUrl: 'bolt://127.0.0.1:7687',
-                  username: 'alice',
-                  password: 'stored-secret',
-                  database: 'neo4j',
-                },
-              } satisfies UpdateDatabaseConnectionRequestBodyDto),
-              signal: testContext.signal,
-            },
-          );
-          assert.equal(credentialSetup.status, 200);
-          const originalCredentialsResponse: Response =
-            await manager.readDocument(
-              'api::database-connection.database-connection',
-              fixture.databaseConnectionId,
-              testContext,
-            );
-          assert.equal(originalCredentialsResponse.status, 200);
-          const originalCredentials: {
-            data: { username: string; password: string };
-          } = z
-            .object({
-              data: z.object({ username: z.string(), password: z.string() }),
-            })
-            .parse(await originalCredentialsResponse.json());
-
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/project/${fixture.projectId}/database-connection/${fixture.databaseConnectionId}`,
-            {
-              method: 'PUT',
-              headers: new Headers([
-                ['Authorization', `Bearer ${ownerLogin.jwt}`],
-                ['Content-Type', 'application/json'],
-              ]),
-              body: JSON.stringify({
-                title: 'Updated Database',
-                browserUrl: 'https://example.test/browser',
-                credentialStoreConsent: false,
-                nodeConfigurations: [],
-                adapter: {
-                  databaseType: DatabaseConnectionDatabaseType.neo4j,
-                  connectionUrl: 'bolt://127.0.0.1:7687',
-                  username: null,
-                  password: null,
-                  database: 'neo4j',
-                },
-              } satisfies UpdateDatabaseConnectionRequestBodyDto),
-              signal: testContext.signal,
-            },
-          );
-
-          // then
-          assert.equal(response.status, 200);
-          const result: DatabaseConnectionDto = databaseSchema.parse(
-            await response.json(),
-          );
-          assert.equal(result.id, fixture.databaseConnectionId);
-          assert.equal(result.title, 'Updated Database');
-          assert.equal(result.connectionUrl, 'bolt://127.0.0.1:7687');
-          assert.equal(result.databaseType, 'neo4j');
-          const projectResponse: Response = await fetch(
-            `${manager.apiUrl}/project/${fixture.projectId}`,
-            {
-              headers: new Headers([
-                ['Authorization', `Bearer ${ownerLogin.jwt}`],
-              ]),
-              signal: testContext.signal,
-            },
-          );
-          assert.equal(projectResponse.status, 200);
-          const publishedState: z.infer<typeof projectStateSchema> =
-            projectStateSchema.parse(await projectResponse.json());
-          const items: DatabaseConnectionDto[] | undefined =
-            publishedState.databases;
-
-          const persisted: DatabaseConnectionDto | undefined = items.find(
-            (item: DatabaseConnectionDto): boolean =>
-              item.id === fixture.databaseConnectionId,
-          );
-          assert.ok(persisted);
-          assert.equal(persisted.title, 'Updated Database');
-          const storedCredentialsResponse: Response =
-            await manager.readDocument(
-              'api::database-connection.database-connection',
-              fixture.databaseConnectionId,
-              testContext,
-            );
-          assert.equal(storedCredentialsResponse.status, 200);
-          const storedCredentials: {
-            data: { username: string; password: string };
-          } = z
-            .object({
-              data: z.object({ username: z.string(), password: z.string() }),
-            })
-            .parse(await storedCredentialsResponse.json());
-          assert.deepEqual(storedCredentials, originalCredentials);
-        });
-
-        test('clears the password with explicit consent', async (testContext: TestContext): Promise<void> => {
-          // given
-          const fixture: FixtureContext =
-            await manager.setupFixture(testContext);
-          const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-            fixture.owner.username,
-            fixture.owner.password,
-            testContext,
-          );
-          const credentialSetup: Response = await fetch(
-            `${manager.apiUrl}/project/${fixture.projectId}/database-connection/${fixture.databaseConnectionId}`,
-            {
-              method: 'PUT',
-              headers: new Headers([
-                ['Authorization', `Bearer ${ownerLogin.jwt}`],
-                ['Content-Type', 'application/json'],
-              ]),
-              body: JSON.stringify({
-                title: 'Updated Database',
-                browserUrl: 'https://example.test/browser',
-                credentialStoreConsent: true,
-                nodeConfigurations: [],
-                adapter: {
-                  databaseType: DatabaseConnectionDatabaseType.neo4j,
-                  connectionUrl: 'bolt://127.0.0.1:7687',
-                  username: 'alice',
-                  password: 'stored-secret',
-                  database: 'neo4j',
-                },
-              } satisfies UpdateDatabaseConnectionRequestBodyDto),
-              signal: testContext.signal,
-            },
-          );
-          assert.equal(credentialSetup.status, 200);
-          const originalCredentialsResponse: Response =
-            await manager.readDocument(
-              'api::database-connection.database-connection',
-              fixture.databaseConnectionId,
-              testContext,
-            );
-          assert.equal(originalCredentialsResponse.status, 200);
-          const originalCredentials: {
-            data: { username: string; password: string };
-          } = z
-            .object({
-              data: z.object({ username: z.string(), password: z.string() }),
-            })
-            .parse(await originalCredentialsResponse.json());
-
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/project/${fixture.projectId}/database-connection/${fixture.databaseConnectionId}`,
-            {
-              method: 'PUT',
-              headers: new Headers([
-                ['Authorization', `Bearer ${ownerLogin.jwt}`],
-                ['Content-Type', 'application/json'],
-              ]),
-              body: JSON.stringify({
-                title: 'Updated Database',
-                browserUrl: 'https://example.test/browser',
-                credentialStoreConsent: true,
-                nodeConfigurations: [],
-                adapter: {
-                  databaseType: DatabaseConnectionDatabaseType.neo4j,
-                  connectionUrl: 'bolt://127.0.0.1:7687',
-                  password: '',
-                  database: 'neo4j',
-                },
-              } satisfies Omit<
-                UpdateDatabaseConnectionRequestBodyDto,
-                'username'
-              >),
-              signal: testContext.signal,
-            },
-          );
-
-          // then
-          assert.equal(response.status, 200);
-          const result: DatabaseConnectionDto = databaseSchema.parse(
-            await response.json(),
-          );
-          assert.equal(result.id, fixture.databaseConnectionId);
-          assert.equal(result.title, 'Updated Database');
-          assert.equal(result.connectionUrl, 'bolt://127.0.0.1:7687');
-          assert.equal(result.databaseType, 'neo4j');
-          const projectResponse: Response = await fetch(
-            `${manager.apiUrl}/project/${fixture.projectId}`,
-            {
-              headers: new Headers([
-                ['Authorization', `Bearer ${ownerLogin.jwt}`],
-              ]),
-              signal: testContext.signal,
-            },
-          );
-          assert.equal(projectResponse.status, 200);
-          const publishedState: z.infer<typeof projectStateSchema> =
-            projectStateSchema.parse(await projectResponse.json());
-          const items: DatabaseConnectionDto[] | undefined =
-            publishedState.databases;
-
-          const persisted: DatabaseConnectionDto | undefined = items.find(
-            (item: DatabaseConnectionDto): boolean =>
-              item.id === fixture.databaseConnectionId,
-          );
-          assert.ok(persisted);
-          assert.equal(persisted.title, 'Updated Database');
-          const storedCredentialsResponse: Response =
-            await manager.readDocument(
-              'api::database-connection.database-connection',
-              fixture.databaseConnectionId,
-              testContext,
-            );
-          assert.equal(storedCredentialsResponse.status, 200);
-          const storedCredentials: {
-            data: { username: string; password: string };
-          } = z
-            .object({
-              data: z.object({ username: z.string(), password: z.string() }),
-            })
-            .parse(await storedCredentialsResponse.json());
-          assert.equal(storedCredentials.data.username, 'alice');
-          assert.notEqual(
-            storedCredentials.data.password,
-            originalCredentials.data.password,
-          );
-          encryptionPayloadSchema.parse(
-            JSON.parse(storedCredentials.data.password),
-          );
-        });
-
-        test('persists a new node configuration', async (testContext: TestContext): Promise<void> => {
-          // given
-          const fixture: FixtureContext =
-            await manager.setupFixture(testContext);
-          const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-            fixture.owner.username,
-            fixture.owner.password,
-            testContext,
-          );
-
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/project/${fixture.projectId}/database-connection/${fixture.databaseConnectionId}`,
-            {
-              method: 'PUT',
-              headers: new Headers([
-                ['Authorization', `Bearer ${ownerLogin.jwt}`],
-                ['Content-Type', 'application/json'],
-              ]),
-              body: JSON.stringify({
-                title: 'Updated Database',
-                browserUrl: 'https://example.test/browser',
-                credentialStoreConsent: false,
-                nodeConfigurations: [
-                  {
-                    id: randomUUID(),
-                    type: NodeConfigurationTypeDto.link,
-                    label: 'Person',
-                    property: 'id',
-                    linkTemplate: 'https://example.test/{value}',
-                    urlEncode: true,
-                    valueRegex: '.*',
+            // when
+            const response: Response = await fetch(
+              `${manager.apiUrl}/project/${fixture.projectId}/database-connection/${fixture.databaseConnectionId}`,
+              {
+                method: 'PUT',
+                headers: new Headers([
+                  ['Authorization', `Bearer ${ownerLogin.jwt}`],
+                  ['Content-Type', 'application/json'],
+                ]),
+                body: JSON.stringify({
+                  title: 'Updated Database',
+                  browserUrl: 'https://example.test/browser',
+                  credentialStoreConsent: false,
+                  nodeConfigurations: [
+                    {
+                      id: randomUUID(),
+                      type: NodeConfigurationTypeDto.link,
+                      label: 'Person',
+                      property: 'id',
+                      linkTemplate: 'https://example.test/{value}',
+                      urlEncode: true,
+                      valueRegex: '.*',
+                    },
+                  ],
+                  adapter: {
+                    databaseType: DatabaseConnectionDatabaseType.neo4j,
+                    connectionUrl: 'bolt://127.0.0.1:7687',
+                    database: 'neo4j',
                   },
-                ],
-                adapter: {
-                  databaseType: DatabaseConnectionDatabaseType.neo4j,
-                  connectionUrl: 'bolt://127.0.0.1:7687',
-                  database: 'neo4j',
-                },
-              } satisfies UpdateDatabaseConnectionRequestBodyDto),
-              signal: testContext.signal,
-            },
-          );
+                } satisfies UpdateDatabaseConnectionRequestBodyDto),
+                signal: testContext.signal,
+              },
+            );
 
-          // then
-          assert.equal(response.status, 200);
-          const result: DatabaseConnectionDto = databaseSchema.parse(
-            await response.json(),
-          );
-          assert.equal(result.id, fixture.databaseConnectionId);
-          assert.equal(result.title, 'Updated Database');
-          assert.equal(result.connectionUrl, 'bolt://127.0.0.1:7687');
-          assert.equal(result.databaseType, 'neo4j');
-          const projectResponse: Response = await fetch(
-            `${manager.apiUrl}/project/${fixture.projectId}`,
-            {
-              headers: new Headers([
-                ['Authorization', `Bearer ${ownerLogin.jwt}`],
-              ]),
-              signal: testContext.signal,
-            },
-          );
-          assert.equal(projectResponse.status, 200);
-          const publishedState: z.infer<typeof projectStateSchema> =
-            projectStateSchema.parse(await projectResponse.json());
-          const items: DatabaseConnectionDto[] | undefined =
-            publishedState.databases;
+            // then
+            assert.equal(response.status, 200);
+            const result: DatabaseConnectionDto = databaseSchema.parse(
+              await response.json(),
+            );
+            assert.equal(result.id, fixture.databaseConnectionId);
+            assert.equal(result.title, 'Updated Database');
+            assert.equal(result.connectionUrl, 'bolt://127.0.0.1:7687');
+            assert.equal(result.databaseType, 'neo4j');
+            const projectResponse: Response = await fetch(
+              `${manager.apiUrl}/project/${fixture.projectId}`,
+              {
+                headers: new Headers([
+                  ['Authorization', `Bearer ${ownerLogin.jwt}`],
+                ]),
+                signal: testContext.signal,
+              },
+            );
+            assert.equal(projectResponse.status, 200);
+            const publishedState: z.infer<typeof projectStateSchema> =
+              projectStateSchema.parse(await projectResponse.json());
+            const items: DatabaseConnectionDto[] | undefined =
+              publishedState.databases;
 
-          const persisted: DatabaseConnectionDto | undefined = items.find(
-            (item: DatabaseConnectionDto): boolean =>
-              item.id === fixture.databaseConnectionId,
-          );
-          assert.ok(persisted);
-          assert.equal(persisted.title, 'Updated Database');
-          assert.equal(result.nodeConfigurations.length, 1);
-          assert.equal(
-            result.nodeConfigurations[0]?.linkTemplate,
-            'https://example.test/{value}',
-          );
-          assert.equal(result.nodeConfigurations[0]?.urlEncode, true);
-          assert.deepEqual(persisted, result);
-        });
+            const persisted: DatabaseConnectionDto | undefined = items.find(
+              (item: DatabaseConnectionDto): boolean =>
+                item.id === fixture.databaseConnectionId,
+            );
+            assert.ok(persisted);
+            assert.equal(persisted.title, 'Updated Database');
+            assert.equal(result.nodeConfigurations.length, 1);
+            assert.equal(
+              result.nodeConfigurations[0]?.linkTemplate,
+              'https://example.test/{value}',
+            );
+            assert.equal(result.nodeConfigurations[0]?.urlEncode, true);
+            assert.deepEqual(persisted, result);
+          });
 
-        test('updates an existing node configuration without changing its identifier', async (testContext: TestContext): Promise<void> => {
-          // given
-          const fixture: FixtureContext =
-            await manager.setupFixture(testContext);
-          const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-            fixture.owner.username,
-            fixture.owner.password,
-            testContext,
-          );
-          const child: string = await manager.createPublishedDocument(
-            'api::node-configuration.node-configuration',
-            {
-              database: fixture.databaseConnectionId,
-              type: 'link',
-              label: 'Original Label',
-              property: 'id',
-              linkTemplate: 'https://example.test/{value}',
-              urlEncode: false,
-              valueRegex: '.*',
-            },
-            testContext,
-          );
+          test('updates an existing node configuration without changing its identifier', async (testContext: TestContext): Promise<void> => {
+            // given
+            const fixture: FixtureContext =
+              await manager.setupFixture(testContext);
+            const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
+              fixture.owner.username,
+              fixture.owner.password,
+              testContext,
+            );
+            const child: string = await manager.createPublishedDocument(
+              'api::node-configuration.node-configuration',
+              {
+                database: fixture.databaseConnectionId,
+                type: 'link',
+                label: 'Original Label',
+                property: 'id',
+                linkTemplate: 'https://example.test/{value}',
+                urlEncode: false,
+                valueRegex: '.*',
+              },
+              testContext,
+            );
 
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/project/${fixture.projectId}/database-connection/${fixture.databaseConnectionId}`,
-            {
-              method: 'PUT',
-              headers: new Headers([
-                ['Authorization', `Bearer ${ownerLogin.jwt}`],
-                ['Content-Type', 'application/json'],
-              ]),
-              body: JSON.stringify({
-                title: 'Updated Database',
-                browserUrl: 'https://example.test/browser',
-                credentialStoreConsent: false,
-                nodeConfigurations: [
-                  {
-                    id: child,
-                    type: NodeConfigurationTypeDto.image,
-                    label: 'Person',
-                    property: 'id',
-                    linkTemplate: 'https://example.test/{value}',
-                    urlEncode: true,
-                    valueRegex: '.*',
+            // when
+            const response: Response = await fetch(
+              `${manager.apiUrl}/project/${fixture.projectId}/database-connection/${fixture.databaseConnectionId}`,
+              {
+                method: 'PUT',
+                headers: new Headers([
+                  ['Authorization', `Bearer ${ownerLogin.jwt}`],
+                  ['Content-Type', 'application/json'],
+                ]),
+                body: JSON.stringify({
+                  title: 'Updated Database',
+                  browserUrl: 'https://example.test/browser',
+                  credentialStoreConsent: false,
+                  nodeConfigurations: [
+                    {
+                      id: child,
+                      type: NodeConfigurationTypeDto.image,
+                      label: 'Person',
+                      property: 'id',
+                      linkTemplate: 'https://example.test/{value}',
+                      urlEncode: true,
+                      valueRegex: '.*',
+                    },
+                  ],
+                  adapter: {
+                    databaseType: DatabaseConnectionDatabaseType.neo4j,
+                    connectionUrl: 'bolt://127.0.0.1:7687',
+                    database: 'neo4j',
                   },
-                ],
+                } satisfies UpdateDatabaseConnectionRequestBodyDto),
+                signal: testContext.signal,
+              },
+            );
+
+            // then
+            assert.equal(response.status, 200);
+            const result: DatabaseConnectionDto = databaseSchema.parse(
+              await response.json(),
+            );
+            assert.equal(result.id, fixture.databaseConnectionId);
+            assert.equal(result.title, 'Updated Database');
+            assert.equal(result.connectionUrl, 'bolt://127.0.0.1:7687');
+            assert.equal(result.databaseType, 'neo4j');
+            const projectResponse: Response = await fetch(
+              `${manager.apiUrl}/project/${fixture.projectId}`,
+              {
+                headers: new Headers([
+                  ['Authorization', `Bearer ${ownerLogin.jwt}`],
+                ]),
+                signal: testContext.signal,
+              },
+            );
+            assert.equal(projectResponse.status, 200);
+            const publishedState: z.infer<typeof projectStateSchema> =
+              projectStateSchema.parse(await projectResponse.json());
+            const items: DatabaseConnectionDto[] | undefined =
+              publishedState.databases;
+
+            const persisted: DatabaseConnectionDto | undefined = items.find(
+              (item: DatabaseConnectionDto): boolean =>
+                item.id === fixture.databaseConnectionId,
+            );
+            assert.ok(persisted);
+            assert.equal(persisted.title, 'Updated Database');
+            assert.equal(result.nodeConfigurations.length, 1);
+            assert.equal(result.nodeConfigurations[0]?.id, child);
+            assert.equal(
+              result.nodeConfigurations[0]?.type,
+              NodeConfigurationTypeDto.image,
+            );
+            assert.deepEqual(persisted, result);
+          });
+
+          test('deletes node configurations omitted from the update', async (testContext: TestContext): Promise<void> => {
+            // given
+            const fixture: FixtureContext =
+              await manager.setupFixture(testContext);
+            const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
+              fixture.owner.username,
+              fixture.owner.password,
+              testContext,
+            );
+            const child: string = await manager.createPublishedDocument(
+              'api::node-configuration.node-configuration',
+              {
+                database: fixture.databaseConnectionId,
+                type: 'link',
+                label: 'Original Label',
+                property: 'id',
+                linkTemplate: 'https://example.test/{value}',
+                urlEncode: false,
+                valueRegex: '.*',
+              },
+              testContext,
+            );
+
+            // when
+            const response: Response = await fetch(
+              `${manager.apiUrl}/project/${fixture.projectId}/database-connection/${fixture.databaseConnectionId}`,
+              {
+                method: 'PUT',
+                headers: new Headers([
+                  ['Authorization', `Bearer ${ownerLogin.jwt}`],
+                  ['Content-Type', 'application/json'],
+                ]),
+                body: JSON.stringify({
+                  title: 'Updated Database',
+                  browserUrl: 'https://example.test/browser',
+                  credentialStoreConsent: false,
+                  nodeConfigurations: [],
+                  adapter: {
+                    databaseType: DatabaseConnectionDatabaseType.neo4j,
+                    connectionUrl: 'bolt://127.0.0.1:7687',
+                    database: 'neo4j',
+                  },
+                } satisfies UpdateDatabaseConnectionRequestBodyDto),
+                signal: testContext.signal,
+              },
+            );
+
+            // then
+            assert.equal(response.status, 200);
+            const result: DatabaseConnectionDto = databaseSchema.parse(
+              await response.json(),
+            );
+            assert.equal(result.id, fixture.databaseConnectionId);
+            assert.equal(result.title, 'Updated Database');
+            assert.equal(result.connectionUrl, 'bolt://127.0.0.1:7687');
+            assert.equal(result.databaseType, 'neo4j');
+            const projectResponse: Response = await fetch(
+              `${manager.apiUrl}/project/${fixture.projectId}`,
+              {
+                headers: new Headers([
+                  ['Authorization', `Bearer ${ownerLogin.jwt}`],
+                ]),
+                signal: testContext.signal,
+              },
+            );
+            assert.equal(projectResponse.status, 200);
+            const publishedState: z.infer<typeof projectStateSchema> =
+              projectStateSchema.parse(await projectResponse.json());
+            const items: DatabaseConnectionDto[] | undefined =
+              publishedState.databases;
+
+            const persisted: DatabaseConnectionDto | undefined = items.find(
+              (item: DatabaseConnectionDto): boolean =>
+                item.id === fixture.databaseConnectionId,
+            );
+            assert.ok(persisted);
+            assert.equal(persisted.title, 'Updated Database');
+            assert.deepEqual(result.nodeConfigurations, []);
+            const removedConfiguration: Response = await manager.readDocument(
+              'api::node-configuration.node-configuration',
+              child,
+              testContext,
+            );
+            assert.equal(removedConfiguration.status, 404);
+            assert.deepEqual(persisted, result);
+          });
+
+          test('owner can update a database connection', async (testContext: TestContext): Promise<void> => {
+            // given
+            const fixture: FixtureContext =
+              await manager.setupFixture(testContext);
+            const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
+              fixture.owner.username,
+              fixture.owner.password,
+              testContext,
+            );
+
+            // when
+            const response: Response = await fetch(
+              `${manager.apiUrl}/project/${fixture.projectId}/database-connection/${fixture.databaseConnectionId}`,
+              {
+                method: 'PUT',
+                headers: new Headers([
+                  ['Authorization', `Bearer ${ownerLogin.jwt}`],
+                  ['Content-Type', 'application/json'],
+                ]),
+                body: JSON.stringify({
+                  title: 'Updated Database',
+                  browserUrl: 'https://example.test/browser',
+                  credentialStoreConsent: false,
+                  nodeConfigurations: [],
+                  adapter: {
+                    databaseType: DatabaseConnectionDatabaseType.neo4j,
+                    connectionUrl: 'bolt://127.0.0.1:7687',
+                    database: 'neo4j',
+                  },
+                } satisfies UpdateDatabaseConnectionRequestBodyDto),
+                signal: testContext.signal,
+              },
+            );
+
+            // then
+            assert.equal(response.status, 200);
+            const result: DatabaseConnectionDto = databaseSchema.parse(
+              await response.json(),
+            );
+            assert.equal(result.id, fixture.databaseConnectionId);
+            assert.equal(result.title, 'Updated Database');
+            assert.equal(result.connectionUrl, 'bolt://127.0.0.1:7687');
+            assert.equal(result.databaseType, 'neo4j');
+            const projectResponse: Response = await fetch(
+              `${manager.apiUrl}/project/${fixture.projectId}`,
+              {
+                headers: new Headers([
+                  ['Authorization', `Bearer ${ownerLogin.jwt}`],
+                ]),
+                signal: testContext.signal,
+              },
+            );
+            assert.equal(projectResponse.status, 200);
+            const publishedState: z.infer<typeof projectStateSchema> =
+              projectStateSchema.parse(await projectResponse.json());
+            const items: DatabaseConnectionDto[] | undefined =
+              publishedState.databases;
+            const persisted: DatabaseConnectionDto | undefined = items.find(
+              (item: DatabaseConnectionDto): boolean =>
+                item.id === fixture.databaseConnectionId,
+            );
+            assert.ok(persisted);
+            assert.equal(persisted.title, 'Updated Database');
+          });
+
+          test('returns saved RAMEN edge-title rules sorted by annotation type', async (testContext: TestContext): Promise<void> => {
+            // given
+            const fixture: FixtureContext =
+              await manager.setupFixture(testContext);
+            const login: PostAuthResponseBodyDto = await manager.loginUser(
+              fixture.collaborator.username,
+              fixture.collaborator.password,
+              testContext,
+            );
+            const url: string = `${manager.apiUrl}/project/${fixture.projectId}/database-connection/${fixture.databaseConnectionId}`;
+            const headers: Headers = new Headers([
+              ['Authorization', `Bearer ${login.jwt}`],
+              ['Content-Type', 'application/json'],
+            ]);
+            const rules: DatabaseConnectionDto['ramenEdgeTitleRules'] = [
+              { annotationType: 'relation', titleProperty: 'kind' },
+              { annotationType: 'persName', titleProperty: 'type' },
+            ];
+            const sortedRules: DatabaseConnectionDto['ramenEdgeTitleRules'] =
+              rules.toReversed();
+
+            // when
+            const response: Response = await fetch(url, {
+              method: 'PUT',
+              headers,
+              body: JSON.stringify({
+                title: 'RAMEN',
+                browserUrl: '',
+                credentialStoreConsent: false,
+                nodeConfigurations: [],
                 adapter: {
-                  databaseType: DatabaseConnectionDatabaseType.neo4j,
+                  databaseType: DatabaseConnectionDatabaseType.ramen,
                   connectionUrl: 'bolt://127.0.0.1:7687',
                   database: 'neo4j',
+                  ramenEdgeTitleRules: rules,
                 },
               } satisfies UpdateDatabaseConnectionRequestBodyDto),
               signal: testContext.signal,
-            },
-          );
+            });
 
-          // then
-          assert.equal(response.status, 200);
-          const result: DatabaseConnectionDto = databaseSchema.parse(
-            await response.json(),
-          );
-          assert.equal(result.id, fixture.databaseConnectionId);
-          assert.equal(result.title, 'Updated Database');
-          assert.equal(result.connectionUrl, 'bolt://127.0.0.1:7687');
-          assert.equal(result.databaseType, 'neo4j');
-          const projectResponse: Response = await fetch(
-            `${manager.apiUrl}/project/${fixture.projectId}`,
-            {
-              headers: new Headers([
-                ['Authorization', `Bearer ${ownerLogin.jwt}`],
-              ]),
+            // then
+            assert.equal(response.status, 200);
+            assert.deepEqual(
+              databaseSchema.parse(await response.json()).ramenEdgeTitleRules,
+              sortedRules,
+            );
+            const persisted: Response = await fetch(url, {
+              headers,
               signal: testContext.signal,
-            },
-          );
-          assert.equal(projectResponse.status, 200);
-          const publishedState: z.infer<typeof projectStateSchema> =
-            projectStateSchema.parse(await projectResponse.json());
-          const items: DatabaseConnectionDto[] | undefined =
-            publishedState.databases;
+            });
+            assert.equal(persisted.status, 200);
+            assert.deepEqual(
+              databaseSchema.parse(await persisted.json()).ramenEdgeTitleRules,
+              sortedRules,
+            );
+          });
 
-          const persisted: DatabaseConnectionDto | undefined = items.find(
-            (item: DatabaseConnectionDto): boolean =>
-              item.id === fixture.databaseConnectionId,
-          );
-          assert.ok(persisted);
-          assert.equal(persisted.title, 'Updated Database');
-          assert.equal(result.nodeConfigurations.length, 1);
-          assert.equal(result.nodeConfigurations[0]?.id, child);
-          assert.equal(
-            result.nodeConfigurations[0]?.type,
-            NodeConfigurationTypeDto.image,
-          );
-          assert.deepEqual(persisted, result);
-        });
-
-        test('deletes node configurations omitted from the update', async (testContext: TestContext): Promise<void> => {
-          // given
-          const fixture: FixtureContext =
-            await manager.setupFixture(testContext);
-          const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-            fixture.owner.username,
-            fixture.owner.password,
-            testContext,
-          );
-          const child: string = await manager.createPublishedDocument(
-            'api::node-configuration.node-configuration',
-            {
-              database: fixture.databaseConnectionId,
-              type: 'link',
-              label: 'Original Label',
-              property: 'id',
-              linkTemplate: 'https://example.test/{value}',
-              urlEncode: false,
-              valueRegex: '.*',
-            },
-            testContext,
-          );
-
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/project/${fixture.projectId}/database-connection/${fixture.databaseConnectionId}`,
-            {
+          test('clears saved RAMEN edge-title rules with an empty array', async (testContext: TestContext): Promise<void> => {
+            // given
+            const fixture: FixtureContext =
+              await manager.setupFixture(testContext);
+            const login: PostAuthResponseBodyDto = await manager.loginUser(
+              fixture.collaborator.username,
+              fixture.collaborator.password,
+              testContext,
+            );
+            const url: string = `${manager.apiUrl}/project/${fixture.projectId}/database-connection/${fixture.databaseConnectionId}`;
+            const headers: Headers = new Headers([
+              ['Authorization', `Bearer ${login.jwt}`],
+              ['Content-Type', 'application/json'],
+            ]);
+            const setup: Response = await fetch(url, {
               method: 'PUT',
-              headers: new Headers([
-                ['Authorization', `Bearer ${ownerLogin.jwt}`],
-                ['Content-Type', 'application/json'],
-              ]),
-              body: JSON.stringify({
-                title: 'Updated Database',
-                browserUrl: 'https://example.test/browser',
-                credentialStoreConsent: false,
-                nodeConfigurations: [],
-                adapter: {
-                  databaseType: DatabaseConnectionDatabaseType.neo4j,
-                  connectionUrl: 'bolt://127.0.0.1:7687',
-                  database: 'neo4j',
-                },
-              } satisfies UpdateDatabaseConnectionRequestBodyDto),
-              signal: testContext.signal,
-            },
-          );
-
-          // then
-          assert.equal(response.status, 200);
-          const result: DatabaseConnectionDto = databaseSchema.parse(
-            await response.json(),
-          );
-          assert.equal(result.id, fixture.databaseConnectionId);
-          assert.equal(result.title, 'Updated Database');
-          assert.equal(result.connectionUrl, 'bolt://127.0.0.1:7687');
-          assert.equal(result.databaseType, 'neo4j');
-          const projectResponse: Response = await fetch(
-            `${manager.apiUrl}/project/${fixture.projectId}`,
-            {
-              headers: new Headers([
-                ['Authorization', `Bearer ${ownerLogin.jwt}`],
-              ]),
-              signal: testContext.signal,
-            },
-          );
-          assert.equal(projectResponse.status, 200);
-          const publishedState: z.infer<typeof projectStateSchema> =
-            projectStateSchema.parse(await projectResponse.json());
-          const items: DatabaseConnectionDto[] | undefined =
-            publishedState.databases;
-
-          const persisted: DatabaseConnectionDto | undefined = items.find(
-            (item: DatabaseConnectionDto): boolean =>
-              item.id === fixture.databaseConnectionId,
-          );
-          assert.ok(persisted);
-          assert.equal(persisted.title, 'Updated Database');
-          assert.deepEqual(result.nodeConfigurations, []);
-          const removedConfiguration: Response = await manager.readDocument(
-            'api::node-configuration.node-configuration',
-            child,
-            testContext,
-          );
-          assert.equal(removedConfiguration.status, 404);
-          assert.deepEqual(persisted, result);
-        });
-
-        test('owner can update a database connection', async (testContext: TestContext): Promise<void> => {
-          // given
-          const fixture: FixtureContext =
-            await manager.setupFixture(testContext);
-          const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-            fixture.owner.username,
-            fixture.owner.password,
-            testContext,
-          );
-
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/project/${fixture.projectId}/database-connection/${fixture.databaseConnectionId}`,
-            {
-              method: 'PUT',
-              headers: new Headers([
-                ['Authorization', `Bearer ${ownerLogin.jwt}`],
-                ['Content-Type', 'application/json'],
-              ]),
-              body: JSON.stringify({
-                title: 'Updated Database',
-                browserUrl: 'https://example.test/browser',
-                credentialStoreConsent: false,
-                nodeConfigurations: [],
-                adapter: {
-                  databaseType: DatabaseConnectionDatabaseType.neo4j,
-                  connectionUrl: 'bolt://127.0.0.1:7687',
-                  database: 'neo4j',
-                },
-              } satisfies UpdateDatabaseConnectionRequestBodyDto),
-              signal: testContext.signal,
-            },
-          );
-
-          // then
-          assert.equal(response.status, 200);
-          const result: DatabaseConnectionDto = databaseSchema.parse(
-            await response.json(),
-          );
-          assert.equal(result.id, fixture.databaseConnectionId);
-          assert.equal(result.title, 'Updated Database');
-          assert.equal(result.connectionUrl, 'bolt://127.0.0.1:7687');
-          assert.equal(result.databaseType, 'neo4j');
-          const projectResponse: Response = await fetch(
-            `${manager.apiUrl}/project/${fixture.projectId}`,
-            {
-              headers: new Headers([
-                ['Authorization', `Bearer ${ownerLogin.jwt}`],
-              ]),
-              signal: testContext.signal,
-            },
-          );
-          assert.equal(projectResponse.status, 200);
-          const publishedState: z.infer<typeof projectStateSchema> =
-            projectStateSchema.parse(await projectResponse.json());
-          const items: DatabaseConnectionDto[] | undefined =
-            publishedState.databases;
-          const persisted: DatabaseConnectionDto | undefined = items.find(
-            (item: DatabaseConnectionDto): boolean =>
-              item.id === fixture.databaseConnectionId,
-          );
-          assert.ok(persisted);
-          assert.equal(persisted.title, 'Updated Database');
-        });
-
-        test('returns saved RAMEN edge-title rules sorted by annotation type', async (testContext: TestContext): Promise<void> => {
-          // given
-          const fixture: FixtureContext =
-            await manager.setupFixture(testContext);
-          const login: PostAuthResponseBodyDto = await manager.loginUser(
-            fixture.collaborator.username,
-            fixture.collaborator.password,
-            testContext,
-          );
-          const url: string = `${manager.apiUrl}/project/${fixture.projectId}/database-connection/${fixture.databaseConnectionId}`;
-          const headers: Headers = new Headers([
-            ['Authorization', `Bearer ${login.jwt}`],
-            ['Content-Type', 'application/json'],
-          ]);
-          const rules: DatabaseConnectionDto['ramenEdgeTitleRules'] = [
-            { annotationType: 'relation', titleProperty: 'kind' },
-            { annotationType: 'persName', titleProperty: 'type' },
-          ];
-          const sortedRules: DatabaseConnectionDto['ramenEdgeTitleRules'] =
-            rules.toReversed();
-
-          // when
-          const response: Response = await fetch(url, {
-            method: 'PUT',
-            headers,
-            body: JSON.stringify({
-              title: 'RAMEN',
-              browserUrl: '',
-              credentialStoreConsent: false,
-              nodeConfigurations: [],
-              adapter: {
-                databaseType: DatabaseConnectionDatabaseType.ramen,
-                connectionUrl: 'bolt://127.0.0.1:7687',
-                database: 'neo4j',
-                ramenEdgeTitleRules: rules,
-              },
-            } satisfies UpdateDatabaseConnectionRequestBodyDto),
-            signal: testContext.signal,
-          });
-
-          // then
-          assert.equal(response.status, 200);
-          assert.deepEqual(
-            databaseSchema.parse(await response.json()).ramenEdgeTitleRules,
-            sortedRules,
-          );
-          const persisted: Response = await fetch(url, {
-            headers,
-            signal: testContext.signal,
-          });
-          assert.equal(persisted.status, 200);
-          assert.deepEqual(
-            databaseSchema.parse(await persisted.json()).ramenEdgeTitleRules,
-            sortedRules,
-          );
-        });
-
-        test('clears saved RAMEN edge-title rules with an empty array', async (testContext: TestContext): Promise<void> => {
-          // given
-          const fixture: FixtureContext =
-            await manager.setupFixture(testContext);
-          const login: PostAuthResponseBodyDto = await manager.loginUser(
-            fixture.collaborator.username,
-            fixture.collaborator.password,
-            testContext,
-          );
-          const url: string = `${manager.apiUrl}/project/${fixture.projectId}/database-connection/${fixture.databaseConnectionId}`;
-          const headers: Headers = new Headers([
-            ['Authorization', `Bearer ${login.jwt}`],
-            ['Content-Type', 'application/json'],
-          ]);
-          const setup: Response = await fetch(url, {
-            method: 'PUT',
-            headers,
-            body: JSON.stringify({
-              title: 'RAMEN',
-              browserUrl: '',
-              credentialStoreConsent: false,
-              nodeConfigurations: [],
-              adapter: {
-                databaseType: DatabaseConnectionDatabaseType.ramen,
-                connectionUrl: 'bolt://127.0.0.1:7687',
-                database: 'neo4j',
-                ramenEdgeTitleRules: [
-                  { annotationType: 'relation', titleProperty: 'kind' },
-                ],
-              },
-            } satisfies UpdateDatabaseConnectionRequestBodyDto),
-            signal: testContext.signal,
-          });
-          assert.equal(setup.status, 200);
-          assert.equal(
-            databaseSchema.parse(await setup.json()).ramenEdgeTitleRules.length,
-            1,
-          );
-
-          // when
-          const response: Response = await fetch(url, {
-            method: 'PUT',
-            headers,
-            body: JSON.stringify({
-              title: 'RAMEN',
-              browserUrl: '',
-              credentialStoreConsent: false,
-              nodeConfigurations: [],
-              adapter: {
-                databaseType: DatabaseConnectionDatabaseType.ramen,
-                connectionUrl: 'bolt://127.0.0.1:7687',
-                database: 'neo4j',
-                ramenEdgeTitleRules: [],
-              },
-            } satisfies UpdateDatabaseConnectionRequestBodyDto),
-            signal: testContext.signal,
-          });
-
-          // then
-          assert.equal(response.status, 200);
-          assert.deepEqual(
-            databaseSchema.parse(await response.json()).ramenEdgeTitleRules,
-            [],
-          );
-          const persisted: Response = await fetch(url, {
-            headers,
-            signal: testContext.signal,
-          });
-          assert.equal(persisted.status, 200);
-          assert.deepEqual(
-            databaseSchema.parse(await persisted.json()).ramenEdgeTitleRules,
-            [],
-          );
-        });
-
-        test('collaborator can update a database connection', async (testContext: TestContext): Promise<void> => {
-          // given
-          const fixture: FixtureContext =
-            await manager.setupFixture(testContext);
-          const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-            fixture.owner.username,
-            fixture.owner.password,
-            testContext,
-          );
-          const login: PostAuthResponseBodyDto = await manager.loginUser(
-            fixture.collaborator.username,
-            fixture.collaborator.password,
-            testContext,
-          );
-
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/project/${fixture.projectId}/database-connection/${fixture.databaseConnectionId}`,
-            {
-              method: 'PUT',
-              headers: new Headers([
-                ['Authorization', `Bearer ${login.jwt}`],
-                ['Content-Type', 'application/json'],
-              ]),
-              body: JSON.stringify({
-                title: 'Updated Database',
-                browserUrl: 'https://example.test/browser',
-                credentialStoreConsent: false,
-                nodeConfigurations: [],
-                adapter: {
-                  databaseType: DatabaseConnectionDatabaseType.neo4j,
-                  connectionUrl: 'bolt://127.0.0.1:7687',
-                  database: 'neo4j',
-                },
-              } satisfies UpdateDatabaseConnectionRequestBodyDto),
-              signal: testContext.signal,
-            },
-          );
-
-          // then
-          assert.equal(response.status, 200);
-          const result: DatabaseConnectionDto = databaseSchema.parse(
-            await response.json(),
-          );
-          assert.equal(result.id, fixture.databaseConnectionId);
-          assert.equal(result.title, 'Updated Database');
-          assert.equal(result.connectionUrl, 'bolt://127.0.0.1:7687');
-          assert.equal(result.databaseType, 'neo4j');
-          const projectResponse: Response = await fetch(
-            `${manager.apiUrl}/project/${fixture.projectId}`,
-            {
-              headers: new Headers([
-                ['Authorization', `Bearer ${ownerLogin.jwt}`],
-              ]),
-              signal: testContext.signal,
-            },
-          );
-          assert.equal(projectResponse.status, 200);
-          const publishedState: z.infer<typeof projectStateSchema> =
-            projectStateSchema.parse(await projectResponse.json());
-          const items: DatabaseConnectionDto[] | undefined =
-            publishedState.databases;
-          const persisted: DatabaseConnectionDto | undefined = items.find(
-            (item: DatabaseConnectionDto): boolean =>
-              item.id === fixture.databaseConnectionId,
-          );
-          assert.ok(persisted);
-          assert.equal(persisted.title, 'Updated Database');
-        });
-
-        test('clears stored Neo4j credentials when switching to SPARQL', async (testContext: TestContext): Promise<void> => {
-          // given
-          const fixture: FixtureContext =
-            await manager.setupFixture(testContext);
-          const login: PostAuthResponseBodyDto = await manager.loginUser(
-            fixture.owner.username,
-            fixture.owner.password,
-            testContext,
-          );
-          const url: string = `${manager.apiUrl}/project/${fixture.projectId}/database-connection/${fixture.databaseConnectionId}`;
-          const headers: Headers = new Headers([
-            ['Authorization', `Bearer ${login.jwt}`],
-            ['Content-Type', 'application/json'],
-          ]);
-          const setup: Response = await fetch(url, {
-            method: 'PUT',
-            headers,
-            body: JSON.stringify({
-              title: 'Graph',
-              browserUrl: '',
-              credentialStoreConsent: true,
-              nodeConfigurations: [],
-              adapter: {
-                databaseType: DatabaseConnectionDatabaseType.neo4j,
-                connectionUrl: 'bolt://example.test:7687',
-                username: 'alice',
-                password: 'stored-secret',
-                database: 'neo4j',
-              },
-            } satisfies UpdateDatabaseConnectionRequestBodyDto),
-            signal: testContext.signal,
-          });
-          assert.equal(setup.status, 200);
-
-          // when
-          const response: Response = await fetch(url, {
-            method: 'PUT',
-            headers,
-            body: JSON.stringify({
-              title: 'Graph',
-              browserUrl: '',
-              credentialStoreConsent: false,
-              nodeConfigurations: [],
-              adapter: {
-                databaseType: DatabaseConnectionDatabaseType.sparql,
-                connectionUrl: 'https://example.test/sparql',
-              },
-            } satisfies UpdateDatabaseConnectionRequestBodyDto),
-            signal: testContext.signal,
-          });
-
-          // then
-          assert.equal(response.status, 200);
-          assert.equal(
-            databaseSchema.parse(await response.json()).database,
-            '',
-          );
-          const stored: Response = await manager.readDocument(
-            'api::database-connection.database-connection',
-            fixture.databaseConnectionId,
-            testContext,
-          );
-          assert.equal(stored.status, 200);
-          z.object({
-            data: z.object({ username: z.null(), password: z.null() }),
-          }).parse(await stored.json());
-        });
-
-        test('can change the database type to sparql', async (testContext: TestContext): Promise<void> => {
-          // given
-          const fixture: FixtureContext =
-            await manager.setupFixture(testContext);
-          const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-            fixture.owner.username,
-            fixture.owner.password,
-            testContext,
-          );
-
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/project/${fixture.projectId}/database-connection/${fixture.databaseConnectionId}`,
-            {
-              method: 'PUT',
-              headers: new Headers([
-                ['Authorization', `Bearer ${ownerLogin.jwt}`],
-                ['Content-Type', 'application/json'],
-              ]),
-              body: JSON.stringify({
-                title: 'Updated Database',
-                browserUrl: 'https://example.test/browser',
-                credentialStoreConsent: false,
-                nodeConfigurations: [],
-                adapter: {
-                  databaseType: DatabaseConnectionDatabaseType.sparql,
-                  connectionUrl: 'bolt://127.0.0.1:7687',
-                },
-              } satisfies UpdateDatabaseConnectionRequestBodyDto),
-              signal: testContext.signal,
-            },
-          );
-
-          // then
-          assert.equal(response.status, 200);
-          const result: DatabaseConnectionDto = databaseSchema.parse(
-            await response.json(),
-          );
-          assert.equal(result.id, fixture.databaseConnectionId);
-          assert.equal(result.title, 'Updated Database');
-          assert.equal(result.connectionUrl, 'bolt://127.0.0.1:7687');
-          assert.equal(result.databaseType, 'sparql');
-          const projectResponse: Response = await fetch(
-            `${manager.apiUrl}/project/${fixture.projectId}`,
-            {
-              headers: new Headers([
-                ['Authorization', `Bearer ${ownerLogin.jwt}`],
-              ]),
-              signal: testContext.signal,
-            },
-          );
-          assert.equal(projectResponse.status, 200);
-          const publishedState: z.infer<typeof projectStateSchema> =
-            projectStateSchema.parse(await projectResponse.json());
-          const items: DatabaseConnectionDto[] | undefined =
-            publishedState.databases;
-          const persisted: DatabaseConnectionDto | undefined = items.find(
-            (item: DatabaseConnectionDto): boolean =>
-              item.id === fixture.databaseConnectionId,
-          );
-          assert.ok(persisted);
-          assert.equal(persisted.title, 'Updated Database');
-        });
-
-        test('can change the database type to wikidata', async (testContext: TestContext): Promise<void> => {
-          // given
-          const fixture: FixtureContext =
-            await manager.setupFixture(testContext);
-          const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-            fixture.owner.username,
-            fixture.owner.password,
-            testContext,
-          );
-
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/project/${fixture.projectId}/database-connection/${fixture.databaseConnectionId}`,
-            {
-              method: 'PUT',
-              headers: new Headers([
-                ['Authorization', `Bearer ${ownerLogin.jwt}`],
-                ['Content-Type', 'application/json'],
-              ]),
-              body: JSON.stringify({
-                title: 'Updated Database',
-                browserUrl: 'https://example.test/browser',
-                credentialStoreConsent: false,
-                nodeConfigurations: [],
-                adapter: {
-                  databaseType: DatabaseConnectionDatabaseType.wikidata,
-                  connectionUrl: 'bolt://127.0.0.1:7687',
-                  language: 'de',
-                },
-              } satisfies UpdateDatabaseConnectionRequestBodyDto),
-              signal: testContext.signal,
-            },
-          );
-
-          // then
-          assert.equal(response.status, 200);
-          const result: DatabaseConnectionDto = databaseSchema.parse(
-            await response.json(),
-          );
-          assert.equal(result.id, fixture.databaseConnectionId);
-          assert.equal(result.title, 'Updated Database');
-          assert.equal(result.connectionUrl, 'bolt://127.0.0.1:7687');
-          assert.equal(result.databaseType, 'wikidata');
-          const projectResponse: Response = await fetch(
-            `${manager.apiUrl}/project/${fixture.projectId}`,
-            {
-              headers: new Headers([
-                ['Authorization', `Bearer ${ownerLogin.jwt}`],
-              ]),
-              signal: testContext.signal,
-            },
-          );
-          assert.equal(projectResponse.status, 200);
-          const publishedState: z.infer<typeof projectStateSchema> =
-            projectStateSchema.parse(await projectResponse.json());
-          const items: DatabaseConnectionDto[] | undefined =
-            publishedState.databases;
-          const persisted: DatabaseConnectionDto | undefined = items.find(
-            (item: DatabaseConnectionDto): boolean =>
-              item.id === fixture.databaseConnectionId,
-          );
-          assert.ok(persisted);
-          assert.equal(persisted.title, 'Updated Database');
-        });
-
-        test('clears the Wikidata language when language is explicitly null', async (testContext: TestContext): Promise<void> => {
-          // given
-          const fixture: FixtureContext =
-            await manager.setupFixture(testContext);
-          const login: PostAuthResponseBodyDto = await manager.loginUser(
-            fixture.owner.username,
-            fixture.owner.password,
-            testContext,
-          );
-          const url: string = `${manager.apiUrl}/project/${fixture.projectId}/database-connection/${fixture.databaseConnectionId}`;
-          const headers: Headers = new Headers([
-            ['Authorization', `Bearer ${login.jwt}`],
-            ['Content-Type', 'application/json'],
-          ]);
-          const adapter: WikidataDatabaseConnectionAdapterDto = {
-            databaseType: DatabaseConnectionDatabaseType.wikidata,
-            connectionUrl: 'https://example.test/sparql',
-            language: 'de',
-          };
-          const body: UpdateDatabaseConnectionRequestBodyDto = {
-            title: 'Wikidata',
-            browserUrl: '',
-            credentialStoreConsent: false,
-            nodeConfigurations: [],
-            adapter,
-          };
-
-          const initialSave: Response = await fetch(url, {
-            method: 'PUT',
-            headers,
-            body: JSON.stringify(body),
-            signal: testContext.signal,
-          });
-          assert.equal(initialSave.status, 200);
-          assert.equal(
-            databaseSchema.parse(await initialSave.json()).language,
-            'de',
-          );
-
-          // when
-          adapter.language = null;
-          const nextSave: Response = await fetch(url, {
-            method: 'PUT',
-            headers,
-            body: JSON.stringify(body),
-            signal: testContext.signal,
-          });
-
-          // then
-          assert.equal(nextSave.status, 200);
-          assert.equal(
-            databaseSchema.parse(await nextSave.json()).language,
-            null,
-          );
-          const read: Response = await fetch(url, {
-            headers,
-            signal: testContext.signal,
-          });
-          assert.equal(read.status, 200);
-          assert.equal(databaseSchema.parse(await read.json()).language, null);
-        });
-      });
-      describe('400', (): void => {
-        test('rejects an empty RAMEN annotation type', async (testContext: TestContext): Promise<void> => {
-          // given
-          const fixture: FixtureContext =
-            await manager.setupFixture(testContext);
-          const login: PostAuthResponseBodyDto = await manager.loginUser(
-            fixture.collaborator.username,
-            fixture.collaborator.password,
-            testContext,
-          );
-
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/project/${fixture.projectId}/database-connection/${fixture.databaseConnectionId}`,
-            {
-              method: 'PUT',
-              headers: new Headers([
-                ['Authorization', `Bearer ${login.jwt}`],
-                ['Content-Type', 'application/json'],
-              ]),
+              headers,
               body: JSON.stringify({
                 title: 'RAMEN',
                 browserUrl: '',
@@ -3435,337 +3070,1051 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
                   connectionUrl: 'bolt://127.0.0.1:7687',
                   database: 'neo4j',
                   ramenEdgeTitleRules: [
-                    { annotationType: '', titleProperty: 'kind' },
+                    { annotationType: 'relation', titleProperty: 'kind' },
                   ],
                 },
               } satisfies UpdateDatabaseConnectionRequestBodyDto),
               signal: testContext.signal,
+            });
+            assert.equal(setup.status, 200);
+            assert.equal(
+              databaseSchema.parse(await setup.json()).ramenEdgeTitleRules
+                .length,
+              1,
+            );
+
+            // when
+            const response: Response = await fetch(url, {
+              method: 'PUT',
+              headers,
+              body: JSON.stringify({
+                title: 'RAMEN',
+                browserUrl: '',
+                credentialStoreConsent: false,
+                nodeConfigurations: [],
+                adapter: {
+                  databaseType: DatabaseConnectionDatabaseType.ramen,
+                  connectionUrl: 'bolt://127.0.0.1:7687',
+                  database: 'neo4j',
+                  ramenEdgeTitleRules: [],
+                },
+              } satisfies UpdateDatabaseConnectionRequestBodyDto),
+              signal: testContext.signal,
+            });
+
+            // then
+            assert.equal(response.status, 200);
+            assert.deepEqual(
+              databaseSchema.parse(await response.json()).ramenEdgeTitleRules,
+              [],
+            );
+            const persisted: Response = await fetch(url, {
+              headers,
+              signal: testContext.signal,
+            });
+            assert.equal(persisted.status, 200);
+            assert.deepEqual(
+              databaseSchema.parse(await persisted.json()).ramenEdgeTitleRules,
+              [],
+            );
+          });
+
+          test('collaborator can update a database connection', async (testContext: TestContext): Promise<void> => {
+            // given
+            const fixture: FixtureContext =
+              await manager.setupFixture(testContext);
+            const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
+              fixture.owner.username,
+              fixture.owner.password,
+              testContext,
+            );
+            const login: PostAuthResponseBodyDto = await manager.loginUser(
+              fixture.collaborator.username,
+              fixture.collaborator.password,
+              testContext,
+            );
+
+            // when
+            const response: Response = await fetch(
+              `${manager.apiUrl}/project/${fixture.projectId}/database-connection/${fixture.databaseConnectionId}`,
+              {
+                method: 'PUT',
+                headers: new Headers([
+                  ['Authorization', `Bearer ${login.jwt}`],
+                  ['Content-Type', 'application/json'],
+                ]),
+                body: JSON.stringify({
+                  title: 'Updated Database',
+                  browserUrl: 'https://example.test/browser',
+                  credentialStoreConsent: false,
+                  nodeConfigurations: [],
+                  adapter: {
+                    databaseType: DatabaseConnectionDatabaseType.neo4j,
+                    connectionUrl: 'bolt://127.0.0.1:7687',
+                    database: 'neo4j',
+                  },
+                } satisfies UpdateDatabaseConnectionRequestBodyDto),
+                signal: testContext.signal,
+              },
+            );
+
+            // then
+            assert.equal(response.status, 200);
+            const result: DatabaseConnectionDto = databaseSchema.parse(
+              await response.json(),
+            );
+            assert.equal(result.id, fixture.databaseConnectionId);
+            assert.equal(result.title, 'Updated Database');
+            assert.equal(result.connectionUrl, 'bolt://127.0.0.1:7687');
+            assert.equal(result.databaseType, 'neo4j');
+            const projectResponse: Response = await fetch(
+              `${manager.apiUrl}/project/${fixture.projectId}`,
+              {
+                headers: new Headers([
+                  ['Authorization', `Bearer ${ownerLogin.jwt}`],
+                ]),
+                signal: testContext.signal,
+              },
+            );
+            assert.equal(projectResponse.status, 200);
+            const publishedState: z.infer<typeof projectStateSchema> =
+              projectStateSchema.parse(await projectResponse.json());
+            const items: DatabaseConnectionDto[] | undefined =
+              publishedState.databases;
+            const persisted: DatabaseConnectionDto | undefined = items.find(
+              (item: DatabaseConnectionDto): boolean =>
+                item.id === fixture.databaseConnectionId,
+            );
+            assert.ok(persisted);
+            assert.equal(persisted.title, 'Updated Database');
+          });
+
+          test('clears stored Neo4j credentials when switching to SPARQL', async (testContext: TestContext): Promise<void> => {
+            // given
+            const fixture: FixtureContext =
+              await manager.setupFixture(testContext);
+            const login: PostAuthResponseBodyDto = await manager.loginUser(
+              fixture.owner.username,
+              fixture.owner.password,
+              testContext,
+            );
+            const url: string = `${manager.apiUrl}/project/${fixture.projectId}/database-connection/${fixture.databaseConnectionId}`;
+            const headers: Headers = new Headers([
+              ['Authorization', `Bearer ${login.jwt}`],
+              ['Content-Type', 'application/json'],
+            ]);
+            const setup: Response = await fetch(url, {
+              method: 'PUT',
+              headers,
+              body: JSON.stringify({
+                title: 'Graph',
+                browserUrl: '',
+                credentialStoreConsent: true,
+                nodeConfigurations: [],
+                adapter: {
+                  databaseType: DatabaseConnectionDatabaseType.neo4j,
+                  connectionUrl: 'bolt://example.test:7687',
+                  username: 'alice',
+                  password: 'stored-secret',
+                  database: 'neo4j',
+                },
+              } satisfies UpdateDatabaseConnectionRequestBodyDto),
+              signal: testContext.signal,
+            });
+            assert.equal(setup.status, 200);
+
+            // when
+            const response: Response = await fetch(url, {
+              method: 'PUT',
+              headers,
+              body: JSON.stringify({
+                title: 'Graph',
+                browserUrl: '',
+                credentialStoreConsent: false,
+                nodeConfigurations: [],
+                adapter: {
+                  databaseType: DatabaseConnectionDatabaseType.sparql,
+                  connectionUrl: 'https://example.test/sparql',
+                },
+              } satisfies UpdateDatabaseConnectionRequestBodyDto),
+              signal: testContext.signal,
+            });
+
+            // then
+            assert.equal(response.status, 200);
+            assert.equal(
+              databaseSchema.parse(await response.json()).database,
+              '',
+            );
+            const stored: Response = await manager.readDocument(
+              'api::database-connection.database-connection',
+              fixture.databaseConnectionId,
+              testContext,
+            );
+            assert.equal(stored.status, 200);
+            z.object({
+              data: z.object({ username: z.null(), password: z.null() }),
+            }).parse(await stored.json());
+          });
+
+          test('can change the database type to sparql', async (testContext: TestContext): Promise<void> => {
+            // given
+            const fixture: FixtureContext =
+              await manager.setupFixture(testContext);
+            const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
+              fixture.owner.username,
+              fixture.owner.password,
+              testContext,
+            );
+
+            // when
+            const response: Response = await fetch(
+              `${manager.apiUrl}/project/${fixture.projectId}/database-connection/${fixture.databaseConnectionId}`,
+              {
+                method: 'PUT',
+                headers: new Headers([
+                  ['Authorization', `Bearer ${ownerLogin.jwt}`],
+                  ['Content-Type', 'application/json'],
+                ]),
+                body: JSON.stringify({
+                  title: 'Updated Database',
+                  browserUrl: 'https://example.test/browser',
+                  credentialStoreConsent: false,
+                  nodeConfigurations: [],
+                  adapter: {
+                    databaseType: DatabaseConnectionDatabaseType.sparql,
+                    connectionUrl: 'bolt://127.0.0.1:7687',
+                  },
+                } satisfies UpdateDatabaseConnectionRequestBodyDto),
+                signal: testContext.signal,
+              },
+            );
+
+            // then
+            assert.equal(response.status, 200);
+            const result: DatabaseConnectionDto = databaseSchema.parse(
+              await response.json(),
+            );
+            assert.equal(result.id, fixture.databaseConnectionId);
+            assert.equal(result.title, 'Updated Database');
+            assert.equal(result.connectionUrl, 'bolt://127.0.0.1:7687');
+            assert.equal(result.databaseType, 'sparql');
+            const projectResponse: Response = await fetch(
+              `${manager.apiUrl}/project/${fixture.projectId}`,
+              {
+                headers: new Headers([
+                  ['Authorization', `Bearer ${ownerLogin.jwt}`],
+                ]),
+                signal: testContext.signal,
+              },
+            );
+            assert.equal(projectResponse.status, 200);
+            const publishedState: z.infer<typeof projectStateSchema> =
+              projectStateSchema.parse(await projectResponse.json());
+            const items: DatabaseConnectionDto[] | undefined =
+              publishedState.databases;
+            const persisted: DatabaseConnectionDto | undefined = items.find(
+              (item: DatabaseConnectionDto): boolean =>
+                item.id === fixture.databaseConnectionId,
+            );
+            assert.ok(persisted);
+            assert.equal(persisted.title, 'Updated Database');
+          });
+
+          test('can change the database type to wikidata', async (testContext: TestContext): Promise<void> => {
+            // given
+            const fixture: FixtureContext =
+              await manager.setupFixture(testContext);
+            const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
+              fixture.owner.username,
+              fixture.owner.password,
+              testContext,
+            );
+
+            // when
+            const response: Response = await fetch(
+              `${manager.apiUrl}/project/${fixture.projectId}/database-connection/${fixture.databaseConnectionId}`,
+              {
+                method: 'PUT',
+                headers: new Headers([
+                  ['Authorization', `Bearer ${ownerLogin.jwt}`],
+                  ['Content-Type', 'application/json'],
+                ]),
+                body: JSON.stringify({
+                  title: 'Updated Database',
+                  browserUrl: 'https://example.test/browser',
+                  credentialStoreConsent: false,
+                  nodeConfigurations: [],
+                  adapter: {
+                    databaseType: DatabaseConnectionDatabaseType.wikidata,
+                    connectionUrl: 'bolt://127.0.0.1:7687',
+                    language: 'de',
+                  },
+                } satisfies UpdateDatabaseConnectionRequestBodyDto),
+                signal: testContext.signal,
+              },
+            );
+
+            // then
+            assert.equal(response.status, 200);
+            const result: DatabaseConnectionDto = databaseSchema.parse(
+              await response.json(),
+            );
+            assert.equal(result.id, fixture.databaseConnectionId);
+            assert.equal(result.title, 'Updated Database');
+            assert.equal(result.connectionUrl, 'bolt://127.0.0.1:7687');
+            assert.equal(result.databaseType, 'wikidata');
+            const projectResponse: Response = await fetch(
+              `${manager.apiUrl}/project/${fixture.projectId}`,
+              {
+                headers: new Headers([
+                  ['Authorization', `Bearer ${ownerLogin.jwt}`],
+                ]),
+                signal: testContext.signal,
+              },
+            );
+            assert.equal(projectResponse.status, 200);
+            const publishedState: z.infer<typeof projectStateSchema> =
+              projectStateSchema.parse(await projectResponse.json());
+            const items: DatabaseConnectionDto[] | undefined =
+              publishedState.databases;
+            const persisted: DatabaseConnectionDto | undefined = items.find(
+              (item: DatabaseConnectionDto): boolean =>
+                item.id === fixture.databaseConnectionId,
+            );
+            assert.ok(persisted);
+            assert.equal(persisted.title, 'Updated Database');
+          });
+
+          test('clears the Wikidata language when language is explicitly null', async (testContext: TestContext): Promise<void> => {
+            // given
+            const fixture: FixtureContext =
+              await manager.setupFixture(testContext);
+            const login: PostAuthResponseBodyDto = await manager.loginUser(
+              fixture.owner.username,
+              fixture.owner.password,
+              testContext,
+            );
+            const url: string = `${manager.apiUrl}/project/${fixture.projectId}/database-connection/${fixture.databaseConnectionId}`;
+            const headers: Headers = new Headers([
+              ['Authorization', `Bearer ${login.jwt}`],
+              ['Content-Type', 'application/json'],
+            ]);
+            const adapter: WikidataDatabaseConnectionAdapterDto = {
+              databaseType: DatabaseConnectionDatabaseType.wikidata,
+              connectionUrl: 'https://example.test/sparql',
+              language: 'de',
+            };
+            const body: UpdateDatabaseConnectionRequestBodyDto = {
+              title: 'Wikidata',
+              browserUrl: '',
+              credentialStoreConsent: false,
+              nodeConfigurations: [],
+              adapter,
+            };
+
+            const initialSave: Response = await fetch(url, {
+              method: 'PUT',
+              headers,
+              body: JSON.stringify(body),
+              signal: testContext.signal,
+            });
+            assert.equal(initialSave.status, 200);
+            assert.equal(
+              databaseSchema.parse(await initialSave.json()).language,
+              'de',
+            );
+
+            // when
+            adapter.language = null;
+            const nextSave: Response = await fetch(url, {
+              method: 'PUT',
+              headers,
+              body: JSON.stringify(body),
+              signal: testContext.signal,
+            });
+
+            // then
+            assert.equal(nextSave.status, 200);
+            assert.equal(
+              databaseSchema.parse(await nextSave.json()).language,
+              null,
+            );
+            const read: Response = await fetch(url, {
+              headers,
+              signal: testContext.signal,
+            });
+            assert.equal(read.status, 200);
+            assert.equal(
+              databaseSchema.parse(await read.json()).language,
+              null,
+            );
+          });
+        });
+        describe('400', (): void => {
+          test('rejects an empty RAMEN annotation type', async (testContext: TestContext): Promise<void> => {
+            // given
+            const fixture: FixtureContext =
+              await manager.setupFixture(testContext);
+            const login: PostAuthResponseBodyDto = await manager.loginUser(
+              fixture.collaborator.username,
+              fixture.collaborator.password,
+              testContext,
+            );
+
+            // when
+            const response: Response = await fetch(
+              `${manager.apiUrl}/project/${fixture.projectId}/database-connection/${fixture.databaseConnectionId}`,
+              {
+                method: 'PUT',
+                headers: new Headers([
+                  ['Authorization', `Bearer ${login.jwt}`],
+                  ['Content-Type', 'application/json'],
+                ]),
+                body: JSON.stringify({
+                  title: 'RAMEN',
+                  browserUrl: '',
+                  credentialStoreConsent: false,
+                  nodeConfigurations: [],
+                  adapter: {
+                    databaseType: DatabaseConnectionDatabaseType.ramen,
+                    connectionUrl: 'bolt://127.0.0.1:7687',
+                    database: 'neo4j',
+                    ramenEdgeTitleRules: [
+                      { annotationType: '', titleProperty: 'kind' },
+                    ],
+                  },
+                } satisfies UpdateDatabaseConnectionRequestBodyDto),
+                signal: testContext.signal,
+              },
+            );
+
+            // then
+            assert.equal(response.status, 400);
+            const error: { statusCode: 400; message: string[] } = z
+              .object({
+                statusCode: z.literal(400),
+                message: z.array(z.string()),
+              })
+              .parse(await response.json());
+            assert.deepEqual(error.message, [
+              'adapter.ramenEdgeTitleRules.0.annotationType should not be empty',
+            ]);
+          });
+
+          test('rejects missing RAMEN edge-title rules', async (testContext: TestContext): Promise<void> => {
+            // given
+            const fixture: FixtureContext =
+              await manager.setupFixture(testContext);
+            const login: PostAuthResponseBodyDto = await manager.loginUser(
+              fixture.collaborator.username,
+              fixture.collaborator.password,
+              testContext,
+            );
+            const url: string = `${manager.apiUrl}/project/${fixture.projectId}/database-connection/${fixture.databaseConnectionId}`;
+            const headers: Headers = new Headers([
+              ['Authorization', `Bearer ${login.jwt}`],
+              ['Content-Type', 'application/json'],
+            ]);
+            const original: Response = await fetch(url, {
+              headers,
+              signal: testContext.signal,
+            });
+            assert.equal(original.status, 200);
+            const originalConnection: DatabaseConnectionDto =
+              databaseSchema.parse(await original.json());
+
+            // when
+            const response: Response = await fetch(url, {
+              method: 'PUT',
+              headers,
+              body: JSON.stringify({
+                title: 'RAMEN',
+                browserUrl: '',
+                credentialStoreConsent: false,
+                nodeConfigurations: [],
+                adapter: {
+                  databaseType: DatabaseConnectionDatabaseType.ramen,
+                  connectionUrl: 'bolt://127.0.0.1:7687',
+                  database: 'neo4j',
+                },
+              }),
+              signal: testContext.signal,
+            });
+
+            // then
+            assert.equal(response.status, 400);
+            const error: { statusCode: 400; message: string[] } = z
+              .object({
+                statusCode: z.literal(400),
+                message: z.array(z.string()),
+              })
+              .parse(await response.json());
+            assert.ok(
+              error.message.some((message: string): boolean =>
+                message.includes('ramenEdgeTitleRules'),
+              ),
+            );
+            const persisted: Response = await fetch(url, {
+              headers,
+              signal: testContext.signal,
+            });
+            assert.equal(persisted.status, 200);
+            assert.deepEqual(
+              databaseSchema.parse(await persisted.json()),
+              originalConnection,
+            );
+          });
+
+          test('rejects null RAMEN edge-title rules', async (testContext: TestContext): Promise<void> => {
+            // given
+            const fixture: FixtureContext =
+              await manager.setupFixture(testContext);
+            const login: PostAuthResponseBodyDto = await manager.loginUser(
+              fixture.collaborator.username,
+              fixture.collaborator.password,
+              testContext,
+            );
+            const url: string = `${manager.apiUrl}/project/${fixture.projectId}/database-connection/${fixture.databaseConnectionId}`;
+            const headers: Headers = new Headers([
+              ['Authorization', `Bearer ${login.jwt}`],
+              ['Content-Type', 'application/json'],
+            ]);
+            const original: Response = await fetch(url, {
+              headers,
+              signal: testContext.signal,
+            });
+            assert.equal(original.status, 200);
+            const originalConnection: DatabaseConnectionDto =
+              databaseSchema.parse(await original.json());
+
+            // when
+            const response: Response = await fetch(url, {
+              method: 'PUT',
+              headers,
+              body: JSON.stringify({
+                title: 'RAMEN',
+                browserUrl: '',
+                credentialStoreConsent: false,
+                nodeConfigurations: [],
+                adapter: {
+                  databaseType: DatabaseConnectionDatabaseType.ramen,
+                  connectionUrl: 'bolt://127.0.0.1:7687',
+                  database: 'neo4j',
+                  ramenEdgeTitleRules: null,
+                },
+              }),
+              signal: testContext.signal,
+            });
+
+            // then
+            assert.equal(response.status, 400);
+            const error: { statusCode: 400; message: string[] } = z
+              .object({
+                statusCode: z.literal(400),
+                message: z.array(z.string()),
+              })
+              .parse(await response.json());
+            assert.ok(
+              error.message.some((message: string): boolean =>
+                message.includes('ramenEdgeTitleRules'),
+              ),
+            );
+            const persisted: Response = await fetch(url, {
+              headers,
+              signal: testContext.signal,
+            });
+            assert.equal(persisted.status, 200);
+            assert.deepEqual(
+              databaseSchema.parse(await persisted.json()),
+              originalConnection,
+            );
+          });
+
+          test(
+            'rejects invalid database connection fields',
+            { timeout: 180_000 },
+            async (testContext: TestContext): Promise<void> => {
+              const neo4jAdapter: {
+                databaseType: DatabaseConnectionDatabaseType.neo4j;
+                connectionUrl: string;
+                database: string;
+              } = {
+                databaseType: DatabaseConnectionDatabaseType.neo4j,
+                connectionUrl: 'bolt://127.0.0.1:7687',
+                database: 'neo4j',
+              };
+              const variants: {
+                payload: Record<string, unknown>;
+                expectedMessage: string;
+              }[] = [
+                {
+                  payload: { title: undefined },
+                  expectedMessage: 'title',
+                },
+                {
+                  payload: { title: null },
+                  expectedMessage: 'title',
+                },
+                {
+                  payload: { title: 123 },
+                  expectedMessage: 'title',
+                },
+                {
+                  payload: { title: '' },
+                  expectedMessage: 'title',
+                },
+                {
+                  payload: {
+                    adapter: { ...neo4jAdapter, database: undefined },
+                  },
+                  expectedMessage: 'database',
+                },
+                {
+                  payload: { adapter: { ...neo4jAdapter, database: null } },
+                  expectedMessage: 'database',
+                },
+                {
+                  payload: { adapter: { ...neo4jAdapter, database: 123 } },
+                  expectedMessage: 'database',
+                },
+                {
+                  payload: {
+                    adapter: { ...neo4jAdapter, connectionUrl: undefined },
+                  },
+                  expectedMessage: 'connectionUrl',
+                },
+                {
+                  payload: {
+                    adapter: { ...neo4jAdapter, connectionUrl: null },
+                  },
+                  expectedMessage: 'connectionUrl',
+                },
+                {
+                  payload: { adapter: { ...neo4jAdapter, connectionUrl: 123 } },
+                  expectedMessage: 'connectionUrl',
+                },
+                {
+                  payload: { browserUrl: undefined },
+                  expectedMessage: 'browserUrl',
+                },
+                {
+                  payload: { browserUrl: null },
+                  expectedMessage: 'browserUrl',
+                },
+                {
+                  payload: { browserUrl: 123 },
+                  expectedMessage: 'browserUrl',
+                },
+                {
+                  payload: { credentialStoreConsent: undefined },
+                  expectedMessage: 'credentialStoreConsent',
+                },
+                {
+                  payload: { credentialStoreConsent: null },
+                  expectedMessage: 'credentialStoreConsent',
+                },
+                {
+                  payload: { credentialStoreConsent: 'true' },
+                  expectedMessage: 'credentialStoreConsent',
+                },
+                {
+                  payload: {
+                    adapter: { ...neo4jAdapter, databaseType: undefined },
+                  },
+                  expectedMessage: 'databaseType',
+                },
+                {
+                  payload: { adapter: { ...neo4jAdapter, databaseType: null } },
+                  expectedMessage: 'databaseType',
+                },
+                {
+                  payload: { adapter: { ...neo4jAdapter, databaseType: 123 } },
+                  expectedMessage: 'databaseType',
+                },
+                {
+                  payload: {
+                    adapter: { ...neo4jAdapter, databaseType: 'unknown' },
+                  },
+                  expectedMessage: 'databaseType',
+                },
+                {
+                  payload: { nodeConfigurations: undefined },
+                  expectedMessage: 'nodeConfigurations',
+                },
+                {
+                  payload: { nodeConfigurations: null },
+                  expectedMessage: 'nodeConfigurations',
+                },
+                {
+                  payload: { nodeConfigurations: {} },
+                  expectedMessage: 'nodeConfigurations',
+                },
+                {
+                  payload: { unexpected: true },
+                  expectedMessage: 'unexpected',
+                },
+                {
+                  payload: { adapter: { ...neo4jAdapter, username: '' } },
+                  expectedMessage: 'username',
+                },
+                {
+                  payload: { adapter: { ...neo4jAdapter, username: 123 } },
+                  expectedMessage: 'username',
+                },
+                {
+                  payload: { adapter: { ...neo4jAdapter, password: 123 } },
+                  expectedMessage: 'password',
+                },
+                {
+                  payload: {
+                    adapter: {
+                      databaseType: DatabaseConnectionDatabaseType.wikidata,
+                      connectionUrl: 'https://example.test/sparql',
+                    },
+                  },
+                  expectedMessage: 'language',
+                },
+                {
+                  payload: {
+                    adapter: {
+                      databaseType: DatabaseConnectionDatabaseType.wikidata,
+                      connectionUrl: 'https://example.test/sparql',
+                      language: 'e',
+                    },
+                  },
+                  expectedMessage: 'language',
+                },
+                {
+                  payload: {
+                    adapter: {
+                      databaseType: DatabaseConnectionDatabaseType.wikidata,
+                      connectionUrl: 'https://example.test/sparql',
+                      language: 123,
+                    },
+                  },
+                  expectedMessage: 'language',
+                },
+                {
+                  payload: { adapter: undefined },
+                  expectedMessage: 'adapter',
+                },
+                {
+                  payload: { adapter: null },
+                  expectedMessage: 'adapter',
+                },
+                {
+                  payload: { adapter: [null] },
+                  expectedMessage: 'adapter',
+                },
+                {
+                  payload: {
+                    adapter: {
+                      databaseType: DatabaseConnectionDatabaseType.sparql,
+                      connectionUrl: 'https://example.test/sparql',
+                      username: 'unused',
+                    },
+                  },
+                  expectedMessage: 'username',
+                },
+              ];
+              for (const variant of variants) {
+                // given
+                const fixture: FixtureContext =
+                  await manager.setupFixture(testContext);
+                const ownerLogin: PostAuthResponseBodyDto =
+                  await manager.loginUser(
+                    fixture.owner.username,
+                    fixture.owner.password,
+                    testContext,
+                  );
+                const filters: Record<string, string> = {
+                  [`filters[project][documentId][$eq]`]: fixture.projectId,
+                  pageSize: '100',
+                  sort: 'documentId:asc',
+                };
+                const originalDraftResponse: Response =
+                  await manager.readDocuments(
+                    'api::database-connection.database-connection',
+                    { ...filters, status: 'draft' },
+                    testContext,
+                  );
+                assert.equal(originalDraftResponse.status, 200);
+                const originalDraft: z.infer<typeof listStateSchema> =
+                  listStateSchema.parse(await originalDraftResponse.json());
+                assert.ok(
+                  originalDraft.results.some(
+                    (item: { documentId: string }): boolean =>
+                      item.documentId === fixture.databaseConnectionId,
+                  ),
+                );
+                const originalPublishedResponse: Response =
+                  await manager.readDocuments(
+                    'api::database-connection.database-connection',
+                    { ...filters, status: 'published' },
+                    testContext,
+                  );
+                assert.equal(originalPublishedResponse.status, 200);
+                const originalPublished: z.infer<typeof listStateSchema> =
+                  listStateSchema.parse(await originalPublishedResponse.json());
+
+                // when
+                const response: Response = await fetch(
+                  `${manager.apiUrl}/project/${fixture.projectId}/database-connection/${fixture.databaseConnectionId}`,
+                  {
+                    method: 'PUT',
+                    headers: new Headers([
+                      ['Authorization', `Bearer ${ownerLogin.jwt}`],
+                      ['Content-Type', 'application/json'],
+                    ]),
+                    body: JSON.stringify({
+                      title: 'Updated Database',
+                      browserUrl: 'https://example.test/browser',
+                      credentialStoreConsent: false,
+                      nodeConfigurations: [],
+                      adapter: neo4jAdapter,
+                      ...variant.payload,
+                    }),
+                    signal: testContext.signal,
+                  },
+                );
+
+                // then
+                assert.equal(response.status, 400, JSON.stringify(variant));
+                const error: {
+                  statusCode: number;
+                  message: string[];
+                  error: string;
+                } = z
+                  .object({
+                    statusCode: z.literal(400),
+                    message: z.array(z.string()),
+                    error: z.literal('Bad Request'),
+                  })
+                  .parse(await response.json());
+                assert.ok(
+                  error.message.some((message: string): boolean =>
+                    message.includes(variant.expectedMessage),
+                  ),
+                );
+                const draftResponse: Response = await manager.readDocuments(
+                  'api::database-connection.database-connection',
+                  { ...filters, status: 'draft' },
+                  testContext,
+                );
+                assert.equal(draftResponse.status, 200);
+                assert.deepEqual(
+                  listStateSchema.parse(await draftResponse.json()),
+                  originalDraft,
+                );
+                const publishedResponse: Response = await manager.readDocuments(
+                  'api::database-connection.database-connection',
+                  { ...filters, status: 'published' },
+                  testContext,
+                );
+                assert.equal(publishedResponse.status, 200);
+                assert.deepEqual(
+                  listStateSchema.parse(await publishedResponse.json()),
+                  originalPublished,
+                );
+              }
             },
           );
 
-          // then
-          assert.equal(response.status, 400);
-          const error: { statusCode: 400; message: string[] } = z
-            .object({
-              statusCode: z.literal(400),
-              message: z.array(z.string()),
-            })
-            .parse(await response.json());
-          assert.deepEqual(error.message, [
-            'adapter.ramenEdgeTitleRules.0.annotationType should not be empty',
-          ]);
-        });
+          test('rejects invalid node configurations', async (testContext: TestContext): Promise<void> => {
+            const variants: { payload: Record<string, unknown> }[] = [
+              {
+                payload: {
+                  nodeConfigurations: [
+                    {
+                      id: randomUUID(),
+                      type: 'unknown',
+                      label: 'Person',
+                      property: 'id',
+                      linkTemplate: 'https://example.test/{value}',
+                      urlEncode: true,
+                      valueRegex: '.*',
+                    },
+                  ],
+                },
+              },
+              {
+                payload: {
+                  nodeConfigurations: [
+                    {
+                      id: '',
+                      type: NodeConfigurationTypeDto.link,
+                      label: 'Person',
+                      property: 'id',
+                      linkTemplate: 'https://example.test/{value}',
+                      urlEncode: true,
+                      valueRegex: '.*',
+                    },
+                  ],
+                },
+              },
+              {
+                payload: {
+                  nodeConfigurations: [
+                    {
+                      id: randomUUID(),
+                      type: NodeConfigurationTypeDto.link,
+                      label: 'Person',
+                      property: 'id',
+                      linkTemplate: 'https://example.test/{value}',
+                      urlEncode: 'true',
+                      valueRegex: '.*',
+                    },
+                  ],
+                },
+              },
+              {
+                payload: {
+                  nodeConfigurations: [
+                    {
+                      id: randomUUID(),
+                      type: NodeConfigurationTypeDto.link,
+                      label: 'Person',
+                      property: 'id',
+                      linkTemplate: 'https://example.test/{value}',
+                      urlEncode: true,
+                      valueRegex: '[',
+                    },
+                  ],
+                },
+              },
+              {
+                payload: {
+                  nodeConfigurations: [
+                    {
+                      id: randomUUID(),
+                      type: NodeConfigurationTypeDto.link,
+                      label: 'Person',
+                      property: 'id',
+                      linkTemplate: 'https://example.test/{value}',
+                      urlEncode: true,
+                      valueRegex: '.*',
+                      unexpected: true,
+                    },
+                  ],
+                },
+              },
+            ];
+            for (const variant of variants) {
+              // given
+              const fixture: FixtureContext =
+                await manager.setupFixture(testContext);
+              const ownerLogin: PostAuthResponseBodyDto =
+                await manager.loginUser(
+                  fixture.owner.username,
+                  fixture.owner.password,
+                  testContext,
+                );
+              const filters: Record<string, string> = {
+                [`filters[project][documentId][$eq]`]: fixture.projectId,
+                pageSize: '100',
+                sort: 'documentId:asc',
+              };
+              const originalDraftResponse: Response =
+                await manager.readDocuments(
+                  'api::database-connection.database-connection',
+                  { ...filters, status: 'draft' },
+                  testContext,
+                );
+              assert.equal(originalDraftResponse.status, 200);
+              const originalDraft: z.infer<typeof listStateSchema> =
+                listStateSchema.parse(await originalDraftResponse.json());
+              assert.ok(
+                originalDraft.results.some(
+                  (item: { documentId: string }): boolean =>
+                    item.documentId === fixture.databaseConnectionId,
+                ),
+              );
+              const originalPublishedResponse: Response =
+                await manager.readDocuments(
+                  'api::database-connection.database-connection',
+                  { ...filters, status: 'published' },
+                  testContext,
+                );
+              assert.equal(originalPublishedResponse.status, 200);
+              const originalPublished: z.infer<typeof listStateSchema> =
+                listStateSchema.parse(await originalPublishedResponse.json());
 
-        test('rejects missing RAMEN edge-title rules', async (testContext: TestContext): Promise<void> => {
-          // given
-          const fixture: FixtureContext =
-            await manager.setupFixture(testContext);
-          const login: PostAuthResponseBodyDto = await manager.loginUser(
-            fixture.collaborator.username,
-            fixture.collaborator.password,
-            testContext,
-          );
-          const url: string = `${manager.apiUrl}/project/${fixture.projectId}/database-connection/${fixture.databaseConnectionId}`;
-          const headers: Headers = new Headers([
-            ['Authorization', `Bearer ${login.jwt}`],
-            ['Content-Type', 'application/json'],
-          ]);
-          const original: Response = await fetch(url, {
-            headers,
-            signal: testContext.signal,
+              // when
+              const response: Response = await fetch(
+                `${manager.apiUrl}/project/${fixture.projectId}/database-connection/${fixture.databaseConnectionId}`,
+                {
+                  method: 'PUT',
+                  headers: new Headers([
+                    ['Authorization', `Bearer ${ownerLogin.jwt}`],
+                    ['Content-Type', 'application/json'],
+                  ]),
+                  body: JSON.stringify({
+                    title: 'Updated Database',
+                    browserUrl: 'https://example.test/browser',
+                    credentialStoreConsent: false,
+                    adapter: {
+                      databaseType: DatabaseConnectionDatabaseType.neo4j,
+                      connectionUrl: 'bolt://127.0.0.1:7687',
+                      database: 'neo4j',
+                    },
+                    ...variant.payload,
+                  }),
+                  signal: testContext.signal,
+                },
+              );
+
+              // then
+              assert.equal(response.status, 400);
+              const error: {
+                statusCode: number;
+                message: string[];
+                error: string;
+              } = z
+                .object({
+                  statusCode: z.literal(400),
+                  message: z.array(z.string()),
+                  error: z.literal('Bad Request'),
+                })
+                .parse(await response.json());
+              assert.ok(
+                error.message.some((message: string): boolean =>
+                  message.includes('nodeConfigurations'),
+                ),
+              );
+              const draftResponse: Response = await manager.readDocuments(
+                'api::database-connection.database-connection',
+                { ...filters, status: 'draft' },
+                testContext,
+              );
+              assert.equal(draftResponse.status, 200);
+              assert.deepEqual(
+                listStateSchema.parse(await draftResponse.json()),
+                originalDraft,
+              );
+              const publishedResponse: Response = await manager.readDocuments(
+                'api::database-connection.database-connection',
+                { ...filters, status: 'published' },
+                testContext,
+              );
+              assert.equal(publishedResponse.status, 200);
+              assert.deepEqual(
+                listStateSchema.parse(await publishedResponse.json()),
+                originalPublished,
+              );
+            }
           });
-          assert.equal(original.status, 200);
-          const originalConnection: DatabaseConnectionDto =
-            databaseSchema.parse(await original.json());
 
-          // when
-          const response: Response = await fetch(url, {
-            method: 'PUT',
-            headers,
-            body: JSON.stringify({
-              title: 'RAMEN',
-              browserUrl: '',
-              credentialStoreConsent: false,
-              nodeConfigurations: [],
-              adapter: {
-                databaseType: DatabaseConnectionDatabaseType.ramen,
-                connectionUrl: 'bolt://127.0.0.1:7687',
-                database: 'neo4j',
-              },
-            }),
-            signal: testContext.signal,
-          });
-
-          // then
-          assert.equal(response.status, 400);
-          const error: { statusCode: 400; message: string[] } = z
-            .object({
-              statusCode: z.literal(400),
-              message: z.array(z.string()),
-            })
-            .parse(await response.json());
-          assert.ok(
-            error.message.some((message: string): boolean =>
-              message.includes('ramenEdgeTitleRules'),
-            ),
-          );
-          const persisted: Response = await fetch(url, {
-            headers,
-            signal: testContext.signal,
-          });
-          assert.equal(persisted.status, 200);
-          assert.deepEqual(
-            databaseSchema.parse(await persisted.json()),
-            originalConnection,
-          );
-        });
-
-        test('rejects null RAMEN edge-title rules', async (testContext: TestContext): Promise<void> => {
-          // given
-          const fixture: FixtureContext =
-            await manager.setupFixture(testContext);
-          const login: PostAuthResponseBodyDto = await manager.loginUser(
-            fixture.collaborator.username,
-            fixture.collaborator.password,
-            testContext,
-          );
-          const url: string = `${manager.apiUrl}/project/${fixture.projectId}/database-connection/${fixture.databaseConnectionId}`;
-          const headers: Headers = new Headers([
-            ['Authorization', `Bearer ${login.jwt}`],
-            ['Content-Type', 'application/json'],
-          ]);
-          const original: Response = await fetch(url, {
-            headers,
-            signal: testContext.signal,
-          });
-          assert.equal(original.status, 200);
-          const originalConnection: DatabaseConnectionDto =
-            databaseSchema.parse(await original.json());
-
-          // when
-          const response: Response = await fetch(url, {
-            method: 'PUT',
-            headers,
-            body: JSON.stringify({
-              title: 'RAMEN',
-              browserUrl: '',
-              credentialStoreConsent: false,
-              nodeConfigurations: [],
-              adapter: {
-                databaseType: DatabaseConnectionDatabaseType.ramen,
-                connectionUrl: 'bolt://127.0.0.1:7687',
-                database: 'neo4j',
-                ramenEdgeTitleRules: null,
-              },
-            }),
-            signal: testContext.signal,
-          });
-
-          // then
-          assert.equal(response.status, 400);
-          const error: { statusCode: 400; message: string[] } = z
-            .object({
-              statusCode: z.literal(400),
-              message: z.array(z.string()),
-            })
-            .parse(await response.json());
-          assert.ok(
-            error.message.some((message: string): boolean =>
-              message.includes('ramenEdgeTitleRules'),
-            ),
-          );
-          const persisted: Response = await fetch(url, {
-            headers,
-            signal: testContext.signal,
-          });
-          assert.equal(persisted.status, 200);
-          assert.deepEqual(
-            databaseSchema.parse(await persisted.json()),
-            originalConnection,
-          );
-        });
-
-        test(
-          'rejects invalid database connection fields',
-          { timeout: 180_000 },
-          async (testContext: TestContext): Promise<void> => {
-            const neo4jAdapter: {
-              databaseType: DatabaseConnectionDatabaseType.neo4j;
-              connectionUrl: string;
-              database: string;
-            } = {
-              databaseType: DatabaseConnectionDatabaseType.neo4j,
-              connectionUrl: 'bolt://127.0.0.1:7687',
-              database: 'neo4j',
-            };
-            const variants: {
-              payload: Record<string, unknown>;
-              expectedMessage: string;
-            }[] = [
+          test('rejects credentials without credential storage consent', async (testContext: TestContext): Promise<void> => {
+            const variants: { payload: Record<string, unknown> }[] = [
               {
-                payload: { title: undefined },
-                expectedMessage: 'title',
+                payload: { username: 'alice' },
               },
               {
-                payload: { title: null },
-                expectedMessage: 'title',
+                payload: { password: 'secret' },
               },
               {
-                payload: { title: 123 },
-                expectedMessage: 'title',
-              },
-              {
-                payload: { title: '' },
-                expectedMessage: 'title',
-              },
-              {
-                payload: { adapter: { ...neo4jAdapter, database: undefined } },
-                expectedMessage: 'database',
-              },
-              {
-                payload: { adapter: { ...neo4jAdapter, database: null } },
-                expectedMessage: 'database',
-              },
-              {
-                payload: { adapter: { ...neo4jAdapter, database: 123 } },
-                expectedMessage: 'database',
-              },
-              {
-                payload: {
-                  adapter: { ...neo4jAdapter, connectionUrl: undefined },
-                },
-                expectedMessage: 'connectionUrl',
-              },
-              {
-                payload: { adapter: { ...neo4jAdapter, connectionUrl: null } },
-                expectedMessage: 'connectionUrl',
-              },
-              {
-                payload: { adapter: { ...neo4jAdapter, connectionUrl: 123 } },
-                expectedMessage: 'connectionUrl',
-              },
-              {
-                payload: { browserUrl: undefined },
-                expectedMessage: 'browserUrl',
-              },
-              {
-                payload: { browserUrl: null },
-                expectedMessage: 'browserUrl',
-              },
-              {
-                payload: { browserUrl: 123 },
-                expectedMessage: 'browserUrl',
-              },
-              {
-                payload: { credentialStoreConsent: undefined },
-                expectedMessage: 'credentialStoreConsent',
-              },
-              {
-                payload: { credentialStoreConsent: null },
-                expectedMessage: 'credentialStoreConsent',
-              },
-              {
-                payload: { credentialStoreConsent: 'true' },
-                expectedMessage: 'credentialStoreConsent',
-              },
-              {
-                payload: {
-                  adapter: { ...neo4jAdapter, databaseType: undefined },
-                },
-                expectedMessage: 'databaseType',
-              },
-              {
-                payload: { adapter: { ...neo4jAdapter, databaseType: null } },
-                expectedMessage: 'databaseType',
-              },
-              {
-                payload: { adapter: { ...neo4jAdapter, databaseType: 123 } },
-                expectedMessage: 'databaseType',
-              },
-              {
-                payload: {
-                  adapter: { ...neo4jAdapter, databaseType: 'unknown' },
-                },
-                expectedMessage: 'databaseType',
-              },
-              {
-                payload: { nodeConfigurations: undefined },
-                expectedMessage: 'nodeConfigurations',
-              },
-              {
-                payload: { nodeConfigurations: null },
-                expectedMessage: 'nodeConfigurations',
-              },
-              {
-                payload: { nodeConfigurations: {} },
-                expectedMessage: 'nodeConfigurations',
-              },
-              {
-                payload: { unexpected: true },
-                expectedMessage: 'unexpected',
-              },
-              {
-                payload: { adapter: { ...neo4jAdapter, username: '' } },
-                expectedMessage: 'username',
-              },
-              {
-                payload: { adapter: { ...neo4jAdapter, username: 123 } },
-                expectedMessage: 'username',
-              },
-              {
-                payload: { adapter: { ...neo4jAdapter, password: 123 } },
-                expectedMessage: 'password',
-              },
-              {
-                payload: {
-                  adapter: {
-                    databaseType: DatabaseConnectionDatabaseType.wikidata,
-                    connectionUrl: 'https://example.test/sparql',
-                  },
-                },
-                expectedMessage: 'language',
-              },
-              {
-                payload: {
-                  adapter: {
-                    databaseType: DatabaseConnectionDatabaseType.wikidata,
-                    connectionUrl: 'https://example.test/sparql',
-                    language: 'e',
-                  },
-                },
-                expectedMessage: 'language',
-              },
-              {
-                payload: {
-                  adapter: {
-                    databaseType: DatabaseConnectionDatabaseType.wikidata,
-                    connectionUrl: 'https://example.test/sparql',
-                    language: 123,
-                  },
-                },
-                expectedMessage: 'language',
-              },
-              {
-                payload: { adapter: undefined },
-                expectedMessage: 'adapter',
-              },
-              {
-                payload: { adapter: null },
-                expectedMessage: 'adapter',
-              },
-              {
-                payload: { adapter: [null] },
-                expectedMessage: 'adapter',
-              },
-              {
-                payload: {
-                  adapter: {
-                    databaseType: DatabaseConnectionDatabaseType.sparql,
-                    connectionUrl: 'https://example.test/sparql',
-                    username: 'unused',
-                  },
-                },
-                expectedMessage: 'username',
+                payload: { password: '' },
               },
             ];
             for (const variant of variants) {
@@ -3822,31 +4171,24 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
                     browserUrl: 'https://example.test/browser',
                     credentialStoreConsent: false,
                     nodeConfigurations: [],
-                    adapter: neo4jAdapter,
-                    ...variant.payload,
+                    adapter: {
+                      databaseType: DatabaseConnectionDatabaseType.neo4j,
+                      connectionUrl: 'bolt://127.0.0.1:7687',
+                      database: 'neo4j',
+                      ...variant.payload,
+                    },
                   }),
                   signal: testContext.signal,
                 },
               );
 
               // then
-              assert.equal(response.status, 400, JSON.stringify(variant));
-              const error: {
-                statusCode: number;
-                message: string[];
-                error: string;
-              } = z
-                .object({
-                  statusCode: z.literal(400),
-                  message: z.array(z.string()),
-                  error: z.literal('Bad Request'),
-                })
-                .parse(await response.json());
-              assert.ok(
-                error.message.some((message: string): boolean =>
-                  message.includes(variant.expectedMessage),
-                ),
-              );
+              assert.equal(response.status, 400);
+              assert.deepEqual(await response.json(), {
+                statusCode: 400,
+                message: 'Consent required.',
+                error: 'Bad Request',
+              });
               const draftResponse: Response = await manager.readDocuments(
                 'api::database-connection.database-connection',
                 { ...filters, status: 'draft' },
@@ -3868,310 +4210,114 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
                 originalPublished,
               );
             }
-          },
-        );
+          });
+        });
+        describe('401', (): void => {
+          test('rejects requests without valid authentication', async (testContext: TestContext): Promise<void> => {
+            const variants: { headers: [string, string][] }[] = [
+              {
+                headers: [['Content-Type', 'application/json']],
+              },
+              {
+                headers: [
+                  ['Authorization', 'Bearer invalid-jwt'],
+                  ['Content-Type', 'application/json'],
+                ],
+              },
+            ];
+            for (const variant of variants) {
+              // given
+              const fixture: FixtureContext =
+                await manager.setupFixture(testContext);
+              await manager.loginUser(
+                fixture.owner.username,
+                fixture.owner.password,
+                testContext,
+              );
+              const filters: Record<string, string> = {
+                [`filters[project][documentId][$eq]`]: fixture.projectId,
+                pageSize: '100',
+                sort: 'documentId:asc',
+              };
+              const originalDraftResponse: Response =
+                await manager.readDocuments(
+                  'api::database-connection.database-connection',
+                  { ...filters, status: 'draft' },
+                  testContext,
+                );
+              assert.equal(originalDraftResponse.status, 200);
+              const originalDraft: z.infer<typeof listStateSchema> =
+                listStateSchema.parse(await originalDraftResponse.json());
+              assert.ok(
+                originalDraft.results.some(
+                  (item: { documentId: string }): boolean =>
+                    item.documentId === fixture.databaseConnectionId,
+                ),
+              );
+              const originalPublishedResponse: Response =
+                await manager.readDocuments(
+                  'api::database-connection.database-connection',
+                  { ...filters, status: 'published' },
+                  testContext,
+                );
+              assert.equal(originalPublishedResponse.status, 200);
+              const originalPublished: z.infer<typeof listStateSchema> =
+                listStateSchema.parse(await originalPublishedResponse.json());
 
-        test('rejects invalid node configurations', async (testContext: TestContext): Promise<void> => {
-          const variants: { payload: Record<string, unknown> }[] = [
-            {
-              payload: {
-                nodeConfigurations: [
-                  {
-                    id: randomUUID(),
-                    type: 'unknown',
-                    label: 'Person',
-                    property: 'id',
-                    linkTemplate: 'https://example.test/{value}',
-                    urlEncode: true,
-                    valueRegex: '.*',
-                  },
-                ],
-              },
-            },
-            {
-              payload: {
-                nodeConfigurations: [
-                  {
-                    id: '',
-                    type: NodeConfigurationTypeDto.link,
-                    label: 'Person',
-                    property: 'id',
-                    linkTemplate: 'https://example.test/{value}',
-                    urlEncode: true,
-                    valueRegex: '.*',
-                  },
-                ],
-              },
-            },
-            {
-              payload: {
-                nodeConfigurations: [
-                  {
-                    id: randomUUID(),
-                    type: NodeConfigurationTypeDto.link,
-                    label: 'Person',
-                    property: 'id',
-                    linkTemplate: 'https://example.test/{value}',
-                    urlEncode: 'true',
-                    valueRegex: '.*',
-                  },
-                ],
-              },
-            },
-            {
-              payload: {
-                nodeConfigurations: [
-                  {
-                    id: randomUUID(),
-                    type: NodeConfigurationTypeDto.link,
-                    label: 'Person',
-                    property: 'id',
-                    linkTemplate: 'https://example.test/{value}',
-                    urlEncode: true,
-                    valueRegex: '[',
-                  },
-                ],
-              },
-            },
-            {
-              payload: {
-                nodeConfigurations: [
-                  {
-                    id: randomUUID(),
-                    type: NodeConfigurationTypeDto.link,
-                    label: 'Person',
-                    property: 'id',
-                    linkTemplate: 'https://example.test/{value}',
-                    urlEncode: true,
-                    valueRegex: '.*',
-                    unexpected: true,
-                  },
-                ],
-              },
-            },
-          ];
-          for (const variant of variants) {
-            // given
-            const fixture: FixtureContext =
-              await manager.setupFixture(testContext);
-            const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-              fixture.owner.username,
-              fixture.owner.password,
-              testContext,
-            );
-            const filters: Record<string, string> = {
-              [`filters[project][documentId][$eq]`]: fixture.projectId,
-              pageSize: '100',
-              sort: 'documentId:asc',
-            };
-            const originalDraftResponse: Response = await manager.readDocuments(
-              'api::database-connection.database-connection',
-              { ...filters, status: 'draft' },
-              testContext,
-            );
-            assert.equal(originalDraftResponse.status, 200);
-            const originalDraft: z.infer<typeof listStateSchema> =
-              listStateSchema.parse(await originalDraftResponse.json());
-            assert.ok(
-              originalDraft.results.some(
-                (item: { documentId: string }): boolean =>
-                  item.documentId === fixture.databaseConnectionId,
-              ),
-            );
-            const originalPublishedResponse: Response =
-              await manager.readDocuments(
+              // when
+              const response: Response = await fetch(
+                `${manager.apiUrl}/project/${fixture.projectId}/database-connection/${fixture.databaseConnectionId}`,
+                {
+                  method: 'PUT',
+                  body: JSON.stringify({
+                    title: 'Updated Database',
+                    browserUrl: 'https://example.test/browser',
+                    credentialStoreConsent: false,
+                    nodeConfigurations: [],
+                    adapter: {
+                      databaseType: DatabaseConnectionDatabaseType.neo4j,
+                      connectionUrl: 'bolt://127.0.0.1:7687',
+                      database: 'neo4j',
+                    },
+                  } satisfies UpdateDatabaseConnectionRequestBodyDto),
+                  signal: testContext.signal,
+                  headers: new Headers(variant.headers),
+                },
+              );
+
+              // then
+              assert.equal(response.status, 401);
+              assert.equal(response.headers.get('www-authenticate'), 'Bearer');
+              assert.deepEqual(await response.json(), {
+                statusCode: 401,
+                message: 'Unauthorized',
+              });
+              const draftResponse: Response = await manager.readDocuments(
+                'api::database-connection.database-connection',
+                { ...filters, status: 'draft' },
+                testContext,
+              );
+              assert.equal(draftResponse.status, 200);
+              assert.deepEqual(
+                listStateSchema.parse(await draftResponse.json()),
+                originalDraft,
+              );
+              const publishedResponse: Response = await manager.readDocuments(
                 'api::database-connection.database-connection',
                 { ...filters, status: 'published' },
                 testContext,
               );
-            assert.equal(originalPublishedResponse.status, 200);
-            const originalPublished: z.infer<typeof listStateSchema> =
-              listStateSchema.parse(await originalPublishedResponse.json());
-
-            // when
-            const response: Response = await fetch(
-              `${manager.apiUrl}/project/${fixture.projectId}/database-connection/${fixture.databaseConnectionId}`,
-              {
-                method: 'PUT',
-                headers: new Headers([
-                  ['Authorization', `Bearer ${ownerLogin.jwt}`],
-                  ['Content-Type', 'application/json'],
-                ]),
-                body: JSON.stringify({
-                  title: 'Updated Database',
-                  browserUrl: 'https://example.test/browser',
-                  credentialStoreConsent: false,
-                  adapter: {
-                    databaseType: DatabaseConnectionDatabaseType.neo4j,
-                    connectionUrl: 'bolt://127.0.0.1:7687',
-                    database: 'neo4j',
-                  },
-                  ...variant.payload,
-                }),
-                signal: testContext.signal,
-              },
-            );
-
-            // then
-            assert.equal(response.status, 400);
-            const error: {
-              statusCode: number;
-              message: string[];
-              error: string;
-            } = z
-              .object({
-                statusCode: z.literal(400),
-                message: z.array(z.string()),
-                error: z.literal('Bad Request'),
-              })
-              .parse(await response.json());
-            assert.ok(
-              error.message.some((message: string): boolean =>
-                message.includes('nodeConfigurations'),
-              ),
-            );
-            const draftResponse: Response = await manager.readDocuments(
-              'api::database-connection.database-connection',
-              { ...filters, status: 'draft' },
-              testContext,
-            );
-            assert.equal(draftResponse.status, 200);
-            assert.deepEqual(
-              listStateSchema.parse(await draftResponse.json()),
-              originalDraft,
-            );
-            const publishedResponse: Response = await manager.readDocuments(
-              'api::database-connection.database-connection',
-              { ...filters, status: 'published' },
-              testContext,
-            );
-            assert.equal(publishedResponse.status, 200);
-            assert.deepEqual(
-              listStateSchema.parse(await publishedResponse.json()),
-              originalPublished,
-            );
-          }
-        });
-
-        test('rejects credentials without credential storage consent', async (testContext: TestContext): Promise<void> => {
-          const variants: { payload: Record<string, unknown> }[] = [
-            {
-              payload: { username: 'alice' },
-            },
-            {
-              payload: { password: 'secret' },
-            },
-            {
-              payload: { password: '' },
-            },
-          ];
-          for (const variant of variants) {
-            // given
-            const fixture: FixtureContext =
-              await manager.setupFixture(testContext);
-            const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-              fixture.owner.username,
-              fixture.owner.password,
-              testContext,
-            );
-            const filters: Record<string, string> = {
-              [`filters[project][documentId][$eq]`]: fixture.projectId,
-              pageSize: '100',
-              sort: 'documentId:asc',
-            };
-            const originalDraftResponse: Response = await manager.readDocuments(
-              'api::database-connection.database-connection',
-              { ...filters, status: 'draft' },
-              testContext,
-            );
-            assert.equal(originalDraftResponse.status, 200);
-            const originalDraft: z.infer<typeof listStateSchema> =
-              listStateSchema.parse(await originalDraftResponse.json());
-            assert.ok(
-              originalDraft.results.some(
-                (item: { documentId: string }): boolean =>
-                  item.documentId === fixture.databaseConnectionId,
-              ),
-            );
-            const originalPublishedResponse: Response =
-              await manager.readDocuments(
-                'api::database-connection.database-connection',
-                { ...filters, status: 'published' },
-                testContext,
+              assert.equal(publishedResponse.status, 200);
+              assert.deepEqual(
+                listStateSchema.parse(await publishedResponse.json()),
+                originalPublished,
               );
-            assert.equal(originalPublishedResponse.status, 200);
-            const originalPublished: z.infer<typeof listStateSchema> =
-              listStateSchema.parse(await originalPublishedResponse.json());
-
-            // when
-            const response: Response = await fetch(
-              `${manager.apiUrl}/project/${fixture.projectId}/database-connection/${fixture.databaseConnectionId}`,
-              {
-                method: 'PUT',
-                headers: new Headers([
-                  ['Authorization', `Bearer ${ownerLogin.jwt}`],
-                  ['Content-Type', 'application/json'],
-                ]),
-                body: JSON.stringify({
-                  title: 'Updated Database',
-                  browserUrl: 'https://example.test/browser',
-                  credentialStoreConsent: false,
-                  nodeConfigurations: [],
-                  adapter: {
-                    databaseType: DatabaseConnectionDatabaseType.neo4j,
-                    connectionUrl: 'bolt://127.0.0.1:7687',
-                    database: 'neo4j',
-                    ...variant.payload,
-                  },
-                }),
-                signal: testContext.signal,
-              },
-            );
-
-            // then
-            assert.equal(response.status, 400);
-            assert.deepEqual(await response.json(), {
-              statusCode: 400,
-              message: 'Consent required.',
-              error: 'Bad Request',
-            });
-            const draftResponse: Response = await manager.readDocuments(
-              'api::database-connection.database-connection',
-              { ...filters, status: 'draft' },
-              testContext,
-            );
-            assert.equal(draftResponse.status, 200);
-            assert.deepEqual(
-              listStateSchema.parse(await draftResponse.json()),
-              originalDraft,
-            );
-            const publishedResponse: Response = await manager.readDocuments(
-              'api::database-connection.database-connection',
-              { ...filters, status: 'published' },
-              testContext,
-            );
-            assert.equal(publishedResponse.status, 200);
-            assert.deepEqual(
-              listStateSchema.parse(await publishedResponse.json()),
-              originalPublished,
-            );
-          }
+            }
+          });
         });
-      });
-      describe('401', (): void => {
-        test('rejects requests without valid authentication', async (testContext: TestContext): Promise<void> => {
-          const variants: { headers: [string, string][] }[] = [
-            {
-              headers: [['Content-Type', 'application/json']],
-            },
-            {
-              headers: [
-                ['Authorization', 'Bearer invalid-jwt'],
-                ['Content-Type', 'application/json'],
-              ],
-            },
-          ];
-          for (const variant of variants) {
+
+        describe('403', (): void => {
+          test('rejects outsider access', async (testContext: TestContext): Promise<void> => {
             // given
             const fixture: FixtureContext =
               await manager.setupFixture(testContext);
@@ -4180,6 +4326,11 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
               fixture.owner.password,
               testContext,
             );
+            const login: PostAuthResponseBodyDto = await manager.loginUser(
+              fixture.outsider.username,
+              fixture.outsider.password,
+              testContext,
+            );
             const filters: Record<string, string> = {
               [`filters[project][documentId][$eq]`]: fixture.projectId,
               pageSize: '100',
@@ -4214,6 +4365,10 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
               `${manager.apiUrl}/project/${fixture.projectId}/database-connection/${fixture.databaseConnectionId}`,
               {
                 method: 'PUT',
+                headers: new Headers([
+                  ['Authorization', `Bearer ${login.jwt}`],
+                  ['Content-Type', 'application/json'],
+                ]),
                 body: JSON.stringify({
                   title: 'Updated Database',
                   browserUrl: 'https://example.test/browser',
@@ -4226,16 +4381,15 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
                   },
                 } satisfies UpdateDatabaseConnectionRequestBodyDto),
                 signal: testContext.signal,
-                headers: new Headers(variant.headers),
               },
             );
 
             // then
-            assert.equal(response.status, 401);
-            assert.equal(response.headers.get('www-authenticate'), 'Bearer');
+            assert.equal(response.status, 403);
             assert.deepEqual(await response.json(), {
-              statusCode: 401,
-              message: 'Unauthorized',
+              statusCode: 403,
+              message: 'Forbidden resource',
+              error: 'Forbidden',
             });
             const draftResponse: Response = await manager.readDocuments(
               'api::database-connection.database-connection',
@@ -4257,1303 +4411,1300 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
               listStateSchema.parse(await publishedResponse.json()),
               originalPublished,
             );
-          }
-        });
-      });
-
-      describe('403', (): void => {
-        test('rejects outsider access', async (testContext: TestContext): Promise<void> => {
-          // given
-          const fixture: FixtureContext =
-            await manager.setupFixture(testContext);
-          await manager.loginUser(
-            fixture.owner.username,
-            fixture.owner.password,
-            testContext,
-          );
-          const login: PostAuthResponseBodyDto = await manager.loginUser(
-            fixture.outsider.username,
-            fixture.outsider.password,
-            testContext,
-          );
-          const filters: Record<string, string> = {
-            [`filters[project][documentId][$eq]`]: fixture.projectId,
-            pageSize: '100',
-            sort: 'documentId:asc',
-          };
-          const originalDraftResponse: Response = await manager.readDocuments(
-            'api::database-connection.database-connection',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(originalDraftResponse.status, 200);
-          const originalDraft: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalDraftResponse.json());
-          assert.ok(
-            originalDraft.results.some(
-              (item: { documentId: string }): boolean =>
-                item.documentId === fixture.databaseConnectionId,
-            ),
-          );
-          const originalPublishedResponse: Response =
-            await manager.readDocuments(
-              'api::database-connection.database-connection',
-              { ...filters, status: 'published' },
-              testContext,
-            );
-          assert.equal(originalPublishedResponse.status, 200);
-          const originalPublished: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalPublishedResponse.json());
-
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/project/${fixture.projectId}/database-connection/${fixture.databaseConnectionId}`,
-            {
-              method: 'PUT',
-              headers: new Headers([
-                ['Authorization', `Bearer ${login.jwt}`],
-                ['Content-Type', 'application/json'],
-              ]),
-              body: JSON.stringify({
-                title: 'Updated Database',
-                browserUrl: 'https://example.test/browser',
-                credentialStoreConsent: false,
-                nodeConfigurations: [],
-                adapter: {
-                  databaseType: DatabaseConnectionDatabaseType.neo4j,
-                  connectionUrl: 'bolt://127.0.0.1:7687',
-                  database: 'neo4j',
-                },
-              } satisfies UpdateDatabaseConnectionRequestBodyDto),
-              signal: testContext.signal,
-            },
-          );
-
-          // then
-          assert.equal(response.status, 403);
-          assert.deepEqual(await response.json(), {
-            statusCode: 403,
-            message: 'Forbidden resource',
-            error: 'Forbidden',
           });
-          const draftResponse: Response = await manager.readDocuments(
-            'api::database-connection.database-connection',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(draftResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await draftResponse.json()),
-            originalDraft,
-          );
-          const publishedResponse: Response = await manager.readDocuments(
-            'api::database-connection.database-connection',
-            { ...filters, status: 'published' },
-            testContext,
-          );
-          assert.equal(publishedResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await publishedResponse.json()),
-            originalPublished,
-          );
-        });
 
-        test('rejects removed collaborator access', async (testContext: TestContext): Promise<void> => {
-          // given
-          const fixture: FixtureContext =
-            await manager.setupFixture(testContext);
-          await manager.loginUser(
-            fixture.owner.username,
-            fixture.owner.password,
-            testContext,
-          );
-          const login: PostAuthResponseBodyDto = await manager.loginUser(
-            fixture.collaborator.username,
-            fixture.collaborator.password,
-            testContext,
-          );
-          const removal: Response = await manager.publishDocument(
-            'api::project.project',
-            fixture.projectId,
-            { collaborators: [] },
-            testContext,
-          );
-          assert.equal(removal.status, 200);
-          const filters: Record<string, string> = {
-            [`filters[project][documentId][$eq]`]: fixture.projectId,
-            pageSize: '100',
-            sort: 'documentId:asc',
-          };
-          const originalDraftResponse: Response = await manager.readDocuments(
-            'api::database-connection.database-connection',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(originalDraftResponse.status, 200);
-          const originalDraft: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalDraftResponse.json());
-          assert.ok(
-            originalDraft.results.some(
-              (item: { documentId: string }): boolean =>
-                item.documentId === fixture.databaseConnectionId,
-            ),
-          );
-          const originalPublishedResponse: Response =
-            await manager.readDocuments(
-              'api::database-connection.database-connection',
-              { ...filters, status: 'published' },
-              testContext,
-            );
-          assert.equal(originalPublishedResponse.status, 200);
-          const originalPublished: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalPublishedResponse.json());
-
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/project/${fixture.projectId}/database-connection/${fixture.databaseConnectionId}`,
-            {
-              method: 'PUT',
-              headers: new Headers([
-                ['Authorization', `Bearer ${login.jwt}`],
-                ['Content-Type', 'application/json'],
-              ]),
-              body: JSON.stringify({
-                title: 'Updated Database',
-                browserUrl: 'https://example.test/browser',
-                credentialStoreConsent: false,
-                nodeConfigurations: [],
-                adapter: {
-                  databaseType: DatabaseConnectionDatabaseType.neo4j,
-                  connectionUrl: 'bolt://127.0.0.1:7687',
-                  database: 'neo4j',
-                },
-              } satisfies UpdateDatabaseConnectionRequestBodyDto),
-              signal: testContext.signal,
-            },
-          );
-
-          // then
-          assert.equal(response.status, 403);
-          assert.deepEqual(await response.json(), {
-            statusCode: 403,
-            message: 'Forbidden resource',
-            error: 'Forbidden',
-          });
-          const draftResponse: Response = await manager.readDocuments(
-            'api::database-connection.database-connection',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(draftResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await draftResponse.json()),
-            originalDraft,
-          );
-          const publishedResponse: Response = await manager.readDocuments(
-            'api::database-connection.database-connection',
-            { ...filters, status: 'published' },
-            testContext,
-          );
-          assert.equal(publishedResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await publishedResponse.json()),
-            originalPublished,
-          );
-        });
-
-        test('rejects draft collaborator access', async (testContext: TestContext): Promise<void> => {
-          // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const collaborator: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
-          const resource: string = await manager.createPublishedDocument(
-            'api::database-connection.database-connection',
-            {
-              title: 'Original Database',
-              project,
-              databaseType: 'neo4j',
-              connectionUrl: '',
-              browserUrl: '',
-              database: '',
-            },
-            testContext,
-          );
-          await manager.loginUser(owner.username, owner.password, testContext);
-          const login: PostAuthResponseBodyDto = await manager.loginUser(
-            collaborator.username,
-            collaborator.password,
-            testContext,
-          );
-          const draftAccess: Response = await manager.updateDocument(
-            'api::project.project',
-            project,
-            { collaborators: [collaborator.documentId] },
-            testContext,
-          );
-          assert.equal(draftAccess.status, 200);
-          const filters: Record<string, string> = {
-            [`filters[project][documentId][$eq]`]: project,
-            pageSize: '100',
-            sort: 'documentId:asc',
-          };
-          const originalDraftResponse: Response = await manager.readDocuments(
-            'api::database-connection.database-connection',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(originalDraftResponse.status, 200);
-          const originalDraft: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalDraftResponse.json());
-          assert.ok(
-            originalDraft.results.some(
-              (item: { documentId: string }): boolean =>
-                item.documentId === resource,
-            ),
-          );
-          const originalPublishedResponse: Response =
-            await manager.readDocuments(
-              'api::database-connection.database-connection',
-              { ...filters, status: 'published' },
-              testContext,
-            );
-          assert.equal(originalPublishedResponse.status, 200);
-          const originalPublished: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalPublishedResponse.json());
-
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/database-connection/${resource}`,
-            {
-              method: 'PUT',
-              headers: new Headers([
-                ['Authorization', `Bearer ${login.jwt}`],
-                ['Content-Type', 'application/json'],
-              ]),
-              body: JSON.stringify({
-                title: 'Updated Database',
-                browserUrl: 'https://example.test/browser',
-                credentialStoreConsent: false,
-                nodeConfigurations: [],
-                adapter: {
-                  databaseType: DatabaseConnectionDatabaseType.neo4j,
-                  connectionUrl: 'bolt://127.0.0.1:7687',
-                  database: 'neo4j',
-                },
-              } satisfies UpdateDatabaseConnectionRequestBodyDto),
-              signal: testContext.signal,
-            },
-          );
-
-          // then
-          assert.equal(response.status, 403);
-          assert.deepEqual(await response.json(), {
-            statusCode: 403,
-            message: 'Forbidden resource',
-            error: 'Forbidden',
-          });
-          const draftResponse: Response = await manager.readDocuments(
-            'api::database-connection.database-connection',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(draftResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await draftResponse.json()),
-            originalDraft,
-          );
-          const publishedResponse: Response = await manager.readDocuments(
-            'api::database-connection.database-connection',
-            { ...filters, status: 'published' },
-            testContext,
-          );
-          assert.equal(publishedResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await publishedResponse.json()),
-            originalPublished,
-          );
-        });
-      });
-      describe('404', (): void => {
-        test('rejects an unknown project', async (testContext: TestContext): Promise<void> => {
-          // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
-          const resource: string = await manager.createPublishedDocument(
-            'api::database-connection.database-connection',
-            {
-              title: 'Original Database',
-              project,
-              databaseType: 'neo4j',
-              connectionUrl: '',
-              browserUrl: '',
-              database: '',
-            },
-            testContext,
-          );
-          const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
-            testContext,
-          );
-          const filters: Record<string, string> = {
-            [`filters[project][documentId][$eq]`]: project,
-            pageSize: '100',
-            sort: 'documentId:asc',
-          };
-          const originalDraftResponse: Response = await manager.readDocuments(
-            'api::database-connection.database-connection',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(originalDraftResponse.status, 200);
-          const originalDraft: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalDraftResponse.json());
-          assert.ok(
-            originalDraft.results.some(
-              (item: { documentId: string }): boolean =>
-                item.documentId === resource,
-            ),
-          );
-          const originalPublishedResponse: Response =
-            await manager.readDocuments(
-              'api::database-connection.database-connection',
-              { ...filters, status: 'published' },
-              testContext,
-            );
-          assert.equal(originalPublishedResponse.status, 200);
-          const originalPublished: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalPublishedResponse.json());
-
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/project/${randomUUID()}/database-connection/${resource}`,
-            {
-              method: 'PUT',
-              headers: new Headers([
-                ['Authorization', `Bearer ${ownerLogin.jwt}`],
-                ['Content-Type', 'application/json'],
-              ]),
-              body: JSON.stringify({
-                title: 'Updated Database',
-                browserUrl: 'https://example.test/browser',
-                credentialStoreConsent: false,
-                nodeConfigurations: [],
-                adapter: {
-                  databaseType: DatabaseConnectionDatabaseType.neo4j,
-                  connectionUrl: 'bolt://127.0.0.1:7687',
-                  database: 'neo4j',
-                },
-              } satisfies UpdateDatabaseConnectionRequestBodyDto),
-              signal: testContext.signal,
-            },
-          );
-
-          // then
-          assert.equal(response.status, 404);
-          assert.deepEqual(await response.json(), {
-            statusCode: 404,
-            message: 'Not Found',
-          });
-          const draftResponse: Response = await manager.readDocuments(
-            'api::database-connection.database-connection',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(draftResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await draftResponse.json()),
-            originalDraft,
-          );
-          const publishedResponse: Response = await manager.readDocuments(
-            'api::database-connection.database-connection',
-            { ...filters, status: 'published' },
-            testContext,
-          );
-          assert.equal(publishedResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await publishedResponse.json()),
-            originalPublished,
-          );
-        });
-
-        test('rejects an unpublished project', async (testContext: TestContext): Promise<void> => {
-          // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
-          const resource: string = await manager.createPublishedDocument(
-            'api::database-connection.database-connection',
-            {
-              title: 'Original Database',
-              project,
-              databaseType: 'neo4j',
-              connectionUrl: '',
-              browserUrl: '',
-              database: '',
-            },
-            testContext,
-          );
-          const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
-            testContext,
-          );
-          const unpublish: Response = await manager.unpublishDocument(
-            'api::project.project',
-            project,
-            {},
-            testContext,
-          );
-          assert.equal(unpublish.status, 200);
-          const draftProject: Response = await manager.readDocument(
-            'api::project.project',
-            project,
-            testContext,
-          );
-          assert.equal(draftProject.status, 200);
-          z.object({ data: z.object({ publishedAt: z.null() }) }).parse(
-            await draftProject.json(),
-          );
-          const filters: Record<string, string> = {
-            [`filters[project][documentId][$eq]`]: project,
-            pageSize: '100',
-            sort: 'documentId:asc',
-          };
-          const originalDraftResponse: Response = await manager.readDocuments(
-            'api::database-connection.database-connection',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(originalDraftResponse.status, 200);
-          const originalDraft: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalDraftResponse.json());
-          assert.ok(
-            originalDraft.results.some(
-              (item: { documentId: string }): boolean =>
-                item.documentId === resource,
-            ),
-          );
-          const originalPublishedResponse: Response =
-            await manager.readDocuments(
-              'api::database-connection.database-connection',
-              { ...filters, status: 'published' },
-              testContext,
-            );
-          assert.equal(originalPublishedResponse.status, 200);
-          const originalPublished: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalPublishedResponse.json());
-
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/database-connection/${resource}`,
-            {
-              method: 'PUT',
-              headers: new Headers([
-                ['Authorization', `Bearer ${ownerLogin.jwt}`],
-                ['Content-Type', 'application/json'],
-              ]),
-              body: JSON.stringify({
-                title: 'Updated Database',
-                browserUrl: 'https://example.test/browser',
-                credentialStoreConsent: false,
-                nodeConfigurations: [],
-                adapter: {
-                  databaseType: DatabaseConnectionDatabaseType.neo4j,
-                  connectionUrl: 'bolt://127.0.0.1:7687',
-                  database: 'neo4j',
-                },
-              } satisfies UpdateDatabaseConnectionRequestBodyDto),
-              signal: testContext.signal,
-            },
-          );
-
-          // then
-          assert.equal(response.status, 404);
-          assert.deepEqual(await response.json(), {
-            statusCode: 404,
-            message: 'Not Found',
-          });
-          const draftResponse: Response = await manager.readDocuments(
-            'api::database-connection.database-connection',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(draftResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await draftResponse.json()),
-            originalDraft,
-          );
-          const publishedResponse: Response = await manager.readDocuments(
-            'api::database-connection.database-connection',
-            { ...filters, status: 'published' },
-            testContext,
-          );
-          assert.equal(publishedResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await publishedResponse.json()),
-            originalPublished,
-          );
-        });
-
-        test('rejects an unknown database connection', async (testContext: TestContext): Promise<void> => {
-          // given
-          const fixture: FixtureContext =
-            await manager.setupFixture(testContext);
-          const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-            fixture.owner.username,
-            fixture.owner.password,
-            testContext,
-          );
-          const filters: Record<string, string> = {
-            [`filters[project][documentId][$eq]`]: fixture.projectId,
-            pageSize: '100',
-            sort: 'documentId:asc',
-          };
-          const originalDraftResponse: Response = await manager.readDocuments(
-            'api::database-connection.database-connection',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(originalDraftResponse.status, 200);
-          const originalDraft: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalDraftResponse.json());
-          assert.ok(
-            originalDraft.results.some(
-              (item: { documentId: string }): boolean =>
-                item.documentId === fixture.databaseConnectionId,
-            ),
-          );
-          const originalPublishedResponse: Response =
-            await manager.readDocuments(
-              'api::database-connection.database-connection',
-              { ...filters, status: 'published' },
-              testContext,
-            );
-          assert.equal(originalPublishedResponse.status, 200);
-          const originalPublished: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalPublishedResponse.json());
-
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/project/${fixture.projectId}/database-connection/${randomUUID()}`,
-            {
-              method: 'PUT',
-              headers: new Headers([
-                ['Authorization', `Bearer ${ownerLogin.jwt}`],
-                ['Content-Type', 'application/json'],
-              ]),
-              body: JSON.stringify({
-                title: 'Updated Database',
-                browserUrl: 'https://example.test/browser',
-                credentialStoreConsent: false,
-                nodeConfigurations: [],
-                adapter: {
-                  databaseType: DatabaseConnectionDatabaseType.neo4j,
-                  connectionUrl: 'bolt://127.0.0.1:7687',
-                  database: 'neo4j',
-                },
-              } satisfies UpdateDatabaseConnectionRequestBodyDto),
-              signal: testContext.signal,
-            },
-          );
-
-          // then
-          assert.equal(response.status, 404);
-          assert.deepEqual(await response.json(), {
-            statusCode: 404,
-            message: 'Not Found',
-          });
-          const draftResponse: Response = await manager.readDocuments(
-            'api::database-connection.database-connection',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(draftResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await draftResponse.json()),
-            originalDraft,
-          );
-          const publishedResponse: Response = await manager.readDocuments(
-            'api::database-connection.database-connection',
-            { ...filters, status: 'published' },
-            testContext,
-          );
-          assert.equal(publishedResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await publishedResponse.json()),
-            originalPublished,
-          );
-        });
-
-        test('rejects an unpublished database connection', async (testContext: TestContext): Promise<void> => {
-          // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
-          const resource: string = await manager.createPublishedDocument(
-            'api::database-connection.database-connection',
-            {
-              title: 'Original Database',
-              project,
-              databaseType: 'neo4j',
-              connectionUrl: '',
-              browserUrl: '',
-              database: '',
-            },
-            testContext,
-          );
-          const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
-            testContext,
-          );
-          const unpublish: Response = await manager.unpublishDocument(
-            'api::database-connection.database-connection',
-            resource,
-            {},
-            testContext,
-          );
-          assert.equal(unpublish.status, 200);
-          const draftResource: Response = await manager.readDocument(
-            'api::database-connection.database-connection',
-            resource,
-            testContext,
-          );
-          assert.equal(draftResource.status, 200);
-          z.object({ data: z.object({ publishedAt: z.null() }) }).parse(
-            await draftResource.json(),
-          );
-          const filters: Record<string, string> = {
-            [`filters[project][documentId][$eq]`]: project,
-            pageSize: '100',
-            sort: 'documentId:asc',
-          };
-          const originalDraftResponse: Response = await manager.readDocuments(
-            'api::database-connection.database-connection',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(originalDraftResponse.status, 200);
-          const originalDraft: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalDraftResponse.json());
-          assert.ok(
-            originalDraft.results.some(
-              (item: { documentId: string }): boolean =>
-                item.documentId === resource,
-            ),
-          );
-          const originalPublishedResponse: Response =
-            await manager.readDocuments(
-              'api::database-connection.database-connection',
-              { ...filters, status: 'published' },
-              testContext,
-            );
-          assert.equal(originalPublishedResponse.status, 200);
-          const originalPublished: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalPublishedResponse.json());
-
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/database-connection/${resource}`,
-            {
-              method: 'PUT',
-              headers: new Headers([
-                ['Authorization', `Bearer ${ownerLogin.jwt}`],
-                ['Content-Type', 'application/json'],
-              ]),
-              body: JSON.stringify({
-                title: 'Updated Database',
-                browserUrl: 'https://example.test/browser',
-                credentialStoreConsent: false,
-                nodeConfigurations: [],
-                adapter: {
-                  databaseType: DatabaseConnectionDatabaseType.neo4j,
-                  connectionUrl: 'bolt://127.0.0.1:7687',
-                  database: 'neo4j',
-                },
-              } satisfies UpdateDatabaseConnectionRequestBodyDto),
-              signal: testContext.signal,
-            },
-          );
-
-          // then
-          assert.equal(response.status, 404);
-          assert.deepEqual(await response.json(), {
-            statusCode: 404,
-            message: 'Not Found',
-          });
-          const draftResponse: Response = await manager.readDocuments(
-            'api::database-connection.database-connection',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(draftResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await draftResponse.json()),
-            originalDraft,
-          );
-          const publishedResponse: Response = await manager.readDocuments(
-            'api::database-connection.database-connection',
-            { ...filters, status: 'published' },
-            testContext,
-          );
-          assert.equal(publishedResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await publishedResponse.json()),
-            originalPublished,
-          );
-        });
-
-        test('rejects a database connection belonging to another existing project', async (testContext: TestContext): Promise<void> => {
-          // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
-          const resource: string = await manager.createPublishedDocument(
-            'api::database-connection.database-connection',
-            {
-              title: 'Original Database',
-              project,
-              databaseType: 'neo4j',
-              connectionUrl: '',
-              browserUrl: '',
-              database: '',
-            },
-            testContext,
-          );
-          const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
-            testContext,
-          );
-          const otherProject: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Other Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
-          const filters: Record<string, string> = {
-            [`filters[project][documentId][$eq]`]: project,
-            pageSize: '100',
-            sort: 'documentId:asc',
-          };
-          const originalDraftResponse: Response = await manager.readDocuments(
-            'api::database-connection.database-connection',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(originalDraftResponse.status, 200);
-          const originalDraft: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalDraftResponse.json());
-          assert.ok(
-            originalDraft.results.some(
-              (item: { documentId: string }): boolean =>
-                item.documentId === resource,
-            ),
-          );
-          const originalPublishedResponse: Response =
-            await manager.readDocuments(
-              'api::database-connection.database-connection',
-              { ...filters, status: 'published' },
-              testContext,
-            );
-          assert.equal(originalPublishedResponse.status, 200);
-          const originalPublished: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalPublishedResponse.json());
-
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/project/${otherProject}/database-connection/${resource}`,
-            {
-              method: 'PUT',
-              headers: new Headers([
-                ['Authorization', `Bearer ${ownerLogin.jwt}`],
-                ['Content-Type', 'application/json'],
-              ]),
-              body: JSON.stringify({
-                title: 'Updated Database',
-                browserUrl: 'https://example.test/browser',
-                credentialStoreConsent: false,
-                nodeConfigurations: [],
-                adapter: {
-                  databaseType: DatabaseConnectionDatabaseType.neo4j,
-                  connectionUrl: 'bolt://127.0.0.1:7687',
-                  database: 'neo4j',
-                },
-              } satisfies UpdateDatabaseConnectionRequestBodyDto),
-              signal: testContext.signal,
-            },
-          );
-
-          // then
-          assert.equal(response.status, 404);
-          assert.deepEqual(await response.json(), {
-            statusCode: 404,
-            message: 'Not Found',
-          });
-          const draftResponse: Response = await manager.readDocuments(
-            'api::database-connection.database-connection',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(draftResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await draftResponse.json()),
-            originalDraft,
-          );
-          const publishedResponse: Response = await manager.readDocuments(
-            'api::database-connection.database-connection',
-            { ...filters, status: 'published' },
-            testContext,
-          );
-          assert.equal(publishedResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await publishedResponse.json()),
-            originalPublished,
-          );
-        });
-      });
-    });
-    describe('DELETE', (): void => {
-      describe('204', (): void => {
-        test('uses the published assignment despite draft reassignment', async (testContext: TestContext): Promise<void> => {
-          // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
-          const resource: string = await manager.createPublishedDocument(
-            'api::database-connection.database-connection',
-            {
-              title: 'Original Database',
-              project,
-              databaseType: 'neo4j',
-              connectionUrl: '',
-              browserUrl: '',
-              database: '',
-            },
-            testContext,
-          );
-          const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
-            testContext,
-          );
-          const otherProject: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Other Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
-          const draftChange: Response = await manager.updateDocument(
-            'api::database-connection.database-connection',
-            resource,
-            { title: 'Draft Database', project: otherProject },
-            testContext,
-          );
-          assert.equal(draftChange.status, 200);
-
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/database-connection/${resource}`,
-            {
-              method: 'DELETE',
-              headers: new Headers([
-                ['Authorization', `Bearer ${ownerLogin.jwt}`],
-              ]),
-              signal: testContext.signal,
-            },
-          );
-
-          // then
-          assert.equal(response.status, 204);
-          assert.equal(await response.text(), '');
-          const projectResponse: Response = await fetch(
-            `${manager.apiUrl}/project/${project}`,
-            {
-              headers: new Headers([
-                ['Authorization', `Bearer ${ownerLogin.jwt}`],
-              ]),
-              signal: testContext.signal,
-            },
-          );
-          assert.equal(projectResponse.status, 200);
-          const publishedState: z.infer<typeof projectStateSchema> =
-            projectStateSchema.parse(await projectResponse.json());
-          const items: DatabaseConnectionDto[] | undefined =
-            publishedState.databases;
-
-          assert.equal(
-            items.some(
-              (item: DatabaseConnectionDto): boolean => item.id === resource,
-            ),
-            false,
-          );
-          const stored: Response = await manager.readDocument(
-            'api::database-connection.database-connection',
-            resource,
-            testContext,
-          );
-          assert.equal(stored.status, 404);
-        });
-
-        test('preserves a database connection outside the targeted parent', async (testContext: TestContext): Promise<void> => {
-          // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
-          const resource: string = await manager.createPublishedDocument(
-            'api::database-connection.database-connection',
-            {
-              title: 'Original Database',
-              project,
-              databaseType: 'neo4j',
-              connectionUrl: '',
-              browserUrl: '',
-              database: '',
-            },
-            testContext,
-          );
-          const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
-            testContext,
-          );
-          const otherProject: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Other Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
-          const control: string = await manager.createPublishedDocument(
-            'api::database-connection.database-connection',
-            {
-              title: 'Unrelated Database',
-              project: otherProject,
-              databaseType: 'neo4j',
-            },
-            testContext,
-          );
-          const originalControlResponse: Response = await manager.readDocument(
-            'api::database-connection.database-connection',
-            control,
-            testContext,
-          );
-          assert.equal(originalControlResponse.status, 200);
-          const originalControl: unknown = await originalControlResponse.json();
-          z.object({
-            data: z.object({ documentId: z.literal(control) }),
-          }).parse(originalControl);
-
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/database-connection/${resource}`,
-            {
-              method: 'DELETE',
-              headers: new Headers([
-                ['Authorization', `Bearer ${ownerLogin.jwt}`],
-              ]),
-              signal: testContext.signal,
-            },
-          );
-
-          // then
-          assert.equal(response.status, 204);
-          assert.equal(await response.text(), '');
-          const projectResponse: Response = await fetch(
-            `${manager.apiUrl}/project/${project}`,
-            {
-              headers: new Headers([
-                ['Authorization', `Bearer ${ownerLogin.jwt}`],
-              ]),
-              signal: testContext.signal,
-            },
-          );
-          assert.equal(projectResponse.status, 200);
-          const publishedState: z.infer<typeof projectStateSchema> =
-            projectStateSchema.parse(await projectResponse.json());
-          const items: DatabaseConnectionDto[] | undefined =
-            publishedState.databases;
-
-          assert.equal(
-            items.some(
-              (item: DatabaseConnectionDto): boolean => item.id === resource,
-            ),
-            false,
-          );
-          const stored: Response = await manager.readDocument(
-            'api::database-connection.database-connection',
-            resource,
-            testContext,
-          );
-          assert.equal(stored.status, 404);
-          const controlResponse: Response = await manager.readDocument(
-            'api::database-connection.database-connection',
-            control,
-            testContext,
-          );
-          assert.equal(controlResponse.status, 200);
-          assert.deepEqual(await controlResponse.json(), originalControl);
-        });
-
-        test('published collaborator retains access after draft removal', async (testContext: TestContext): Promise<void> => {
-          // given
-          const fixture: FixtureContext =
-            await manager.setupFixture(testContext);
-          const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-            fixture.owner.username,
-            fixture.owner.password,
-            testContext,
-          );
-          const login: PostAuthResponseBodyDto = await manager.loginUser(
-            fixture.collaborator.username,
-            fixture.collaborator.password,
-            testContext,
-          );
-          const draftRemoval: Response = await manager.updateDocument(
-            'api::project.project',
-            fixture.projectId,
-            { collaborators: [] },
-            testContext,
-          );
-          assert.equal(draftRemoval.status, 200);
-
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/project/${fixture.projectId}/database-connection/${fixture.databaseConnectionId}`,
-            {
-              method: 'DELETE',
-              headers: new Headers([['Authorization', `Bearer ${login.jwt}`]]),
-              signal: testContext.signal,
-            },
-          );
-
-          // then
-          assert.equal(response.status, 204);
-          assert.equal(await response.text(), '');
-          const projectResponse: Response = await fetch(
-            `${manager.apiUrl}/project/${fixture.projectId}`,
-            {
-              headers: new Headers([
-                ['Authorization', `Bearer ${ownerLogin.jwt}`],
-              ]),
-              signal: testContext.signal,
-            },
-          );
-          assert.equal(projectResponse.status, 200);
-          const publishedState: z.infer<typeof projectStateSchema> =
-            projectStateSchema.parse(await projectResponse.json());
-          const items: DatabaseConnectionDto[] | undefined =
-            publishedState.databases;
-
-          assert.equal(
-            items.some(
-              (item: DatabaseConnectionDto): boolean =>
-                item.id === fixture.databaseConnectionId,
-            ),
-            false,
-          );
-          const stored: Response = await manager.readDocument(
-            'api::database-connection.database-connection',
-            fixture.databaseConnectionId,
-            testContext,
-          );
-          assert.equal(stored.status, 404);
-        });
-
-        test('owner can delete a database connection', async (testContext: TestContext): Promise<void> => {
-          // given
-          const fixture: FixtureContext =
-            await manager.setupFixture(testContext);
-          const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-            fixture.owner.username,
-            fixture.owner.password,
-            testContext,
-          );
-
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/project/${fixture.projectId}/database-connection/${fixture.databaseConnectionId}`,
-            {
-              method: 'DELETE',
-              headers: new Headers([
-                ['Authorization', `Bearer ${ownerLogin.jwt}`],
-              ]),
-              signal: testContext.signal,
-            },
-          );
-
-          // then
-          assert.equal(response.status, 204);
-          assert.equal(await response.text(), '');
-          const projectResponse: Response = await fetch(
-            `${manager.apiUrl}/project/${fixture.projectId}`,
-            {
-              headers: new Headers([
-                ['Authorization', `Bearer ${ownerLogin.jwt}`],
-              ]),
-              signal: testContext.signal,
-            },
-          );
-          assert.equal(projectResponse.status, 200);
-          const publishedState: z.infer<typeof projectStateSchema> =
-            projectStateSchema.parse(await projectResponse.json());
-          const items: DatabaseConnectionDto[] | undefined =
-            publishedState.databases;
-          assert.equal(
-            items.some(
-              (item: DatabaseConnectionDto): boolean =>
-                item.id === fixture.databaseConnectionId,
-            ),
-            false,
-          );
-          const stored: Response = await manager.readDocument(
-            'api::database-connection.database-connection',
-            fixture.databaseConnectionId,
-            testContext,
-          );
-          assert.equal(stored.status, 404);
-        });
-
-        test('collaborator can delete a database connection', async (testContext: TestContext): Promise<void> => {
-          // given
-          const fixture: FixtureContext =
-            await manager.setupFixture(testContext);
-          const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-            fixture.owner.username,
-            fixture.owner.password,
-            testContext,
-          );
-          const login: PostAuthResponseBodyDto = await manager.loginUser(
-            fixture.collaborator.username,
-            fixture.collaborator.password,
-            testContext,
-          );
-
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/project/${fixture.projectId}/database-connection/${fixture.databaseConnectionId}`,
-            {
-              method: 'DELETE',
-              headers: new Headers([['Authorization', `Bearer ${login.jwt}`]]),
-              signal: testContext.signal,
-            },
-          );
-
-          // then
-          assert.equal(response.status, 204);
-          assert.equal(await response.text(), '');
-          const projectResponse: Response = await fetch(
-            `${manager.apiUrl}/project/${fixture.projectId}`,
-            {
-              headers: new Headers([
-                ['Authorization', `Bearer ${ownerLogin.jwt}`],
-              ]),
-              signal: testContext.signal,
-            },
-          );
-          assert.equal(projectResponse.status, 200);
-          const publishedState: z.infer<typeof projectStateSchema> =
-            projectStateSchema.parse(await projectResponse.json());
-          const items: DatabaseConnectionDto[] | undefined =
-            publishedState.databases;
-          assert.equal(
-            items.some(
-              (item: DatabaseConnectionDto): boolean =>
-                item.id === fixture.databaseConnectionId,
-            ),
-            false,
-          );
-          const stored: Response = await manager.readDocument(
-            'api::database-connection.database-connection',
-            fixture.databaseConnectionId,
-            testContext,
-          );
-          assert.equal(stored.status, 404);
-        });
-      });
-      describe('401', (): void => {
-        test('rejects requests without valid authentication', async (testContext: TestContext): Promise<void> => {
-          const variants: { headers: [string, string][] }[] = [
-            { headers: [] },
-            {
-              headers: [['Authorization', 'Bearer invalid-jwt']],
-            },
-          ];
-          for (const variant of variants) {
+          test('rejects removed collaborator access', async (testContext: TestContext): Promise<void> => {
             // given
             const fixture: FixtureContext =
               await manager.setupFixture(testContext);
             await manager.loginUser(
               fixture.owner.username,
               fixture.owner.password,
+              testContext,
+            );
+            const login: PostAuthResponseBodyDto = await manager.loginUser(
+              fixture.collaborator.username,
+              fixture.collaborator.password,
+              testContext,
+            );
+            const removal: Response = await manager.publishDocument(
+              'api::project.project',
+              fixture.projectId,
+              { collaborators: [] },
+              testContext,
+            );
+            assert.equal(removal.status, 200);
+            const filters: Record<string, string> = {
+              [`filters[project][documentId][$eq]`]: fixture.projectId,
+              pageSize: '100',
+              sort: 'documentId:asc',
+            };
+            const originalDraftResponse: Response = await manager.readDocuments(
+              'api::database-connection.database-connection',
+              { ...filters, status: 'draft' },
+              testContext,
+            );
+            assert.equal(originalDraftResponse.status, 200);
+            const originalDraft: z.infer<typeof listStateSchema> =
+              listStateSchema.parse(await originalDraftResponse.json());
+            assert.ok(
+              originalDraft.results.some(
+                (item: { documentId: string }): boolean =>
+                  item.documentId === fixture.databaseConnectionId,
+              ),
+            );
+            const originalPublishedResponse: Response =
+              await manager.readDocuments(
+                'api::database-connection.database-connection',
+                { ...filters, status: 'published' },
+                testContext,
+              );
+            assert.equal(originalPublishedResponse.status, 200);
+            const originalPublished: z.infer<typeof listStateSchema> =
+              listStateSchema.parse(await originalPublishedResponse.json());
+
+            // when
+            const response: Response = await fetch(
+              `${manager.apiUrl}/project/${fixture.projectId}/database-connection/${fixture.databaseConnectionId}`,
+              {
+                method: 'PUT',
+                headers: new Headers([
+                  ['Authorization', `Bearer ${login.jwt}`],
+                  ['Content-Type', 'application/json'],
+                ]),
+                body: JSON.stringify({
+                  title: 'Updated Database',
+                  browserUrl: 'https://example.test/browser',
+                  credentialStoreConsent: false,
+                  nodeConfigurations: [],
+                  adapter: {
+                    databaseType: DatabaseConnectionDatabaseType.neo4j,
+                    connectionUrl: 'bolt://127.0.0.1:7687',
+                    database: 'neo4j',
+                  },
+                } satisfies UpdateDatabaseConnectionRequestBodyDto),
+                signal: testContext.signal,
+              },
+            );
+
+            // then
+            assert.equal(response.status, 403);
+            assert.deepEqual(await response.json(), {
+              statusCode: 403,
+              message: 'Forbidden resource',
+              error: 'Forbidden',
+            });
+            const draftResponse: Response = await manager.readDocuments(
+              'api::database-connection.database-connection',
+              { ...filters, status: 'draft' },
+              testContext,
+            );
+            assert.equal(draftResponse.status, 200);
+            assert.deepEqual(
+              listStateSchema.parse(await draftResponse.json()),
+              originalDraft,
+            );
+            const publishedResponse: Response = await manager.readDocuments(
+              'api::database-connection.database-connection',
+              { ...filters, status: 'published' },
+              testContext,
+            );
+            assert.equal(publishedResponse.status, 200);
+            assert.deepEqual(
+              listStateSchema.parse(await publishedResponse.json()),
+              originalPublished,
+            );
+          });
+
+          test('rejects draft collaborator access', async (testContext: TestContext): Promise<void> => {
+            // given
+            const owner: E2ETestApplicationUser =
+              await manager.registerUser(testContext);
+            const collaborator: E2ETestApplicationUser =
+              await manager.registerUser(testContext);
+            const project: string = await manager.createPublishedDocument(
+              'api::project.project',
+              {
+                title: 'Test Project',
+                owner: owner.documentId,
+                collaborators: [],
+              },
+              testContext,
+            );
+            const resource: string = await manager.createPublishedDocument(
+              'api::database-connection.database-connection',
+              {
+                title: 'Original Database',
+                project,
+                databaseType: 'neo4j',
+                connectionUrl: '',
+                browserUrl: '',
+                database: '',
+              },
+              testContext,
+            );
+            await manager.loginUser(
+              owner.username,
+              owner.password,
+              testContext,
+            );
+            const login: PostAuthResponseBodyDto = await manager.loginUser(
+              collaborator.username,
+              collaborator.password,
+              testContext,
+            );
+            const draftAccess: Response = await manager.updateDocument(
+              'api::project.project',
+              project,
+              { collaborators: [collaborator.documentId] },
+              testContext,
+            );
+            assert.equal(draftAccess.status, 200);
+            const filters: Record<string, string> = {
+              [`filters[project][documentId][$eq]`]: project,
+              pageSize: '100',
+              sort: 'documentId:asc',
+            };
+            const originalDraftResponse: Response = await manager.readDocuments(
+              'api::database-connection.database-connection',
+              { ...filters, status: 'draft' },
+              testContext,
+            );
+            assert.equal(originalDraftResponse.status, 200);
+            const originalDraft: z.infer<typeof listStateSchema> =
+              listStateSchema.parse(await originalDraftResponse.json());
+            assert.ok(
+              originalDraft.results.some(
+                (item: { documentId: string }): boolean =>
+                  item.documentId === resource,
+              ),
+            );
+            const originalPublishedResponse: Response =
+              await manager.readDocuments(
+                'api::database-connection.database-connection',
+                { ...filters, status: 'published' },
+                testContext,
+              );
+            assert.equal(originalPublishedResponse.status, 200);
+            const originalPublished: z.infer<typeof listStateSchema> =
+              listStateSchema.parse(await originalPublishedResponse.json());
+
+            // when
+            const response: Response = await fetch(
+              `${manager.apiUrl}/project/${project}/database-connection/${resource}`,
+              {
+                method: 'PUT',
+                headers: new Headers([
+                  ['Authorization', `Bearer ${login.jwt}`],
+                  ['Content-Type', 'application/json'],
+                ]),
+                body: JSON.stringify({
+                  title: 'Updated Database',
+                  browserUrl: 'https://example.test/browser',
+                  credentialStoreConsent: false,
+                  nodeConfigurations: [],
+                  adapter: {
+                    databaseType: DatabaseConnectionDatabaseType.neo4j,
+                    connectionUrl: 'bolt://127.0.0.1:7687',
+                    database: 'neo4j',
+                  },
+                } satisfies UpdateDatabaseConnectionRequestBodyDto),
+                signal: testContext.signal,
+              },
+            );
+
+            // then
+            assert.equal(response.status, 403);
+            assert.deepEqual(await response.json(), {
+              statusCode: 403,
+              message: 'Forbidden resource',
+              error: 'Forbidden',
+            });
+            const draftResponse: Response = await manager.readDocuments(
+              'api::database-connection.database-connection',
+              { ...filters, status: 'draft' },
+              testContext,
+            );
+            assert.equal(draftResponse.status, 200);
+            assert.deepEqual(
+              listStateSchema.parse(await draftResponse.json()),
+              originalDraft,
+            );
+            const publishedResponse: Response = await manager.readDocuments(
+              'api::database-connection.database-connection',
+              { ...filters, status: 'published' },
+              testContext,
+            );
+            assert.equal(publishedResponse.status, 200);
+            assert.deepEqual(
+              listStateSchema.parse(await publishedResponse.json()),
+              originalPublished,
+            );
+          });
+        });
+        describe('404', (): void => {
+          test('rejects an unknown project', async (testContext: TestContext): Promise<void> => {
+            // given
+            const owner: E2ETestApplicationUser =
+              await manager.registerUser(testContext);
+            const project: string = await manager.createPublishedDocument(
+              'api::project.project',
+              {
+                title: 'Test Project',
+                owner: owner.documentId,
+                collaborators: [],
+              },
+              testContext,
+            );
+            const resource: string = await manager.createPublishedDocument(
+              'api::database-connection.database-connection',
+              {
+                title: 'Original Database',
+                project,
+                databaseType: 'neo4j',
+                connectionUrl: '',
+                browserUrl: '',
+                database: '',
+              },
+              testContext,
+            );
+            const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
+              owner.username,
+              owner.password,
+              testContext,
+            );
+            const filters: Record<string, string> = {
+              [`filters[project][documentId][$eq]`]: project,
+              pageSize: '100',
+              sort: 'documentId:asc',
+            };
+            const originalDraftResponse: Response = await manager.readDocuments(
+              'api::database-connection.database-connection',
+              { ...filters, status: 'draft' },
+              testContext,
+            );
+            assert.equal(originalDraftResponse.status, 200);
+            const originalDraft: z.infer<typeof listStateSchema> =
+              listStateSchema.parse(await originalDraftResponse.json());
+            assert.ok(
+              originalDraft.results.some(
+                (item: { documentId: string }): boolean =>
+                  item.documentId === resource,
+              ),
+            );
+            const originalPublishedResponse: Response =
+              await manager.readDocuments(
+                'api::database-connection.database-connection',
+                { ...filters, status: 'published' },
+                testContext,
+              );
+            assert.equal(originalPublishedResponse.status, 200);
+            const originalPublished: z.infer<typeof listStateSchema> =
+              listStateSchema.parse(await originalPublishedResponse.json());
+
+            // when
+            const response: Response = await fetch(
+              `${manager.apiUrl}/project/${randomUUID()}/database-connection/${resource}`,
+              {
+                method: 'PUT',
+                headers: new Headers([
+                  ['Authorization', `Bearer ${ownerLogin.jwt}`],
+                  ['Content-Type', 'application/json'],
+                ]),
+                body: JSON.stringify({
+                  title: 'Updated Database',
+                  browserUrl: 'https://example.test/browser',
+                  credentialStoreConsent: false,
+                  nodeConfigurations: [],
+                  adapter: {
+                    databaseType: DatabaseConnectionDatabaseType.neo4j,
+                    connectionUrl: 'bolt://127.0.0.1:7687',
+                    database: 'neo4j',
+                  },
+                } satisfies UpdateDatabaseConnectionRequestBodyDto),
+                signal: testContext.signal,
+              },
+            );
+
+            // then
+            assert.equal(response.status, 404);
+            assert.deepEqual(await response.json(), {
+              statusCode: 404,
+              message: 'Not Found',
+            });
+            const draftResponse: Response = await manager.readDocuments(
+              'api::database-connection.database-connection',
+              { ...filters, status: 'draft' },
+              testContext,
+            );
+            assert.equal(draftResponse.status, 200);
+            assert.deepEqual(
+              listStateSchema.parse(await draftResponse.json()),
+              originalDraft,
+            );
+            const publishedResponse: Response = await manager.readDocuments(
+              'api::database-connection.database-connection',
+              { ...filters, status: 'published' },
+              testContext,
+            );
+            assert.equal(publishedResponse.status, 200);
+            assert.deepEqual(
+              listStateSchema.parse(await publishedResponse.json()),
+              originalPublished,
+            );
+          });
+
+          test('rejects an unpublished project', async (testContext: TestContext): Promise<void> => {
+            // given
+            const owner: E2ETestApplicationUser =
+              await manager.registerUser(testContext);
+            const project: string = await manager.createPublishedDocument(
+              'api::project.project',
+              {
+                title: 'Test Project',
+                owner: owner.documentId,
+                collaborators: [],
+              },
+              testContext,
+            );
+            const resource: string = await manager.createPublishedDocument(
+              'api::database-connection.database-connection',
+              {
+                title: 'Original Database',
+                project,
+                databaseType: 'neo4j',
+                connectionUrl: '',
+                browserUrl: '',
+                database: '',
+              },
+              testContext,
+            );
+            const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
+              owner.username,
+              owner.password,
+              testContext,
+            );
+            const unpublish: Response = await manager.unpublishDocument(
+              'api::project.project',
+              project,
+              {},
+              testContext,
+            );
+            assert.equal(unpublish.status, 200);
+            const draftProject: Response = await manager.readDocument(
+              'api::project.project',
+              project,
+              testContext,
+            );
+            assert.equal(draftProject.status, 200);
+            z.object({ data: z.object({ publishedAt: z.null() }) }).parse(
+              await draftProject.json(),
+            );
+            const filters: Record<string, string> = {
+              [`filters[project][documentId][$eq]`]: project,
+              pageSize: '100',
+              sort: 'documentId:asc',
+            };
+            const originalDraftResponse: Response = await manager.readDocuments(
+              'api::database-connection.database-connection',
+              { ...filters, status: 'draft' },
+              testContext,
+            );
+            assert.equal(originalDraftResponse.status, 200);
+            const originalDraft: z.infer<typeof listStateSchema> =
+              listStateSchema.parse(await originalDraftResponse.json());
+            assert.ok(
+              originalDraft.results.some(
+                (item: { documentId: string }): boolean =>
+                  item.documentId === resource,
+              ),
+            );
+            const originalPublishedResponse: Response =
+              await manager.readDocuments(
+                'api::database-connection.database-connection',
+                { ...filters, status: 'published' },
+                testContext,
+              );
+            assert.equal(originalPublishedResponse.status, 200);
+            const originalPublished: z.infer<typeof listStateSchema> =
+              listStateSchema.parse(await originalPublishedResponse.json());
+
+            // when
+            const response: Response = await fetch(
+              `${manager.apiUrl}/project/${project}/database-connection/${resource}`,
+              {
+                method: 'PUT',
+                headers: new Headers([
+                  ['Authorization', `Bearer ${ownerLogin.jwt}`],
+                  ['Content-Type', 'application/json'],
+                ]),
+                body: JSON.stringify({
+                  title: 'Updated Database',
+                  browserUrl: 'https://example.test/browser',
+                  credentialStoreConsent: false,
+                  nodeConfigurations: [],
+                  adapter: {
+                    databaseType: DatabaseConnectionDatabaseType.neo4j,
+                    connectionUrl: 'bolt://127.0.0.1:7687',
+                    database: 'neo4j',
+                  },
+                } satisfies UpdateDatabaseConnectionRequestBodyDto),
+                signal: testContext.signal,
+              },
+            );
+
+            // then
+            assert.equal(response.status, 404);
+            assert.deepEqual(await response.json(), {
+              statusCode: 404,
+              message: 'Not Found',
+            });
+            const draftResponse: Response = await manager.readDocuments(
+              'api::database-connection.database-connection',
+              { ...filters, status: 'draft' },
+              testContext,
+            );
+            assert.equal(draftResponse.status, 200);
+            assert.deepEqual(
+              listStateSchema.parse(await draftResponse.json()),
+              originalDraft,
+            );
+            const publishedResponse: Response = await manager.readDocuments(
+              'api::database-connection.database-connection',
+              { ...filters, status: 'published' },
+              testContext,
+            );
+            assert.equal(publishedResponse.status, 200);
+            assert.deepEqual(
+              listStateSchema.parse(await publishedResponse.json()),
+              originalPublished,
+            );
+          });
+
+          test('rejects an unknown database connection', async (testContext: TestContext): Promise<void> => {
+            // given
+            const fixture: FixtureContext =
+              await manager.setupFixture(testContext);
+            const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
+              fixture.owner.username,
+              fixture.owner.password,
+              testContext,
+            );
+            const filters: Record<string, string> = {
+              [`filters[project][documentId][$eq]`]: fixture.projectId,
+              pageSize: '100',
+              sort: 'documentId:asc',
+            };
+            const originalDraftResponse: Response = await manager.readDocuments(
+              'api::database-connection.database-connection',
+              { ...filters, status: 'draft' },
+              testContext,
+            );
+            assert.equal(originalDraftResponse.status, 200);
+            const originalDraft: z.infer<typeof listStateSchema> =
+              listStateSchema.parse(await originalDraftResponse.json());
+            assert.ok(
+              originalDraft.results.some(
+                (item: { documentId: string }): boolean =>
+                  item.documentId === fixture.databaseConnectionId,
+              ),
+            );
+            const originalPublishedResponse: Response =
+              await manager.readDocuments(
+                'api::database-connection.database-connection',
+                { ...filters, status: 'published' },
+                testContext,
+              );
+            assert.equal(originalPublishedResponse.status, 200);
+            const originalPublished: z.infer<typeof listStateSchema> =
+              listStateSchema.parse(await originalPublishedResponse.json());
+
+            // when
+            const response: Response = await fetch(
+              `${manager.apiUrl}/project/${fixture.projectId}/database-connection/${randomUUID()}`,
+              {
+                method: 'PUT',
+                headers: new Headers([
+                  ['Authorization', `Bearer ${ownerLogin.jwt}`],
+                  ['Content-Type', 'application/json'],
+                ]),
+                body: JSON.stringify({
+                  title: 'Updated Database',
+                  browserUrl: 'https://example.test/browser',
+                  credentialStoreConsent: false,
+                  nodeConfigurations: [],
+                  adapter: {
+                    databaseType: DatabaseConnectionDatabaseType.neo4j,
+                    connectionUrl: 'bolt://127.0.0.1:7687',
+                    database: 'neo4j',
+                  },
+                } satisfies UpdateDatabaseConnectionRequestBodyDto),
+                signal: testContext.signal,
+              },
+            );
+
+            // then
+            assert.equal(response.status, 404);
+            assert.deepEqual(await response.json(), {
+              statusCode: 404,
+              message: 'Not Found',
+            });
+            const draftResponse: Response = await manager.readDocuments(
+              'api::database-connection.database-connection',
+              { ...filters, status: 'draft' },
+              testContext,
+            );
+            assert.equal(draftResponse.status, 200);
+            assert.deepEqual(
+              listStateSchema.parse(await draftResponse.json()),
+              originalDraft,
+            );
+            const publishedResponse: Response = await manager.readDocuments(
+              'api::database-connection.database-connection',
+              { ...filters, status: 'published' },
+              testContext,
+            );
+            assert.equal(publishedResponse.status, 200);
+            assert.deepEqual(
+              listStateSchema.parse(await publishedResponse.json()),
+              originalPublished,
+            );
+          });
+
+          test('rejects an unpublished database connection', async (testContext: TestContext): Promise<void> => {
+            // given
+            const owner: E2ETestApplicationUser =
+              await manager.registerUser(testContext);
+            const project: string = await manager.createPublishedDocument(
+              'api::project.project',
+              {
+                title: 'Test Project',
+                owner: owner.documentId,
+                collaborators: [],
+              },
+              testContext,
+            );
+            const resource: string = await manager.createPublishedDocument(
+              'api::database-connection.database-connection',
+              {
+                title: 'Original Database',
+                project,
+                databaseType: 'neo4j',
+                connectionUrl: '',
+                browserUrl: '',
+                database: '',
+              },
+              testContext,
+            );
+            const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
+              owner.username,
+              owner.password,
+              testContext,
+            );
+            const unpublish: Response = await manager.unpublishDocument(
+              'api::database-connection.database-connection',
+              resource,
+              {},
+              testContext,
+            );
+            assert.equal(unpublish.status, 200);
+            const draftResource: Response = await manager.readDocument(
+              'api::database-connection.database-connection',
+              resource,
+              testContext,
+            );
+            assert.equal(draftResource.status, 200);
+            z.object({ data: z.object({ publishedAt: z.null() }) }).parse(
+              await draftResource.json(),
+            );
+            const filters: Record<string, string> = {
+              [`filters[project][documentId][$eq]`]: project,
+              pageSize: '100',
+              sort: 'documentId:asc',
+            };
+            const originalDraftResponse: Response = await manager.readDocuments(
+              'api::database-connection.database-connection',
+              { ...filters, status: 'draft' },
+              testContext,
+            );
+            assert.equal(originalDraftResponse.status, 200);
+            const originalDraft: z.infer<typeof listStateSchema> =
+              listStateSchema.parse(await originalDraftResponse.json());
+            assert.ok(
+              originalDraft.results.some(
+                (item: { documentId: string }): boolean =>
+                  item.documentId === resource,
+              ),
+            );
+            const originalPublishedResponse: Response =
+              await manager.readDocuments(
+                'api::database-connection.database-connection',
+                { ...filters, status: 'published' },
+                testContext,
+              );
+            assert.equal(originalPublishedResponse.status, 200);
+            const originalPublished: z.infer<typeof listStateSchema> =
+              listStateSchema.parse(await originalPublishedResponse.json());
+
+            // when
+            const response: Response = await fetch(
+              `${manager.apiUrl}/project/${project}/database-connection/${resource}`,
+              {
+                method: 'PUT',
+                headers: new Headers([
+                  ['Authorization', `Bearer ${ownerLogin.jwt}`],
+                  ['Content-Type', 'application/json'],
+                ]),
+                body: JSON.stringify({
+                  title: 'Updated Database',
+                  browserUrl: 'https://example.test/browser',
+                  credentialStoreConsent: false,
+                  nodeConfigurations: [],
+                  adapter: {
+                    databaseType: DatabaseConnectionDatabaseType.neo4j,
+                    connectionUrl: 'bolt://127.0.0.1:7687',
+                    database: 'neo4j',
+                  },
+                } satisfies UpdateDatabaseConnectionRequestBodyDto),
+                signal: testContext.signal,
+              },
+            );
+
+            // then
+            assert.equal(response.status, 404);
+            assert.deepEqual(await response.json(), {
+              statusCode: 404,
+              message: 'Not Found',
+            });
+            const draftResponse: Response = await manager.readDocuments(
+              'api::database-connection.database-connection',
+              { ...filters, status: 'draft' },
+              testContext,
+            );
+            assert.equal(draftResponse.status, 200);
+            assert.deepEqual(
+              listStateSchema.parse(await draftResponse.json()),
+              originalDraft,
+            );
+            const publishedResponse: Response = await manager.readDocuments(
+              'api::database-connection.database-connection',
+              { ...filters, status: 'published' },
+              testContext,
+            );
+            assert.equal(publishedResponse.status, 200);
+            assert.deepEqual(
+              listStateSchema.parse(await publishedResponse.json()),
+              originalPublished,
+            );
+          });
+
+          test('rejects a database connection belonging to another existing project', async (testContext: TestContext): Promise<void> => {
+            // given
+            const owner: E2ETestApplicationUser =
+              await manager.registerUser(testContext);
+            const project: string = await manager.createPublishedDocument(
+              'api::project.project',
+              {
+                title: 'Test Project',
+                owner: owner.documentId,
+                collaborators: [],
+              },
+              testContext,
+            );
+            const resource: string = await manager.createPublishedDocument(
+              'api::database-connection.database-connection',
+              {
+                title: 'Original Database',
+                project,
+                databaseType: 'neo4j',
+                connectionUrl: '',
+                browserUrl: '',
+                database: '',
+              },
+              testContext,
+            );
+            const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
+              owner.username,
+              owner.password,
+              testContext,
+            );
+            const otherProject: string = await manager.createPublishedDocument(
+              'api::project.project',
+              {
+                title: 'Other Project',
+                owner: owner.documentId,
+                collaborators: [],
+              },
+              testContext,
+            );
+            const filters: Record<string, string> = {
+              [`filters[project][documentId][$eq]`]: project,
+              pageSize: '100',
+              sort: 'documentId:asc',
+            };
+            const originalDraftResponse: Response = await manager.readDocuments(
+              'api::database-connection.database-connection',
+              { ...filters, status: 'draft' },
+              testContext,
+            );
+            assert.equal(originalDraftResponse.status, 200);
+            const originalDraft: z.infer<typeof listStateSchema> =
+              listStateSchema.parse(await originalDraftResponse.json());
+            assert.ok(
+              originalDraft.results.some(
+                (item: { documentId: string }): boolean =>
+                  item.documentId === resource,
+              ),
+            );
+            const originalPublishedResponse: Response =
+              await manager.readDocuments(
+                'api::database-connection.database-connection',
+                { ...filters, status: 'published' },
+                testContext,
+              );
+            assert.equal(originalPublishedResponse.status, 200);
+            const originalPublished: z.infer<typeof listStateSchema> =
+              listStateSchema.parse(await originalPublishedResponse.json());
+
+            // when
+            const response: Response = await fetch(
+              `${manager.apiUrl}/project/${otherProject}/database-connection/${resource}`,
+              {
+                method: 'PUT',
+                headers: new Headers([
+                  ['Authorization', `Bearer ${ownerLogin.jwt}`],
+                  ['Content-Type', 'application/json'],
+                ]),
+                body: JSON.stringify({
+                  title: 'Updated Database',
+                  browserUrl: 'https://example.test/browser',
+                  credentialStoreConsent: false,
+                  nodeConfigurations: [],
+                  adapter: {
+                    databaseType: DatabaseConnectionDatabaseType.neo4j,
+                    connectionUrl: 'bolt://127.0.0.1:7687',
+                    database: 'neo4j',
+                  },
+                } satisfies UpdateDatabaseConnectionRequestBodyDto),
+                signal: testContext.signal,
+              },
+            );
+
+            // then
+            assert.equal(response.status, 404);
+            assert.deepEqual(await response.json(), {
+              statusCode: 404,
+              message: 'Not Found',
+            });
+            const draftResponse: Response = await manager.readDocuments(
+              'api::database-connection.database-connection',
+              { ...filters, status: 'draft' },
+              testContext,
+            );
+            assert.equal(draftResponse.status, 200);
+            assert.deepEqual(
+              listStateSchema.parse(await draftResponse.json()),
+              originalDraft,
+            );
+            const publishedResponse: Response = await manager.readDocuments(
+              'api::database-connection.database-connection',
+              { ...filters, status: 'published' },
+              testContext,
+            );
+            assert.equal(publishedResponse.status, 200);
+            assert.deepEqual(
+              listStateSchema.parse(await publishedResponse.json()),
+              originalPublished,
+            );
+          });
+        });
+      });
+      describe('DELETE', (): void => {
+        describe('204', (): void => {
+          test('uses the published assignment despite draft reassignment', async (testContext: TestContext): Promise<void> => {
+            // given
+            const owner: E2ETestApplicationUser =
+              await manager.registerUser(testContext);
+            const project: string = await manager.createPublishedDocument(
+              'api::project.project',
+              {
+                title: 'Test Project',
+                owner: owner.documentId,
+                collaborators: [],
+              },
+              testContext,
+            );
+            const resource: string = await manager.createPublishedDocument(
+              'api::database-connection.database-connection',
+              {
+                title: 'Original Database',
+                project,
+                databaseType: 'neo4j',
+                connectionUrl: '',
+                browserUrl: '',
+                database: '',
+              },
+              testContext,
+            );
+            const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
+              owner.username,
+              owner.password,
+              testContext,
+            );
+            const otherProject: string = await manager.createPublishedDocument(
+              'api::project.project',
+              {
+                title: 'Other Project',
+                owner: owner.documentId,
+                collaborators: [],
+              },
+              testContext,
+            );
+            const draftChange: Response = await manager.updateDocument(
+              'api::database-connection.database-connection',
+              resource,
+              { title: 'Draft Database', project: otherProject },
+              testContext,
+            );
+            assert.equal(draftChange.status, 200);
+
+            // when
+            const response: Response = await fetch(
+              `${manager.apiUrl}/project/${project}/database-connection/${resource}`,
+              {
+                method: 'DELETE',
+                headers: new Headers([
+                  ['Authorization', `Bearer ${ownerLogin.jwt}`],
+                ]),
+                signal: testContext.signal,
+              },
+            );
+
+            // then
+            assert.equal(response.status, 204);
+            assert.equal(await response.text(), '');
+            const projectResponse: Response = await fetch(
+              `${manager.apiUrl}/project/${project}`,
+              {
+                headers: new Headers([
+                  ['Authorization', `Bearer ${ownerLogin.jwt}`],
+                ]),
+                signal: testContext.signal,
+              },
+            );
+            assert.equal(projectResponse.status, 200);
+            const publishedState: z.infer<typeof projectStateSchema> =
+              projectStateSchema.parse(await projectResponse.json());
+            const items: DatabaseConnectionDto[] | undefined =
+              publishedState.databases;
+
+            assert.equal(
+              items.some(
+                (item: DatabaseConnectionDto): boolean => item.id === resource,
+              ),
+              false,
+            );
+            const stored: Response = await manager.readDocument(
+              'api::database-connection.database-connection',
+              resource,
+              testContext,
+            );
+            assert.equal(stored.status, 404);
+          });
+
+          test('preserves a database connection outside the targeted parent', async (testContext: TestContext): Promise<void> => {
+            // given
+            const owner: E2ETestApplicationUser =
+              await manager.registerUser(testContext);
+            const project: string = await manager.createPublishedDocument(
+              'api::project.project',
+              {
+                title: 'Test Project',
+                owner: owner.documentId,
+                collaborators: [],
+              },
+              testContext,
+            );
+            const resource: string = await manager.createPublishedDocument(
+              'api::database-connection.database-connection',
+              {
+                title: 'Original Database',
+                project,
+                databaseType: 'neo4j',
+                connectionUrl: '',
+                browserUrl: '',
+                database: '',
+              },
+              testContext,
+            );
+            const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
+              owner.username,
+              owner.password,
+              testContext,
+            );
+            const otherProject: string = await manager.createPublishedDocument(
+              'api::project.project',
+              {
+                title: 'Other Project',
+                owner: owner.documentId,
+                collaborators: [],
+              },
+              testContext,
+            );
+            const control: string = await manager.createPublishedDocument(
+              'api::database-connection.database-connection',
+              {
+                title: 'Unrelated Database',
+                project: otherProject,
+                databaseType: 'neo4j',
+              },
+              testContext,
+            );
+            const originalControlResponse: Response =
+              await manager.readDocument(
+                'api::database-connection.database-connection',
+                control,
+                testContext,
+              );
+            assert.equal(originalControlResponse.status, 200);
+            const originalControl: unknown =
+              await originalControlResponse.json();
+            z.object({
+              data: z.object({ documentId: z.literal(control) }),
+            }).parse(originalControl);
+
+            // when
+            const response: Response = await fetch(
+              `${manager.apiUrl}/project/${project}/database-connection/${resource}`,
+              {
+                method: 'DELETE',
+                headers: new Headers([
+                  ['Authorization', `Bearer ${ownerLogin.jwt}`],
+                ]),
+                signal: testContext.signal,
+              },
+            );
+
+            // then
+            assert.equal(response.status, 204);
+            assert.equal(await response.text(), '');
+            const projectResponse: Response = await fetch(
+              `${manager.apiUrl}/project/${project}`,
+              {
+                headers: new Headers([
+                  ['Authorization', `Bearer ${ownerLogin.jwt}`],
+                ]),
+                signal: testContext.signal,
+              },
+            );
+            assert.equal(projectResponse.status, 200);
+            const publishedState: z.infer<typeof projectStateSchema> =
+              projectStateSchema.parse(await projectResponse.json());
+            const items: DatabaseConnectionDto[] | undefined =
+              publishedState.databases;
+
+            assert.equal(
+              items.some(
+                (item: DatabaseConnectionDto): boolean => item.id === resource,
+              ),
+              false,
+            );
+            const stored: Response = await manager.readDocument(
+              'api::database-connection.database-connection',
+              resource,
+              testContext,
+            );
+            assert.equal(stored.status, 404);
+            const controlResponse: Response = await manager.readDocument(
+              'api::database-connection.database-connection',
+              control,
+              testContext,
+            );
+            assert.equal(controlResponse.status, 200);
+            assert.deepEqual(await controlResponse.json(), originalControl);
+          });
+
+          test('published collaborator retains access after draft removal', async (testContext: TestContext): Promise<void> => {
+            // given
+            const fixture: FixtureContext =
+              await manager.setupFixture(testContext);
+            const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
+              fixture.owner.username,
+              fixture.owner.password,
+              testContext,
+            );
+            const login: PostAuthResponseBodyDto = await manager.loginUser(
+              fixture.collaborator.username,
+              fixture.collaborator.password,
+              testContext,
+            );
+            const draftRemoval: Response = await manager.updateDocument(
+              'api::project.project',
+              fixture.projectId,
+              { collaborators: [] },
+              testContext,
+            );
+            assert.equal(draftRemoval.status, 200);
+
+            // when
+            const response: Response = await fetch(
+              `${manager.apiUrl}/project/${fixture.projectId}/database-connection/${fixture.databaseConnectionId}`,
+              {
+                method: 'DELETE',
+                headers: new Headers([
+                  ['Authorization', `Bearer ${login.jwt}`],
+                ]),
+                signal: testContext.signal,
+              },
+            );
+
+            // then
+            assert.equal(response.status, 204);
+            assert.equal(await response.text(), '');
+            const projectResponse: Response = await fetch(
+              `${manager.apiUrl}/project/${fixture.projectId}`,
+              {
+                headers: new Headers([
+                  ['Authorization', `Bearer ${ownerLogin.jwt}`],
+                ]),
+                signal: testContext.signal,
+              },
+            );
+            assert.equal(projectResponse.status, 200);
+            const publishedState: z.infer<typeof projectStateSchema> =
+              projectStateSchema.parse(await projectResponse.json());
+            const items: DatabaseConnectionDto[] | undefined =
+              publishedState.databases;
+
+            assert.equal(
+              items.some(
+                (item: DatabaseConnectionDto): boolean =>
+                  item.id === fixture.databaseConnectionId,
+              ),
+              false,
+            );
+            const stored: Response = await manager.readDocument(
+              'api::database-connection.database-connection',
+              fixture.databaseConnectionId,
+              testContext,
+            );
+            assert.equal(stored.status, 404);
+          });
+
+          test('owner can delete a database connection', async (testContext: TestContext): Promise<void> => {
+            // given
+            const fixture: FixtureContext =
+              await manager.setupFixture(testContext);
+            const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
+              fixture.owner.username,
+              fixture.owner.password,
+              testContext,
+            );
+
+            // when
+            const response: Response = await fetch(
+              `${manager.apiUrl}/project/${fixture.projectId}/database-connection/${fixture.databaseConnectionId}`,
+              {
+                method: 'DELETE',
+                headers: new Headers([
+                  ['Authorization', `Bearer ${ownerLogin.jwt}`],
+                ]),
+                signal: testContext.signal,
+              },
+            );
+
+            // then
+            assert.equal(response.status, 204);
+            assert.equal(await response.text(), '');
+            const projectResponse: Response = await fetch(
+              `${manager.apiUrl}/project/${fixture.projectId}`,
+              {
+                headers: new Headers([
+                  ['Authorization', `Bearer ${ownerLogin.jwt}`],
+                ]),
+                signal: testContext.signal,
+              },
+            );
+            assert.equal(projectResponse.status, 200);
+            const publishedState: z.infer<typeof projectStateSchema> =
+              projectStateSchema.parse(await projectResponse.json());
+            const items: DatabaseConnectionDto[] | undefined =
+              publishedState.databases;
+            assert.equal(
+              items.some(
+                (item: DatabaseConnectionDto): boolean =>
+                  item.id === fixture.databaseConnectionId,
+              ),
+              false,
+            );
+            const stored: Response = await manager.readDocument(
+              'api::database-connection.database-connection',
+              fixture.databaseConnectionId,
+              testContext,
+            );
+            assert.equal(stored.status, 404);
+          });
+
+          test('collaborator can delete a database connection', async (testContext: TestContext): Promise<void> => {
+            // given
+            const fixture: FixtureContext =
+              await manager.setupFixture(testContext);
+            const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
+              fixture.owner.username,
+              fixture.owner.password,
+              testContext,
+            );
+            const login: PostAuthResponseBodyDto = await manager.loginUser(
+              fixture.collaborator.username,
+              fixture.collaborator.password,
+              testContext,
+            );
+
+            // when
+            const response: Response = await fetch(
+              `${manager.apiUrl}/project/${fixture.projectId}/database-connection/${fixture.databaseConnectionId}`,
+              {
+                method: 'DELETE',
+                headers: new Headers([
+                  ['Authorization', `Bearer ${login.jwt}`],
+                ]),
+                signal: testContext.signal,
+              },
+            );
+
+            // then
+            assert.equal(response.status, 204);
+            assert.equal(await response.text(), '');
+            const projectResponse: Response = await fetch(
+              `${manager.apiUrl}/project/${fixture.projectId}`,
+              {
+                headers: new Headers([
+                  ['Authorization', `Bearer ${ownerLogin.jwt}`],
+                ]),
+                signal: testContext.signal,
+              },
+            );
+            assert.equal(projectResponse.status, 200);
+            const publishedState: z.infer<typeof projectStateSchema> =
+              projectStateSchema.parse(await projectResponse.json());
+            const items: DatabaseConnectionDto[] | undefined =
+              publishedState.databases;
+            assert.equal(
+              items.some(
+                (item: DatabaseConnectionDto): boolean =>
+                  item.id === fixture.databaseConnectionId,
+              ),
+              false,
+            );
+            const stored: Response = await manager.readDocument(
+              'api::database-connection.database-connection',
+              fixture.databaseConnectionId,
+              testContext,
+            );
+            assert.equal(stored.status, 404);
+          });
+        });
+        describe('401', (): void => {
+          test('rejects requests without valid authentication', async (testContext: TestContext): Promise<void> => {
+            const variants: { headers: [string, string][] }[] = [
+              { headers: [] },
+              {
+                headers: [['Authorization', 'Bearer invalid-jwt']],
+              },
+            ];
+            for (const variant of variants) {
+              // given
+              const fixture: FixtureContext =
+                await manager.setupFixture(testContext);
+              await manager.loginUser(
+                fixture.owner.username,
+                fixture.owner.password,
+                testContext,
+              );
+              const filters: Record<string, string> = {
+                [`filters[project][documentId][$eq]`]: fixture.projectId,
+                pageSize: '100',
+                sort: 'documentId:asc',
+              };
+              const originalDraftResponse: Response =
+                await manager.readDocuments(
+                  'api::database-connection.database-connection',
+                  { ...filters, status: 'draft' },
+                  testContext,
+                );
+              assert.equal(originalDraftResponse.status, 200);
+              const originalDraft: z.infer<typeof listStateSchema> =
+                listStateSchema.parse(await originalDraftResponse.json());
+              assert.ok(
+                originalDraft.results.some(
+                  (item: { documentId: string }): boolean =>
+                    item.documentId === fixture.databaseConnectionId,
+                ),
+              );
+              const originalPublishedResponse: Response =
+                await manager.readDocuments(
+                  'api::database-connection.database-connection',
+                  { ...filters, status: 'published' },
+                  testContext,
+                );
+              assert.equal(originalPublishedResponse.status, 200);
+              const originalPublished: z.infer<typeof listStateSchema> =
+                listStateSchema.parse(await originalPublishedResponse.json());
+
+              // when
+              const response: Response = await fetch(
+                `${manager.apiUrl}/project/${fixture.projectId}/database-connection/${fixture.databaseConnectionId}`,
+                {
+                  method: 'DELETE',
+                  signal: testContext.signal,
+                  headers: new Headers(variant.headers),
+                },
+              );
+
+              // then
+              assert.equal(response.status, 401);
+              assert.equal(response.headers.get('www-authenticate'), 'Bearer');
+              assert.deepEqual(await response.json(), {
+                statusCode: 401,
+                message: 'Unauthorized',
+              });
+              const draftResponse: Response = await manager.readDocuments(
+                'api::database-connection.database-connection',
+                { ...filters, status: 'draft' },
+                testContext,
+              );
+              assert.equal(draftResponse.status, 200);
+              assert.deepEqual(
+                listStateSchema.parse(await draftResponse.json()),
+                originalDraft,
+              );
+              const publishedResponse: Response = await manager.readDocuments(
+                'api::database-connection.database-connection',
+                { ...filters, status: 'published' },
+                testContext,
+              );
+              assert.equal(publishedResponse.status, 200);
+              assert.deepEqual(
+                listStateSchema.parse(await publishedResponse.json()),
+                originalPublished,
+              );
+            }
+          });
+        });
+
+        describe('403', (): void => {
+          test('rejects outsider access', async (testContext: TestContext): Promise<void> => {
+            // given
+            const fixture: FixtureContext =
+              await manager.setupFixture(testContext);
+            await manager.loginUser(
+              fixture.owner.username,
+              fixture.owner.password,
+              testContext,
+            );
+            const login: PostAuthResponseBodyDto = await manager.loginUser(
+              fixture.outsider.username,
+              fixture.outsider.password,
               testContext,
             );
             const filters: Record<string, string> = {
@@ -5590,17 +5741,19 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
               `${manager.apiUrl}/project/${fixture.projectId}/database-connection/${fixture.databaseConnectionId}`,
               {
                 method: 'DELETE',
+                headers: new Headers([
+                  ['Authorization', `Bearer ${login.jwt}`],
+                ]),
                 signal: testContext.signal,
-                headers: new Headers(variant.headers),
               },
             );
 
             // then
-            assert.equal(response.status, 401);
-            assert.equal(response.headers.get('www-authenticate'), 'Bearer');
+            assert.equal(response.status, 403);
             assert.deepEqual(await response.json(), {
-              statusCode: 401,
-              message: 'Unauthorized',
+              statusCode: 403,
+              message: 'Forbidden resource',
+              error: 'Forbidden',
             });
             const draftResponse: Response = await manager.readDocuments(
               'api::database-connection.database-connection',
@@ -5622,806 +5775,730 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
               listStateSchema.parse(await publishedResponse.json()),
               originalPublished,
             );
-          }
-        });
-      });
+          });
 
-      describe('403', (): void => {
-        test('rejects outsider access', async (testContext: TestContext): Promise<void> => {
-          // given
-          const fixture: FixtureContext =
-            await manager.setupFixture(testContext);
-          await manager.loginUser(
-            fixture.owner.username,
-            fixture.owner.password,
-            testContext,
-          );
-          const login: PostAuthResponseBodyDto = await manager.loginUser(
-            fixture.outsider.username,
-            fixture.outsider.password,
-            testContext,
-          );
-          const filters: Record<string, string> = {
-            [`filters[project][documentId][$eq]`]: fixture.projectId,
-            pageSize: '100',
-            sort: 'documentId:asc',
-          };
-          const originalDraftResponse: Response = await manager.readDocuments(
-            'api::database-connection.database-connection',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(originalDraftResponse.status, 200);
-          const originalDraft: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalDraftResponse.json());
-          assert.ok(
-            originalDraft.results.some(
-              (item: { documentId: string }): boolean =>
-                item.documentId === fixture.databaseConnectionId,
-            ),
-          );
-          const originalPublishedResponse: Response =
-            await manager.readDocuments(
+          test('rejects removed collaborator access', async (testContext: TestContext): Promise<void> => {
+            // given
+            const fixture: FixtureContext =
+              await manager.setupFixture(testContext);
+            await manager.loginUser(
+              fixture.owner.username,
+              fixture.owner.password,
+              testContext,
+            );
+            const login: PostAuthResponseBodyDto = await manager.loginUser(
+              fixture.collaborator.username,
+              fixture.collaborator.password,
+              testContext,
+            );
+            const removal: Response = await manager.publishDocument(
+              'api::project.project',
+              fixture.projectId,
+              { collaborators: [] },
+              testContext,
+            );
+            assert.equal(removal.status, 200);
+            const filters: Record<string, string> = {
+              [`filters[project][documentId][$eq]`]: fixture.projectId,
+              pageSize: '100',
+              sort: 'documentId:asc',
+            };
+            const originalDraftResponse: Response = await manager.readDocuments(
+              'api::database-connection.database-connection',
+              { ...filters, status: 'draft' },
+              testContext,
+            );
+            assert.equal(originalDraftResponse.status, 200);
+            const originalDraft: z.infer<typeof listStateSchema> =
+              listStateSchema.parse(await originalDraftResponse.json());
+            assert.ok(
+              originalDraft.results.some(
+                (item: { documentId: string }): boolean =>
+                  item.documentId === fixture.databaseConnectionId,
+              ),
+            );
+            const originalPublishedResponse: Response =
+              await manager.readDocuments(
+                'api::database-connection.database-connection',
+                { ...filters, status: 'published' },
+                testContext,
+              );
+            assert.equal(originalPublishedResponse.status, 200);
+            const originalPublished: z.infer<typeof listStateSchema> =
+              listStateSchema.parse(await originalPublishedResponse.json());
+
+            // when
+            const response: Response = await fetch(
+              `${manager.apiUrl}/project/${fixture.projectId}/database-connection/${fixture.databaseConnectionId}`,
+              {
+                method: 'DELETE',
+                headers: new Headers([
+                  ['Authorization', `Bearer ${login.jwt}`],
+                ]),
+                signal: testContext.signal,
+              },
+            );
+
+            // then
+            assert.equal(response.status, 403);
+            assert.deepEqual(await response.json(), {
+              statusCode: 403,
+              message: 'Forbidden resource',
+              error: 'Forbidden',
+            });
+            const draftResponse: Response = await manager.readDocuments(
+              'api::database-connection.database-connection',
+              { ...filters, status: 'draft' },
+              testContext,
+            );
+            assert.equal(draftResponse.status, 200);
+            assert.deepEqual(
+              listStateSchema.parse(await draftResponse.json()),
+              originalDraft,
+            );
+            const publishedResponse: Response = await manager.readDocuments(
               'api::database-connection.database-connection',
               { ...filters, status: 'published' },
               testContext,
             );
-          assert.equal(originalPublishedResponse.status, 200);
-          const originalPublished: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalPublishedResponse.json());
-
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/project/${fixture.projectId}/database-connection/${fixture.databaseConnectionId}`,
-            {
-              method: 'DELETE',
-              headers: new Headers([['Authorization', `Bearer ${login.jwt}`]]),
-              signal: testContext.signal,
-            },
-          );
-
-          // then
-          assert.equal(response.status, 403);
-          assert.deepEqual(await response.json(), {
-            statusCode: 403,
-            message: 'Forbidden resource',
-            error: 'Forbidden',
+            assert.equal(publishedResponse.status, 200);
+            assert.deepEqual(
+              listStateSchema.parse(await publishedResponse.json()),
+              originalPublished,
+            );
           });
-          const draftResponse: Response = await manager.readDocuments(
-            'api::database-connection.database-connection',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(draftResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await draftResponse.json()),
-            originalDraft,
-          );
-          const publishedResponse: Response = await manager.readDocuments(
-            'api::database-connection.database-connection',
-            { ...filters, status: 'published' },
-            testContext,
-          );
-          assert.equal(publishedResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await publishedResponse.json()),
-            originalPublished,
-          );
-        });
 
-        test('rejects removed collaborator access', async (testContext: TestContext): Promise<void> => {
-          // given
-          const fixture: FixtureContext =
-            await manager.setupFixture(testContext);
-          await manager.loginUser(
-            fixture.owner.username,
-            fixture.owner.password,
-            testContext,
-          );
-          const login: PostAuthResponseBodyDto = await manager.loginUser(
-            fixture.collaborator.username,
-            fixture.collaborator.password,
-            testContext,
-          );
-          const removal: Response = await manager.publishDocument(
-            'api::project.project',
-            fixture.projectId,
-            { collaborators: [] },
-            testContext,
-          );
-          assert.equal(removal.status, 200);
-          const filters: Record<string, string> = {
-            [`filters[project][documentId][$eq]`]: fixture.projectId,
-            pageSize: '100',
-            sort: 'documentId:asc',
-          };
-          const originalDraftResponse: Response = await manager.readDocuments(
-            'api::database-connection.database-connection',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(originalDraftResponse.status, 200);
-          const originalDraft: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalDraftResponse.json());
-          assert.ok(
-            originalDraft.results.some(
-              (item: { documentId: string }): boolean =>
-                item.documentId === fixture.databaseConnectionId,
-            ),
-          );
-          const originalPublishedResponse: Response =
-            await manager.readDocuments(
-              'api::database-connection.database-connection',
-              { ...filters, status: 'published' },
+          test('rejects draft collaborator access', async (testContext: TestContext): Promise<void> => {
+            // given
+            const owner: E2ETestApplicationUser =
+              await manager.registerUser(testContext);
+            const collaborator: E2ETestApplicationUser =
+              await manager.registerUser(testContext);
+            const project: string = await manager.createPublishedDocument(
+              'api::project.project',
+              {
+                title: 'Test Project',
+                owner: owner.documentId,
+                collaborators: [],
+              },
               testContext,
             );
-          assert.equal(originalPublishedResponse.status, 200);
-          const originalPublished: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalPublishedResponse.json());
-
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/project/${fixture.projectId}/database-connection/${fixture.databaseConnectionId}`,
-            {
-              method: 'DELETE',
-              headers: new Headers([['Authorization', `Bearer ${login.jwt}`]]),
-              signal: testContext.signal,
-            },
-          );
-
-          // then
-          assert.equal(response.status, 403);
-          assert.deepEqual(await response.json(), {
-            statusCode: 403,
-            message: 'Forbidden resource',
-            error: 'Forbidden',
-          });
-          const draftResponse: Response = await manager.readDocuments(
-            'api::database-connection.database-connection',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(draftResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await draftResponse.json()),
-            originalDraft,
-          );
-          const publishedResponse: Response = await manager.readDocuments(
-            'api::database-connection.database-connection',
-            { ...filters, status: 'published' },
-            testContext,
-          );
-          assert.equal(publishedResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await publishedResponse.json()),
-            originalPublished,
-          );
-        });
-
-        test('rejects draft collaborator access', async (testContext: TestContext): Promise<void> => {
-          // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const collaborator: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
-          const resource: string = await manager.createPublishedDocument(
-            'api::database-connection.database-connection',
-            {
-              title: 'Original Database',
+            const resource: string = await manager.createPublishedDocument(
+              'api::database-connection.database-connection',
+              {
+                title: 'Original Database',
+                project,
+                databaseType: 'neo4j',
+                connectionUrl: '',
+                browserUrl: '',
+                database: '',
+              },
+              testContext,
+            );
+            await manager.loginUser(
+              owner.username,
+              owner.password,
+              testContext,
+            );
+            const login: PostAuthResponseBodyDto = await manager.loginUser(
+              collaborator.username,
+              collaborator.password,
+              testContext,
+            );
+            const draftAccess: Response = await manager.updateDocument(
+              'api::project.project',
               project,
-              databaseType: 'neo4j',
-              connectionUrl: '',
-              browserUrl: '',
-              database: '',
-            },
-            testContext,
-          );
-          await manager.loginUser(owner.username, owner.password, testContext);
-          const login: PostAuthResponseBodyDto = await manager.loginUser(
-            collaborator.username,
-            collaborator.password,
-            testContext,
-          );
-          const draftAccess: Response = await manager.updateDocument(
-            'api::project.project',
-            project,
-            { collaborators: [collaborator.documentId] },
-            testContext,
-          );
-          assert.equal(draftAccess.status, 200);
-          const filters: Record<string, string> = {
-            [`filters[project][documentId][$eq]`]: project,
-            pageSize: '100',
-            sort: 'documentId:asc',
-          };
-          const originalDraftResponse: Response = await manager.readDocuments(
-            'api::database-connection.database-connection',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(originalDraftResponse.status, 200);
-          const originalDraft: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalDraftResponse.json());
-          assert.ok(
-            originalDraft.results.some(
-              (item: { documentId: string }): boolean =>
-                item.documentId === resource,
-            ),
-          );
-          const originalPublishedResponse: Response =
-            await manager.readDocuments(
+              { collaborators: [collaborator.documentId] },
+              testContext,
+            );
+            assert.equal(draftAccess.status, 200);
+            const filters: Record<string, string> = {
+              [`filters[project][documentId][$eq]`]: project,
+              pageSize: '100',
+              sort: 'documentId:asc',
+            };
+            const originalDraftResponse: Response = await manager.readDocuments(
+              'api::database-connection.database-connection',
+              { ...filters, status: 'draft' },
+              testContext,
+            );
+            assert.equal(originalDraftResponse.status, 200);
+            const originalDraft: z.infer<typeof listStateSchema> =
+              listStateSchema.parse(await originalDraftResponse.json());
+            assert.ok(
+              originalDraft.results.some(
+                (item: { documentId: string }): boolean =>
+                  item.documentId === resource,
+              ),
+            );
+            const originalPublishedResponse: Response =
+              await manager.readDocuments(
+                'api::database-connection.database-connection',
+                { ...filters, status: 'published' },
+                testContext,
+              );
+            assert.equal(originalPublishedResponse.status, 200);
+            const originalPublished: z.infer<typeof listStateSchema> =
+              listStateSchema.parse(await originalPublishedResponse.json());
+
+            // when
+            const response: Response = await fetch(
+              `${manager.apiUrl}/project/${project}/database-connection/${resource}`,
+              {
+                method: 'DELETE',
+                headers: new Headers([
+                  ['Authorization', `Bearer ${login.jwt}`],
+                ]),
+                signal: testContext.signal,
+              },
+            );
+
+            // then
+            assert.equal(response.status, 403);
+            assert.deepEqual(await response.json(), {
+              statusCode: 403,
+              message: 'Forbidden resource',
+              error: 'Forbidden',
+            });
+            const draftResponse: Response = await manager.readDocuments(
+              'api::database-connection.database-connection',
+              { ...filters, status: 'draft' },
+              testContext,
+            );
+            assert.equal(draftResponse.status, 200);
+            assert.deepEqual(
+              listStateSchema.parse(await draftResponse.json()),
+              originalDraft,
+            );
+            const publishedResponse: Response = await manager.readDocuments(
               'api::database-connection.database-connection',
               { ...filters, status: 'published' },
               testContext,
             );
-          assert.equal(originalPublishedResponse.status, 200);
-          const originalPublished: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalPublishedResponse.json());
-
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/database-connection/${resource}`,
-            {
-              method: 'DELETE',
-              headers: new Headers([['Authorization', `Bearer ${login.jwt}`]]),
-              signal: testContext.signal,
-            },
-          );
-
-          // then
-          assert.equal(response.status, 403);
-          assert.deepEqual(await response.json(), {
-            statusCode: 403,
-            message: 'Forbidden resource',
-            error: 'Forbidden',
+            assert.equal(publishedResponse.status, 200);
+            assert.deepEqual(
+              listStateSchema.parse(await publishedResponse.json()),
+              originalPublished,
+            );
           });
-          const draftResponse: Response = await manager.readDocuments(
-            'api::database-connection.database-connection',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(draftResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await draftResponse.json()),
-            originalDraft,
-          );
-          const publishedResponse: Response = await manager.readDocuments(
-            'api::database-connection.database-connection',
-            { ...filters, status: 'published' },
-            testContext,
-          );
-          assert.equal(publishedResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await publishedResponse.json()),
-            originalPublished,
-          );
         });
-      });
-      describe('404', (): void => {
-        test('rejects an unknown project', async (testContext: TestContext): Promise<void> => {
-          // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
-          const resource: string = await manager.createPublishedDocument(
-            'api::database-connection.database-connection',
-            {
-              title: 'Original Database',
+        describe('404', (): void => {
+          test('rejects an unknown project', async (testContext: TestContext): Promise<void> => {
+            // given
+            const owner: E2ETestApplicationUser =
+              await manager.registerUser(testContext);
+            const project: string = await manager.createPublishedDocument(
+              'api::project.project',
+              {
+                title: 'Test Project',
+                owner: owner.documentId,
+                collaborators: [],
+              },
+              testContext,
+            );
+            const resource: string = await manager.createPublishedDocument(
+              'api::database-connection.database-connection',
+              {
+                title: 'Original Database',
+                project,
+                databaseType: 'neo4j',
+                connectionUrl: '',
+                browserUrl: '',
+                database: '',
+              },
+              testContext,
+            );
+            const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
+              owner.username,
+              owner.password,
+              testContext,
+            );
+            const filters: Record<string, string> = {
+              [`filters[project][documentId][$eq]`]: project,
+              pageSize: '100',
+              sort: 'documentId:asc',
+            };
+            const originalDraftResponse: Response = await manager.readDocuments(
+              'api::database-connection.database-connection',
+              { ...filters, status: 'draft' },
+              testContext,
+            );
+            assert.equal(originalDraftResponse.status, 200);
+            const originalDraft: z.infer<typeof listStateSchema> =
+              listStateSchema.parse(await originalDraftResponse.json());
+            assert.ok(
+              originalDraft.results.some(
+                (item: { documentId: string }): boolean =>
+                  item.documentId === resource,
+              ),
+            );
+            const originalPublishedResponse: Response =
+              await manager.readDocuments(
+                'api::database-connection.database-connection',
+                { ...filters, status: 'published' },
+                testContext,
+              );
+            assert.equal(originalPublishedResponse.status, 200);
+            const originalPublished: z.infer<typeof listStateSchema> =
+              listStateSchema.parse(await originalPublishedResponse.json());
+
+            // when
+            const response: Response = await fetch(
+              `${manager.apiUrl}/project/${randomUUID()}/database-connection/${resource}`,
+              {
+                method: 'DELETE',
+                headers: new Headers([
+                  ['Authorization', `Bearer ${ownerLogin.jwt}`],
+                ]),
+                signal: testContext.signal,
+              },
+            );
+
+            // then
+            assert.equal(response.status, 404);
+            assert.deepEqual(await response.json(), {
+              statusCode: 404,
+              message: 'Not Found',
+            });
+            const draftResponse: Response = await manager.readDocuments(
+              'api::database-connection.database-connection',
+              { ...filters, status: 'draft' },
+              testContext,
+            );
+            assert.equal(draftResponse.status, 200);
+            assert.deepEqual(
+              listStateSchema.parse(await draftResponse.json()),
+              originalDraft,
+            );
+            const publishedResponse: Response = await manager.readDocuments(
+              'api::database-connection.database-connection',
+              { ...filters, status: 'published' },
+              testContext,
+            );
+            assert.equal(publishedResponse.status, 200);
+            assert.deepEqual(
+              listStateSchema.parse(await publishedResponse.json()),
+              originalPublished,
+            );
+          });
+
+          test('rejects an unpublished project', async (testContext: TestContext): Promise<void> => {
+            // given
+            const owner: E2ETestApplicationUser =
+              await manager.registerUser(testContext);
+            const project: string = await manager.createPublishedDocument(
+              'api::project.project',
+              {
+                title: 'Test Project',
+                owner: owner.documentId,
+                collaborators: [],
+              },
+              testContext,
+            );
+            const resource: string = await manager.createPublishedDocument(
+              'api::database-connection.database-connection',
+              {
+                title: 'Original Database',
+                project,
+                databaseType: 'neo4j',
+                connectionUrl: '',
+                browserUrl: '',
+                database: '',
+              },
+              testContext,
+            );
+            const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
+              owner.username,
+              owner.password,
+              testContext,
+            );
+            const unpublish: Response = await manager.unpublishDocument(
+              'api::project.project',
               project,
-              databaseType: 'neo4j',
-              connectionUrl: '',
-              browserUrl: '',
-              database: '',
-            },
-            testContext,
-          );
-          const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
-            testContext,
-          );
-          const filters: Record<string, string> = {
-            [`filters[project][documentId][$eq]`]: project,
-            pageSize: '100',
-            sort: 'documentId:asc',
-          };
-          const originalDraftResponse: Response = await manager.readDocuments(
-            'api::database-connection.database-connection',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(originalDraftResponse.status, 200);
-          const originalDraft: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalDraftResponse.json());
-          assert.ok(
-            originalDraft.results.some(
-              (item: { documentId: string }): boolean =>
-                item.documentId === resource,
-            ),
-          );
-          const originalPublishedResponse: Response =
-            await manager.readDocuments(
-              'api::database-connection.database-connection',
-              { ...filters, status: 'published' },
+              {},
               testContext,
             );
-          assert.equal(originalPublishedResponse.status, 200);
-          const originalPublished: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalPublishedResponse.json());
-
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/project/${randomUUID()}/database-connection/${resource}`,
-            {
-              method: 'DELETE',
-              headers: new Headers([
-                ['Authorization', `Bearer ${ownerLogin.jwt}`],
-              ]),
-              signal: testContext.signal,
-            },
-          );
-
-          // then
-          assert.equal(response.status, 404);
-          assert.deepEqual(await response.json(), {
-            statusCode: 404,
-            message: 'Not Found',
-          });
-          const draftResponse: Response = await manager.readDocuments(
-            'api::database-connection.database-connection',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(draftResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await draftResponse.json()),
-            originalDraft,
-          );
-          const publishedResponse: Response = await manager.readDocuments(
-            'api::database-connection.database-connection',
-            { ...filters, status: 'published' },
-            testContext,
-          );
-          assert.equal(publishedResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await publishedResponse.json()),
-            originalPublished,
-          );
-        });
-
-        test('rejects an unpublished project', async (testContext: TestContext): Promise<void> => {
-          // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
-          const resource: string = await manager.createPublishedDocument(
-            'api::database-connection.database-connection',
-            {
-              title: 'Original Database',
+            assert.equal(unpublish.status, 200);
+            const draftProject: Response = await manager.readDocument(
+              'api::project.project',
               project,
-              databaseType: 'neo4j',
-              connectionUrl: '',
-              browserUrl: '',
-              database: '',
-            },
-            testContext,
-          );
-          const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
-            testContext,
-          );
-          const unpublish: Response = await manager.unpublishDocument(
-            'api::project.project',
-            project,
-            {},
-            testContext,
-          );
-          assert.equal(unpublish.status, 200);
-          const draftProject: Response = await manager.readDocument(
-            'api::project.project',
-            project,
-            testContext,
-          );
-          assert.equal(draftProject.status, 200);
-          z.object({ data: z.object({ publishedAt: z.null() }) }).parse(
-            await draftProject.json(),
-          );
-          const filters: Record<string, string> = {
-            [`filters[project][documentId][$eq]`]: project,
-            pageSize: '100',
-            sort: 'documentId:asc',
-          };
-          const originalDraftResponse: Response = await manager.readDocuments(
-            'api::database-connection.database-connection',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(originalDraftResponse.status, 200);
-          const originalDraft: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalDraftResponse.json());
-          assert.ok(
-            originalDraft.results.some(
-              (item: { documentId: string }): boolean =>
-                item.documentId === resource,
-            ),
-          );
-          const originalPublishedResponse: Response =
-            await manager.readDocuments(
+              testContext,
+            );
+            assert.equal(draftProject.status, 200);
+            z.object({ data: z.object({ publishedAt: z.null() }) }).parse(
+              await draftProject.json(),
+            );
+            const filters: Record<string, string> = {
+              [`filters[project][documentId][$eq]`]: project,
+              pageSize: '100',
+              sort: 'documentId:asc',
+            };
+            const originalDraftResponse: Response = await manager.readDocuments(
+              'api::database-connection.database-connection',
+              { ...filters, status: 'draft' },
+              testContext,
+            );
+            assert.equal(originalDraftResponse.status, 200);
+            const originalDraft: z.infer<typeof listStateSchema> =
+              listStateSchema.parse(await originalDraftResponse.json());
+            assert.ok(
+              originalDraft.results.some(
+                (item: { documentId: string }): boolean =>
+                  item.documentId === resource,
+              ),
+            );
+            const originalPublishedResponse: Response =
+              await manager.readDocuments(
+                'api::database-connection.database-connection',
+                { ...filters, status: 'published' },
+                testContext,
+              );
+            assert.equal(originalPublishedResponse.status, 200);
+            const originalPublished: z.infer<typeof listStateSchema> =
+              listStateSchema.parse(await originalPublishedResponse.json());
+
+            // when
+            const response: Response = await fetch(
+              `${manager.apiUrl}/project/${project}/database-connection/${resource}`,
+              {
+                method: 'DELETE',
+                headers: new Headers([
+                  ['Authorization', `Bearer ${ownerLogin.jwt}`],
+                ]),
+                signal: testContext.signal,
+              },
+            );
+
+            // then
+            assert.equal(response.status, 404);
+            assert.deepEqual(await response.json(), {
+              statusCode: 404,
+              message: 'Not Found',
+            });
+            const draftResponse: Response = await manager.readDocuments(
+              'api::database-connection.database-connection',
+              { ...filters, status: 'draft' },
+              testContext,
+            );
+            assert.equal(draftResponse.status, 200);
+            assert.deepEqual(
+              listStateSchema.parse(await draftResponse.json()),
+              originalDraft,
+            );
+            const publishedResponse: Response = await manager.readDocuments(
               'api::database-connection.database-connection',
               { ...filters, status: 'published' },
               testContext,
             );
-          assert.equal(originalPublishedResponse.status, 200);
-          const originalPublished: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalPublishedResponse.json());
-
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/database-connection/${resource}`,
-            {
-              method: 'DELETE',
-              headers: new Headers([
-                ['Authorization', `Bearer ${ownerLogin.jwt}`],
-              ]),
-              signal: testContext.signal,
-            },
-          );
-
-          // then
-          assert.equal(response.status, 404);
-          assert.deepEqual(await response.json(), {
-            statusCode: 404,
-            message: 'Not Found',
+            assert.equal(publishedResponse.status, 200);
+            assert.deepEqual(
+              listStateSchema.parse(await publishedResponse.json()),
+              originalPublished,
+            );
           });
-          const draftResponse: Response = await manager.readDocuments(
-            'api::database-connection.database-connection',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(draftResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await draftResponse.json()),
-            originalDraft,
-          );
-          const publishedResponse: Response = await manager.readDocuments(
-            'api::database-connection.database-connection',
-            { ...filters, status: 'published' },
-            testContext,
-          );
-          assert.equal(publishedResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await publishedResponse.json()),
-            originalPublished,
-          );
-        });
 
-        test('rejects an unknown database connection', async (testContext: TestContext): Promise<void> => {
-          // given
-          const fixture: FixtureContext =
-            await manager.setupFixture(testContext);
-          const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-            fixture.owner.username,
-            fixture.owner.password,
-            testContext,
-          );
-          const filters: Record<string, string> = {
-            [`filters[project][documentId][$eq]`]: fixture.projectId,
-            pageSize: '100',
-            sort: 'documentId:asc',
-          };
-          const originalDraftResponse: Response = await manager.readDocuments(
-            'api::database-connection.database-connection',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(originalDraftResponse.status, 200);
-          const originalDraft: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalDraftResponse.json());
-          assert.ok(
-            originalDraft.results.some(
-              (item: { documentId: string }): boolean =>
-                item.documentId === fixture.databaseConnectionId,
-            ),
-          );
-          const originalPublishedResponse: Response =
-            await manager.readDocuments(
+          test('rejects an unknown database connection', async (testContext: TestContext): Promise<void> => {
+            // given
+            const fixture: FixtureContext =
+              await manager.setupFixture(testContext);
+            const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
+              fixture.owner.username,
+              fixture.owner.password,
+              testContext,
+            );
+            const filters: Record<string, string> = {
+              [`filters[project][documentId][$eq]`]: fixture.projectId,
+              pageSize: '100',
+              sort: 'documentId:asc',
+            };
+            const originalDraftResponse: Response = await manager.readDocuments(
+              'api::database-connection.database-connection',
+              { ...filters, status: 'draft' },
+              testContext,
+            );
+            assert.equal(originalDraftResponse.status, 200);
+            const originalDraft: z.infer<typeof listStateSchema> =
+              listStateSchema.parse(await originalDraftResponse.json());
+            assert.ok(
+              originalDraft.results.some(
+                (item: { documentId: string }): boolean =>
+                  item.documentId === fixture.databaseConnectionId,
+              ),
+            );
+            const originalPublishedResponse: Response =
+              await manager.readDocuments(
+                'api::database-connection.database-connection',
+                { ...filters, status: 'published' },
+                testContext,
+              );
+            assert.equal(originalPublishedResponse.status, 200);
+            const originalPublished: z.infer<typeof listStateSchema> =
+              listStateSchema.parse(await originalPublishedResponse.json());
+
+            // when
+            const response: Response = await fetch(
+              `${manager.apiUrl}/project/${fixture.projectId}/database-connection/${randomUUID()}`,
+              {
+                method: 'DELETE',
+                headers: new Headers([
+                  ['Authorization', `Bearer ${ownerLogin.jwt}`],
+                ]),
+                signal: testContext.signal,
+              },
+            );
+
+            // then
+            assert.equal(response.status, 404);
+            assert.deepEqual(await response.json(), {
+              statusCode: 404,
+              message: 'Not Found',
+            });
+            const draftResponse: Response = await manager.readDocuments(
+              'api::database-connection.database-connection',
+              { ...filters, status: 'draft' },
+              testContext,
+            );
+            assert.equal(draftResponse.status, 200);
+            assert.deepEqual(
+              listStateSchema.parse(await draftResponse.json()),
+              originalDraft,
+            );
+            const publishedResponse: Response = await manager.readDocuments(
               'api::database-connection.database-connection',
               { ...filters, status: 'published' },
               testContext,
             );
-          assert.equal(originalPublishedResponse.status, 200);
-          const originalPublished: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalPublishedResponse.json());
-
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/project/${fixture.projectId}/database-connection/${randomUUID()}`,
-            {
-              method: 'DELETE',
-              headers: new Headers([
-                ['Authorization', `Bearer ${ownerLogin.jwt}`],
-              ]),
-              signal: testContext.signal,
-            },
-          );
-
-          // then
-          assert.equal(response.status, 404);
-          assert.deepEqual(await response.json(), {
-            statusCode: 404,
-            message: 'Not Found',
+            assert.equal(publishedResponse.status, 200);
+            assert.deepEqual(
+              listStateSchema.parse(await publishedResponse.json()),
+              originalPublished,
+            );
           });
-          const draftResponse: Response = await manager.readDocuments(
-            'api::database-connection.database-connection',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(draftResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await draftResponse.json()),
-            originalDraft,
-          );
-          const publishedResponse: Response = await manager.readDocuments(
-            'api::database-connection.database-connection',
-            { ...filters, status: 'published' },
-            testContext,
-          );
-          assert.equal(publishedResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await publishedResponse.json()),
-            originalPublished,
-          );
-        });
 
-        test('rejects an unpublished database connection', async (testContext: TestContext): Promise<void> => {
-          // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
-          const resource: string = await manager.createPublishedDocument(
-            'api::database-connection.database-connection',
-            {
-              title: 'Original Database',
-              project,
-              databaseType: 'neo4j',
-              connectionUrl: '',
-              browserUrl: '',
-              database: '',
-            },
-            testContext,
-          );
-          const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
-            testContext,
-          );
-          const unpublish: Response = await manager.unpublishDocument(
-            'api::database-connection.database-connection',
-            resource,
-            {},
-            testContext,
-          );
-          assert.equal(unpublish.status, 200);
-          const draftResource: Response = await manager.readDocument(
-            'api::database-connection.database-connection',
-            resource,
-            testContext,
-          );
-          assert.equal(draftResource.status, 200);
-          z.object({ data: z.object({ publishedAt: z.null() }) }).parse(
-            await draftResource.json(),
-          );
-          const filters: Record<string, string> = {
-            [`filters[project][documentId][$eq]`]: project,
-            pageSize: '100',
-            sort: 'documentId:asc',
-          };
-          const originalDraftResponse: Response = await manager.readDocuments(
-            'api::database-connection.database-connection',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(originalDraftResponse.status, 200);
-          const originalDraft: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalDraftResponse.json());
-          assert.ok(
-            originalDraft.results.some(
-              (item: { documentId: string }): boolean =>
-                item.documentId === resource,
-            ),
-          );
-          const originalPublishedResponse: Response =
-            await manager.readDocuments(
+          test('rejects an unpublished database connection', async (testContext: TestContext): Promise<void> => {
+            // given
+            const owner: E2ETestApplicationUser =
+              await manager.registerUser(testContext);
+            const project: string = await manager.createPublishedDocument(
+              'api::project.project',
+              {
+                title: 'Test Project',
+                owner: owner.documentId,
+                collaborators: [],
+              },
+              testContext,
+            );
+            const resource: string = await manager.createPublishedDocument(
+              'api::database-connection.database-connection',
+              {
+                title: 'Original Database',
+                project,
+                databaseType: 'neo4j',
+                connectionUrl: '',
+                browserUrl: '',
+                database: '',
+              },
+              testContext,
+            );
+            const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
+              owner.username,
+              owner.password,
+              testContext,
+            );
+            const unpublish: Response = await manager.unpublishDocument(
+              'api::database-connection.database-connection',
+              resource,
+              {},
+              testContext,
+            );
+            assert.equal(unpublish.status, 200);
+            const draftResource: Response = await manager.readDocument(
+              'api::database-connection.database-connection',
+              resource,
+              testContext,
+            );
+            assert.equal(draftResource.status, 200);
+            z.object({ data: z.object({ publishedAt: z.null() }) }).parse(
+              await draftResource.json(),
+            );
+            const filters: Record<string, string> = {
+              [`filters[project][documentId][$eq]`]: project,
+              pageSize: '100',
+              sort: 'documentId:asc',
+            };
+            const originalDraftResponse: Response = await manager.readDocuments(
+              'api::database-connection.database-connection',
+              { ...filters, status: 'draft' },
+              testContext,
+            );
+            assert.equal(originalDraftResponse.status, 200);
+            const originalDraft: z.infer<typeof listStateSchema> =
+              listStateSchema.parse(await originalDraftResponse.json());
+            assert.ok(
+              originalDraft.results.some(
+                (item: { documentId: string }): boolean =>
+                  item.documentId === resource,
+              ),
+            );
+            const originalPublishedResponse: Response =
+              await manager.readDocuments(
+                'api::database-connection.database-connection',
+                { ...filters, status: 'published' },
+                testContext,
+              );
+            assert.equal(originalPublishedResponse.status, 200);
+            const originalPublished: z.infer<typeof listStateSchema> =
+              listStateSchema.parse(await originalPublishedResponse.json());
+
+            // when
+            const response: Response = await fetch(
+              `${manager.apiUrl}/project/${project}/database-connection/${resource}`,
+              {
+                method: 'DELETE',
+                headers: new Headers([
+                  ['Authorization', `Bearer ${ownerLogin.jwt}`],
+                ]),
+                signal: testContext.signal,
+              },
+            );
+
+            // then
+            assert.equal(response.status, 404);
+            assert.deepEqual(await response.json(), {
+              statusCode: 404,
+              message: 'Not Found',
+            });
+            const draftResponse: Response = await manager.readDocuments(
+              'api::database-connection.database-connection',
+              { ...filters, status: 'draft' },
+              testContext,
+            );
+            assert.equal(draftResponse.status, 200);
+            assert.deepEqual(
+              listStateSchema.parse(await draftResponse.json()),
+              originalDraft,
+            );
+            const publishedResponse: Response = await manager.readDocuments(
               'api::database-connection.database-connection',
               { ...filters, status: 'published' },
               testContext,
             );
-          assert.equal(originalPublishedResponse.status, 200);
-          const originalPublished: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalPublishedResponse.json());
-
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/project/${project}/database-connection/${resource}`,
-            {
-              method: 'DELETE',
-              headers: new Headers([
-                ['Authorization', `Bearer ${ownerLogin.jwt}`],
-              ]),
-              signal: testContext.signal,
-            },
-          );
-
-          // then
-          assert.equal(response.status, 404);
-          assert.deepEqual(await response.json(), {
-            statusCode: 404,
-            message: 'Not Found',
+            assert.equal(publishedResponse.status, 200);
+            assert.deepEqual(
+              listStateSchema.parse(await publishedResponse.json()),
+              originalPublished,
+            );
           });
-          const draftResponse: Response = await manager.readDocuments(
-            'api::database-connection.database-connection',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(draftResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await draftResponse.json()),
-            originalDraft,
-          );
-          const publishedResponse: Response = await manager.readDocuments(
-            'api::database-connection.database-connection',
-            { ...filters, status: 'published' },
-            testContext,
-          );
-          assert.equal(publishedResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await publishedResponse.json()),
-            originalPublished,
-          );
-        });
 
-        test('rejects a database connection belonging to another existing project', async (testContext: TestContext): Promise<void> => {
-          // given
-          const owner: E2ETestApplicationUser =
-            await manager.registerUser(testContext);
-          const project: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Test Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
-          const resource: string = await manager.createPublishedDocument(
-            'api::database-connection.database-connection',
-            {
-              title: 'Original Database',
-              project,
-              databaseType: 'neo4j',
-              connectionUrl: '',
-              browserUrl: '',
-              database: '',
-            },
-            testContext,
-          );
-          const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
-            owner.username,
-            owner.password,
-            testContext,
-          );
-          const otherProject: string = await manager.createPublishedDocument(
-            'api::project.project',
-            {
-              title: 'Other Project',
-              owner: owner.documentId,
-              collaborators: [],
-            },
-            testContext,
-          );
-          const filters: Record<string, string> = {
-            [`filters[project][documentId][$eq]`]: project,
-            pageSize: '100',
-            sort: 'documentId:asc',
-          };
-          const originalDraftResponse: Response = await manager.readDocuments(
-            'api::database-connection.database-connection',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(originalDraftResponse.status, 200);
-          const originalDraft: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalDraftResponse.json());
-          assert.ok(
-            originalDraft.results.some(
-              (item: { documentId: string }): boolean =>
-                item.documentId === resource,
-            ),
-          );
-          const originalPublishedResponse: Response =
-            await manager.readDocuments(
+          test('rejects a database connection belonging to another existing project', async (testContext: TestContext): Promise<void> => {
+            // given
+            const owner: E2ETestApplicationUser =
+              await manager.registerUser(testContext);
+            const project: string = await manager.createPublishedDocument(
+              'api::project.project',
+              {
+                title: 'Test Project',
+                owner: owner.documentId,
+                collaborators: [],
+              },
+              testContext,
+            );
+            const resource: string = await manager.createPublishedDocument(
+              'api::database-connection.database-connection',
+              {
+                title: 'Original Database',
+                project,
+                databaseType: 'neo4j',
+                connectionUrl: '',
+                browserUrl: '',
+                database: '',
+              },
+              testContext,
+            );
+            const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
+              owner.username,
+              owner.password,
+              testContext,
+            );
+            const otherProject: string = await manager.createPublishedDocument(
+              'api::project.project',
+              {
+                title: 'Other Project',
+                owner: owner.documentId,
+                collaborators: [],
+              },
+              testContext,
+            );
+            const filters: Record<string, string> = {
+              [`filters[project][documentId][$eq]`]: project,
+              pageSize: '100',
+              sort: 'documentId:asc',
+            };
+            const originalDraftResponse: Response = await manager.readDocuments(
+              'api::database-connection.database-connection',
+              { ...filters, status: 'draft' },
+              testContext,
+            );
+            assert.equal(originalDraftResponse.status, 200);
+            const originalDraft: z.infer<typeof listStateSchema> =
+              listStateSchema.parse(await originalDraftResponse.json());
+            assert.ok(
+              originalDraft.results.some(
+                (item: { documentId: string }): boolean =>
+                  item.documentId === resource,
+              ),
+            );
+            const originalPublishedResponse: Response =
+              await manager.readDocuments(
+                'api::database-connection.database-connection',
+                { ...filters, status: 'published' },
+                testContext,
+              );
+            assert.equal(originalPublishedResponse.status, 200);
+            const originalPublished: z.infer<typeof listStateSchema> =
+              listStateSchema.parse(await originalPublishedResponse.json());
+
+            // when
+            const response: Response = await fetch(
+              `${manager.apiUrl}/project/${otherProject}/database-connection/${resource}`,
+              {
+                method: 'DELETE',
+                headers: new Headers([
+                  ['Authorization', `Bearer ${ownerLogin.jwt}`],
+                ]),
+                signal: testContext.signal,
+              },
+            );
+
+            // then
+            assert.equal(response.status, 404);
+            assert.deepEqual(await response.json(), {
+              statusCode: 404,
+              message: 'Not Found',
+            });
+            const draftResponse: Response = await manager.readDocuments(
+              'api::database-connection.database-connection',
+              { ...filters, status: 'draft' },
+              testContext,
+            );
+            assert.equal(draftResponse.status, 200);
+            assert.deepEqual(
+              listStateSchema.parse(await draftResponse.json()),
+              originalDraft,
+            );
+            const publishedResponse: Response = await manager.readDocuments(
               'api::database-connection.database-connection',
               { ...filters, status: 'published' },
               testContext,
             );
-          assert.equal(originalPublishedResponse.status, 200);
-          const originalPublished: z.infer<typeof listStateSchema> =
-            listStateSchema.parse(await originalPublishedResponse.json());
-
-          // when
-          const response: Response = await fetch(
-            `${manager.apiUrl}/project/${otherProject}/database-connection/${resource}`,
-            {
-              method: 'DELETE',
-              headers: new Headers([
-                ['Authorization', `Bearer ${ownerLogin.jwt}`],
-              ]),
-              signal: testContext.signal,
-            },
-          );
-
-          // then
-          assert.equal(response.status, 404);
-          assert.deepEqual(await response.json(), {
-            statusCode: 404,
-            message: 'Not Found',
+            assert.equal(publishedResponse.status, 200);
+            assert.deepEqual(
+              listStateSchema.parse(await publishedResponse.json()),
+              originalPublished,
+            );
           });
-          const draftResponse: Response = await manager.readDocuments(
-            'api::database-connection.database-connection',
-            { ...filters, status: 'draft' },
-            testContext,
-          );
-          assert.equal(draftResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await draftResponse.json()),
-            originalDraft,
-          );
-          const publishedResponse: Response = await manager.readDocuments(
-            'api::database-connection.database-connection',
-            { ...filters, status: 'published' },
-            testContext,
-          );
-          assert.equal(publishedResponse.status, 200);
-          assert.deepEqual(
-            listStateSchema.parse(await publishedResponse.json()),
-            originalPublished,
-          );
         });
       });
     });
-  });
-});
+  },
+);

@@ -6,6 +6,7 @@ import { createHmac, randomUUID } from 'node:crypto';
 import type { SuiteContext, TestContext } from 'node:test';
 import { after, before, describe, test } from 'node:test';
 import type { PostAuthResponseBodyDto } from './dto/PostAuthResponseBodyDto';
+import { suiteOptions } from '../../../../e2e/suiteOptions';
 import { E2ETestManager } from '../../../../e2e/E2ETestManager';
 import z from 'zod';
 import type { JwtPayload } from 'jsonwebtoken';
@@ -74,7 +75,7 @@ const roleSchema: z.ZodType<{ role: Role }> = z.object({
   }),
 });
 
-describe('/auth', (suiteContext: SuiteContext): void => {
+describe('/auth', suiteOptions, (suiteContext: SuiteContext): void => {
   const manager: E2ETestManager = new E2ETestManager();
 
   before(
@@ -322,7 +323,8 @@ describe('/auth', (suiteContext: SuiteContext): void => {
   });
 
   describe('/register', (): void => {
-    describe('POST', (): void => {
+    // The 503 case temporarily disables registration for this test instance.
+    describe('POST', { concurrency: false }, (): void => {
       describe('201', (): void => {
         test('creates a confirmed account with a usable JWT', async (testContext: TestContext): Promise<void> => {
           // given

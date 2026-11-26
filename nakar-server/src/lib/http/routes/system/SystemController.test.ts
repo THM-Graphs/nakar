@@ -2,9 +2,10 @@ import assert from 'node:assert/strict';
 import type { SuiteContext, TestContext } from 'node:test';
 import { after, before, describe, test } from 'node:test';
 import packageInfo from '../../../../../package.json';
+import { suiteOptions } from '../../../../e2e/suiteOptions';
 import { E2ETestManager } from '../../../../e2e/E2ETestManager';
 
-describe('/system', (suiteContext: SuiteContext): void => {
+describe('/system', suiteOptions, (suiteContext: SuiteContext): void => {
   const manager: E2ETestManager = new E2ETestManager();
 
   before(
