@@ -1,4 +1,4 @@
-FROM node:24-alpine AS deps
+FROM node:24.22.3-alpine AS deps
 WORKDIR /app
 
 RUN apk add --no-cache python3 make g++ linux-headers
@@ -20,7 +20,7 @@ COPY tsconfig.json ./
 
 RUN NODE_ENV=production npm run build
 
-FROM node:24-alpine AS production
+FROM node:24.22.3-alpine AS production
 WORKDIR /app
 
 COPY package.json package-lock.json ./

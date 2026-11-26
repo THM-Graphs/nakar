@@ -1,4 +1,4 @@
-FROM neo4j:5.25
+FROM neo4j:2026.10.2-community
 
 # ENV NEO4J_PLUGINS="[\"apoc\", \"graph-data-science\"]"
 
@@ -14,7 +14,7 @@ RUN neo4j-admin database import full \
     --relationships=/import/edges/works/relationships.csv \
     --verbose
 
-ENV NEO4J_server_databases_read__only=true
+ENV NEO4J_server_databases_default__to__read__only=true
 
 HEALTHCHECK  \
     --interval=10m \

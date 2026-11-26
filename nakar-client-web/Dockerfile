@@ -1,4 +1,4 @@
-FROM node:24 AS deps
+FROM node:24.22.3 AS deps
 WORKDIR /app
 
 COPY package.json package-lock.json .npmrc ./
@@ -17,7 +17,7 @@ COPY tsconfig.node.json ./
 COPY vite.config.ts ./
 RUN npm run build
 
-FROM nginx:1.27-alpine
+FROM nginx:1.31.10-alpine
 
 WORKDIR /usr/share/nginx/html
 COPY --from=builder /app/dist ./
