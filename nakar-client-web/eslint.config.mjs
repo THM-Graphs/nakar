@@ -34,6 +34,7 @@ export default defineConfig([
         },
       ],
       curly: ["error", "all"],
+      "@typescript-eslint/no-unsafe-class-instance-assignment": "off", // activate later
     },
   },
 ]);
